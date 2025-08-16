@@ -1,0 +1,12 @@
+
+# Normalize text files and prefer LF (good for web projects)
+*           text=auto
+
+# Force LF for source/text
+*.{js,jsx,ts,tsx,css,scss,html,md,json,yml,yaml}  text eol=lf
+
+# Keep images/binaries untouched
+*.{png,jpg,jpeg,gif,webp,ico,svg}  binary
+
+# Keep Windows endings for batch scripts (if you add any)
+*.{bat,cmd}  text eol=crlf
