@@ -16,8 +16,7 @@
   <link rel="preconnect" href="https://imagedelivery.net" />
   <link rel="dns-prefetch" href="https://imagedelivery.net" />
 
-  <!-- Tailwind Play CDN (swap to compiled Tailwind in prod) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/style.css" />
 
   <style>
     /* Smooth fade/slide on load */
@@ -252,18 +251,25 @@
       const dots = Array.from(dotsWrap.children);
       let index = 0, timer = null, isPointerDown = false, startX = 0, currentX = 0;
 
-      // Load helpers
-      function ensureLoaded(i) {
-        const s = slides[i]; if (!s) return;
-        const im = s.querySelector('img');
-        if (im && !im.src) im.src = im.dataset.src;
-        // eager-load next image
-        const next = slides[(i + 1) % slides.length];
-        if (next) {
-          const im2 = next.querySelector('img');
-          if (im2 && !im2.src) im2.src = im2.dataset.src;
-        }
-      }
+// Load helpers
+function ensureLoaded(i) {
+  const s = slides[i];
+  if (!s) return;
+
+  const im = s.querySelector('img');
+  if (im && !im.getAttribute('src')) {
+    im.src = im.dataset.src;
+  }
+
+  // eager-load next image
+  const next = slides[(i + 1) % slides.length];
+  if (next) {
+    const im2 = next.querySelector('img');
+    if (im2 && !im2.getAttribute('src')) {
+      im2.src = im2.dataset.src;
+    }
+  }
+}
 
       // Navigation
       function goTo(i) {
