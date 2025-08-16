@@ -16,7 +16,13 @@
   <link rel="preconnect" href="https://imagedelivery.net" />
   <link rel="dns-prefetch" href="https://imagedelivery.net" />
 
-  <link rel="stylesheet" href="/style.css" />
+  <!-- Tailwind (CDN for quick fix) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Your custom CSS (animations, gallery, etc.) -->
+<link rel="preload" href="./style.css" as="style">
+<link rel="stylesheet" href="./style.css">
+
 
   <style>
     /* Smooth fade/slide on load */
