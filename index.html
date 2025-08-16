@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SnapInk™ — Branding on Lock.</title>
+  <meta name="description" content="SnapInk™: the world’s first strap‑branded snapback. Premium 5‑panel hats + interchangeable strap sleeves. Branding on Lock." />
+  <meta property="og:title" content="SnapInk™ — Branding on Lock." />
+  <meta property="og:description" content="The world’s first strap‑branded snapback. Premium 5‑panel hats + interchangeable strap sleeves. Join the waitlist." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/og.jpg" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" href="/favicon.ico" />
+  <!-- Tailwind Play CDN (great for a simple static page; swap to compiled Tailwind in prod if you prefer) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Smooth fade/slide on load */
+    .fade-in { animation: fadeIn .8s ease forwards; opacity: 0; }
+    .slide-up { animation: slideUp .8s ease forwards; opacity: 0; transform: translateY(10px); }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+    /* Subtle grid texture */
+    .grid-bg { background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 24px 24px; }
+  </style>
+</head>
+<body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/60 border-b border-neutral-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black">S</span>
+        <span class="text-lg tracking-widest font-black">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300">
+        <a href="#features" class="hover:text-white">Features</a>
+        <a href="#gallery" class="hover:text-white">Gallery</a>
+        <a href="#faq" class="hover:text-white">FAQ</a>
+        <a href="#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white">Join Waitlist</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black"></div>
+    <div class="absolute inset-0 grid-bg"></div>
+    <div class="relative max-w-6xl mx-auto px-4 py-20 md:py-28">
+      <div class="grid md:grid-cols-2 gap-10 items-center">
+        <div class="slide-up">
+          <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">Branding on Lock.</h1>
+          <p class="mt-5 text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> is the first snapback that makes the strap the stage — with interchangeable, print‑ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <a href="#waitlist" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Get early access</a>
+            <a href="#features" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
+          </div>
+          <p class="mt-3 text-neutral-400 text-sm">MSRP <span class="text-white font-semibold">$49.99</span> · Drop 001 coming soon</p>
+        </div>
+        <!-- Mock device/card -->
+        <div class="fade-in">
+          <div class="relative aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
+            <!-- Replace the placeholder with your real image once you have it -->
+            <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31ce?q=80&w=1200&auto=format&fit=crop" alt="SnapInk strap sleeve closeup" class="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-luminosity" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
+              <span class="text-sm text-neutral-300">Prototype • Strap Sleeve V1</span>
+              <span class="px-2.5 py-1 rounded-md bg-pink-600/90 text-xs font-semibold">PATENT PENDING</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-20 md:py-28 border-t border-neutral-800 bg-neutral-950">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-8 md:gap-10">
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <h3 class="text-xl font-semibold">Interchangeable Sleeves</h3>
+          <p class="mt-2 text-neutral-400">Semi‑rigid TPU sleeve slides over the stock strap and hides the nubs for a seamless silhouette. Swap colors, prints, or collabs in seconds.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <h3 class="text-xl font-semibold">Print‑Ready Surface</h3>
+          <p class="mt-2 text-neutral-400">Smooth exterior engineered for UV/pad printing, emboss, or foil. Designed to showcase <span class="font-semibold text-white">SNAPINK<span class="align-super text-[.6em]">™</span></span> or your collab mark.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <h3 class="text-xl font-semibold">Locked Fit, Clean Look</h3>
+          <p class="mt-2 text-neutral-400">Hidden inner holes align with snap pegs so the hat fastens normally — the mechanism disappears, the branding doesn’t.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery / Colorways -->
+  <section id="gallery" class="py-20 md:py-28 bg-gradient-to-b from-neutral-950 to-black">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-8">
+        <h2 class="text-2xl md:text-3xl font-black">Drop 001 — Preview</h2>
+        <p class="text-sm text-neutral-400">Replace placeholders with your real photos when ready.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Card 1 -->
+        <figure class="group overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/50">
+          <img class="w-full h-64 object-cover transition duration-500 group-hover:scale-105" src="https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1200&auto=format&fit=crop" alt="Matte black with white Strap"/>
+          <figcaption class="p-4 flex items-center justify-between text-sm">
+            <span>Matte Black • White Print</span>
+            <span class="px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">Core</span>
+          </figcaption>
+        </figure>
+        <!-- Card 2 -->
+        <figure class="group overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/50">
+          <img class="w-full h-64 object-cover transition duration-500 group-hover:scale-105" src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1200&auto=format&fit=crop" alt="Camo with neon strap"/>
+          <figcaption class="p-4 flex items-center justify-between text-sm">
+            <span>Camo • Neon Strap</span>
+            <span class="px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">Limited</span>
+          </figcaption>
+        </figure>
+        <!-- Card 3 -->
+        <figure class="group overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/50">
+          <img class="w-full h-64 object-cover transition duration-500 group-hover:scale-105" src="https://images.unsplash.com/photo-1511988617509-a57c8a288659?q=80&w=1200&auto=format&fit=crop" alt="Clear strap metallic print"/>
+          <figcaption class="p-4 flex items-center justify-between text-sm">
+            <span>Clear • Metallic Print</span>
+            <span class="px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">Concept</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Waitlist -->
+  <section id="waitlist" class="py-20 md:py-28 border-y border-neutral-800 bg-neutral-950">
+    <div class="max-w-2xl mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-black">Get first dibs on Drop 001</h2>
+      <p class="mt-3 text-neutral-400">Join the list and we’ll email you 24 hours before the first drop goes live.</p>
+      <form id="wl" class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <input type="email" required placeholder="your@email.com" class="w-full sm:w-96 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600" />
+        <button class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Join Waitlist</button>
+      </form>
+      <p class="mt-3 text-xs text-neutral-500">We’ll never sell your data. Unsubscribe anytime.</p>
+      <p class="mt-6 text-sm text-neutral-400">Want to wholesale or collab? <a href="mailto:hello@snapinkhats.com" class="underline hover:text-white">hello@snapinkhats.com</a></p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-20 md:py-28 bg-black">
+    <div class="max-w-4xl mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-black mb-8">FAQ</h2>
+      <div class="space-y-6">
+        <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
+          <summary class="cursor-pointer font-semibold flex items-center justify-between">What is a SnapInk™ strap sleeve?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
+          <p class="mt-3 text-neutral-400">A semi‑rigid, print‑ready cover that slides over a standard snapback strap, hides the pegs, and turns the strap into a clean branding surface.</p>
+        </details>
+        <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
+          <summary class="cursor-pointer font-semibold flex items-center justify-between">Will it fit my hat?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
+          <p class="mt-3 text-neutral-400">V1 sleeves target most common snap spacing (~7 mm CTC). We’ll publish a fit guide before launch and offer multiple sizes if required.</p>
+        </details>
+        <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
+          <summary class="cursor-pointer font-semibold flex items-center justify-between">When does Drop 001 ship?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
+          <p class="mt-3 text-neutral-400">We’ll announce the date to the waitlist first. Prototype photos and wear‑tests are coming soon.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 bg-neutral-950 border-t border-neutral-800">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-neutral-400">
+      <p>© <span id="year"></span> SnapInk Hats. All rights reserved. SnapInk<span class="align-super text-[.6em]">™</span>.</p>
+      <div class="flex items-center gap-4">
+        <a class="hover:text-white" href="#">Instagram</a>
+        <a class="hover:text-white" href="#">TikTok</a>
+        <a class="hover:text-white" href="#">X</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Year stamp
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Lightweight waitlist handler — replace with your ESP (Mailchimp, Klaviyo, Beehiiv, etc.)
+    document.getElementById('wl').addEventListener('submit', function(e){
+      e.preventDefault();
+      const email = this.querySelector('input[type="email"]').value.trim();
+      if(!email) return;
+      // TODO: wire to your provider or Cloudflare Pages Function
+      // Example: fetch('/api/subscribe', { method:'POST', body: JSON.stringify({email}) })
+      localStorage.setItem('snapink_waitlist', email);
+      this.reset();
+      alert('You\'re on the list. We\'ll email you before Drop 001.');
+    });
+  </script>
+</body>
+</html>
