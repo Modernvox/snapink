@@ -187,18 +187,17 @@
     const VARIANT = "portrait3x4";
 
     const IDS = [
-  "3819446f-199a-420f-bc5f-010e677ef500",
-  "911272db-0ab9-48b6-047a-5b3794a38300",
-  "23a9a989-7ac3-4233-9bf7-bf72f3c51b00",
-  "45c63d9c-ec14-4a5c-6bdf-13738c42ce00",
-  "e27b1994-d35e-4f60-eef3-1f2742867d00",
-  "3a88a638-f385-4a5e-eac2-3a499fa04200",
-  "0ca79320-1290-4ab1-85b7-5525eb85e900",
-  "23b70715-63b9-468a-01ee-ac4a248aee00",
-  "3ca0ae14-e56e-43e1-00a2-c713a777f000",
-  "c19261a7-c5c0-485c-10d3-1a50bfff1100" // new 10th ID
-];
-
+      "3819446f-199a-420f-bc5f-010e677ef500",
+      "911272db-0ab9-48b6-047a-5b3794a38300",
+      "23a9a989-7ac3-4233-9bf7-bf72f3c51b00",
+      "45c63d9c-ec14-4a5c-6bdf-13738c42ce00",
+      "e27b1994-d35e-4f60-eef3-1f2742867d00",
+      "3a88a638-f385-4a5e-eac2-3a499fa04200",
+      "0ca79320-1290-4ab1-85b7-5525eb85e900",
+      "23b70715-63b9-468a-01ee-ac4a248aee00",
+      "3ca0ae14-e56e-43e1-00a2-c713a777f000",
+      "c19261a7-c5c0-485c-10d3-1a50bfff1100"
+    ];
 
     const images = IDS.map((id, i) => ({
       src: `https://imagedelivery.net/${ACCOUNT}/${id}/${VARIANT}`,
@@ -212,6 +211,7 @@
     const btnPrev = document.getElementById('si-prev');
     const btnNext = document.getElementById('si-next');
 
+    // Build slides
     track.innerHTML = images.map((img, i) => `
       <li class="slide" role="group" aria-roledescription="slide" aria-label="${i+1} of ${images.length}">
         <img
@@ -225,27 +225,29 @@
       </li>
     `).join('');
 
+    // Dots
     dotsWrap.innerHTML = images.map((_, i) =>
-      `<button class="dot" role="tab" aria-selected="${i===0?'true':'false'}" aria-label="Go to slide ${i+1}"></button>`
+      `<button class="dot" role="tab" aria-selected="${i===0?'true':'false'}" aria-label="Go to slide ${i+1}" type="button"></button>`
     ).join('');
 
     const slides = Array.from(track.children);
     const dots = Array.from(dotsWrap.children);
     let index = 0, timer = null, isPointerDown = false, startX = 0, currentX = 0;
 
+    // Load helpers
     function ensureLoaded(i) {
-      const slide = slides[i]; if (!slide) return;
-      const img = slide.querySelector('img');
-      if (img && !img.src) img.src = img.dataset.src;
-      const prev = slides[(i - 1 + slides.length) % slides.length];
+      const s = slides[i]; if (!s) return;
+      const im = s.querySelector('img');
+      if (im && !im.src) im.src = im.dataset.src;
+      // also eager-load next one so it’s ready when we move
       const next = slides[(i + 1) % slides.length];
-      [prev, next].forEach(s => {
-        if (!s) return;
-        const im = s.querySelector('img');
-        if (im && !im.src) im.src = im.dataset.src;
-      });
+      if (next) {
+        const im2 = next.querySelector('img');
+        if (im2 && !im2.src) im2.src = im2.dataset.src;
+      }
     }
 
+    // Navigation
     function goTo(i) {
       i = LOOP ? (i + slides.length) % slides.length : Math.max(0, Math.min(i, slides.length - 1));
       index = i;
@@ -254,36 +256,45 @@
       ensureLoaded(i);
     }
 
-    function startAutoplay() { stopAutoplay(); timer = setInterval(() => goTo(index + 1), AUTOPLAY_MS); }
-    function stopAutoplay() { if (timer) { clearInterval(timer); timer = null; } }
+    function startAutoplay() {
+      stopAutoplay();
+      timer = setInterval(() => goTo(index + 1), AUTOPLAY_MS);
+    }
+    function stopAutoplay() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
 
+    // Button + dot events
+    btnPrev.setAttribute('type','button');
+    btnNext.setAttribute('type','button');
     btnPrev.addEventListener('click', () => { goTo(index - 1); startAutoplay(); });
     btnNext.addEventListener('click', () => { goTo(index + 1); startAutoplay(); });
     dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAutoplay(); }));
 
+    // Keyboard
     const carousel = document.querySelector('.carousel');
-    ['mouseenter','focusin'].forEach(e => carousel.addEventListener(e, stopAutoplay));
-    ['mouseleave','focusout'].forEach(e => carousel.addEventListener(e, startAutoplay));
-
     carousel.tabIndex = 0;
     carousel.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(index - 1); startAutoplay(); }
-      if (e.key === 'ArrowRight'){ e.preventDefault(); goTo(index + 1); startAutoplay(); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(index - 1); startAutoplay(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); startAutoplay(); }
     });
 
+    // Swipe
     function onDown(x){ isPointerDown = true; startX = currentX = x; stopAutoplay(); track.style.transition = 'none'; }
-    function onMove(x){ if(!isPointerDown) return; currentX = x; const percent = ((currentX - startX) / carousel.clientWidth) * 100; track.style.transform = `translateX(calc(${-index * 100}% + ${percent}%))`; }
+    function onMove(x){ if(!isPointerDown) return; currentX = x; const pct = ((currentX - startX) / carousel.clientWidth) * 100; track.style.transform = `translateX(calc(${-index*100}% + ${pct}%))`; }
     function onUp(){ if(!isPointerDown) return; isPointerDown = false; track.style.transition = ''; const moved = currentX - startX; if (Math.abs(moved) > SWIPE_MIN_PX) { goTo(index + (moved < 0 ? 1 : -1)); } else { goTo(index); } startAutoplay(); }
-
     carousel.addEventListener('pointerdown', e => onDown(e.clientX));
     window.addEventListener('pointermove', e => onMove(e.clientX));
     window.addEventListener('pointerup', onUp);
 
+    // INIT
     ensureLoaded(0);
     goTo(0);
-    startAutoplay();
+    // Start after a tiny delay so hover/focus on load doesn't pause it
+    setTimeout(startAutoplay, 150);
   })();
 </script>
+
 
 <script>
   // Year stamp
