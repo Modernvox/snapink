@@ -4,47 +4,63 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SnapInk™ — Branding on Lock.</title>
-  <meta name="description" content="SnapInk™: the world’s first strap‑branded snapback. Premium 5‑panel hats + interchangeable strap sleeves. Branding on Lock." />
+  <meta name="description" content="SnapInk™: the world’s first strap-branded snapback. Premium 5-panel hats + interchangeable strap sleeves. Branding on Lock." />
   <meta property="og:title" content="SnapInk™ — Branding on Lock." />
-  <meta property="og:description" content="The world’s first strap‑branded snapback. Premium 5‑panel hats + interchangeable strap sleeves. Join the waitlist." />
+  <meta property="og:description" content="The world’s first strap-branded snapback. Premium 5-panel hats + interchangeable strap sleeves. Join the waitlist." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="/og.jpg" />
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="icon" href="/favicon.ico" />
-  <!-- Tailwind Play CDN (great for a simple static page; swap to compiled Tailwind in prod if you prefer) -->
+
+  <!-- Perf hints for Cloudflare Images -->
+  <link rel="preconnect" href="https://imagedelivery.net" />
+  <link rel="dns-prefetch" href="https://imagedelivery.net" />
+
+  <!-- Tailwind Play CDN (swap to compiled Tailwind in prod) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     /* Smooth fade/slide on load */
     .fade-in { animation: fadeIn .8s ease forwards; opacity: 0; }
     .slide-up { animation: slideUp .8s ease forwards; opacity: 0; transform: translateY(10px); }
     @keyframes fadeIn { to { opacity: 1; } }
     @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
     /* Subtle grid texture */
-    .grid-bg { background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 24px 24px; }
- /* SNAPINK 3:4 Rotating Gallery */
-  :root{
-    --si-width:min(92vw,780px);
-    --si-ratio:3/4;
-    --si-radius:18px;
-    --si-shadow:0 10px 25px rgba(0,0,0,.18);
-    --si-transition:420ms ease;
-    --si-accent:#fff;
-  }
-  .snapink-gallery{display:grid;place-items:center;padding:8px 0}
-  .carousel{width:var(--si-width);position:relative;user-select:none;-webkit-tap-highlight-color:transparent}
-  .viewport{aspect-ratio:var(--si-ratio);width:100%;overflow:hidden;border-radius:var(--si-radius);box-shadow:var(--si-shadow);background:#111}
-  .track{display:flex;height:100%;margin:0;padding:0;list-style:none;transform:translateX(0);transition:transform var(--si-transition)}
-  .slide{flex:0 0 100%;display:grid;place-items:center;background:#000}
-  .slide img{width:100%;height:100%;object-fit:cover;display:block}
-  .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:42px;height:42px;border:0;border-radius:999px;background:rgba(255,255,255,.85);cursor:pointer}
-  .prev{left:10px}.next{right:10px}
-  .dots{display:flex;gap:8px;justify-content:center;margin-top:14px}
-  .dot{width:9px;height:9px;border-radius:999px;background:#d1d5db;border:0;cursor:pointer}
-  .dot[aria-selected="true"]{width:26px;border-radius:999px;background:var(--si-accent)}
-  @media (hover:hover) and (pointer:fine){
-    .nav{opacity:0;transition:opacity .2s}
-    .carousel:hover .nav{opacity:1}
-  }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* SNAPINK 3:4 Rotating Gallery */
+    :root{
+      --si-width:min(92vw,780px);
+      --si-ratio:3/4;
+      --si-radius:18px;
+      --si-shadow:0 10px 25px rgba(0,0,0,.18);
+      --si-transition:420ms ease;
+      --si-accent:#fff;
+    }
+    .snapink-gallery{display:grid;place-items:center;padding:8px 0}
+    .carousel{width:var(--si-width);position:relative;user-select:none;-webkit-tap-highlight-color:transparent}
+    .viewport{aspect-ratio:var(--si-ratio);width:100%;overflow:hidden;border-radius:var(--si-radius);box-shadow:var(--si-shadow);background:#111}
+    .track{display:flex;height:100%;margin:0;padding:0;list-style:none;transform:translateX(0);transition:transform var(--si-transition)}
+    .slide{flex:0 0 100%;display:grid;place-items:center;background:#000}
+    .slide img{width:100%;height:100%;object-fit:cover;display:block}
+    .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:42px;height:42px;border:0;border-radius:999px;background:rgba(255,255,255,.85);cursor:pointer}
+    .prev{left:10px}.next{right:10px}
+    .dots{display:flex;gap:8px;justify-content:center;margin-top:14px}
+    .dot{width:9px;height:9px;border-radius:999px;background:#d1d5db;border:0;cursor:pointer}
+    .dot[aria-selected="true"]{width:26px;border-radius:999px;background:var(--si-accent)}
+    @media (hover:hover) and (pointer:fine){
+      .nav{opacity:0;transition:opacity .2s}
+      .carousel:hover .nav{opacity:1}
+    }
+    @media (prefers-reduced-motion: reduce){
+      .track{transition:none}
+    }
   </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
@@ -72,17 +88,17 @@
       <div class="grid md:grid-cols-2 gap-10 items-center">
         <div class="slide-up">
           <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">Branding on Lock.</h1>
-          <p class="mt-5 text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> is the first snapback that makes the strap the stage — with interchangeable, print‑ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
+          <p class="mt-5 text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> is the first snapback that makes the strap the stage — with interchangeable, print-ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
           <div class="mt-8 flex flex-col sm:flex-row gap-3">
             <a href="#waitlist" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Get early access</a>
             <a href="#features" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
           </div>
-          <p class="mt-3 text-neutral-400 text-sm">MSRP <span class="text-white font-semibold">$49.99</span> · Drop 001 coming soon</p>
+          <p class="mt-3 text-neutral-400 text-sm">MSRP <span class="text-white font-semibold">$49.99</span> · Drop 001 coming soon</p>
         </div>
+
         <!-- Mock device/card -->
         <div class="fade-in">
           <div class="relative aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
-            <!-- Replace the placeholder with your real image once you have it -->
             <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31ce?q=80&w=1200&auto=format&fit=crop" alt="SnapInk strap sleeve closeup" class="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-luminosity" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
             <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
@@ -101,10 +117,10 @@
       <div class="grid md:grid-cols-3 gap-8 md:gap-10">
         <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
           <h3 class="text-xl font-semibold">Interchangeable Sleeves</h3>
-          <p class="mt-2 text-neutral-400">Semi‑rigid TPU sleeve slides over the stock strap and hides the nubs for a seamless silhouette. Swap colors, prints, or collabs in seconds.</p>
+          <p class="mt-2 text-neutral-400">Semi-rigid TPU sleeve slides over the stock strap and hides the nubs for a seamless silhouette. Swap colors, prints, or collabs in seconds.</p>
         </div>
         <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
-          <h3 class="text-xl font-semibold">Print‑Ready Surface</h3>
+          <h3 class="text-xl font-semibold">Print-Ready Surface</h3>
           <p class="mt-2 text-neutral-400">Smooth exterior engineered for UV/pad printing, emboss, or foil. Designed to showcase <span class="font-semibold text-white">SNAPINK<span class="align-super text-[.6em]">™</span></span> or your collab mark.</p>
         </div>
         <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
@@ -115,30 +131,31 @@
     </div>
   </section>
 
-<section id="gallery" class="py-20 md:py-28 bg-gradient-to-b from-neutral-950 to-black">
-  <div class="max-w-6xl mx-auto px-4">
-    <div class="flex items-end justify-between mb-8">
-      <h2 class="text-2xl md:text-3xl font-black">Drop 001 — Preview</h2>
-      <p class="text-sm text-neutral-400">All images delivered via Cloudflare Images.</p>
-    </div>
-
-    <section class="snapink-gallery" aria-label="SnapInk rotating gallery">
-      <div class="carousel" role="region" aria-roledescription="carousel" aria-label="SnapInk hats" aria-live="polite">
-        <div class="viewport">
-          <ul class="track" id="si-track"></ul>
-        </div>
-        <button class="nav prev" aria-label="Previous slide" id="si-prev">❮</button>
-        <button class="nav next" aria-label="Next slide" id="si-next">❯</button>
-        <div class="dots" id="si-dots" role="tablist" aria-label="Slide selectors"></div>
+  <!-- Gallery -->
+  <section id="gallery" class="py-20 md:py-28 bg-gradient-to-b from-neutral-950 to-black">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-8">
+        <h2 class="text-2xl md:text-3xl font-black">Drop 001 — Preview</h2>
+        <p class="text-sm text-neutral-400">All images delivered via Cloudflare Images.</p>
       </div>
-    </section>
-  </div>
-</section>
+
+      <section class="snapink-gallery" aria-label="SnapInk rotating gallery">
+        <div class="carousel" role="region" aria-roledescription="carousel" aria-label="SnapInk hats" aria-live="polite">
+          <div class="viewport">
+            <ul class="track" id="si-track"></ul>
+          </div>
+          <button type="button" class="nav prev" aria-label="Previous slide" id="si-prev">❮</button>
+          <button type="button" class="nav next" aria-label="Next slide" id="si-next">❯</button>
+          <div class="dots" id="si-dots" role="tablist" aria-label="Slide selectors"></div>
+        </div>
+      </section>
+    </div>
+  </section>
 
   <!-- Waitlist -->
   <section id="waitlist" class="py-20 md:py-28 border-y border-neutral-800 bg-neutral-950">
     <div class="max-w-2xl mx-auto px-4 text-center">
-      <h2 class="text-3xl md:text-4xl font-black">Get first dibs on Drop 001</h2>
+      <h2 class="text-3xl md:text-4xl font-black">Get first dibs on Drop 001</h2>
       <p class="mt-3 text-neutral-400">Join the list and we’ll email you 24 hours before the first drop goes live.</p>
       <form id="wl" class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
         <input type="email" required placeholder="your@email.com" class="w-full sm:w-96 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600" />
@@ -156,15 +173,15 @@
       <div class="space-y-6">
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
           <summary class="cursor-pointer font-semibold flex items-center justify-between">What is a SnapInk™ strap sleeve?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
-          <p class="mt-3 text-neutral-400">A semi‑rigid, print‑ready cover that slides over a standard snapback strap, hides the pegs, and turns the strap into a clean branding surface.</p>
+          <p class="mt-3 text-neutral-400">A semi-rigid, print-ready cover that slides over a standard snapback strap, hides the pegs, and turns the strap into a clean branding surface.</p>
         </details>
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
           <summary class="cursor-pointer font-semibold flex items-center justify-between">Will it fit my hat?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
-          <p class="mt-3 text-neutral-400">V1 sleeves target most common snap spacing (~7 mm CTC). We’ll publish a fit guide before launch and offer multiple sizes if required.</p>
+          <p class="mt-3 text-neutral-400">V1 sleeves target most common snap spacing (~7 mm CTC). We’ll publish a fit guide before launch and offer multiple sizes if required.</p>
         </details>
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
-          <summary class="cursor-pointer font-semibold flex items-center justify-between">When does Drop 001 ship?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
-          <p class="mt-3 text-neutral-400">We’ll announce the date to the waitlist first. Prototype photos and wear‑tests are coming soon.</p>
+          <summary class="cursor-pointer font-semibold flex items-center justify-between">When does Drop 001 ship?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
+          <p class="mt-3 text-neutral-400">We’ll announce the date to the waitlist first. Prototype photos and wear-tests are coming soon.</p>
         </details>
       </div>
     </div>
@@ -181,148 +198,141 @@
       </div>
     </div>
   </footer>
-<script>
-  (function () {
-    const ACCOUNT = "fYqzQPf1CS3qAF1vZpfSLw";
-    const VARIANT = "portrait3x4";
 
-    const IDS = [
-      "3819446f-199a-420f-bc5f-010e677ef500",
-      "911272db-0ab9-48b6-047a-5b3794a38300",
-      "23a9a989-7ac3-4233-9bf7-bf72f3c51b00",
-      "45c63d9c-ec14-4a5c-6bdf-13738c42ce00",
-      "e27b1994-d35e-4f60-eef3-1f2742867d00",
-      "3a88a638-f385-4a5e-eac2-3a499fa04200",
-      "0ca79320-1290-4ab1-85b7-5525eb85e900",
-      "23b70715-63b9-468a-01ee-ac4a248aee00",
-      "3ca0ae14-e56e-43e1-00a2-c713a777f000",
-      "c19261a7-c5c0-485c-10d3-1a50bfff1100"
-    ];
+  <!-- Rotating gallery (runs after DOM is parsed) -->
+  <script>
+    (function () {
+      const ACCOUNT = "fYqzQPf1CS3qAF1vZpfSLw";
+      const VARIANT = "portrait3x4";
 
-    const images = IDS.map((id, i) => ({
-      src: `https://imagedelivery.net/${ACCOUNT}/${id}/${VARIANT}`,
-      alt: `SnapInk gallery ${String(i+1).padStart(2,'0')}`,
-      caption: ""
-    }));
+      const IDS = [
+        "3819446f-199a-420f-bc5f-010e677ef500",
+        "911272db-0ab9-48b6-047a-5b3794a38300",
+        "23a9a989-7ac3-4233-9bf7-bf72f3c51b00",
+        "45c63d9c-ec14-4a5c-6bdf-13738c42ce00",
+        "e27b1994-d35e-4f60-eef3-1f2742867d00",
+        "3a88a638-f385-4a5e-eac2-3a499fa04200",
+        "0ca79320-1290-4ab1-85b7-5525eb85e900",
+        "23b70715-63b9-468a-01ee-ac4a248aee00",
+        "3ca0ae14-e56e-43e1-00a2-c713a777f000",
+        "c19261a7-c5c0-485c-10d3-1a50bfff1100"
+      ];
 
-    const AUTOPLAY_MS = 3500, SWIPE_MIN_PX = 35, LOOP = true;
-    const track = document.getElementById('si-track');
-    const dotsWrap = document.getElementById('si-dots');
-    const btnPrev = document.getElementById('si-prev');
-    const btnNext = document.getElementById('si-next');
+      const images = IDS.map((id, i) => ({
+        src: `https://imagedelivery.net/${ACCOUNT}/${id}/${VARIANT}`,
+        alt: `SnapInk gallery ${String(i+1).padStart(2,'0')}`
+      }));
 
-    // Build slides
-    track.innerHTML = images.map((img, i) => `
-      <li class="slide" role="group" aria-roledescription="slide" aria-label="${i+1} of ${images.length}">
-        <img
-          src="${i === 0 ? img.src : ''}"
-          data-src="${img.src}"
-          alt="${img.alt || ''}"
-          loading="lazy"
-          decoding="async"
-          width="900" height="1200"
-        />
-      </li>
-    `).join('');
+      const AUTOPLAY_MS = 3500, SWIPE_MIN_PX = 35, LOOP = true;
+      const track = document.getElementById('si-track');
+      const dotsWrap = document.getElementById('si-dots');
+      const btnPrev = document.getElementById('si-prev');
+      const btnNext = document.getElementById('si-next');
 
-    // Dots
-    dotsWrap.innerHTML = images.map((_, i) =>
-      `<button class="dot" role="tab" aria-selected="${i===0?'true':'false'}" aria-label="Go to slide ${i+1}" type="button"></button>`
-    ).join('');
+      // Build slides
+      track.innerHTML = images.map((img, i) => `
+        <li class="slide" role="group" aria-roledescription="slide" aria-label="${i+1} of ${images.length}">
+          <img
+            src="${i === 0 ? img.src : ''}"
+            data-src="${img.src}"
+            alt="${img.alt || ''}"
+            loading="lazy"
+            decoding="async"
+            width="900" height="1200"
+          />
+        </li>
+      `).join('');
 
-    const slides = Array.from(track.children);
-    const dots = Array.from(dotsWrap.children);
-    let index = 0, timer = null, isPointerDown = false, startX = 0, currentX = 0;
+      // Dots
+      dotsWrap.innerHTML = images.map((_, i) =>
+        `<button class="dot" role="tab" aria-selected="${i===0?'true':'false'}" aria-label="Go to slide ${i+1}" type="button"></button>`
+      ).join('');
 
-    // Load helpers
-    function ensureLoaded(i) {
-      const s = slides[i]; if (!s) return;
-      const im = s.querySelector('img');
-      if (im && !im.src) im.src = im.dataset.src;
-      // also eager-load next one so it’s ready when we move
-      const next = slides[(i + 1) % slides.length];
-      if (next) {
-        const im2 = next.querySelector('img');
-        if (im2 && !im2.src) im2.src = im2.dataset.src;
+      const slides = Array.from(track.children);
+      const dots = Array.from(dotsWrap.children);
+      let index = 0, timer = null, isPointerDown = false, startX = 0, currentX = 0;
+
+      // Load helpers
+      function ensureLoaded(i) {
+        const s = slides[i]; if (!s) return;
+        const im = s.querySelector('img');
+        if (im && !im.src) im.src = im.dataset.src;
+        // eager-load next image
+        const next = slides[(i + 1) % slides.length];
+        if (next) {
+          const im2 = next.querySelector('img');
+          if (im2 && !im2.src) im2.src = im2.dataset.src;
+        }
       }
+
+      // Navigation
+      function goTo(i) {
+        i = LOOP ? (i + slides.length) % slides.length : Math.max(0, Math.min(i, slides.length - 1));
+        index = i;
+        track.style.transform = `translateX(-${i * 100}%)`;
+        dots.forEach((d, di) => d.setAttribute('aria-selected', di === i ? 'true' : 'false'));
+        ensureLoaded(i);
+      }
+
+      function startAutoplay() { stopAutoplay(); timer = setInterval(() => goTo(index + 1), AUTOPLAY_MS); }
+      function stopAutoplay()  { if (timer) { clearInterval(timer); timer = null; } }
+
+      // Button + dot events
+      btnPrev.addEventListener('click', () => { goTo(index - 1); startAutoplay(); });
+      btnNext.addEventListener('click', () => { goTo(index + 1); startAutoplay(); });
+      dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAutoplay(); }));
+
+      // Keyboard
+      const carousel = document.querySelector('.carousel');
+      carousel.tabIndex = 0;
+      carousel.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(index - 1); startAutoplay(); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); startAutoplay(); }
+      });
+
+      // Swipe
+      function onDown(x){ isPointerDown = true; startX = currentX = x; stopAutoplay(); track.style.transition = 'none'; }
+      function onMove(x){ if(!isPointerDown) return; currentX = x; const pct = ((currentX - startX) / carousel.clientWidth) * 100; track.style.transform = `translateX(calc(${-index*100}% + ${pct}%))`; }
+      function onUp(){ if(!isPointerDown) return; isPointerDown = false; track.style.transition = ''; const moved = currentX - startX; if (Math.abs(moved) > SWIPE_MIN_PX) { goTo(index + (moved < 0 ? 1 : -1)); } else { goTo(index); } startAutoplay(); }
+      carousel.addEventListener('pointerdown', e => onDown(e.clientX));
+      window.addEventListener('pointermove', e => onMove(e.clientX));
+      window.addEventListener('pointerup', onUp);
+
+      // Init
+      ensureLoaded(0);
+      goTo(0);
+      setTimeout(startAutoplay, 150); // avoid accidental pause on load
+    })();
+  </script>
+
+  <!-- Footer utilities -->
+  <script>
+    // Year stamp
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    // Waitlist form
+    const wlForm = document.getElementById('wl');
+    if (wlForm) {
+      wlForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = this.querySelector('input[type="email"]').value.trim();
+        if (!email) return;
+
+        // Save locally (replace with Pages Function / ESP)
+        localStorage.setItem('snapink_waitlist', email);
+
+        // Example:
+        // fetch('/api/subscribe', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ email })
+        // });
+
+        this.reset();
+        alert("You're on the list. We’ll email you before Drop 001.");
+      });
     }
-
-    // Navigation
-    function goTo(i) {
-      i = LOOP ? (i + slides.length) % slides.length : Math.max(0, Math.min(i, slides.length - 1));
-      index = i;
-      track.style.transform = `translateX(-${i * 100}%)`;
-      dots.forEach((d, di) => d.setAttribute('aria-selected', di === i ? 'true' : 'false'));
-      ensureLoaded(i);
-    }
-
-    function startAutoplay() {
-      stopAutoplay();
-      timer = setInterval(() => goTo(index + 1), AUTOPLAY_MS);
-    }
-    function stopAutoplay() {
-      if (timer) { clearInterval(timer); timer = null; }
-    }
-
-    // Button + dot events
-    btnPrev.setAttribute('type','button');
-    btnNext.setAttribute('type','button');
-    btnPrev.addEventListener('click', () => { goTo(index - 1); startAutoplay(); });
-    btnNext.addEventListener('click', () => { goTo(index + 1); startAutoplay(); });
-    dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAutoplay(); }));
-
-    // Keyboard
-    const carousel = document.querySelector('.carousel');
-    carousel.tabIndex = 0;
-    carousel.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(index - 1); startAutoplay(); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); startAutoplay(); }
-    });
-
-    // Swipe
-    function onDown(x){ isPointerDown = true; startX = currentX = x; stopAutoplay(); track.style.transition = 'none'; }
-    function onMove(x){ if(!isPointerDown) return; currentX = x; const pct = ((currentX - startX) / carousel.clientWidth) * 100; track.style.transform = `translateX(calc(${-index*100}% + ${pct}%))`; }
-    function onUp(){ if(!isPointerDown) return; isPointerDown = false; track.style.transition = ''; const moved = currentX - startX; if (Math.abs(moved) > SWIPE_MIN_PX) { goTo(index + (moved < 0 ? 1 : -1)); } else { goTo(index); } startAutoplay(); }
-    carousel.addEventListener('pointerdown', e => onDown(e.clientX));
-    window.addEventListener('pointermove', e => onMove(e.clientX));
-    window.addEventListener('pointerup', onUp);
-
-    // INIT
-    ensureLoaded(0);
-    goTo(0);
-    // Start after a tiny delay so hover/focus on load doesn't pause it
-    setTimeout(startAutoplay, 150);
-  })();
-</script>
-
-
-<script>
-  // Year stamp
-  const yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  // Waitlist form
-  const wlForm = document.getElementById('wl');
-  if (wlForm) {
-    wlForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = this.querySelector('input[type="email"]').value.trim();
-      if (!email) return;
-
-      // Save locally
-      localStorage.setItem('snapink_waitlist', email);
-
-      // TODO: Replace with call to your provider or Pages Function
-      // fetch('/api/subscribe', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
-      // });
-
-      this.reset();
-      alert("You're on the list. We’ll email you before Drop 001.");
-    });
-  }
-</script>
+  </script>
 </body>
 </html>
