@@ -1,0 +1,30 @@
+{
+  "name": "SnapInk",
+  "short_name": "SnapInk",
+  "icons": [
+    {
+      "src": "https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/22344b49-e7ec-4970-f246-f71f59c14700/public",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/c130040c-b121-4dee-37af-2a8e8f185e00/public",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e0634329-0654-4a50-a5c0-4287e6880700/public",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/f15ac235-0a41-477d-91b5-e03681bdd200/public",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone"
+}
