@@ -39,6 +39,62 @@
   .nav{opacity:0;transition:opacity .2s}
   .carousel:hover .nav{opacity:1}
 }
+/* === SnapInk extras (marquee, glow, cards, etc.) === */
+
+/* Marquee strip */
+.marquee{ --gap: 48px; display:flex; gap:var(--gap); overflow:hidden;
+  mask:linear-gradient(90deg,transparent,black 10%,black 90%,transparent) }
+.marquee__track{ display:flex; gap:var(--gap); animation:scroll 22s linear infinite }
+@keyframes scroll{ from { transform:translateX(0)} to {transform:translateX(calc(-50% - var(--gap)/2))} }
+
+/* Carousel viewport (product scroller) */
+.carousel-viewport{ scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch }
+.carousel-viewport > div{ scroll-snap-align:start }
+
+/* Hide scrollbars for carousels */
+.no-scrollbar::-webkit-scrollbar{ display:none }
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
+
+/* Pulse glow CTA */
+.pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153, .6); animation:pulse 2.2s infinite }
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}
+  70%{box-shadow:0 0 0 16px rgba(236,72,153,0)}
+  100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}
+}
+
+/* “Sticker” effect */
+.sticker{ transform:rotate(-6deg); box-shadow:0 12px 40px rgba(0,0,0,.35) }
+
+/* Subtle noise overlay for sections */
+.noise{ position:relative }
+.noise::before{
+  content:""; position:absolute; inset:0;
+  background-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4z/CfBwADHwGf8eYgTQAAAABJRU5ErkJggg==');
+  opacity:.06; pointer-events:none
+}
+
+/* Shiny hover for CTAs */
+.shine{ position:relative; overflow:hidden }
+.shine::after{
+  content:""; position:absolute; inset:-100% -30%;
+  background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%);
+  transform:translateX(-100%);
+}
+.shine:hover::after{ transition: transform .7s ease; transform:translateX(100%) }
+
+/* Card lift */
+.card{ transition:transform .2s ease, box-shadow .2s ease }
+.card:hover{ transform:translateY(-4px); box-shadow:0 10px 30px rgba(0,0,0,.35) }
+
+/* Sticky CTA bar */
+.sticky-cta{ backdrop-filter:saturate(120%) blur(8px) }
+
+/* FAQ caret rotate */
+details[open] summary .caret{ transform:rotate(180deg) }
+
 @media (prefers-reduced-motion: reduce){
   .track{transition:none}
 }
+
+

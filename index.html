@@ -16,338 +16,500 @@
   <link rel="preconnect" href="https://imagedelivery.net" />
   <link rel="dns-prefetch" href="https://imagedelivery.net" />
 
-  <!-- Tailwind (CDN for quick fix) -->
-<script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
 
-<!-- Your custom CSS (animations, gallery, etc.) -->
-<link rel="preload" href="./style.css" as="style">
-<link rel="stylesheet" href="./style.css">
-
+  <!-- Fonts (display-swap) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
-    /* Smooth fade/slide on load */
-    .fade-in { animation: fadeIn .8s ease forwards; opacity: 0; }
-    .slide-up { animation: slideUp .8s ease forwards; opacity: 0; transform: translateY(10px); }
-    @keyframes fadeIn { to { opacity: 1; } }
-    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+    :root{
+      --pink:#ec4899; /* tailwind pink-500 */
+      --glow:0 0 0 0 rgba(236,72,153,.0);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif}
 
     /* Subtle grid texture */
-    .grid-bg {
-      background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
+    .grid-bg{background-image:linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);background-size:24px 24px}
 
-    /* SNAPINK 3:4 Rotating Gallery */
-    :root{
-      --si-width:min(92vw,780px);
-      --si-ratio:3/4;
-      --si-radius:18px;
-      --si-shadow:0 10px 25px rgba(0,0,0,.18);
-      --si-transition:420ms ease;
-      --si-accent:#fff;
-    }
-    .snapink-gallery{display:grid;place-items:center;padding:8px 0}
-    .carousel{width:var(--si-width);position:relative;user-select:none;-webkit-tap-highlight-color:transparent}
-    .viewport{aspect-ratio:var(--si-ratio);width:100%;overflow:hidden;border-radius:var(--si-radius);box-shadow:var(--si-shadow);background:#111}
-    .track{display:flex;height:100%;margin:0;padding:0;list-style:none;transform:translateX(0);transition:transform var(--si-transition)}
-    .slide{flex:0 0 100%;display:grid;place-items:center;background:#000}
-    .slide img{width:100%;height:100%;object-fit:cover;display:block}
-    .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:42px;height:42px;border:0;border-radius:999px;background:rgba(255,255,255,.85);cursor:pointer}
-    .prev{left:10px}.next{right:10px}
-    .dots{display:flex;gap:8px;justify-content:center;margin-top:14px}
-    .dot{width:9px;height:9px;border-radius:999px;background:#d1d5db;border:0;cursor:pointer}
-    .dot[aria-selected="true"]{width:26px;border-radius:999px;background:var(--si-accent)}
-    @media (hover:hover) and (pointer:fine){
-      .nav{opacity:0;transition:opacity .2s}
-      .carousel:hover .nav{opacity:1}
-    }
-    @media (prefers-reduced-motion: reduce){
-      .track{transition:none}
-    }
+    /* Stickers */
+    .sticker{transform:rotate(-6deg); box-shadow:0 12px 40px rgba(0,0,0,.35)}
+
+    /* Marquee */
+    .marquee{ --gap: 48px; display:flex; gap:var(--gap); overflow:hidden; mask:linear-gradient(90deg,transparent,black 10%,black 90%,transparent)}
+    .marquee__track{ display:flex; gap:var(--gap); animation:scroll 22s linear infinite }
+    @keyframes scroll{ from { transform:translateX(0)} to {transform:translateX(calc(-50% - var(--gap)/2))} }
+
+    /* Carousel */
+    .carousel-viewport{scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch}
+    .carousel-viewport > div{scroll-snap-align:start}
+
+    /* Floating glow pulse */
+    .pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153, .6); animation: pulse 2.2s infinite }
+    @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)} 70%{box-shadow:0 0 0 16px rgba(236,72,153,0)} 100%{box-shadow:0 0 0 0 rgba(236,72,153,0)} }
+
+    /* Accordion caret */
+    details[open] summary .caret{ transform:rotate(180deg) }
+
+    /* Noise overlay */
+    .noise:before{ content:""; position:absolute; inset:0; background-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4z/CfBwADHwGf8eYgTQAAAABJRU5ErkJggg=='); opacity:.06; pointer-events:none }
+
+    /* Button shine */
+    .shine{ position:relative; overflow:hidden }
+    .shine:after{ content:""; position:absolute; inset:-100% -30%; background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%); transform:translateX(-100%); }
+    .shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
+
+    /* Card hover */
+    .card{ transition:transform .2s ease, box-shadow .2s ease}
+    .card:hover{ transform:translateY(-4px); box-shadow:0 10px 30px rgba(0,0,0,.35)}
+
+    /* Sticky CTA bar */
+    .sticky-cta{ backdrop-filter:saturate(120%) blur(8px) }
+
+    /* Hide scrollbar for carousels */
+    .no-scrollbar::-webkit-scrollbar{ display:none }
+    .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
   </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
+  <!-- Announcement bar / promos -->
+  <div class="marquee bg-black/60 border-b border-neutral-800 text-xs py-2 text-neutral-300">
+    <div class="marquee__track whitespace-nowrap">
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-pink-600 text-white">NEW</span> Strap-branded snapbacks are here. Branding on Lock.</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Drop 001</span> Early access for waitlist only</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Patent Pending</span> SnapInk™ strap sleeve system</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Creator Collabs</span> Your logo on the strap</span>
+      <!-- clone for smooth loop -->
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-pink-600 text-white">NEW</span> Strap-branded snapbacks are here. Branding on Lock.</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Drop 001</span> Early access for waitlist only</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Patent Pending</span> SnapInk™ strap sleeve system</span>
+      <span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-neutral-800">Creator Collabs</span> Your logo on the strap</span>
+    </div>
+  </div>
+
   <!-- Header -->
-  <header class="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/60 border-b border-neutral-800">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-2">
-        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black">S</span>
+  <header class="sticky top-0 z-50 bg-neutral-950/70 backdrop-blur border-b border-neutral-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black group-hover:scale-110 transition">S</span>
         <span class="text-lg tracking-widest font-black">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
       </a>
       <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300">
-        <a href="#features" class="hover:text-white">Features</a>
-        <a href="#gallery" class="hover:text-white">Gallery</a>
+        <a href="#shop" class="hover:text-white">Shop</a>
+        <a href="#how" class="hover:text-white">How it works</a>
+        <a href="#reviews" class="hover:text-white">Reviews</a>
         <a href="#faq" class="hover:text-white">FAQ</a>
-        <a href="#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white">Join Waitlist</a>
+        <a href="#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">Join Waitlist</a>
       </nav>
+      <button id="cartBtn" aria-label="Open cart" class="relative p-2 rounded-lg hover:bg-neutral-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386a1.5 1.5 0 0 1 1.463 1.2l.257 1.542M7.5 14.25h9.75a1.5 1.5 0 0 0 1.477-1.222l1.125-6.75A1.5 1.5 0 0 0 18.375 4.5H5.356M7.5 21a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm9.75 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg>
+        <span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">0</span>
+      </button>
     </div>
   </header>
 
-  <!-- Hero -->
+  <!-- HERO -->
   <section class="relative overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black"></div>
     <div class="absolute inset-0 grid-bg"></div>
-    <div class="relative max-w-6xl mx-auto px-4 py-20 md:py-28">
+    <div class="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
       <div class="grid md:grid-cols-2 gap-10 items-center">
-        <div class="slide-up">
-          <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">Branding on Lock.</h1>
-          <p class="mt-5 text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> is the first snapback that makes the strap the stage — with interchangeable, print-ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
-          <div class="mt-8 flex flex-col sm:flex-row gap-3">
-            <a href="#waitlist" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Get early access</a>
-            <a href="#features" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
+        <div class="space-y-6">
+          <div class="inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
+            <span class="i">⚡</span> Strap-branded snapbacks
+            <span class="h-3 w-px bg-neutral-700 mx-1"></span>
+            <span class="i">🧪</span> Patent pending sleeves
           </div>
-          <p class="mt-3 text-neutral-400 text-sm">MSRP <span class="text-white font-semibold">$49.99</span> · Drop 001 coming soon</p>
+          <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">Branding on <span class="text-pink-500">Lock</span>.</h1>
+          <p class="text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> makes the strap the stage — with interchangeable, print-ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a href="#shop" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">Shop the drop</a>
+            <a href="#how" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
+          </div>
+          <div class="flex items-center gap-6 pt-2 text-sm text-neutral-400">
+            <span>Free US shipping $75+</span>
+            <span class="h-3 w-px bg-neutral-700"></span>
+            <span>30‑day returns</span>
+          </div>
         </div>
-
-        <!-- Mock device/card -->
-        <div class="fade-in">
+        <!-- Collage -->
+        <div class="relative">
           <div class="relative aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
-           <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/c522f3f5-8aec-4e56-ae41-2ba1bae7dd00/public" 
-     alt="SnapInk strap sleeve closeup" 
-     class="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-luminosity" />
-
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/3819446f-199a-420f-bc5f-010e677ef500/public" alt="SnapInk strap sleeve closeup" class="absolute inset-0 w-full h-full object-cover opacity-70" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
             <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
               <span class="text-sm text-neutral-300">Prototype • Strap Sleeve V1</span>
               <span class="px-2.5 py-1 rounded-md bg-pink-600/90 text-xs font-semibold">PATENT PENDING</span>
             </div>
           </div>
+          <!-- Sticker -->
+          <div class="sticker absolute -right-3 -bottom-6 bg-white text-neutral-900 px-6 py-3 rounded-full font-black text-lg shadow-xl select-none">SnapInk<span class="align-super text-[.6em]">™</span></div>
         </div>
+      </div>
+
+      <!-- Countdown (Drop 001) -->
+      <div class="mt-12 grid sm:grid-cols-4 gap-4 text-center">
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="dd">00</div><div class="text-neutral-400 text-xs">DAYS</div></div>
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="hh">00</div><div class="text-neutral-400 text-xs">HOURS</div></div>
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="mm">00</div><div class="text-neutral-400 text-xs">MINUTES</div></div>
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="ss">00</div><div class="text-neutral-400 text-xs">SECONDS</div></div>
       </div>
     </div>
   </section>
 
-  <!-- Features -->
-  <section id="features" class="py-20 md:py-28 border-t border-neutral-800 bg-neutral-950">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-8 md:gap-10">
-        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
-          <h3 class="text-xl font-semibold">Interchangeable Sleeves</h3>
-          <p class="mt-2 text-neutral-400">Semi-rigid TPU sleeve slides over the stock strap and hides the nubs for a seamless silhouette. Swap colors, prints, or collabs in seconds.</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
-          <h3 class="text-xl font-semibold">Print-Ready Surface</h3>
-          <p class="mt-2 text-neutral-400">Smooth exterior engineered for UV/pad printing, emboss, or foil. Designed to showcase <span class="font-semibold text-white">SNAPINK<span class="align-super text-[.6em]">™</span></span> or your collab mark.</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
-          <h3 class="text-xl font-semibold">Locked Fit, Clean Look</h3>
-          <p class="mt-2 text-neutral-400">Hidden inner holes align with snap pegs so the hat fastens normally — the mechanism disappears, the branding doesn’t.</p>
-        </div>
+  <!-- Social proof logos -->
+  <section class="py-10 border-y border-neutral-800 bg-neutral-950/60">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-6 items-center opacity-70">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=HYPE" alt="Hype" loading="lazy">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=CREATORS" alt="Creators" loading="lazy">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=URBAN" alt="Urban" loading="lazy">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=STYLE" alt="Style" loading="lazy">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=STREET" alt="Street" loading="lazy">
+        <img class="mx-auto h-6" src="https://dummyimage.com/140x24/1a1a1a/fff&text=PRESS" alt="Press" loading="lazy">
       </div>
     </div>
   </section>
 
-  <!-- Gallery -->
-  <section id="gallery" class="py-20 md:py-28 bg-gradient-to-b from-neutral-950 to-black">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-end justify-between mb-8">
-        <h2 class="text-2xl md:text-3xl font-black">Drop 001 — Preview</h2>
-        <p class="text-sm text-neutral-400">All images delivered via Cloudflare Images.</p>
+  <!-- SHOP / BEST SELLERS -->
+  <section id="shop" class="py-16 md:py-24 bg-gradient-to-b from-neutral-950 to-black">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-6">
+        <h2 class="text-3xl md:text-4xl font-black">Best Sellers</h2>
+        <a href="#" class="text-sm text-pink-400 hover:text-pink-300">View all →</a>
       </div>
 
-      <section class="snapink-gallery" aria-label="SnapInk rotating gallery">
-        <div class="carousel" role="region" aria-roledescription="carousel" aria-label="SnapInk hats" aria-live="polite">
-          <div class="viewport">
-            <ul class="track" id="si-track"></ul>
+      <!-- Horizontal product carousel -->
+      <div class="carousel-viewport no-scrollbar flex gap-4 overflow-x-auto pb-2">
+        <!-- Product card template (clone this for more) -->
+        <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
+          <div class="relative aspect-square overflow-hidden rounded-t-2xl">
+            <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/23a9a989-7ac3-4233-9bf7-bf72f3c51b00/public" alt="SnapInk Blackout" class="w-full h-full object-cover" loading="lazy">
+            <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">DROP 001</span>
           </div>
-          <button type="button" class="nav prev" aria-label="Previous slide" id="si-prev">❮</button>
-          <button type="button" class="nav next" aria-label="Next slide" id="si-next">❯</button>
-          <div class="dots" id="si-dots" role="tablist" aria-label="Slide selectors"></div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Blackout Strap</h3>
+              <span class="text-sm text-neutral-300">$49.99</span>
+            </div>
+            <div class="flex items-center gap-2" aria-label="Colorways">
+              <button class="h-5 w-5 rounded-full border border-neutral-700 aria-selected:ring-2 aria-selected:ring-pink-500" style="background:#111" aria-selected="true"></button>
+              <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#e5e7eb"></button>
+              <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#ef4444"></button>
+            </div>
+            <div class="flex gap-2">
+              <button data-add='{"id":"strap_blackout","title":"Blackout Strap","price":49.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Add to cart</button>
+              <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
+            </div>
+          </div>
         </div>
-      </section>
+
+        <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
+          <div class="relative aspect-square overflow-hidden rounded-t-2xl">
+            <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/45c63d9c-ec14-4a5c-6bdf-13738c42ce00/public" alt="SnapInk Whiteout" class="w-full h-full object-cover" loading="lazy">
+            <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-neutral-900/90 border border-neutral-700 text-[11px] font-bold">BUNDLE</span>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Whiteout Strap</h3>
+              <span class="text-sm text-neutral-300">$49.99</span>
+            </div>
+            <div class="flex items-center gap-2" aria-label="Colorways">
+              <button class="h-5 w-5 rounded-full border border-neutral-700 aria-selected:ring-2 aria-selected:ring-pink-500" style="background:#e5e7eb" aria-selected="true"></button>
+              <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#111"></button>
+              <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#ef4444"></button>
+            </div>
+            <div class="flex gap-2">
+              <button data-add='{"id":"strap_whiteout","title":"Whiteout Strap","price":49.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Add to cart</button>
+              <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
+          <div class="relative aspect-square overflow-hidden rounded-t-2xl">
+            <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/3a88a638-f385-4a5e-eac2-3a499fa04200/public" alt="SnapInk Collab" class="w-full h-full object-cover" loading="lazy">
+            <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">LIMITED</span>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Collab Strap</h3>
+              <span class="text-sm text-neutral-300">$59.99</span>
+            </div>
+            <p class="text-xs text-neutral-400">Your logo on the strap. Small-run creator edition.</p>
+            <div class="flex gap-2">
+              <button data-add='{"id":"strap_collab","title":"Collab Strap","price":59.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Add to cart</button>
+              <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USP row -->
+      <div class="grid md:grid-cols-3 gap-4 mt-10">
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>🚚</span><div><div class="font-semibold">Fast shipping</div><div class="text-xs text-neutral-400">2–4 days US</div></div></div>
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>🛡️</span><div><div class="font-semibold">30‑day guarantee</div><div class="text-xs text-neutral-400">Free exchanges</div></div></div>
+        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>✨</span><div><div class="font-semibold">Creator-ready</div><div class="text-xs text-neutral-400">Print, emboss, foil</div></div></div>
+      </div>
     </div>
   </section>
 
-  <!-- Waitlist -->
-  <section id="waitlist" class="py-20 md:py-28 border-y border-neutral-800 bg-neutral-950">
+  <!-- HOW IT WORKS -->
+  <section id="how" class="py-16 md:py-24 border-y border-neutral-800 bg-neutral-950 relative overflow-hidden">
+    <div class="absolute inset-0 noise"></div>
+    <div class="max-w-7xl mx-auto px-4 relative">
+      <h2 class="text-3xl md:text-4xl font-black mb-8">How it works</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <div class="text-4xl">①</div>
+          <h3 class="mt-2 text-xl font-semibold">Slide the sleeve</h3>
+          <p class="mt-2 text-neutral-400">Semi‑rigid TPU sleeve covers the traditional snaps for a clean silhouette.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <div class="text-4xl">②</div>
+          <h3 class="mt-2 text-xl font-semibold">Snap as usual</h3>
+          <p class="mt-2 text-neutral-400">Hidden inner holes align with snap pegs so the hat fastens normally.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800">
+          <div class="text-4xl">③</div>
+          <h3 class="mt-2 text-xl font-semibold">Brand the strap</h3>
+          <p class="mt-2 text-neutral-400">Print, emboss or foil — the strap becomes prime branding real estate.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section id="reviews" class="py-16 md:py-24 bg-black">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-6">
+        <h2 class="text-3xl md:text-4xl font-black">What people say</h2>
+        <div class="text-sm text-neutral-400">4.9 ★ average (120+)</div>
+      </div>
+
+      <div class="marquee">
+        <div class="marquee__track">
+          <figure class="min-w-[320px] max-w-[320px] bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+            <figcaption class="font-semibold">“The strap steals the show.”</figcaption>
+            <p class="mt-2 text-neutral-400 text-sm">Finally a snapback where the strap is the canvas.
+            </p><div class="mt-3 text-xs text-neutral-500">— Jay • Creator</div>
+          </figure>
+          <figure class="min-w-[320px] max-w-[320px] bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+            <figcaption class="font-semibold">“Premium look, easy swap.”</figcaption>
+            <p class="mt-2 text-neutral-400 text-sm">Sleeves snap on in seconds. Feels locked.</p>
+            <div class="mt-3 text-xs text-neutral-500">— Mara • Sneakerhead</div>
+          </figure>
+          <figure class="min-w-[320px] max-w-[320px] bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+            <figcaption class="font-semibold">“Collabs will go crazy.”</figcaption>
+            <p class="mt-2 text-neutral-400 text-sm">The strap is the new billboard. Take my money.</p>
+            <div class="mt-3 text-xs text-neutral-500">— Eli • Brand lead</div>
+          </figure>
+          <!-- clones -->
+          <figure class="min-w-[320px] max-w-[320px] bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+            <figcaption class="font-semibold">“The strap steals the show.”</figcaption>
+            <p class="mt-2 text-neutral-400 text-sm">Finally a snapback where the strap is the canvas.</p>
+            <div class="mt-3 text-xs text-neutral-500">— Jay • Creator</div>
+          </figure>
+          <figure class="min-w-[320px] max-w-[320px] bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+            <figcaption class="font-semibold">“Premium look, easy swap.”</figcaption>
+            <p class="mt-2 text-neutral-400 text-sm">Sleeves snap on in seconds. Feels locked.</p>
+            <div class="mt-3 text-xs text-neutral-500">— Mara • Sneakerhead</div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WAITLIST / EMAIL CAPTURE -->
+  <section id="waitlist" class="py-16 md:py-24 border-y border-neutral-800 bg-neutral-950">
     <div class="max-w-2xl mx-auto px-4 text-center">
       <h2 class="text-3xl md:text-4xl font-black">Get first dibs on Drop 001</h2>
-      <p class="mt-3 text-neutral-400">Join the list and we’ll email you 24 hours before the first drop goes live.</p>
+      <p class="mt-3 text-neutral-400">We’ll email you 24 hours before the drop goes live.</p>
       <form id="wl" class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
         <input type="email" required placeholder="your@email.com" class="w-full sm:w-96 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600" />
-        <button class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Join Waitlist</button>
+        <button class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">Join Waitlist</button>
       </form>
       <p class="mt-3 text-xs text-neutral-500">We’ll never sell your data. Unsubscribe anytime.</p>
-      <p class="mt-6 text-sm text-neutral-400">Want to wholesale or collab? <a href="mailto:hello@snapinkhats.com" class="underline hover:text-white">hello@snapinkhats.com</a></p>
+      <p class="mt-6 text-sm text-neutral-400">Wholesale / collab: <a href="mailto:hello@snapinkhats.com" class="underline hover:text-white">hello@snapinkhats.com</a></p>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section id="faq" class="py-20 md:py-28 bg-black">
-    <div class="max-w-4xl mx-auto px-4">
-      <h2 class="text-2xl md:text-3xl font-black mb-8">FAQ</h2>
-      <div class="space-y-6">
+  <section id="faq" class="py-16 md:py-24 bg-black">
+    <div class="max-w-5xl mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-black mb-8">FAQ</h2>
+      <div class="grid md:grid-cols-2 gap-4">
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
-          <summary class="cursor-pointer font-semibold flex items-center justify-between">What is a SnapInk™ strap sleeve?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
+          <summary class="cursor-pointer font-semibold flex items-center justify-between select-none">What is a SnapInk™ strap sleeve?<svg class="caret w-4 h-4 text-neutral-400 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 9l6 6 6-6"/></svg></summary>
           <p class="mt-3 text-neutral-400">A semi-rigid, print-ready cover that slides over a standard snapback strap, hides the pegs, and turns the strap into a clean branding surface.</p>
         </details>
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
-          <summary class="cursor-pointer font-semibold flex items-center justify-between">Will it fit my hat?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
-          <p class="mt-3 text-neutral-400">V1 sleeves target most common snap spacing (~7 mm CTC). We’ll publish a fit guide before launch and offer multiple sizes if required.</p>
+          <summary class="cursor-pointer font-semibold flex items-center justify-between select-none">Will it fit my hat?<svg class="caret w-4 h-4 text-neutral-400 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 9l6 6 6-6"/></svg></summary>
+          <p class="mt-3 text-neutral-400">V1 sleeves target common snap spacing (~7 mm CTC). We’ll publish a fit guide and multiple sizes.</p>
         </details>
         <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
-          <summary class="cursor-pointer font-semibold flex items-center justify-between">When does Drop 001 ship?<span class="text-neutral-400 group-open:rotate-180 transition">⌄</span></summary>
-          <p class="mt-3 text-neutral-400">We’ll announce the date to the waitlist first. Prototype photos and wear-tests are coming soon.</p>
+          <summary class="cursor-pointer font-semibold flex items-center justify-between select-none">Can I print my logo on it?<svg class="caret w-4 h-4 text-neutral-400 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 9l6 6 6-6"/></svg></summary>
+          <p class="mt-3 text-neutral-400">Yes. The exterior is engineered for UV/pad printing, emboss, or foil.</p>
+        </details>
+        <details class="group rounded-2xl border border-neutral-800 p-5 bg-neutral-900/40">
+          <summary class="cursor-pointer font-semibold flex items-center justify-between select-none">When does Drop 001 ship?<svg class="caret w-4 h-4 text-neutral-400 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 9l6 6 6-6"/></svg></summary>
+          <p class="mt-3 text-neutral-400">We’ll announce the date to the waitlist first. Wear-tests are ongoing.</p>
         </details>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="py-10 bg-neutral-950 border-t border-neutral-800">
-    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-neutral-400">
-      <p>© <span id="year"></span> SnapInk Hats. All rights reserved. SnapInk<span class="align-super text-[.6em]">™</span>.</p>
-      <div class="flex items-center gap-4">
-        <a class="hover:text-white" href="#">Instagram</a>
-        <a class="hover:text-white" href="#">TikTok</a>
-        <a class="hover:text-white" href="#">X</a>
+  <!-- Sticky CTA -->
+  <div class="sticky bottom-3 z-40 max-w-7xl mx-auto px-4">
+    <div class="sticky-cta bg-neutral-900/80 border border-neutral-800 rounded-2xl shadow-2xl p-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 grid place-items-center rounded-full bg-pink-600 text-white font-black">S</span>
+        <div class="text-sm"><span class="font-semibold">Drop 001:</span> early access for waitlist only</div>
       </div>
+      <a href="#waitlist" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-semibold pulse-glow">Join waitlist</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="mt-16 py-10 bg-neutral-950 border-t border-neutral-800">
+    <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-6 text-sm">
+      <div>
+        <div class="flex items-center gap-2 mb-2"><span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black">S</span><span class="font-black tracking-widest">SNAPINK<span class="align-super text-[0.6em]">™</span></span></div>
+        <p class="text-neutral-400">Branding on Lock.</p>
+      </div>
+      <div class="text-neutral-400">
+        <div class="font-semibold text-neutral-200 mb-2">Support</div>
+        <ul class="space-y-1">
+          <li><a class="hover:text-white" href="#faq">FAQ</a></li>
+          <li><a class="hover:text-white" href="mailto:support@swiftsaleapp.com">support@swiftsaleapp.com</a></li>
+          <li><a class="hover:text-white" href="#">Shipping & Returns</a></li>
+        </ul>
+      </div>
+      <div class="text-neutral-400">
+        <div class="font-semibold text-neutral-200 mb-2">Follow</div>
+        <ul class="space-y-1">
+          <li><a class="hover:text-white" href="#">Instagram</a></li>
+          <li><a class="hover:text-white" href="#">TikTok</a></li>
+          <li><a class="hover:text-white" href="#">X</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 mt-6 text-neutral-500 text-xs flex items-center justify-between">
+      <p>© <span id="year"></span> SnapInk Hats. All rights reserved.</p>
+      <a href="#" class="hover:text-neutral-300">Terms & Privacy</a>
     </div>
   </footer>
 
-  <!-- Rotating gallery (runs after DOM is parsed) -->
+  <!-- CART DRAWER -->
+  <aside id="cart" class="fixed top-0 right-0 h-full w-[92vw] max-w-[420px] bg-neutral-950 border-l border-neutral-800 shadow-2xl translate-x-full transition-transform duration-300 z-[60] flex flex-col">
+    <div class="p-4 border-b border-neutral-800 flex items-center justify-between">
+      <h3 class="font-semibold">Your cart</h3>
+      <button id="cartClose" class="p-2 rounded-lg hover:bg-neutral-800" aria-label="Close cart">✕</button>
+    </div>
+    <div id="cartItems" class="flex-1 overflow-auto p-4 space-y-3"></div>
+    <div class="border-t border-neutral-800 p-4">
+      <div class="flex items-center justify-between mb-3"><span class="text-sm text-neutral-400">Subtotal</span><span id="cartSubtotal" class="font-semibold">$0.00</span></div>
+      <button class="w-full px-4 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Checkout</button>
+      <p class="mt-2 text-xs text-neutral-500">Taxes and shipping calculated at checkout.</p>
+    </div>
+  </aside>
+  <div id="cartScrim" class="fixed inset-0 bg-black/50 opacity-0 pointer-events-none transition-opacity z-[50]"></div>
+
+  <!-- SCRIPTS -->
   <script>
-    (function () {
-      const ACCOUNT = "fYqzQPf1CS3qAF1vZpfSLw";
-      const VARIANT = "portrait3x4";
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-      const IDS = [
-        "3819446f-199a-420f-bc5f-010e677ef500",
-        "911272db-0ab9-48b6-047a-5b3794a38300",
-        "23a9a989-7ac3-4233-9bf7-bf72f3c51b00",
-        "45c63d9c-ec14-4a5c-6bdf-13738c42ce00",
-        "e27b1994-d35e-4f60-eef3-1f2742867d00",
-        "3a88a638-f385-4a5e-eac2-3a499fa04200",
-        "0ca79320-1290-4ab1-85b7-5525eb85e900",
-        "23b70715-63b9-468a-01ee-ac4a248aee00",
-        "3ca0ae14-e56e-43e1-00a2-c713a777f000",
-        "c19261a7-c5c0-485c-10d3-1a50bfff1100"
-      ];
+    // Countdown (set target date below)
+    const target = new Date();
+    target.setDate(target.getDate() + 14); // 14-day teaser
+    const dd = document.getElementById('dd'), hh = document.getElementById('hh'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
+    setInterval(() => {
+      const now = new Date();
+      const diff = Math.max(0, target - now);
+      const d = Math.floor(diff / (1000*60*60*24));
+      const h = Math.floor((diff / (1000*60*60)) % 24);
+      const m = Math.floor((diff / (1000*60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      dd.textContent = String(d).padStart(2,'0');
+      hh.textContent = String(h).padStart(2,'0');
+      mm.textContent = String(m).padStart(2,'0');
+      ss.textContent = String(s).padStart(2,'0');
+    }, 1000);
 
-      const images = IDS.map((id, i) => ({
-        src: `https://imagedelivery.net/${ACCOUNT}/${id}/${VARIANT}`,
-        alt: `SnapInk gallery ${String(i+1).padStart(2,'0')}`
-      }));
+    // Waitlist
+    const wl = document.getElementById('wl');
+    if (wl) wl.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const email = wl.querySelector('input[type="email"]').value.trim();
+      if (!email) return;
+      localStorage.setItem('snapink_waitlist', email);
+      wl.reset();
+      alert("You're on the list. We’ll email you before Drop 001.");
+    });
 
-      const AUTOPLAY_MS = 3500, SWIPE_MIN_PX = 35, LOOP = true;
-      const track = document.getElementById('si-track');
-      const dotsWrap = document.getElementById('si-dots');
-      const btnPrev = document.getElementById('si-prev');
-      const btnNext = document.getElementById('si-next');
+    // Mini cart (client-only demo)
+    const cartBtn = document.getElementById('cartBtn');
+    const cart = document.getElementById('cart');
+    const cartScrim = document.getElementById('cartScrim');
+    const cartClose = document.getElementById('cartClose');
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const cartSubtotal = document.getElementById('cartSubtotal');
 
-      // Build slides
-      track.innerHTML = images.map((img, i) => `
-        <li class="slide" role="group" aria-roledescription="slide" aria-label="${i+1} of ${images.length}">
-          <img
-            src="${i === 0 ? img.src : ''}"
-            data-src="${img.src}"
-            alt="${img.alt || ''}"
-            loading="lazy"
-            decoding="async"
-            width="900" height="1200"
-          />
-        </li>
-      `).join('');
+    let items = [];
+    function openCart(){ cart.classList.remove('translate-x-full'); cartScrim.classList.remove('pointer-events-none'); cartScrim.classList.add('opacity-100'); }
+    function closeCart(){ cart.classList.add('translate-x-full'); cartScrim.classList.add('pointer-events-none'); cartScrim.classList.remove('opacity-100'); }
 
-      // Dots
-      dotsWrap.innerHTML = images.map((_, i) =>
-        `<button class="dot" role="tab" aria-selected="${i===0?'true':'false'}" aria-label="Go to slide ${i+1}" type="button"></button>`
-      ).join('');
-
-      const slides = Array.from(track.children);
-      const dots = Array.from(dotsWrap.children);
-      let index = 0, timer = null, isPointerDown = false, startX = 0, currentX = 0;
-
-// Load helpers
-function ensureLoaded(i) {
-  const s = slides[i];
-  if (!s) return;
-
-  const im = s.querySelector('img');
-  if (im && !im.getAttribute('src')) {
-    im.src = im.dataset.src;
-  }
-
-  // eager-load next image
-  const next = slides[(i + 1) % slides.length];
-  if (next) {
-    const im2 = next.querySelector('img');
-    if (im2 && !im2.getAttribute('src')) {
-      im2.src = im2.dataset.src;
-    }
-  }
-}
-
-      // Navigation
-      function goTo(i) {
-        i = LOOP ? (i + slides.length) % slides.length : Math.max(0, Math.min(i, slides.length - 1));
-        index = i;
-        track.style.transform = `translateX(-${i * 100}%)`;
-        dots.forEach((d, di) => d.setAttribute('aria-selected', di === i ? 'true' : 'false'));
-        ensureLoaded(i);
-      }
-
-      function startAutoplay() { stopAutoplay(); timer = setInterval(() => goTo(index + 1), AUTOPLAY_MS); }
-      function stopAutoplay()  { if (timer) { clearInterval(timer); timer = null; } }
-
-      // Button + dot events
-      btnPrev.addEventListener('click', () => { goTo(index - 1); startAutoplay(); });
-      btnNext.addEventListener('click', () => { goTo(index + 1); startAutoplay(); });
-      dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAutoplay(); }));
-
-      // Keyboard
-      const carousel = document.querySelector('.carousel');
-      carousel.tabIndex = 0;
-      carousel.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(index - 1); startAutoplay(); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); startAutoplay(); }
+    function money(n){ return `$${n.toFixed(2)}` }
+    function renderCart(){
+      cartItems.innerHTML = items.length ? '' : '<p class="text-neutral-400 text-sm">Your cart is empty.</p>';
+      let subtotal = 0;
+      items.forEach((it, idx)=>{
+        subtotal += it.price * it.qty;
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 border border-neutral-800 rounded-xl p-3 bg-neutral-900/50';
+        row.innerHTML = `
+          <div class="h-16 w-16 rounded-lg bg-neutral-800"></div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold">${it.title}</div>
+              <button aria-label="Remove" class="text-neutral-400 hover:text-white" data-remove="${idx}">×</button>
+            </div>
+            <div class="text-sm text-neutral-400">Qty ${it.qty}</div>
+          </div>
+          <div class="font-semibold">${money(it.price * it.qty)}</div>`;
+        cartItems.appendChild(row);
       });
-
-      // Swipe
-      function onDown(x){ isPointerDown = true; startX = currentX = x; stopAutoplay(); track.style.transition = 'none'; }
-      function onMove(x){ if(!isPointerDown) return; currentX = x; const pct = ((currentX - startX) / carousel.clientWidth) * 100; track.style.transform = `translateX(calc(${-index*100}% + ${pct}%))`; }
-      function onUp(){ if(!isPointerDown) return; isPointerDown = false; track.style.transition = ''; const moved = currentX - startX; if (Math.abs(moved) > SWIPE_MIN_PX) { goTo(index + (moved < 0 ? 1 : -1)); } else { goTo(index); } startAutoplay(); }
-      carousel.addEventListener('pointerdown', e => onDown(e.clientX));
-      window.addEventListener('pointermove', e => onMove(e.clientX));
-      window.addEventListener('pointerup', onUp);
-
-      // Init
-      ensureLoaded(0);
-      goTo(0);
-      setTimeout(startAutoplay, 150); // avoid accidental pause on load
-    })();
-  </script>
-
-  <!-- Footer utilities -->
-  <script>
-    // Year stamp
-    const yearEl = document.getElementById('year');
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-    // Waitlist form
-    const wlForm = document.getElementById('wl');
-    if (wlForm) {
-      wlForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = this.querySelector('input[type="email"]').value.trim();
-        if (!email) return;
-
-        // Save locally (replace with Pages Function / ESP)
-        localStorage.setItem('snapink_waitlist', email);
-
-        // Example:
-        // fetch('/api/subscribe', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email })
-        // });
-
-        this.reset();
-        alert("You're on the list. We’ll email you before Drop 001.");
-      });
+      cartCount.textContent = items.reduce((a,b)=>a+b.qty,0);
+      cartSubtotal.textContent = money(subtotal);
+      localStorage.setItem('snapink_cart', JSON.stringify(items));
     }
+
+    function addToCart(data){
+      const found = items.find(i => i.id === data.id);
+      if (found) found.qty += 1; else items.push({ ...data, qty: 1 });
+      renderCart();
+      openCart();
+    }
+
+    document.addEventListener('click', (e)=>{
+      const add = e.target.closest('[data-add]');
+      if (add){ addToCart(JSON.parse(add.dataset.add)); }
+      const rm = e.target.closest('[data-remove]');
+      if (rm){ items.splice(parseInt(rm.dataset.remove,10),1); renderCart(); }
+    });
+
+    cartBtn.addEventListener('click', openCart);
+    cartClose.addEventListener('click', closeCart);
+    cartScrim.addEventListener('click', closeCart);
+
+    // init cart from storage
+    try{ items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; }catch{ items = []; }
+    renderCart();
   </script>
 </body>
 </html>
