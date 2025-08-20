@@ -90,26 +90,113 @@
     </div>
   </div>
 
-  <!-- Header -->
-  <header class="sticky top-0 z-50 bg-neutral-950/70 backdrop-blur border-b border-neutral-800">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
-        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black group-hover:scale-110 transition">S</span>
-        <span class="text-lg tracking-widest font-black">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
-      </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300">
-        <a href="#shop" class="hover:text-white">Shop</a>
-        <a href="#how" class="hover:text-white">How it works</a>
-        <a href="#reviews" class="hover:text-white">Reviews</a>
-        <a href="#faq" class="hover:text-white">FAQ</a>
-        <a href="#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">Join Waitlist</a>
-      </nav>
-      <button id="cartBtn" aria-label="Open cart" class="relative p-2 rounded-lg hover:bg-neutral-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386a1.5 1.5 0 0 1 1.463 1.2l.257 1.542M7.5 14.25h9.75a1.5 1.5 0 0 0 1.477-1.222l1.125-6.75A1.5 1.5 0 0 0 18.375 4.5H5.356M7.5 21a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm9.75 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg>
-        <span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">0</span>
+ <!-- Header -->
+<header class="sticky top-0 z-50 bg-neutral-950/70 backdrop-blur border-b border-neutral-800">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3 group">
+      <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black group-hover:scale-110 transition">S</span>
+      <span class="text-lg tracking-widest font-black">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300">
+      <a href="#shop" class="hover:text-white">Shop</a>
+      <a href="#how" class="hover:text-white">How it works</a>
+      <a href="#reviews" class="hover:text-white">Reviews</a>
+      <a href="#faq" class="hover:text-white">FAQ</a>
+      <a href="#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">Join Waitlist</a>
+
+      <!-- Desktop checkout -->
+      <button id="checkoutLink"
+              class="hidden lg:inline-flex px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200"
+              aria-label="Checkout">
+        Checkout
       </button>
+    </nav>
+
+    <!-- Right side: mobile menu + cart -->
+    <div class="flex items-center gap-2">
+      <button id="menuBtn" class="md:hidden p-2 rounded-lg hover:bg-neutral-800" aria-label="Open menu" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
+        </svg>
+      </button>
+
+<!-- Cart with mini-cart preview -->
+<div class="relative" id="cartArea">
+  <button id="cartBtn" aria-label="Open cart" class="relative p-2 rounded-lg hover:bg-neutral-800">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M2.25 3h1.386a1.5 1.5 0 0 1 1.463 1.2l.257 1.542M7.5 14.25h9.75a1.5 1.5 0 0 0 1.477-1.222l1.125-6.75A1.5 1.5 0 0 0 18.375 4.5H5.356M7.5 21a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm9.75 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/>
+    </svg>
+    <span id="cartCount"
+          class="absolute -top-1 -right-1 text-[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">0</span>
+  </button>
+
+  <!-- Mini-cart popover -->
+  <div id="miniCart"
+       class="absolute right-0 mt-2 w-[320px] origin-top-right scale-95 opacity-0 pointer-events-none
+              transition-all duration-150
+              bg-neutral-950 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden z-50">
+    <div class="p-3 border-b border-neutral-800">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-neutral-400">Cart</div>
+        <div class="text-xs px-2 py-0.5 rounded bg-neutral-800"><span id="miniCount">0</span> item<span id="miniCountPlural">s</span></div>
+      </div>
     </div>
-  </header>
+    <div id="miniItems" class="max-h-[300px] overflow-auto divide-y divide-neutral-800"></div>
+    <div class="p-3 space-y-3">
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-neutral-400">Subtotal</span>
+        <span id="miniSubtotal" class="font-semibold">$0.00</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="miniViewCart" class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">View cart</button>
+        <button id="miniCheckout" class="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm">Checkout</button>
+      </div>
+      <p class="text-[11px] text-neutral-500">Taxes and shipping calculated at checkout.</p>
+    </div>
+  </div>
+</div>
+
+</header>
+
+<!-- Mobile menu scrim + drawer -->
+<div id="mobileScrim" class="fixed inset-0 bg-black/60 opacity-0 pointer-events-none transition-opacity z-[60]"></div>
+
+<aside id="mobileNav"
+       class="fixed top-0 left-0 h-full w-[84vw] max-w-[360px] translate-x-[-100%] transition-transform duration-300 z-[70]
+              bg-neutral-950 border-r border-neutral-800 flex flex-col">
+  <div class="p-4 border-b border-neutral-800 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-white font-black">S</span>
+      <span class="font-black tracking-widest">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
+    </div>
+    <button id="mobileClose" class="p-2 rounded-lg hover:bg-neutral-800" aria-label="Close menu">✕</button>
+  </div>
+
+  <nav class="p-3 text-neutral-200 text-base">
+    <a href="#shop" class="block px-3 py-2 rounded-lg hover:bg-neutral-800">Shop</a>
+    <a href="#how" class="block px-3 py-2 rounded-lg hover:bg-neutral-800">How it works</a>
+    <a href="#reviews" class="block px-3 py-2 rounded-lg hover:bg-neutral-800">Reviews</a>
+    <a href="#faq" class="block px-3 py-2 rounded-lg hover:bg-neutral-800">FAQ</a>
+    <a href="#waitlist" class="block px-3 py-2 mt-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white">Join Waitlist</a>
+
+    <div class="my-4 h-px bg-neutral-800"></div>
+
+    <!-- Mobile checkout -->
+    <button id="mobileCheckout" class="w-full px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-100 text-left">
+      Checkout
+    </button>
+  </nav>
+
+  <div class="mt-auto p-3 text-sm text-neutral-400 border-t border-neutral-800">
+    <div class="flex items-center justify-between">
+      <span>Cart items</span>
+      <span id="mobileCartCount" class="inline-grid place-items-center min-w-[24px] h-[24px] px-1 rounded-full bg-pink-600 text-white text-xs">0</span>
+    </div>
+  </div>
+</aside>
 
   <!-- HERO -->
   <section class="relative overflow-hidden">
@@ -415,104 +502,282 @@
     <div id="cartItems" class="flex-1 overflow-auto p-4 space-y-3"></div>
     <div class="border-t border-neutral-800 p-4">
       <div class="flex items-center justify-between mb-3"><span class="text-sm text-neutral-400">Subtotal</span><span id="cartSubtotal" class="font-semibold">$0.00</span></div>
-      <button class="w-full px-4 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Checkout</button>
+      <button id="cartCheckout" class="w-full px-4 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Checkout</button>
       <p class="mt-2 text-xs text-neutral-500">Taxes and shipping calculated at checkout.</p>
     </div>
   </aside>
   <div id="cartScrim" class="fixed inset-0 bg-black/50 opacity-0 pointer-events-none transition-opacity z-[50]"></div>
 
-  <!-- SCRIPTS -->
-  <script>
-    // Year
-    document.getElementById('year').textContent = new Date().getFullYear();
+<!-- SCRIPTS -->
+<script>
+  // Year
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Countdown (set target date below)
-    const target = new Date();
-    target.setDate(target.getDate() + 14); // 14-day teaser
-    const dd = document.getElementById('dd'), hh = document.getElementById('hh'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
-    setInterval(() => {
-      const now = new Date();
-      const diff = Math.max(0, target - now);
-      const d = Math.floor(diff / (1000*60*60*24));
-      const h = Math.floor((diff / (1000*60*60)) % 24);
-      const m = Math.floor((diff / (1000*60)) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      dd.textContent = String(d).padStart(2,'0');
-      hh.textContent = String(h).padStart(2,'0');
-      mm.textContent = String(m).padStart(2,'0');
-      ss.textContent = String(s).padStart(2,'0');
-    }, 1000);
+  // Countdown (set target date below)
+  const target = new Date();
+  target.setDate(target.getDate() + 14); // 14-day teaser
+  const dd = document.getElementById('dd'), hh = document.getElementById('hh'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
+  setInterval(() => {
+    const now = new Date();
+    const diff = Math.max(0, target - now);
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff / (1000*60*60)) % 24);
+    const m = Math.floor((diff / (1000*60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    dd.textContent = String(d).padStart(2,'0');
+    hh.textContent = String(h).padStart(2,'0');
+    mm.textContent = String(m).padStart(2,'0');
+    ss.textContent = String(s).padStart(2,'0');
+  }, 1000);
 
-    // Waitlist
-    const wl = document.getElementById('wl');
-    if (wl) wl.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const email = wl.querySelector('input[type="email"]').value.trim();
-      if (!email) return;
-      localStorage.setItem('snapink_waitlist', email);
-      wl.reset();
-      alert("You're on the list. We’ll email you before Drop 001.");
-    });
+  // Waitlist
+  const wl = document.getElementById('wl');
+  if (wl) wl.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = wl.querySelector('input[type="email"]').value.trim();
+    if (!email) return;
+    localStorage.setItem('snapink_waitlist', email);
+    wl.reset();
+    alert("You're on the list. We’ll email you before Drop 001.");
+  });
 
-    // Mini cart (client-only demo)
-    const cartBtn = document.getElementById('cartBtn');
-    const cart = document.getElementById('cart');
-    const cartScrim = document.getElementById('cartScrim');
-    const cartClose = document.getElementById('cartClose');
-    const cartItems = document.getElementById('cartItems');
-    const cartCount = document.getElementById('cartCount');
-    const cartSubtotal = document.getElementById('cartSubtotal');
+  // ---------- Mini cart (client-only demo) ----------
+  const cartBtn = document.getElementById('cartBtn');
+  const cart = document.getElementById('cart');
+  const cartScrim = document.getElementById('cartScrim');
+  const cartClose = document.getElementById('cartClose');
+  const cartItems = document.getElementById('cartItems');
+  const cartCount = document.getElementById('cartCount');
+  const cartSubtotal = document.getElementById('cartSubtotal');
 
-    let items = [];
-    function openCart(){ cart.classList.remove('translate-x-full'); cartScrim.classList.remove('pointer-events-none'); cartScrim.classList.add('opacity-100'); }
-    function closeCart(){ cart.classList.add('translate-x-full'); cartScrim.classList.add('pointer-events-none'); cartScrim.classList.remove('opacity-100'); }
+  // Optional targets if you added them:
+  const cartCheckoutBtn = document.getElementById('cartCheckout');   // (give your cart button this id)
+  const checkoutLink = document.getElementById('checkoutLink');      // (desktop nav)
+  const mobileCheckout = document.getElementById('mobileCheckout');  // (mobile drawer)
+  const mobileCartCount = document.getElementById('mobileCartCount');
 
-    function money(n){ return `$${n.toFixed(2)}` }
-    function renderCart(){
-      cartItems.innerHTML = items.length ? '' : '<p class="text-neutral-400 text-sm">Your cart is empty.</p>';
-      let subtotal = 0;
-      items.forEach((it, idx)=>{
-        subtotal += it.price * it.qty;
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-3 border border-neutral-800 rounded-xl p-3 bg-neutral-900/50';
-        row.innerHTML = `
-          <div class="h-16 w-16 rounded-lg bg-neutral-800"></div>
-          <div class="flex-1">
-            <div class="flex items-center justify-between">
-              <div class="font-semibold">${it.title}</div>
-              <button aria-label="Remove" class="text-neutral-400 hover:text-white" data-remove="${idx}">×</button>
-            </div>
-            <div class="text-sm text-neutral-400">Qty ${it.qty}</div>
+  // Mobile drawer elements (if added)
+  const menuBtn = document.getElementById('menuBtn');
+  const mobileNav = document.getElementById('mobileNav');
+  const mobileScrim = document.getElementById('mobileScrim');
+  const mobileClose = document.getElementById('mobileClose');
+
+  let items = [];
+
+  function openCart(){
+    cart.classList.remove('translate-x-full');
+    cartScrim.classList.remove('pointer-events-none');
+    cartScrim.classList.add('opacity-100');
+  }
+  function closeCart(){
+    cart.classList.add('translate-x-full');
+    cartScrim.classList.add('pointer-events-none');
+    cartScrim.classList.remove('opacity-100');
+  }
+
+  function money(n){ return `$${n.toFixed(2)}` }
+
+  // Live cart badges (desktop + mobile)
+  function setBadges(){
+    const n = items.reduce((a,b)=>a+(b.qty||0),0);
+    if (cartCount) cartCount.textContent = n || 0;
+    if (mobileCartCount) mobileCartCount.textContent = n || 0;
+  }
+
+  function renderCart(){
+    cartItems.innerHTML = items.length ? '' : '<p class="text-neutral-400 text-sm">Your cart is empty.</p>';
+    let subtotal = 0;
+    items.forEach((it, idx)=>{
+      subtotal += it.price * it.qty;
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 border border-neutral-800 rounded-xl p-3 bg-neutral-900/50';
+      row.innerHTML = `
+        <div class="h-16 w-16 rounded-lg bg-neutral-800"></div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <div class="font-semibold">${it.title}</div>
+            <button aria-label="Remove" class="text-neutral-400 hover:text-white" data-remove="${idx}">×</button>
           </div>
-          <div class="font-semibold">${money(it.price * it.qty)}</div>`;
-        cartItems.appendChild(row);
-      });
-      cartCount.textContent = items.reduce((a,b)=>a+b.qty,0);
-      cartSubtotal.textContent = money(subtotal);
-      localStorage.setItem('snapink_cart', JSON.stringify(items));
-    }
+          <div class="text-sm text-neutral-400">Qty ${it.qty}</div>
+        </div>
+        <div class="font-semibold">${money(it.price * it.qty)}</div>`;
+      cartItems.appendChild(row);
+    });
+    if (cartCount) cartCount.textContent = items.reduce((a,b)=>a+b.qty,0);
+    if (cartSubtotal) cartSubtotal.textContent = money(subtotal);
+    localStorage.setItem('snapink_cart', JSON.stringify(items));
+    setBadges();
+  }
 
-    function addToCart(data){
-      const found = items.find(i => i.id === data.id);
-      if (found) found.qty += 1; else items.push({ ...data, qty: 1 });
+  function addToCart(data){
+    const found = items.find(i => i.id === data.id);
+    if (found) found.qty += 1; else items.push({ ...data, qty: 1 });
+    renderCart();
+    openCart();
+  }
+
+  document.addEventListener('click', (e)=>{
+    const add = e.target.closest('[data-add]');
+    if (add){ addToCart(JSON.parse(add.dataset.add)); }
+    const rm = e.target.closest('[data-remove]');
+    if (rm){ items.splice(parseInt(rm.dataset.remove,10),1); renderCart(); }
+  });
+
+  cartBtn?.addEventListener('click', openCart);
+  cartClose?.addEventListener('click', closeCart);
+  cartScrim?.addEventListener('click', closeCart);
+
+  // init cart from storage
+  try{ items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; }catch{ items = []; }
+  renderCart();
+
+  // Sync across tabs
+  window.addEventListener('storage', (e)=>{
+    if (e.key === 'snapink_cart') {
+      try { items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; } catch { /* keep */ }
       renderCart();
-      openCart();
     }
+  });
 
-    document.addEventListener('click', (e)=>{
-      const add = e.target.closest('[data-add]');
-      if (add){ addToCart(JSON.parse(add.dataset.add)); }
-      const rm = e.target.closest('[data-remove]');
-      if (rm){ items.splice(parseInt(rm.dataset.remove,10),1); renderCart(); }
+  // ---------- Stripe Checkout (server-driven session) ----------
+  async function startCheckout() {
+    const payload = items.map(it => ({ sku: it.id || it.sku, qty: it.qty || 1 }));
+    if (!payload.length) return alert('Cart is empty');
+    try {
+      const r = await fetch('/checkout/create-session', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ items: payload })
+      });
+      const data = await r.json();
+      if (!data.ok || !data.url) throw new Error(data.error || 'Checkout error');
+      location.href = data.url;
+    } catch (err) {
+      alert(err.message || 'Could not start checkout.');
+    }
+  }
+
+  checkoutLink?.addEventListener('click', startCheckout);
+  cartCheckoutBtn?.addEventListener('click', startCheckout);
+  mobileCheckout?.addEventListener('click', startCheckout);
+
+  // ---------- Mobile menu drawer (optional; only runs if elements exist) ----------
+  function lockScroll(lock){ document.documentElement.style.overflow = lock ? 'hidden' : ''; }
+  function openMenu(){
+    mobileNav.classList.remove('translate-x-[-100%]');
+    mobileScrim.classList.remove('pointer-events-none');
+    mobileScrim.classList.add('opacity-100');
+    lockScroll(true);
+    menuBtn?.setAttribute('aria-expanded','true');
+    setTimeout(()=>mobileClose?.focus(), 50);
+  }
+  function closeMenu(){
+    mobileNav.classList.add('translate-x-[-100%]');
+    mobileScrim.classList.add('pointer-events-none');
+    mobileScrim.classList.remove('opacity-100');
+    lockScroll(false);
+    menuBtn?.setAttribute('aria-expanded','false');
+    menuBtn?.focus();
+  }
+
+  if (menuBtn && mobileNav && mobileScrim && mobileClose) {
+    menuBtn.addEventListener('click', openMenu);
+    mobileClose.addEventListener('click', closeMenu);
+    mobileScrim.addEventListener('click', closeMenu);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeMenu(); });
+  }
+  // ===== Mini-cart (hover preview) =====
+  const cartArea = document.getElementById('cartArea');
+  const miniCart = document.getElementById('miniCart');
+  const miniItems = document.getElementById('miniItems');
+  const miniSubtotal = document.getElementById('miniSubtotal');
+  const miniCount = document.getElementById('miniCount');
+  const miniCountPlural = document.getElementById('miniCountPlural');
+  const miniViewCart = document.getElementById('miniViewCart');
+  const miniCheckout = document.getElementById('miniCheckout');
+
+  let miniHoverTimer;
+
+  function showMiniCart() {
+    if (!miniCart) return;
+    miniCart.classList.remove('pointer-events-none','opacity-0','scale-95');
+    miniCart.classList.add('opacity-100','scale-100');
+  }
+  function hideMiniCart() {
+    if (!miniCart) return;
+    miniCart.classList.add('pointer-events-none','opacity-0','scale-95');
+    miniCart.classList.remove('opacity-100','scale-100');
+  }
+
+  function renderMiniCart() {
+    if (!miniItems) return;
+    miniItems.innerHTML = '';
+    let subtotal = 0;
+    const LIM = 3;
+
+    items.forEach((it, idx) => {
+      subtotal += it.price * it.qty;
+      if (idx >= LIM) return;
+
+      const row = document.createElement('div');
+      row.className = 'p-3 flex items-center gap-3 bg-neutral-900/30';
+
+      // If you add `image` to cart items, show it; else fallback block.
+      const imgHTML = it.image
+        ? `<img src="${it.image}" alt="" class="h-12 w-12 rounded-lg object-cover">`
+        : `<div class="h-12 w-12 rounded-lg bg-neutral-800"></div>`;
+
+      row.innerHTML = `
+        ${imgHTML}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-medium truncate">${it.title}</div>
+            <div class="text-sm text-neutral-300">${money(it.price * it.qty)}</div>
+          </div>
+          <div class="text-xs text-neutral-400">Qty ${it.qty}</div>
+        </div>`;
+      miniItems.appendChild(row);
     });
 
-    cartBtn.addEventListener('click', openCart);
-    cartClose.addEventListener('click', closeCart);
-    cartScrim.addEventListener('click', closeCart);
+    if (items.length > LIM) {
+      const more = document.createElement('div');
+      more.className = 'p-2 text-center text-xs text-neutral-400';
+      more.textContent = `+ ${items.length - LIM} more in cart`;
+      miniItems.appendChild(more);
+    }
 
-    // init cart from storage
-    try{ items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; }catch{ items = []; }
-    renderCart();
-  </script>
+    miniSubtotal.textContent = money(subtotal);
+    const count = items.reduce((a,b)=>a+(b.qty||0),0);
+    miniCount.textContent = count;
+    miniCountPlural.style.display = (count === 1) ? 'none' : '';
+  }
+
+  // Keep mini-cart synced whenever main cart renders
+  const _renderCart_orig = window.renderCart;
+  window.renderCart = function() {
+    _renderCart_orig();
+    renderMiniCart();
+  };
+  // Initial paint
+  renderMiniCart();
+
+  // Hover/focus behavior (desktop)
+  function enterMiniSoon(){ clearTimeout(miniHoverTimer); miniHoverTimer = setTimeout(showMiniCart, 60); }
+  function leaveMiniSoon(){ clearTimeout(miniHoverTimer); miniHoverTimer = setTimeout(hideMiniCart, 120); }
+  cartArea?.addEventListener('mouseenter', enterMiniSoon);
+  cartArea?.addEventListener('mouseleave', leaveMiniSoon);
+  document.getElementById('cartBtn')?.addEventListener('focus', showMiniCart);
+  window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideMiniCart(); });
+
+  // Click outside to close
+  document.addEventListener('click', (e)=>{
+    if (!miniCart) return;
+    if (!miniCart.contains(e.target) && !cartArea.contains(e.target)) hideMiniCart();
+  });
+
+  // Buttons
+  miniViewCart?.addEventListener('click', () => { hideMiniCart(); openCart(); });
+  miniCheckout?.addEventListener('click', async () => { hideMiniCart(); await (window.startCheckout ? startCheckout() : null); });
+</script>
 </body>
 </html>
