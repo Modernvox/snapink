@@ -1,7 +1,0 @@
-# Allow CSS/JS/images to be served directly
-/style.css     /style.css     200
-/site.webmanifest  /site.webmanifest  200
-/images/*      /images/:splat   200
-
-# Fallback for SPA (optional)
-/*    /index.html   200
