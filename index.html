@@ -516,37 +516,73 @@
 
 <!-- SCRIPTS -->
 <script>
-  // Year
-  document.getElementById('year').textContent = new Date().getFullYear();
+const prelaunchMode = true; // 👈 flip this true/false to control mode
 
-  // Countdown (set target date below)
-  const target = new Date();
-  target.setDate(target.getDate() + 14); // 14-day teaser
-  const dd = document.getElementById('dd'), hh = document.getElementById('hh'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
-  setInterval(() => {
-    const now = new Date();
-    const diff = Math.max(0, target - now);
-    const d = Math.floor(diff / (1000*60*60*24));
-    const h = Math.floor((diff / (1000*60*60)) % 24);
-    const m = Math.floor((diff / (1000*60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-    dd.textContent = String(d).padStart(2,'0');
-    hh.textContent = String(h).padStart(2,'0');
-    mm.textContent = String(m).padStart(2,'0');
-    ss.textContent = String(s).padStart(2,'0');
-  }, 1000);
+// Year
+document.getElementById('year').textContent = new Date().getFullYear();
 
-  // Waitlist
-  const wl = document.getElementById('wl');
-  if (wl) wl.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const email = wl.querySelector('input[type="email"]').value.trim();
-    if (!email) return;
-    localStorage.setItem('snapink_waitlist', email);
-    wl.reset();
-    alert("You're on the list. We’ll email you before Drop 001.");
+// Countdown (always runs — teaser stays on both modes)
+const target = new Date();
+target.setDate(target.getDate() + 14); 
+const dd = document.getElementById('dd'),
+      hh = document.getElementById('hh'),
+      mm = document.getElementById('mm'),
+      ss = document.getElementById('ss');
+setInterval(() => {
+  const now = new Date();
+  const diff = Math.max(0, target - now);
+  const d = Math.floor(diff / (1000*60*60*24));
+  const h = Math.floor((diff / (1000*60*60)) % 24);
+  const m = Math.floor((diff / (1000*60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+  dd.textContent = String(d).padStart(2,'0');
+  hh.textContent = String(h).padStart(2,'0');
+  mm.textContent = String(m).padStart(2,'0');
+  ss.textContent = String(s).padStart(2,'0');
+}, 1000);
+
+// Waitlist form handler (works in both modes)
+const wl = document.getElementById('wl');
+if (wl) wl.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const email = wl.querySelector('input[type="email"]').value.trim();
+  if (!email) return;
+  localStorage.setItem('snapink_waitlist', email);
+  wl.reset();
+  alert("You're on the list. We’ll email you before Drop 001.");
+});
+
+if (prelaunchMode) {
+  // ======== PRE-LAUNCH MODE ========
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1) Replace every [data-add] button with a "Join waitlist" link
+    document.querySelectorAll("[data-add]").forEach(btn => {
+      const a = document.createElement("a");
+      a.href = "#waitlist";
+      a.className = btn.className + " text-center";
+      a.textContent = "Join waitlist";
+      btn.replaceWith(a);
+    });
+
+    // 2) Turn any checkout buttons into waitlist links
+    ["#checkoutLink", "#cartCheckout", "#mobileCheckout"].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      const a = document.createElement("a");
+      a.href = "#waitlist";
+      a.className = el.className + " text-center";
+      a.textContent = "Join waitlist";
+      el.replaceWith(a);
+    });
+
+    // 3) Hide cart icon / mini-cart entry points
+    const cartArea = document.getElementById("cartArea");
+    if (cartArea) cartArea.style.display = "none";
   });
 
+} else {
+  // ======== FULL STORE MODE ========
+  // 👇 Everything you pasted goes here unchanged.
   // ---------- Mini cart (client-only demo) ----------
   const cartBtn = document.getElementById('cartBtn');
   const cart = document.getElementById('cart');
@@ -556,13 +592,11 @@
   const cartCount = document.getElementById('cartCount');
   const cartSubtotal = document.getElementById('cartSubtotal');
 
-  // Optional targets if you added them:
-  const cartCheckoutBtn = document.getElementById('cartCheckout');   // (give your cart button this id)
-  const checkoutLink = document.getElementById('checkoutLink');      // (desktop nav)
-  const mobileCheckout = document.getElementById('mobileCheckout');  // (mobile drawer)
+  const cartCheckoutBtn = document.getElementById('cartCheckout');
+  const checkoutLink = document.getElementById('checkoutLink');
+  const mobileCheckout = document.getElementById('mobileCheckout');
   const mobileCartCount = document.getElementById('mobileCartCount');
 
-  // Mobile drawer elements (if added)
   const menuBtn = document.getElementById('menuBtn');
   const mobileNav = document.getElementById('mobileNav');
   const mobileScrim = document.getElementById('mobileScrim');
@@ -583,7 +617,6 @@
 
   function money(n){ return `$${n.toFixed(2)}` }
 
-  // Live cart badges (desktop + mobile)
   function setBadges(){
     const n = items.reduce((a,b)=>a+(b.qty||0),0);
     if (cartCount) cartCount.textContent = n || 0;
@@ -633,19 +666,16 @@
   cartClose?.addEventListener('click', closeCart);
   cartScrim?.addEventListener('click', closeCart);
 
-  // init cart from storage
   try{ items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; }catch{ items = []; }
   renderCart();
 
-  // Sync across tabs
   window.addEventListener('storage', (e)=>{
     if (e.key === 'snapink_cart') {
-      try { items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; } catch { /* keep */ }
+      try { items = JSON.parse(localStorage.getItem('snapink_cart')||'[]') || []; } catch { }
       renderCart();
     }
   });
 
-  // ---------- Stripe Checkout (server-driven session) ----------
   async function startCheckout() {
     const payload = items.map(it => ({ sku: it.id || it.sku, qty: it.qty || 1 }));
     if (!payload.length) return alert('Cart is empty');
@@ -667,7 +697,6 @@
   cartCheckoutBtn?.addEventListener('click', startCheckout);
   mobileCheckout?.addEventListener('click', startCheckout);
 
-  // ---------- Mobile menu drawer (optional; only runs if elements exist) ----------
   function lockScroll(lock){ document.documentElement.style.overflow = lock ? 'hidden' : ''; }
   function openMenu(){
     mobileNav.classList.remove('translate-x-[-100%]');
@@ -692,6 +721,7 @@
     mobileScrim.addEventListener('click', closeMenu);
     window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeMenu(); });
   }
+
   // ===== Mini-cart (hover preview) =====
   const cartArea = document.getElementById('cartArea');
   const miniCart = document.getElementById('miniCart');
@@ -720,19 +750,14 @@
     miniItems.innerHTML = '';
     let subtotal = 0;
     const LIM = 3;
-
     items.forEach((it, idx) => {
       subtotal += it.price * it.qty;
       if (idx >= LIM) return;
-
       const row = document.createElement('div');
       row.className = 'p-3 flex items-center gap-3 bg-neutral-900/30';
-
-      // If you add `image` to cart items, show it; else fallback block.
       const imgHTML = it.image
         ? `<img src="${it.image}" alt="" class="h-12 w-12 rounded-lg object-cover">`
         : `<div class="h-12 w-12 rounded-lg bg-neutral-800"></div>`;
-
       row.innerHTML = `
         ${imgHTML}
         <div class="flex-1 min-w-0">
@@ -744,30 +769,25 @@
         </div>`;
       miniItems.appendChild(row);
     });
-
     if (items.length > LIM) {
       const more = document.createElement('div');
       more.className = 'p-2 text-center text-xs text-neutral-400';
       more.textContent = `+ ${items.length - LIM} more in cart`;
       miniItems.appendChild(more);
     }
-
     miniSubtotal.textContent = money(subtotal);
     const count = items.reduce((a,b)=>a+(b.qty||0),0);
     miniCount.textContent = count;
     miniCountPlural.style.display = (count === 1) ? 'none' : '';
   }
 
-  // Keep mini-cart synced whenever main cart renders
   const _renderCart_orig = window.renderCart;
   window.renderCart = function() {
     _renderCart_orig();
     renderMiniCart();
   };
-  // Initial paint
   renderMiniCart();
 
-  // Hover/focus behavior (desktop)
   function enterMiniSoon(){ clearTimeout(miniHoverTimer); miniHoverTimer = setTimeout(showMiniCart, 60); }
   function leaveMiniSoon(){ clearTimeout(miniHoverTimer); miniHoverTimer = setTimeout(hideMiniCart, 120); }
   cartArea?.addEventListener('mouseenter', enterMiniSoon);
@@ -775,15 +795,14 @@
   document.getElementById('cartBtn')?.addEventListener('focus', showMiniCart);
   window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideMiniCart(); });
 
-  // Click outside to close
   document.addEventListener('click', (e)=>{
     if (!miniCart) return;
     if (!miniCart.contains(e.target) && !cartArea.contains(e.target)) hideMiniCart();
   });
 
-  // Buttons
   miniViewCart?.addEventListener('click', () => { hideMiniCart(); openCart(); });
   miniCheckout?.addEventListener('click', async () => { hideMiniCart(); await (window.startCheckout ? startCheckout() : null); });
+}
 </script>
 </body>
 </html>
