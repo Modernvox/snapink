@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Customize Your Strap — SnapInk™</title>
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" href="/favicon.ico" />
+  <!-- Reuse your Tailwind build -->
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-neutral-950 text-neutral-100 antialiased">
+  <header class="sticky top-0 z-50 bg-neutral-950/70 backdrop-blur border-b border-neutral-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+          <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/0a0dc63a-baf1-4513-bc95-bfe88daa5800/public" alt="SnapInk logo" class="h-full w-full object-cover"/>
+        </span>
+        <span class="text-lg tracking-widest font-black">SNAPINK<span class="align-super text-[0.6em]">™</span></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300">
+        <a href="/#shop" class="hover:text-white">Shop</a>
+        <a href="/#how" class="hover:text-white">How it works</a>
+        <a href="/#faq" class="hover:text-white">FAQ</a>
+        <a href="/customize.html" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">Customize</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <h1 class="text-3xl md:text-4xl font-black mb-6">Design your strap</h1>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Controls -->
+      <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 space-y-5">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label class="block">
+            <span class="text-sm text-neutral-300">Text</span>
+            <input id="strapText" maxlength="24" placeholder="Type here…" class="mt-1 w-full px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600" />
+          </label>
+
+          <label class="block">
+            <span class="text-sm text-neutral-300">Font</span>
+            <select id="font" class="mt-1 w-full px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600">
+              <option value="Inter, system-ui, sans-serif">Inter (Default)</option>
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+              <option value="'Roboto Condensed', Arial, sans-serif">Roboto Condensed</option>
+              <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="text-sm text-neutral-300">Text Size</span>
+            <input id="size" type="range" min="18" max="42" value="28" class="w-full">
+          </label>
+
+          <label class="block">
+            <span class="text-sm text-neutral-300">Letter Spacing</span>
+            <input id="tracking" type="range" min="0" max="10" value="1" class="w-full">
+          </label>
+
+          <label class="block">
+            <span class="text-sm text-neutral-300">Text Color</span>
+            <input id="textColor" type="color" value="#ffffff" class="w-full h-10 rounded-lg bg-neutral-900 border border-neutral-700">
+          </label>
+
+          <label class="block">
+            <span class="text-sm text-neutral-300">Strap Color</span>
+            <input id="strapColor" type="color" value="#111111" class="w-full h-10 rounded-lg bg-neutral-900 border border-neutral-700">
+          </label>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <label class="inline-flex items-center gap-2">
+            <input id="upper" type="checkbox" class="accent-pink-600">
+            <span class="text-sm text-neutral-300">All caps</span>
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input id="shadow" type="checkbox" class="accent-pink-600" checked>
+            <span class="text-sm text-neutral-300">Soft text shadow</span>
+          </label>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="download" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Download PNG</button>
+          <button id="addToCart" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700">Add design to cart (demo)</button>
+        </div>
+
+        <p class="text-xs text-neutral-500">Tip: keep it under ~20–24 characters for best fit.</p>
+      </section>
+
+      <!-- Preview -->
+      <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+        <div class="text-sm text-neutral-400 mb-3">Live preview</div>
+
+        <!-- Canvas preview block -->
+        <div class="relative rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900">
+          <!-- Background “hat back” mock -->
+          <div id="mock" class="aspect-[16/10] w-full relative">
+            <!-- Strap bar -->
+            <div id="strap" class="absolute left-1/2 -translate-x-1/2 bottom-[22%] h-10 w-[70%] rounded-lg flex items-center justify-center"
+                 style="background:#111;">
+              <span id="strapLabel" class="px-3 py-1 font-semibold tracking-wide whitespace-nowrap">YOUR TEXT</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden canvas for export -->
+        <canvas id="exportCanvas" class="hidden" width="1600" height="1000"></canvas>
+
+        <div class="mt-4 text-xs text-neutral-500">
+          This is a visual mockup for marketing. Actual print may vary slightly based on method (UV/pad/foil/emboss).
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/strap-customizer.js"></script>
+</body>
+</html>
