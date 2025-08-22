@@ -128,13 +128,25 @@
       </button>
     </nav>
 
-    <!-- Right side: mobile menu + cart -->
-    <div class="flex items-center gap-2">
-      <button id="menuBtn" class="md:hidden p-2 rounded-lg hover:bg-neutral-800" aria-label="Open menu" aria-expanded="false">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
-        </svg>
-      </button>
+ <!-- Right side: mobile menu + cart -->
+<div class="flex items-center gap-2">
+  <!-- Mobile menu toggle -->
+  <button id="menuBtn" 
+          class="md:hidden p-2 rounded-lg hover:bg-neutral-800" 
+          aria-label="Open menu" 
+          aria-expanded="false">
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         class="w-6 h-6" 
+         fill="none" 
+         viewBox="0 0 24 24" 
+         stroke="currentColor">
+      <path stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="1.5" 
+            d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
+    </svg>
+  </button>
+</div>
 
 <!-- Cart with mini-cart preview -->
 <div class="relative" id="cartArea">
