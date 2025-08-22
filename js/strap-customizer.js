@@ -1,160 +1,237 @@
-// Simple strap designer: live preview + PNG export
+// === SnapInk Strap Customizer ===
+// Assumes the DOM from customize.html above.
 
-const el = (id) => document.getElementById(id);
+(function () {
+  // ---- Elements ----
+  const bgImageEl     = document.getElementById('bgImage');
+  const strapRectEl   = document.getElementById('strapRect');
+  const overlayEl     = document.getElementById('strap-overlay');
+  const textLayerEl   = document.getElementById('strapTextLayer');
 
-const strapText   = el("strapText");
-const font        = el("font");
-const size        = el("size");
-const tracking    = el("tracking");
-const textColor   = el("textColor");
-const strapColor  = el("strapColor");
-const upper       = el("upper");
-const shadow      = el("shadow");
-const strap       = el("strap");
-const strapLabel  = el("strapLabel");
-const mock        = el("mock");
-const downloadBtn = el("download");
-const addToCart   = el("addToCart");
-const canvas      = el("exportCanvas");
-const ctx         = canvas.getContext("2d");
+  const strapText     = document.getElementById('strapText');
+  const fontSelect    = document.getElementById('font');
+  const sizeRange     = document.getElementById('size');
+  const trackingRange = document.getElementById('tracking');
+  const textColor     = document.getElementById('textColor');
+  const strapColor    = document.getElementById('strapColor');
+  const upperCheck    = document.getElementById('upper');
+  const shadowCheck   = document.getElementById('shadow');
+  const downloadBtn   = document.getElementById('download');
 
-// Defaults
-strapText.value = "YOUR TEXT";
+  // Background selector buttons (future-friendly)
+  const bgButtons = Array.from(document.querySelectorAll('[data-bg]'));
 
-// Live apply styles to the DOM preview
-function applyPreview() {
-  const raw = strapText.value || "";
-  const text = upper.checked ? raw.toUpperCase() : raw;
+  // Canvas for export
+  const canvas = document.getElementById('exportCanvas');
+  const ctx = canvas.getContext('2d');
 
-  strap.style.background = strapColor.value;
-  strapLabel.textContent = text;
-  strapLabel.style.color = textColor.value;
-  strapLabel.style.fontFamily = font.value;
-  strapLabel.style.fontSize = `${size.value}px`;
-  strapLabel.style.letterSpacing = `${tracking.value * 0.5}px`;
-  strapLabel.style.textShadow = shadow.checked ? "0 1px 2px rgba(0,0,0,.6)" : "none";
-}
+  const CF_BG = "https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e0459dcc-97bf-444c-6f05-330f77204f00/public";
 
-["input", "change"].forEach(evt => {
-  [strapText, font, size, tracking, textColor, strapColor, upper, shadow].forEach(c =>
-    c.addEventListener(evt, applyPreview)
-  );
-});
+const state = {
+  bgSrc: CF_BG,                    // ← use Cloudflare image by default
+  strapColor: strapColor.value || '#111111',
+  text: 'YOUR TEXT',
+  font: fontSelect.value,
+  size: parseInt(sizeRange.value, 10) || 30,
+  tracking: parseInt(trackingRange.value, 10) || 1,
+  textColor: textColor.value || '#ffffff',
+  upper: false,
+  shadow: true,
+};
 
-// Initial render
-applyPreview();
-
-// Export a clean PNG from a canvas render
-function exportPNG() {
-  // Clear
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Background gradient “nightclub vibe”
-  const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  g.addColorStop(0, "#0b0b0c");
-  g.addColorStop(1, "#111114");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // “Hat” silhouette hint
-  ctx.fillStyle = "#0e0e10";
-  ctx.beginPath();
-  ctx.arc(canvas.width * 0.5, canvas.height * 0.48, canvas.width * 0.38, Math.PI, 0);
-  ctx.fill();
-
-  // Strap bar
-  const strapW = canvas.width * 0.7;
-  const strapH = 100;
-  const strapX = (canvas.width - strapW) / 2;
-  const strapY = canvas.height * 0.68 - strapH / 2;
-
-  // Strap base with subtle gloss
-  ctx.fillStyle = strapColor.value;
-  roundRect(ctx, strapX, strapY, strapW, strapH, 12);
-  ctx.fill();
-
-  // Top gloss
-  const gloss = ctx.createLinearGradient(0, strapY, 0, strapY + strapH);
-  gloss.addColorStop(0, "rgba(255,255,255,0.08)");
-  gloss.addColorStop(0.4, "rgba(255,255,255,0.02)");
-  gloss.addColorStop(1, "rgba(255,255,255,0.00)");
-  ctx.fillStyle = gloss;
-  roundRect(ctx, strapX, strapY, strapW, strapH, 12);
-  ctx.fill();
-
-  // Text
-  const raw = strapText.value || "";
-  const text = upper.checked ? raw.toUpperCase() : raw;
-
-  ctx.fillStyle = textColor.value;
-  ctx.font = `${parseInt(size.value, 10) * 2}px ${font.value}`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  const letterSpacing = parseFloat(tracking.value) * 1.0; // px at 2x scale
-  drawSpacedText(ctx, text, canvas.width / 2, strapY + strapH / 2, letterSpacing, shadow.checked);
-
-  // Export
-  const url = canvas.toDataURL("image/png");
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `snapink-strap-${Date.now()}.png`;
-  a.click();
-}
-
-downloadBtn.addEventListener("click", exportPNG);
-
-// Demo “add to cart” to localStorage (matches your index.html demo cart)
-addToCart.addEventListener("click", () => {
-  const item = {
-    id: "strap_custom_" + Date.now(),
-    title: `Custom Strap: "${(strapText.value || "YOUR TEXT").slice(0, 24)}"`,
-    price: 39.99,
-    qty: 1,
-    image: null
-  };
-  try {
-    const cart = JSON.parse(localStorage.getItem("snapink_cart") || "[]");
-    cart.push(item);
-    localStorage.setItem("snapink_cart", JSON.stringify(cart));
-    alert("Design added to cart (demo). Open the cart on the main page to see it.");
-  } catch {
-    alert("Could not add to cart (localStorage).");
+  // ---- Utilities ----
+  function setAriaPressed(targetBtn) {
+    bgButtons.forEach(btn => btn.setAttribute('aria-pressed', btn === targetBtn ? 'true' : 'false'));
   }
-});
 
-// Helpers
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-function drawSpacedText(ctx, text, cx, cy, spacing, withShadow) {
-  const chars = [...text];
-  const widths = chars.map(ch => ctx.measureText(ch).width + spacing);
-  const total = widths.reduce((a, b) => a + b, -spacing);
-  let x = cx - total / 2;
-
-  chars.forEach((ch, i) => {
-    if (withShadow) {
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,.6)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 2;
-      ctx.fillText(ch, x + widths[i] / 2 - spacing / 2, cy);
-      ctx.restore();
-    } else {
-      ctx.fillText(ch, x + widths[i] / 2 - spacing / 2, cy);
+  function applyToDOM() {
+    // Background swaps
+    if (bgImageEl.getAttribute('src') !== state.bgSrc) {
+      bgImageEl.setAttribute('src', state.bgSrc);
     }
-    x += widths[i];
+
+    // Strap color block
+    strapRectEl.style.background = state.strapColor;
+
+    // Text content + casing
+    const content = state.upper ? (state.text || '').toUpperCase() : (state.text || '');
+    textLayerEl.textContent = content || 'YOUR TEXT';
+
+    // Text style
+    textLayerEl.style.fontFamily = state.font;
+    textLayerEl.style.fontSize = `${state.size}px`;
+    textLayerEl.style.letterSpacing = `${state.tracking}px`;
+    textLayerEl.style.color = state.textColor;
+    textLayerEl.style.textShadow = state.shadow ? '0 1px 2px rgba(0,0,0,.55)' : 'none';
+  }
+
+  // Draw the composite to canvas (1600x1000)
+  async function exportPNG() {
+    // 1) Draw background
+    const bg = await loadImage(state.bgSrc);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Fill canvas fully with the background (object-cover equivalent)
+    drawObjectCover(ctx, bg, canvas.width, canvas.height);
+
+    // 2) Compute strap rect in canvas coords (mirror the % used in CSS)
+    const strap = {
+      x: 0.15 * canvas.width,
+      y: 0.72 * canvas.height,
+      w: 0.70 * canvas.width,
+      h: 0.115 * canvas.height
+    };
+
+    // 3) Strap color rectangle with rounded corners
+    roundRect(ctx, strap.x, strap.y, strap.w, strap.h, 16);
+    ctx.fillStyle = state.strapColor;
+    ctx.fill();
+
+    // 4) Sheen overlay (subtle)
+    const grd = ctx.createLinearGradient(0, strap.y, 0, strap.y + strap.h);
+    grd.addColorStop(0, 'rgba(255,255,255,0.10)');
+    grd.addColorStop(1, 'rgba(0,0,0,0.35)');
+    roundRect(ctx, strap.x, strap.y, strap.w, strap.h, 16);
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // 5) Text
+    const content = state.upper ? (state.text || '').toUpperCase() : (state.text || 'YOUR TEXT');
+    const fontPx = Math.max(10, Math.min(96, state.size * (canvas.width / 800))); // scale size up for 1600px width
+    ctx.font = `700 ${fontPx}px ${cssFontToCanvasFont(state.font)}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = state.textColor;
+
+    // Fake letter-spacing on canvas by drawing each char manually
+    const spacing = state.tracking * (canvas.width / 800); // simple scale
+    const xCenter = strap.x + strap.w / 2;
+    const yCenter = strap.y + strap.h / 2;
+
+    if (state.shadow) {
+      ctx.shadowColor = 'rgba(0,0,0,0.55)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 2;
+    } else {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+    }
+
+    drawSpacedText(ctx, content, xCenter, yCenter, spacing);
+
+    // 6) Save
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.download = 'snapink-strap.png';
+    a.href = url;
+    a.click();
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = 'anonymous';
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = src;
+    });
+  }
+
+  function drawObjectCover(ctx, img, cw, ch) {
+    const iw = img.width, ih = img.height;
+    const scale = Math.max(cw / iw, ch / ih);
+    const w = iw * scale;
+    const h = ih * scale;
+    const x = (cw - w) / 2;
+    const y = (ch - h) / 2;
+    ctx.drawImage(img, x, y, w, h);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  // Convert a CSS font stack to a single family for canvas
+  function cssFontToCanvasFont(cssStack) {
+    // Take the first family name block
+    const first = cssStack.split(',')[0].trim();
+    return first.replace(/['"]/g, '') || 'Inter';
+  }
+
+  // Draw text with manual letter spacing centered around xCenter
+  function drawSpacedText(ctx, text, xCenter, y, spacing) {
+    if (!text) return;
+    // Measure width by summing glyphs + spacing
+    const widths = [...text].map(ch => ctx.measureText(ch).width);
+    const totalSpacing = spacing * Math.max(0, text.length - 1);
+    const totalWidth = widths.reduce((a, b) => a + b, 0) + totalSpacing;
+
+    let x = xCenter - totalWidth / 2;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      ctx.fillText(ch, x + widths[i] / 2, y);
+      x += widths[i] + spacing;
+    }
+  }
+
+  // ---- Event wiring ----
+  bgButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.bgSrc = btn.dataset.bg;
+      setAriaPressed(btn);
+      applyToDOM();
+    });
   });
-}
+
+  strapText.addEventListener('input', (e) => {
+    state.text = e.target.value;
+    applyToDOM();
+  });
+
+  fontSelect.addEventListener('change', (e) => {
+    state.font = e.target.value;
+    applyToDOM();
+  });
+
+  sizeRange.addEventListener('input', (e) => {
+    state.size = parseInt(e.target.value, 10) || 30;
+    applyToDOM();
+  });
+
+  trackingRange.addEventListener('input', (e) => {
+    state.tracking = parseInt(e.target.value, 10) || 0;
+    applyToDOM();
+  });
+
+  textColor.addEventListener('input', (e) => {
+    state.textColor = e.target.value || '#ffffff';
+    applyToDOM();
+  });
+
+  strapColor.addEventListener('input', (e) => {
+    state.strapColor = e.target.value || '#111111';
+    applyToDOM();
+  });
+
+  upperCheck.addEventListener('change', (e) => {
+    state.upper = !!e.target.checked;
+    applyToDOM();
+  });
+
+  shadowCheck.addEventListener('change', (e) => {
+    state.shadow = !!e.target.checked;
+    applyToDOM();
+  });
+
+  downloadBtn.addEventListener('click', exportPNG);
+
+  // Initial paint
+  applyToDOM();
+})();
