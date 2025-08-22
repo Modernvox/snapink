@@ -15,57 +15,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    /* Overlay highlight for strap “print zone” (subtle rubber sheen) */
-    #strap-overlay {
-      position: absolute;
-      top: 72%;             /* tune to match your image */
-      left: 15%;
-      width: 70%;
-      height: 11.5%;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.10), rgba(0,0,0,0.35));
-      border-radius: 8px;
-      pointer-events: none;
-      filter: saturate(0.9) contrast(1.05);
-      mix-blend-mode: lighten; /* looks great on dark straps */
+    /* --- Preview layout & visuals (page-local CSS) --- */
+    .preview-box{border-radius:14px;overflow:hidden;border:1px solid #262626;background:#0a0a0a;position:relative}
+    .mock{position:relative;width:100%;aspect-ratio:16/10;min-height:340px;background:#0a0a0a}
+    .mock-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.05) contrast(1.05)}
+
+    /* Strap rectangle (colorable) */
+    #strapRect{
+      position:absolute;border-radius:8px;background:#111;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.06),
+        inset 0 -10px 16px rgba(0,0,0,.35),
+        inset 0 10px 16px rgba(255,255,255,.05);
     }
 
-    /* Live strap text positioning */
-    #strapTextLayer {
-      position: absolute;
-      top: 74.5%;           /* tune to sit visually centered on strap */
-      left: 50%;
-      transform: translateX(-50%);
-      width: 66%;
-      text-align: center;
-      white-space: nowrap;
-      line-height: 1;
-      user-select: none;
-      pointer-events: none;
-      text-rendering: optimizeLegibility;
+    /* Subtle “rubber sheen” overlay on the strap */
+    #strap-overlay{
+      position:absolute;border-radius:8px;pointer-events:none;
+      background:linear-gradient(to bottom, rgba(255,255,255,.10), rgba(0,0,0,.35));
+      filter:saturate(.95) contrast(1.05);
+      mix-blend-mode:lighten;
     }
 
-    /* Keep the preview box tidy on small screens */
-    .preview-box {
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid #262626; /* neutral-800 */
-      background: #0a0a0a;       /* neutral-950 */
-      position: relative;
+    /* Live text layer centered on strap */
+    #strapTextLayer{
+      position:absolute;left:50%;transform:translate(-50%,-50%);
+      width:66%;text-align:center;white-space:nowrap;line-height:1;
+      user-select:none;pointer-events:none;text-rendering:optimizeLegibility;
+      color:#fff;font-weight:700;font-size:30px;letter-spacing:1px;
+      text-shadow:0 1px 2px rgba(0,0,0,.5);
+      font-family:Inter, system-ui, sans-serif;
     }
 
-    /* Simple pill buttons for background options (future-proofing) */
-    .bg-option {
-      padding: .5rem .75rem;
-      border: 1px solid #262626;
-      background: #0f0f0f;
-      border-radius: .6rem;
-      font-size: .875rem;
-      color: #e5e5e5;
-    }
-    .bg-option[aria-pressed="true"] {
-      border-color: #ec4899;
-      box-shadow: 0 0 0 2px rgba(236,72,153,.25) inset;
-    }
+    /* Background option buttons */
+    .bg-option{padding:.5rem .75rem;border:1px solid #262626;background:#0f0f0f;border-radius:.6rem;font-size:.875rem;color:#e5e5e5}
+    .bg-option[aria-pressed="true"]{border-color:#ec4899;box-shadow:0 0 0 2px rgba(236,72,153,.25) inset}
   </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased">
@@ -94,17 +78,17 @@
     <div class="grid lg:grid-cols-2 gap-8">
       <!-- Controls -->
       <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 space-y-5">
-        <!-- Background selector (future-friendly) -->
+        <!-- Background selector -->
         <div>
           <div class="text-sm text-neutral-300 mb-2">Hat background</div>
           <div class="flex flex-wrap gap-2">
-            <!-- Default black hat (your current asset) -->
-            <button class="bg-option" data-bg="/customize3.png" aria-pressed="true">Black</button>
-
-            <!-- Add more later by dropping the image in your public folder and adding a button:
-            <button class="bg-option" data-bg="/customize_navy.png">Navy</button>
-            <button class="bg-option" data-bg="/customize_white.png">White</button>
-            -->
+            <button
+              class="bg-option"
+              aria-pressed="true"
+              data-bg="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e0459dcc-97bf-444c-6f05-330f77204f00/public">
+              Black
+            </button>
+            <!-- Add more later by adding buttons with data-bg pointing to new images -->
           </div>
         </div>
 
@@ -169,45 +153,23 @@
         <div class="text-sm text-neutral-400 mb-3">Live preview</div>
 
         <div class="preview-box">
-          <!-- Aspect 16:10 so it scales cleanly; the BG image fills this box -->
-          <div id="mock" class="aspect-[16/10] w-full relative">
-            <!-- Background image layer -->
+          <div id="mock" class="mock">
+            <!-- Background image -->
             <img
-  id="bgImage"
-  src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e0459dcc-97bf-444c-6f05-330f77204f00/public"
-  alt="SnapInk strap sleeve closeup"
-  class="absolute inset-0 w-full h-full object-cover"
-  crossorigin="anonymous"
-  loading="eager"
-/>
+              id="bgImage"
+              src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e0459dcc-97bf-444c-6f05-330f77204f00/public"
+              alt="SnapInk hat back — customization backdrop"
+              class="mock-bg"
+              crossorigin="anonymous"
+              loading="eager"
+            />
 
-            <!-- Strap color layer (a clean rectangle you can recolor) -->
-            <div id="strapRect"
-                 class="absolute"
-                 style="
-                   left: 15%;
-                   width: 70%;
-                   top: 72%;
-                   height: 11.5%;
-                   background: #111111;
-                   border-radius: 8px;">
-            </div>
-
-            <!-- Subtle rubber sheen overlay -->
+            <!-- Strap layers -->
+            <div id="strapRect"></div>
             <div id="strap-overlay"></div>
 
-            <!-- Live text layer -->
-            <div id="strapTextLayer"
-                 style="
-                   font-family: Inter, system-ui, sans-serif;
-                   font-weight: 700;
-                   font-size: 30px;
-                   letter-spacing: 1px;
-                   color: #ffffff;
-                   text-shadow: 0 1px 2px rgba(0,0,0,.5);
-                 ">
-              YOUR TEXT
-            </div>
+            <!-- Live text -->
+            <div id="strapTextLayer">YOUR TEXT</div>
           </div>
         </div>
 
@@ -221,6 +183,6 @@
     </div>
   </main>
 
-  <script src="/js/strap-customizer.js"></script>
+  <script defer src="/js/strap-customizer.js"></script>
 </body>
 </html>
