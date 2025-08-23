@@ -709,16 +709,17 @@ if (prelaunchMode) {
       btn.replaceWith(a);
     });
 
-    // 2) Turn any checkout buttons into waitlist links
-    ["#checkoutLink", "#cartCheckout", "#mobileCheckout"].forEach(sel => {
-      const el = document.querySelector(sel);
-      if (!el) return;
-      const a = document.createElement("a");
-      a.href = "#waitlist";
-      a.className = el.className + " text-center";
-      a.textContent = "Join waitlist";
-      el.replaceWith(a);
-    });
+   // 2) Turn any checkout buttons into waitlist links (except header one)
+["#cartCheckout", "#mobileCheckout"].forEach(sel => {
+  const el = document.querySelector(sel);
+  if (!el) return;
+  const a = document.createElement("a");
+  a.href = "#waitlist";
+  a.className = el.className + " text-center";
+  a.textContent = "Join waitlist";
+  el.replaceWith(a);
+});
+
 
     // 3) Hide cart icon / mini-cart entry points
     const cartArea = document.getElementById("cartArea");
@@ -949,16 +950,18 @@ if (prelaunchMode) {
   miniCheckout?.addEventListener('click', async () => { hideMiniCart(); await (window.startCheckout ? startCheckout() : null); });
 }
 </script>
+
 <script>
   (function(){
     const modal = document.getElementById('fitGuideModal');
     const openBtns = [document.getElementById('fitGuideBtn'), document.getElementById('fitGuideBtnMobile')].filter(Boolean);
     const closeBtn = document.getElementById('fitGuideClose');
+    if (!modal || openBtns.length === 0) return; // ← guard
 
     function openModal(){
       modal.classList.remove('opacity-0','pointer-events-none');
       modal.classList.add('opacity-100');
-      document.documentElement.style.overflow = 'hidden'; // lock background scroll
+      document.documentElement.style.overflow = 'hidden';
     }
     function closeModal(){
       modal.classList.add('opacity-0','pointer-events-none');
@@ -972,5 +975,45 @@ if (prelaunchMode) {
     window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
   })();
 </script>
+
+<!-- Fit Guide Modal (global) -->
+<div id="fitGuideModal"
+     class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center
+            opacity-0 pointer-events-none transition-opacity duration-200 z-[100]">
+  <div class="bg-neutral-950 border border-neutral-800 rounded-2xl max-w-2xl w-full mx-4 p-6 relative">
+    <button id="fitGuideClose" class="absolute top-3 right-3 text-neutral-400 hover:text-white text-xl" aria-label="Close">✕</button>
+
+    <h2 class="text-2xl font-black mb-4">SnapInk™ Fit Guide</h2>
+    <p class="text-neutral-400 mb-6">
+      Our sleeves fit <span class="text-white font-semibold">all standard snapback hats</span>.
+      If your hat uses a <span class="text-white">Yupoong / Flexfit strap</span> (industry standard),
+      SnapInk™ will fit. That includes New Era, Richardson, Otto, Decky, and most streetwear blanks.
+      They do <span class="text-pink-500 font-semibold">not</span> fit fitteds, strapbacks, or Velcro hats.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-6 text-left">
+      <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+        <h3 class="font-semibold text-white mb-2">✅ Compatible</h3>
+        <ul class="space-y-1 text-neutral-400 text-sm">
+          <li>Yupoong / Flexfit</li><li>New Era 9FIFTY</li><li>Richardson</li>
+          <li>Otto Cap</li><li>Decky</li><li>Adidas/Nike/Champion snapbacks</li>
+        </ul>
+      </div>
+      <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+        <h3 class="font-semibold text-yellow-400 mb-2">⚠️ Might Not Fit</h3>
+        <ul class="space-y-1 text-neutral-400 text-sm">
+          <li>Cheap fast-fashion hats</li><li>Vintage 80s/90s snapbacks</li><li>Youth sizes</li>
+        </ul>
+      </div>
+      <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+        <h3 class="font-semibold text-pink-500 mb-2">❌ Not Compatible</h3>
+        <ul class="space-y-1 text-neutral-400 text-sm">
+          <li>Fitted hats</li><li>Strapbacks (buckle)</li><li>Velcro backs</li><li>Elastic band truckers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
