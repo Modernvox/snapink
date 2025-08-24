@@ -229,57 +229,91 @@
   </div>
 </aside>
 
-  <!-- HERO -->
-  <section class="relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black"></div>
-    <div class="absolute inset-0 grid-bg"></div>
-    <div class="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
-      <div class="grid md:grid-cols-2 gap-10 items-center">
-        <div class="space-y-6">
-          <div class="inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
-            <span class="i">⚡</span> Strap-branded snapbacks
-            <span class="h-3 w-px bg-neutral-700 mx-1"></span>
-            <span class="i">🧪</span> Patent pending sleeves
-          </div>
-          <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">Branding on <span class="text-pink-500">Lock</span>.</h1>
-          <p class="text-neutral-300 text-lg md:text-xl max-w-prose">SnapInk<span class="align-super text-[.6em]">™</span> makes the strap the stage — with interchangeable (slide on-slide off) print-ready <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.</p>
-          <div class="flex flex-col sm:flex-row gap-3">
-            <a href="#shop" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">Shop the drop</a>
-            <a href="#how" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
-          </div>
-          <div class="flex items-center gap-6 pt-2 text-sm text-neutral-400">
-            <span>Free US shipping $75+</span>
-            <span class="h-3 w-px bg-neutral-700"></span>
-            <span>30‑day returns</span>
+<!-- HERO -->
+<section class="relative overflow-hidden min-h-[88svh] md:min-h-0 flex items-center">
+  <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black pointer-events-none"></div>
+  <div class="absolute inset-0 grid-bg pointer-events-none"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 py-8 md:py-24 w-full">
+    <div class="grid md:grid-cols-2 gap-8 md:gap-10 items-center">
+
+      <!-- Collage (first on mobile) -->
+      <div class="relative order-1 md:order-2">
+        <div class="relative aspect-[3/4] md:aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
+          <img
+            src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/47b6b314-5a30-442a-2aac-60aa04f25b00/public"
+            alt="SnapInk strap sleeve closeup"
+            class="absolute inset-0 w-full h-full object-cover opacity-80"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
+            <span class="text-sm text-neutral-300">Prototype • Strap Sleeve V1</span>
+            <span class="px-2.5 py-1 rounded-md bg-pink-600/90 text-xs font-semibold">PATENT PENDING</span>
           </div>
         </div>
-        <!-- Collage -->
-        <div class="relative">
-          <div class="relative aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
-           <img 
-  src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/47b6b314-5a30-442a-2aac-60aa04f25b00/public" 
-  alt="SnapInk strap sleeve closeup" 
-  class="absolute inset-0 w-full h-full object-cover opacity-70"/>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between">
-              <span class="text-sm text-neutral-300">Prototype • Strap Sleeve V1</span>
-              <span class="px-2.5 py-1 rounded-md bg-pink-600/90 text-xs font-semibold">PATENT PENDING</span>
-            </div>
-          </div>
-          <!-- Sticker -->
-          <div class="sticker absolute -right-3 -bottom-6 bg-white text-neutral-900 px-6 py-3 rounded-full font-black text-lg shadow-xl select-none">SnapInk<span class="align-super text-[.6em]">™</span></div>
+        <!-- Sticker -->
+        <div class="sticker absolute -right-3 -bottom-6 bg-white text-neutral-900 px-6 py-3 rounded-full font-black text-lg shadow-xl select-none">
+          SnapInk<span class="align-super text-[.6em]">™</span>
         </div>
       </div>
 
-      <!-- Countdown (Drop 001) -->
-      <div class="mt-12 grid sm:grid-cols-4 gap-4 text-center">
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="dd">00</div><div class="text-neutral-400 text-xs">DAYS</div></div>
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="hh">00</div><div class="text-neutral-400 text-xs">HOURS</div></div>
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="mm">00</div><div class="text-neutral-400 text-xs">MINUTES</div></div>
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-4"><div class="text-3xl font-extrabold" id="ss">00</div><div class="text-neutral-400 text-xs">SECONDS</div></div>
+      <!-- Copy/CTA -->
+      <div class="space-y-5 md:space-y-6 order-2 md:order-1">
+        <div class="inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
+          <span class="i">⚡</span> Strap-branded snapbacks
+          <span class="h-3 w-px bg-neutral-700 mx-1"></span>
+          <span class="i">🧪</span> Patent pending sleeves
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight">
+          Branding on <span class="text-pink-500">Lock</span>.
+        </h1>
+        <p class="text-neutral-300 text-base md:text-xl max-w-prose">
+          SnapInk<span class="align-super text-[.6em]">™</span> makes the strap the stage — with interchangeable (slide on–slide off) print-ready
+          <span class="font-semibold text-white">strap sleeves</span> that cover traditional snaps for a smooth, premium look.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="#shop" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">Shop the drop</a>
+          <a href="#how" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700">How it works</a>
+        </div>
+        <div class="flex items-center gap-6 pt-1 text-sm text-neutral-400">
+          <span>Free US shipping $75+</span>
+          <span class="h-3 w-px bg-neutral-700"></span>
+          <span>30-day returns</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Countdown -->
+    <!-- On mobile: overlay at bottom; on desktop: normal grid below -->
+    <div class="mt-4 md:mt-12">
+      <div class="fixed left-4 right-4 bottom-4 z-30 md:static md:z-auto
+                  grid grid-cols-4 gap-3 text-center
+                  bg-neutral-900/70 backdrop-blur md:bg-transparent
+                  border border-neutral-800 md:border-0
+                  rounded-xl md:rounded-none p-3 md:p-0">
+        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
+          <div class="text-2xl md:text-3xl font-extrabold" id="dd">00</div>
+          <div class="text-neutral-400 text-[10px] md:text-xs">DAYS</div>
+        </div>
+        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
+          <div class="text-2xl md:text-3xl font-extrabold" id="hh">00</div>
+          <div class="text-neutral-400 text-[10px] md:text-xs">HOURS</div>
+        </div>
+        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
+          <div class="text-2xl md:text-3xl font-extrabold" id="mm">00</div>
+          <div class="text-neutral-400 text-[10px] md:text-xs">MINUTES</div>
+        </div>
+        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
+          <div class="text-2xl md:text-3xl font-extrabold" id="ss">00</div>
+          <div class="text-neutral-400 text-[10px] md:text-xs">SECONDS</div>
+        </div>
       </div>
     </div>
-  </section>
+
+  </div>
+</section>
+
 
  <!-- Social proof / vibe tags -->
 <section class="py-10 border-y border-neutral-800 bg-neutral-950/60">
