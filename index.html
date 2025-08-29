@@ -730,29 +730,22 @@ setInterval(() => {
   ss.textContent = String(s).padStart(2,'0');
 }, 1000);
 
-document.getElementById('wl').addEventListener('submit', async (e) => {
+document.getElementById('wl').addEventListener('submit', (e) => {
   e.preventDefault();
   const email = document.getElementById('wl-email').value.trim();
   if (!email) return;
 
-  const r = await fetch('/api/waitlist', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ email })
-  });
+  // ✅ Immediate feedback (no fetch)
+  const wrap = document.getElementById("wl-wrap");
+  wrap.innerHTML = `
+    <div class="p-6 mt-8 rounded-xl bg-green-600/20 border border-green-600 text-green-300 text-center">
+      <h3 class="font-semibold text-lg">You're in 🎉</h3>
+      <p class="mt-2 text-sm">We'll email you 24 hours before Drop 001 (SnapInk OG) goes live.</p>
+    </div>
+  `;
 
-  if (r.ok) {
-    // replace wrapper contents with thank-you message
-    const wrap = document.getElementById("wl-wrap");
-    wrap.innerHTML = `
-      <div class="p-6 mt-8 rounded-xl bg-green-600/20 border border-green-600 text-green-300 text-center">
-        <h3 class="font-semibold text-lg">You're in 🎉</h3>
-        <p class="mt-2 text-sm">We'll email you 24 hours before Drop 001 (SnapInk OG) goes live.</p>
-      </div>
-    `;
-  } else {
-    alert("Could not join. Please try again.");
-  }
+  // TODO: re-enable backend later
+  // fetch('/api/waitlist', { ... })
 });
 
 
