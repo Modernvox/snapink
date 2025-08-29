@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Customize Your Strap — SnapInk™</title>
+  <title>Customize Your Strap — SnapInk™ (Prelaunch)</title>
   <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="SnapInk™ is a patent-pending strap sleeve system. Creator customization opens post-launch. Design a mockup now and join the waitlist for Drop 001 (SnapInk OG)." />
    <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" 
         href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
@@ -12,7 +13,6 @@
         href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
   <link rel="apple-touch-icon" 
         href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
-
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="/style.css">
@@ -112,9 +112,9 @@
 
     <!-- Center: Desktop nav (identical links/IDs) -->
     <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300 flex-1 justify-center">
-      <a href="/#shop" class="hover:text-white">Shop</a>
+      <a href="/#shop" class="hover:text-white">Drops</a>
       <a href="/#how" class="hover:text-white">How it works</a>
-      <a href="/#reviews" class="hover:text-white">Reviews</a>
+      <a href="/#reviews" class="hover:text-white">Early feedback</a>
       <a href="/#faq" class="hover:text-white">FAQ</a>
 
       <!-- Fit Guide trigger -->
@@ -122,7 +122,7 @@
         Fit Guide
       </button>
 
-      <a href="/customize.html" class="hover:text-white">Customize</a>
+      <a href="/customize.html" class="hover:text-white">Customize (post-launch)</a>
       <a href="/#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">
         Join Waitlist
       </a>
@@ -148,7 +148,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M2.25 3h1.386a1.5 1.5 0 0 1 1.463 1.2l.257 1.542M7.5 14.25h9.75a1.5 1.5 0 0 0 1.477-1.222l1.125-6.75A1.5 1.5 0 0 0 18.375 4.5H5.356M7.5 21a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm9.75 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/>
           </svg>
-          <span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">
+          <span id="cartCount" class="absolute -top-1 -right-1 text:[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">
             0
           </span>
         </button>
@@ -160,7 +160,7 @@
                     overflow-hidden z-50">
           <div class="p-3 border-b border-neutral-800">
             <div class="flex items-center justify-between">
-              <div class="text-sm text-neutral-400">Cart</div>
+              <div class="text-sm text-neutral-400">Cart (prelaunch)</div>
               <div class="text-xs px-2 py-0.5 rounded bg-neutral-800">
                 <span id="miniCount">0</span> item<span id="miniCountPlural">s</span>
               </div>
@@ -176,7 +176,7 @@
               <button id="miniViewCart" class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">View cart</button>
               <button id="miniCheckout" class="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm">Checkout</button>
             </div>
-            <p class="text-[11px] text-neutral-500">Taxes and shipping calculated at checkout.</p>
+            <p class="text-[11px] text-neutral-500">Sales open at launch. Join the waitlist for early access.</p>
           </div>
         </div>
       </div>
@@ -186,7 +186,14 @@
 
   <!-- Main -->
   <main class="max-w-7xl mx-auto px-4 py-10">
-    <h1 class="text-3xl md:text-4xl font-black mb-6">Design your strap</h1>
+    <div class="mb-4 inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
+      <span>🧪 Patent-pending</span>
+      <span class="h-3 w-px bg-neutral-700 mx-1"></span>
+      <span>Prelaunch preview — creator customization opens post-launch</span>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-black mb-2">Design your strap (mockup)</h1>
+    <p class="text-neutral-400 mb-6">Play with fonts, spacing, and colors to visualize your idea. Save a PNG and <a class="underline hover:text-white" href="/#waitlist">join the waitlist</a> for Drop 001 (SnapInk OG).</p>
 
     <div class="grid lg:grid-cols-2 gap-8">
       <!-- Controls -->
@@ -244,7 +251,7 @@
           <button id="addToCart" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700">Add design to cart (demo)</button>
         </div>
 
-        <p class="text-xs text-neutral-500">Tip: best results under ~20–24 characters.</p>
+        <p class="text-xs text-neutral-500">Tip: best results under ~20–24 characters. Final customization opens post-launch.</p>
       </section>
 
       <!-- Preview -->
@@ -266,7 +273,7 @@
         <canvas id="exportCanvas" class="hidden" width="1600" height="1000"></canvas>
 
         <div class="mt-4 text-xs text-neutral-500">
-          Visual mockup only. Final print may vary slightly by method (UV / pad / foil / emboss).
+          Visual mockup only. Print options (UV / pad / foil / emboss) and pricing will be announced at launch. SnapInk™ is patent-pending.
         </div>
       </section>
     </div>
