@@ -2,49 +2,32 @@ function isValidEmail(email) {
   return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Optional: hash or key-prefix to avoid storing raw email as the key.
-// Here we store JSON under a prefix with the plain email as the *value*.
-function keyFor(email) {
-  return `wl:${email.toLowerCase().trim()}`;
-}
-
 export async function onRequestPost({ request, env }) {
   try {
-    const { email, source } = await request.json().catch(() => ({}));
+    const form = await request.formData();
+    const email = (form.get("email") || "").trim().toLowerCase();
+
     if (!isValidEmail(email)) {
-      return new Response(JSON.stringify({ ok: false, error: 'Invalid email' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-      });
+      // invalid → send back with error flag
+      return Response.redirect("/?error=invalid#waitlist", 303);
     }
 
-    const key = keyFor(email);
-    const exists = await env.WAITLIST.get(key);
+    // check if already exists
+    const existing = await env.DB.prepare(
+      "SELECT id FROM waitlist WHERE email = ?"
+    ).bind(email).first();
 
-    if (exists) {
-      // already on list
-      return new Response(JSON.stringify({ ok: true, status: 'duplicate' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-      });
+    if (!existing) {
+      // insert new row
+      await env.DB.prepare(
+        "INSERT INTO waitlist (email, created_at) VALUES (?, ?)"
+      ).bind(email, new Date().toISOString()).run();
     }
 
-    const payload = JSON.stringify({
-      email: email.toLowerCase().trim(),
-      source: (source || 'site').slice(0, 64),
-      created_at: new Date().toISOString()
-    });
+    // success or duplicate → always redirect with success flag
+    return Response.redirect("/?joined=1#waitlist", 303);
 
-    await env.WAITLIST.put(key, payload);
-
-    return new Response(JSON.stringify({ ok: true, status: 'added' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
+    return Response.redirect("/?error=server#waitlist", 303);
   }
 }
