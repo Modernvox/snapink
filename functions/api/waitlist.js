@@ -1,78 +1,50 @@
-// /functions/api/waitlist.js
-const RECIPIENT = "earlyaccess@snapinkhats.com";   // notification recipient
-const FROM      = "noreply@snapinkhats.com";       // sender identity
-const ORIGIN    = "https://snapinkhats.com";       // allowed origin
+function isValidEmail(email) {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: cors() });
+// Optional: hash or key-prefix to avoid storing raw email as the key.
+// Here we store JSON under a prefix with the plain email as the *value*.
+function keyFor(email) {
+  return `wl:${email.toLowerCase().trim()}`;
 }
 
 export async function onRequestPost({ request, env }) {
   try {
-    const ct = request.headers.get("content-type") || "";
-    let email = "";
-
-    if (ct.includes("application/json")) {
-      const body = await request.json().catch(() => ({}));
-      email = (body.email || "").trim().toLowerCase();
-    } else {
-      const body = await request.text();
-      email = (new URLSearchParams(body).get("email") || "").trim().toLowerCase();
+    const { email, source } = await request.json().catch(() => ({}));
+    if (!isValidEmail(email)) {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid email' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
     }
 
-    // Basic validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return json({ ok: false, error: "Invalid email" }, 400);
+    const key = keyFor(email);
+    const exists = await env.WAITLIST.get(key);
+
+    if (exists) {
+      // already on list
+      return new Response(JSON.stringify({ ok: true, status: 'duplicate' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
     }
 
-    // ---- SAVE TO KV ----
-    const record = {
-      email,
-      ts: new Date().toISOString(),
-      ua: request.headers.get("user-agent") || "",
-      ip: request.headers.get("cf-connecting-ip") || "",
-      country: (request.cf && request.cf.country) || "",
-    };
-    const key = `email:${email}`;
-    await env.WAITLIST.put(key, JSON.stringify(record), {
-      metadata: { email, ts: record.ts },
+    const payload = JSON.stringify({
+      email: email.toLowerCase().trim(),
+      source: (source || 'site').slice(0, 64),
+      created_at: new Date().toISOString()
     });
 
-    // ---- NOTIFY VIA MAILCHANNELS ----
-    await fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: RECIPIENT }] }],
-        from: { email: FROM, name: "SnapInk Waitlist" },
-        subject: "New waitlist signup",
-        reply_to: [{ email, name: email }],
-        content: [
-          {
-            type: "text/plain",
-            value: `New signup:\n\nEmail: ${email}\nTime: ${record.ts}\nIP: ${record.ip}\nUA: ${record.ua}`,
-          },
-        ],
-      }),
-    }).catch(err => console.error("MailChannels error:", err));
+    await env.WAITLIST.put(key, payload);
 
-    return json({ ok: true }, 200);
+    return new Response(JSON.stringify({ ok: true, status: 'added' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+    });
   } catch (err) {
-    console.error(err);
-    return json({ ok: false, error: "Server error" }, 500);
+    return new Response(JSON.stringify({ ok: false, error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+    });
   }
-}
-
-function cors() {
-  return {
-    "Access-Control-Allow-Origin": ORIGIN,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "content-type",
-  };
-}
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { "content-type": "application/json", ...cors() },
-  });
 }
