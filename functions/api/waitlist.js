@@ -18,7 +18,10 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (!isValidEmail(email)) {
-      return Response.redirect("/?error=invalid#waitlist", 303);
+      return Response.redirect(
+        new URL("/?error=invalid#waitlist", request.url),
+        303
+      );
     }
 
     // check if already exists
@@ -32,10 +35,16 @@ export async function onRequestPost({ request, env }) {
       ).bind(email, new Date().toISOString()).run();
     }
 
-    return Response.redirect("/?joined=1#waitlist", 303);
+    return Response.redirect(
+      new URL("/?joined=1#waitlist", request.url),
+      303
+    );
 
   } catch (err) {
     console.error("Waitlist error:", err.message);
-    return Response.redirect("/?error=server#waitlist", 303);
+    return Response.redirect(
+      new URL("/?error=server#waitlist", request.url),
+      303
+    );
   }
 }
