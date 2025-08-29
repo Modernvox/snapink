@@ -1,14 +1,23 @@
 function isValidEmail(email) {
-  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export async function onRequestPost({ request, env }) {
   try {
-    const form = await request.formData();
-    const email = (form.get("email") || "").trim().toLowerCase();
+    let email = null;
+
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      // handle JSON POST
+      const body = await request.json();
+      email = (body.email || "").trim().toLowerCase();
+    } else {
+      // handle HTML <form> POST
+      const form = await request.formData();
+      email = (form.get("email") || "").trim().toLowerCase();
+    }
 
     if (!isValidEmail(email)) {
-      // invalid → send back with error flag
       return Response.redirect("/?error=invalid#waitlist", 303);
     }
 
@@ -18,16 +27,15 @@ export async function onRequestPost({ request, env }) {
     ).bind(email).first();
 
     if (!existing) {
-      // insert new row
       await env.DB.prepare(
         "INSERT INTO waitlist (email, created_at) VALUES (?, ?)"
       ).bind(email, new Date().toISOString()).run();
     }
 
-    // success or duplicate → always redirect with success flag
     return Response.redirect("/?joined=1#waitlist", 303);
 
   } catch (err) {
+    console.error("Waitlist error:", err.message);
     return Response.redirect("/?error=server#waitlist", 303);
   }
 }
