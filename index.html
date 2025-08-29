@@ -591,24 +591,25 @@ function scrollCarousel(dir) {
     </div>
   </section>
 
-<!-- WAITLIST / EMAIL CAPTURE -->
 <section id="waitlist" class="py-16 md:py-24 border-y border-neutral-800 bg-neutral-950">
   <div class="max-w-2xl mx-auto px-4 text-center">
     <h2 class="text-3xl md:text-4xl font-black">Get first dibs on Drop 001</h2>
     <p class="mt-3 text-neutral-400">We’re prelaunch. We’ll email you 24 hours before SnapInk OG goes live.</p>
-    
-<form id="wl" action="/api/waitlist" method="POST" 
-      class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-  <input id="wl-email" name="email" type="email" required
-         placeholder="your@email.com"
-         class="w-full sm:w-96 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700
-                focus:outline-none focus:ring-2 focus:ring-pink-600" />
-  <button type="submit"
-          class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">
-    Join Waitlist
-  </button>
-</form>
 
+    <!-- 👇 add this wrapper -->
+    <div id="wl-wrap">
+      <form id="wl" action="/api/waitlist" method="POST" 
+            class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <input id="wl-email" name="email" type="email" required
+               placeholder="your@email.com"
+               class="w-full sm:w-96 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700
+                      focus:outline-none focus:ring-2 focus:ring-pink-600" />
+        <button type="submit"
+                class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine">
+          Join Waitlist
+        </button>
+      </form>
+    </div>
     </div>    
     <p class="mt-3 text-xs text-neutral-500">We’ll never sell your data. Unsubscribe anytime.</p>
     <p class="mt-6 text-sm text-neutral-400">
@@ -734,35 +735,6 @@ setInterval(() => {
 if (prelaunchMode) {
   document.addEventListener('DOMContentLoaded', () => {
 
-// Waitlist form
-const form = document.getElementById('wl');
-if (form) {
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('wl-email')?.value.trim();
-    if (!email) return;
-
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-
-      if (!res.ok) throw new Error("Failed to join waitlist");
-
-      const wrap = document.getElementById("wl-wrap");
-      wrap.innerHTML = `
-        <div class="p-6 mt-8 rounded-xl bg-green-600/20 border border-green-600 text-green-300 text-center">
-          <h3 class="font-semibold text-lg">You're in 🎉</h3>
-          <p class="mt-2 text-sm">We'll email you 24 hours before Drop 001 (SnapInk OG) goes live.</p>
-        </div>
-      `;
-    } catch (err) {
-      alert("Something went wrong: " + err.message);
-    }
-  });
-}
 
     // 2) Turn any checkout buttons into waitlist links (except header one)
     ["#cartCheckout", "#mobileCheckout"].forEach(sel => {
@@ -1029,6 +1001,25 @@ if (form) {
     modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
     window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
   })();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const url = new URL(window.location);
+  const wrap = document.getElementById("wl-wrap");
+  if (!wrap) return;
+
+  if (url.searchParams.get("joined") === "1") {
+    wrap.innerHTML = `
+      <div class="p-6 mt-8 rounded-xl bg-green-600/20 border border-green-600 text-green-300 text-center">
+        <h3 class="font-semibold text-lg">You're in 🎉</h3>
+        <p class="mt-2 text-sm">We’ll email you 24 hours before SnapInk OG goes live.</p>
+      </div>`;
+  } else if (url.searchParams.get("error") === "invalid") {
+    alert("Please enter a valid email.");
+  } else if (url.searchParams.get("error") === "server") {
+    alert("Server error saving your email. Please try again.");
+  }
+});
 </script>
 
 <!-- Fit Guide Modal (global) -->
