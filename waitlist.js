@@ -31,12 +31,18 @@ export async function onRequestPost({ request, env }) {
   try {
     const form = await request.formData();
     const email = (form.get("email") || "").trim().toLowerCase();
+
     if (!isValidEmail(email)) {
-      return Response.redirect("/?error=invalid#waitlist", 303);
+      return Response.redirect(
+        new URL("/?error=invalid#waitlist", request.url),
+        303
+      );
     }
 
     // Check if the email already exists
-    const existing = await env.DB.prepare("SELECT id FROM waitlist WHERE email = ?")
+    const existing = await env.DB.prepare(
+      "SELECT id FROM waitlist WHERE email = ?"
+    )
       .bind(email)
       .first();
 
@@ -48,10 +54,17 @@ export async function onRequestPost({ request, env }) {
         .bind(email, new Date().toISOString())
         .run();
     }
-    return Response.redirect("/?joined=1#waitlist", 303);
+
+    return Response.redirect(
+      new URL("/?joined=1#waitlist", request.url),
+      303
+    );
+
   } catch (err) {
-    // Log error for debugging; redirect with error indicator
     console.error("waitlist POST error:", err);
-    return Response.redirect("/?error=server#waitlist", 303);
+    return Response.redirect(
+      new URL("/?error=server#waitlist", request.url),
+      303
+    );
   }
 }
