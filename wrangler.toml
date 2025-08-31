@@ -1,9 +1,9 @@
-name = "snapink-waitlist"          # Worker name (can be anything)
+# wrangler.toml
+name = "snapink-waitlist"
 main = "./functions/api/waitlist.js"
-compatibility_date = "2025-08-29"  # today’s date or close to it
+compatibility_date = "2025-08-29"
 
-# Bind your D1 database
 [[d1_databases]]
-binding = "DB"                     
-database_name = "snapink_waitlist" # must match the DB you created in dashboard
-database_id = "9263527d-7f81-4277-a171-e20b364f918c" # your database UUID
+binding = "DB"
+database_name = "snapink_waitlist"
+database_id = "9263527d-7f81-4277-a171-e20b364f918c"
