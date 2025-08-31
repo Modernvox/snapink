@@ -1,17 +1,20 @@
 @import "tailwindcss";
 @config "./tailwind.config.js";
 
-/* Base resets or element tweaks go here if you have any */
+/* =========================
+   COMPONENTS / CUSTOM CSS
+   ========================= */
 @layer components {
-  /* --- Custom SnapInk Components --- */
+  /* --- Animations used in hero/sections --- */
+  .fade-in { animation: fadeIn .8s ease forwards; opacity: 0; }
+  .slide-up { animation: slideUp .8s ease forwards; opacity: 0; transform: translateY(10px); }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
-  /* Stickers */
-  .sticker {
-    transform: rotate(-6deg);
-    box-shadow: 0 12px 40px rgba(0,0,0,.35);
-  }
+  /* --- Stickers --- */
+  .sticker { transform: rotate(-6deg); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
 
-  /* Marquee */
+  /* --- Marquee --- */
   .marquee {
     --gap: 48px;
     display: flex;
@@ -19,105 +22,57 @@
     overflow: hidden;
     mask: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
   }
-  .marquee__track {
-    display: flex;
-    gap: var(--gap);
-    animation: scroll 22s linear infinite;
-  }
-  @keyframes scroll {
-    from { transform: translateX(0) }
-    to   { transform: translateX(calc(-50% - var(--gap)/2)) }
-  }
+  .marquee__track { display: flex; gap: var(--gap); animation: scroll 22s linear infinite; }
+  @keyframes scroll { from { transform: translateX(0) } to { transform: translateX(calc(-50% - var(--gap)/2)) } }
 
-  /* Carousel */
-  .carousel-viewport {
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  .carousel-viewport > div {
-    scroll-snap-align: start;
-  }
+  /* --- Product carousel viewport --- */
+  .carousel-viewport { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+  .carousel-viewport > div { scroll-snap-align: start; }
 
-  /* Floating glow pulse */
-  .pulse-glow {
-    box-shadow: 0 0 0 0 rgba(236,72,153,.6);
-    animation: pulse 2.2s infinite;
-  }
+  /* --- Hide scrollbars for carousels --- */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* --- CTA glow pulse --- */
+  .pulse-glow { box-shadow: 0 0 0 0 rgba(236,72,153,.6); animation: pulse 2.2s infinite; }
   @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(236,72,153,.55) }
-    70%  { box-shadow: 0 0 0 16px rgba(236,72,153,0) }
+    0% { box-shadow: 0 0 0 0 rgba(236,72,153,.55) }
+    70% { box-shadow: 0 0 0 16px rgba(236,72,153,0) }
     100% { box-shadow: 0 0 0 0 rgba(236,72,153,0) }
   }
 
-  /* Accordion caret */
-  details[open] summary .caret {
-    transform: rotate(180deg);
-  }
+  /* --- Accordion caret --- */
+  details[open] summary .caret { transform: rotate(180deg); }
 
-  /* Noise overlay */
+  /* --- Noise overlay --- */
+  .noise { position: relative; }                  /* (add the base element rule) */
   .noise:before {
-    content: "";
-    position: absolute;
-    inset: 0;
+    content: ""; position: absolute; inset: 0;
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4z/CfBwADHwGf8eYgTQAAAABJRU5ErkJggg==');
-    opacity: .06;
-    pointer-events: none;
+    opacity: .06; pointer-events: none;
   }
 
-  /* Button shine */
-  .shine {
-    position: relative;
-    overflow: hidden;
-  }
+  /* --- Button shine --- */
+  .shine { position: relative; overflow: hidden; }
   .shine:after {
-    content: "";
-    position: absolute;
-    inset: -100% -30%;
+    content: ""; position: absolute; inset: -100% -30%;
     background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%);
     transform: translateX(-100%);
   }
-  .shine:hover:after {
-    transition: transform .7s ease;
-    transform: translateX(100%);
-  }
+  .shine:hover:after { transition: transform .7s ease; transform: translateX(100%); }
 
-  /* Card hover */
-  .card {
-    transition: transform .2s ease, box-shadow .2s ease;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
-  }
+  /* --- Card hover --- */
+  .card { transition: transform .2s ease, box-shadow .2s ease; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
 
-  /* Sticky CTA bar */
-  .sticky-cta {
-    backdrop-filter: saturate(120%) blur(8px);
-  }
+  /* --- Sticky CTA bar --- */
+  .sticky-cta { backdrop-filter: saturate(120%) blur(8px); }
 
-  /* Hide scrollbar for carousels */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Slideshow */
-  .slideshow-images {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
+  /* --- Slideshow (hero collage) --- */
+  .slideshow-images { position: relative; width: 100%; height: 100%; }
   .slideshow-image {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 0.8s ease-in-out;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0; transition: opacity .8s ease-in-out;
     animation: slideshow 16s infinite;
   }
   .slideshow-image:nth-child(1) { animation-delay: 0s; }
@@ -128,19 +83,71 @@
   .slideshow-image:nth-child(6) { animation-delay: 10s; }
   .slideshow-image:nth-child(7) { animation-delay: 12s; }
   .slideshow-image:nth-child(8) { animation-delay: 14s; }
-
   @keyframes slideshow {
-    0% { opacity: 0; }
-    8% { opacity: 1; }
-    25% { opacity: 1; }
-    33% { opacity: 0; }
-    100% { opacity: 0; }
+    0% { opacity: 0; } 8% { opacity: 1; } 25% { opacity: 1; } 33% { opacity: 0; } 100% { opacity: 0; }
+  }
+
+  /* --- SNAPINK 3:4 Rotating Gallery (customizer/gallery) --- */
+  :root{
+    --si-width: min(92vw, 780px);
+    --si-ratio: 3/4;
+    --si-radius: 18px;
+    --si-shadow: 0 10px 25px rgba(0,0,0,.18);
+    --si-transition: 420ms ease;
+    --si-accent: #fff;
+  }
+  .snapink-gallery { display: grid; place-items: center; padding: 8px 0; }
+  .carousel { width: var(--si-width); position: relative; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .viewport { aspect-ratio: var(--si-ratio); width: 100%; overflow: hidden; border-radius: var(--si-radius); box-shadow: var(--si-shadow); background: #111; }
+  .track { display: flex; height: 100%; margin: 0; padding: 0; list-style: none; transform: translateX(0); transition: transform var(--si-transition); }
+  .slide { flex: 0 0 100%; display: grid; place-items: center; background: #000; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 42px; height: 42px; border: 0; border-radius: 999px; background: rgba(255,255,255,.85); cursor: pointer; }
+  .prev { left: 10px; } .next { right: 10px; }
+  .dots { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+  .dot { width: 9px; height: 9px; border-radius: 999px; background: #d1d5db; border: 0; cursor: pointer; }
+  .dot[aria-selected="true"] { width: 26px; border-radius: 999px; background: var(--si-accent); }
+  @media (hover:hover) and (pointer:fine) {
+    .nav { opacity: 0; transition: opacity .2s; }
+    .carousel:hover .nav { opacity: 1; }
+  }
+
+  /* --- Strap customizer / hero tweaks --- */
+  #strap-text {
+    position: absolute; top: 72%; left: 26%; width: 48%; height: 12%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: bold; color: #fff; letter-spacing: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  }
+  .hero { position: relative; overflow: hidden; background: #0a0a0a; }
+
+  /* --- Reduced motion --- */
+  @media (prefers-reduced-motion: reduce) { .track { transition: none; } }
+
+  /* --- Mobile tweaks --- */
+  @media (max-width: 640px) {
+    .carousel-viewport > div { min-width: 75% !important; max-width: 75% !important; }
+    .nav { width: 34px; height: 34px; }
+    .hero { min-height: 88svh; }
+    .hero__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .site-header {
+      position: absolute; top: 0; left: 0; right: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0)); z-index: 20;
+    }
+    .hero__scrim::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.15)); pointer-events: none;
+    }
+    .hero__inner { padding-top: 18svh; padding-bottom: 24px; }
+    #strap-text { font-size: .9rem; letter-spacing: 1px; }
   }
 }
 
+/* =========================
+   UTILITIES / HELPERS
+   ========================= */
 @layer utilities {
-  /* Utility-like helpers so they compose well with Tailwind classes */
-
   /* Subtle grid texture */
   .grid-bg {
     background-image:
