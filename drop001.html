@@ -38,17 +38,44 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <style>
-    :root{ --pink:#ec4899 }
-    body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif}
-    .grid-bg{background-image:linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);background-size:24px 24px}
-    .pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 2.2s infinite }
-    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}70%{box-shadow:0 0 0 16px rgba(236,72,153,0)}100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}}
-    .shine{ position:relative; overflow:hidden }
-    .shine:after{ content:""; position:absolute; inset:-100% -30%; background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%); transform:translateX(-100%) }
-    .shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
-    .no-scrollbar::-webkit-scrollbar{ display:none } .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
-  </style>
+ <style>
+:root{ --pink:#ec4899 }
+body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif}
+.grid-bg{background-image:linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);background-size:24px 24px}
+.pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 2.2s infinite }
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}70%{box-shadow:0 0 0 16px rgba(236,72,153,0)}100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}}
+.shine{ position:relative; overflow:hidden }
+.shine:after{ content:""; position:absolute; inset:-100% -30%; background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%); transform:translateX(-100%) }
+.shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
+.no-scrollbar::-webkit-scrollbar{ display:none } .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
+
+
+/* --- Mobile polish for the funnel --- */
+input, button { font-size: 16px; }
+img { max-width: 100%; height: auto; }
+
+
+.cta-bar { padding-bottom: 12px; }
+@supports (padding: max(0px)) {
+.cta-bar { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
+
+
+@media (max-width: 640px) {
+header {
+background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
+border-bottom-color: rgba(38,38,38,.6);
+}
+.hero { min-height: 88svh; }
+.hero-inner { padding-top: 14svh; padding-bottom: 20px; }
+#wl { display: flex; flex-direction: column; gap: 12px; }
+#wl input, #wl button { width: 100%; min-height: 48px; }
+h1 { font-size: 2rem; line-height: 1.1; }
+.lead { font-size: 1rem; line-height: 1.5; }
+.rounded-2xl, .rounded-xl { border-radius: 16px !important; }
+.nav, .btn { min-height: 44px; }
+}
+</style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
 
