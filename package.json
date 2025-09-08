@@ -5,8 +5,12 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --watch",
-    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --minify"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "dev:css": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --watch",
+    "build:css": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --minify",
+    "prebuild": "npm run build:css"
   },
   "repository": {
     "type": "git",
@@ -21,9 +25,15 @@
   "homepage": "https://github.com/Modernvox/snapink#readme",
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.12",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12"
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.6"
   },
   "dependencies": {
     "braces": "^3.0.3",
@@ -56,6 +66,8 @@
     "picocolors": "^1.1.1",
     "picomatch": "^2.3.1",
     "postcss-value-parser": "^4.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "source-map-js": "^1.2.1",
     "tapable": "^2.2.2",
     "tar": "^7.4.3",
