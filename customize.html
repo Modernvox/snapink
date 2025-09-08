@@ -6,102 +6,30 @@
   <title>Customize Your Strap — SnapInk™ (Prelaunch)</title>
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="description" content="SnapInk™ is a patent-pending strap sleeve system. Creator customization opens post-launch. Design a mockup now and join the waitlist for Drop 001 (SnapInk OG)." />
-   <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" 
-        href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
-  <link rel="icon" type="image/png" sizes="16x16" 
-        href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
-  <link rel="apple-touch-icon" 
-        href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
+  <link rel="apple-touch-icon" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/612f51ba-49f8-41cc-3eb8-e6dafea52b00/public">
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="/style.css">
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+  rel="stylesheet"
+/>
 
-  <style>
-    /* Preview container (no photo bg; neutral stage) */
-    .preview-box {
-      position: relative;
-      border: 1px solid #262626; /* neutral-800 */
-      background:
-        radial-gradient(60% 60% at 50% 50%, rgba(255,255,255,.05), rgba(0,0,0,.0) 60%),
-        #0b0b0b;                 /* neutral-950-ish */
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    /* Centered stage with fixed aspect so everything scales cleanly */
-    #stage {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/10;
-    }
-
-    /* The strap “rectangle” that the text sits on */
-    #strapRect {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 70%;
-      height: 14%;
-      transform: translate(-50%,-50%);
-      background: #111111;
-      border-radius: 10px;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.04),
-        0 10px 30px rgba(0,0,0,0.35);
-    }
-
-    /* Subtle rubber sheen overlay */
-    #strap-overlay {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 70%;
-      height: 14%;
-      transform: translate(-50%,-50%);
-      pointer-events: none;
-      border-radius: 10px;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(0,0,0,0.35));
-      mix-blend-mode: lighten; /* plays nice on dark straps */
-      filter: saturate(0.95) contrast(1.03);
-    }
-
-    /* Live text layer */
-    #strapTextLayer {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 66%;
-      transform: translate(-50%,-50%);
-      text-align: center;
-      white-space: nowrap;
-      user-select: none;
-      pointer-events: none;
-      text-rendering: optimizeLegibility;
-      line-height: 1;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 1px 2px rgba(0,0,0,.55);
-    }
-
-    /* Mobile niceties */
-    @media (max-width: 640px) {
-      #strapTextLayer { width: 82%; }
-      #strapRect, #strap-overlay { width: 82%; }
-    }
-  </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased">
 
 <!-- Header -->
 <header class="sticky top-0 z-50 bg-neutral-950/70 backdrop-blur border-b border-neutral-800">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-
-    <!-- Left: Logo (same as homepage) -->
+    <!-- Left: Logo -->
     <a href="/" class="flex items-center group flex-shrink-0" aria-label="Home">
       <img
         src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/5afcae7b-e96a-4465-ebbc-a7e7d6831000/public"
@@ -110,7 +38,7 @@
       />
     </a>
 
-    <!-- Center: Desktop nav (identical links/IDs) -->
+    <!-- Center: Desktop nav -->
     <nav class="hidden md:flex items-center gap-6 text-sm text-neutral-300 flex-1 justify-center">
       <a href="/#shop" class="hover:text-white">Drops</a>
       <a href="/#how" class="hover:text-white">How it works</a>
@@ -131,26 +59,21 @@
       </button>
     </nav>
 
-    <!-- Right: Mobile menu + Cart (same IDs for shared JS) -->
+    <!-- Right: Mobile menu + Cart -->
     <div class="flex items-center gap-2 flex-shrink-0">
-      <!-- Mobile menu toggle -->
       <button id="menuBtn" class="md:hidden p-2 rounded-lg hover:bg-neutral-800" aria-label="Open menu" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
         </svg>
       </button>
 
-      <!-- Cart / mini-cart -->
       <div class="relative" id="cartArea">
         <button id="cartBtn" aria-label="Open cart" class="relative p-2 rounded-lg hover:bg-neutral-800">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M2.25 3h1.386a1.5 1.5 0 0 1 1.463 1.2l.257 1.542M7.5 14.25h9.75a1.5 1.5 0 0 0 1.477-1.222l1.125-6.75A1.5 1.5 0 0 0 18.375 4.5H5.356M7.5 21a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm9.75 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/>
           </svg>
-          <span id="cartCount" class="absolute -top-1 -right-1 text:[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">
-            0
-          </span>
+          <span id="cartCount" class="absolute -top-1 -right-1 text:[10px] bg-pink-600 text-white rounded-full min-w-[18px] h-[18px] grid place-items-center">0</span>
         </button>
 
         <!-- Mini-cart popover -->
@@ -184,101 +107,38 @@
   </div>
 </header>
 
-  <!-- Main -->
-  <main class="max-w-7xl mx-auto px-4 py-10">
-    <div class="mb-4 inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
-      <span>🧪 Patent-pending</span>
-      <span class="h-3 w-px bg-neutral-700 mx-1"></span>
-      <span>Prelaunch preview — creator customization opens post-launch</span>
-    </div>
+<!-- Main -->
+<main class="max-w-7xl mx-auto px-4 py-10">
+  <div class="mb-4 inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">
+    <span>🧪 Patent-pending</span>
+    <span class="h-3 w-px bg-neutral-700 mx-1"></span>
+    <span>Prelaunch preview — creator customization opens post-launch</span>
+  </div>
 
-    <h1 class="text-3xl md:text-4xl font-black mb-2">Design your strap (mockup)</h1>
-    <p class="text-neutral-400 mb-6">Play with fonts, spacing, and colors to visualize your idea. Save a PNG and <a class="underline hover:text-white" href="/#waitlist">join the waitlist</a> for Drop 001 (SnapInk OG).</p>
+  <h1 class="text-3xl md:text-4xl font-black mb-2">Design your strap (mockup)</h1>
+  <p class="text-neutral-400 mb-6">
+    Play with fonts, spacing, and colors to visualize your idea. Save a PNG and
+    <a class="underline hover:text-white" href="/#waitlist">join the waitlist</a> for Drop 001 (SnapInk OG).
+  </p>
 
-    <div class="grid lg:grid-cols-2 gap-8">
-      <!-- Controls -->
-      <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 space-y-5">
-        <div class="grid sm:grid-cols-2 gap-4">
-          <label class="block">
-            <span class="text-sm text-neutral-300">Text</span>
-            <input id="strapText" maxlength="24" placeholder="Type here…" class="mt-1 w-full px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600" />
-          </label>
+  <div class="grid lg:grid-cols-2 gap-8">
+    <!-- Controls (keep your existing vanilla controls for now or replace later with React controls) -->
+    <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 space-y-5">
+      <!-- Optional: you can remove these if you will control everything from React -->
+      <div class="text-sm text-neutral-400">Controls are managed inside the React customizer.</div>
+      <p class="text-xs text-neutral-500">Tip: final customization opens post-launch. SnapInk™ is patent-pending.</p>
+    </section>
 
-          <label class="block">
-            <span class="text-sm text-neutral-300">Font</span>
-            <select id="font" class="mt-1 w-full px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600">
-              <option value="Inter, system-ui, sans-serif">Inter (Default)</option>
-              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-              <option value="'Roboto Condensed', Arial, sans-serif">Roboto Condensed</option>
-              <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
-            </select>
-          </label>
+    <!-- React Customizer Mount -->
+    <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
+      <div class="text-sm text-neutral-400 mb-3">Live preview</div>
+      <div id="customizer-root"></div>
+      <noscript class="text-xs text-red-400">JavaScript is required to run the SnapInk customizer.</noscript>
+    </section>
+  </div>
+</main>
 
-          <label class="block">
-            <span class="text-sm text-neutral-300">Text Size</span>
-            <input id="size" type="range" min="18" max="48" value="30" class="w-full">
-          </label>
-
-          <label class="block">
-            <span class="text-sm text-neutral-300">Letter Spacing</span>
-            <input id="tracking" type="range" min="0" max="16" value="1" class="w-full">
-          </label>
-
-          <label class="block">
-            <span class="text-sm text-neutral-300">Text Color</span>
-            <input id="textColor" type="color" value="#ffffff" class="w-full h-10 rounded-lg bg-neutral-900 border border-neutral-700">
-          </label>
-
-          <label class="block">
-            <span class="text-sm text-neutral-300">Strap Color</span>
-            <input id="strapColor" type="color" value="#111111" class="w-full h-10 rounded-lg bg-neutral-900 border border-neutral-700">
-          </label>
-        </div>
-
-        <div class="grid sm:grid-cols-2 gap-4">
-          <label class="inline-flex items-center gap-2">
-            <input id="upper" type="checkbox" class="accent-pink-600">
-            <span class="text-sm text-neutral-300">All caps</span>
-          </label>
-          <label class="inline-flex items-center gap-2">
-            <input id="shadow" type="checkbox" class="accent-pink-600" checked>
-            <span class="text-sm text-neutral-300">Soft text shadow</span>
-          </label>
-        </div>
-
-        <div class="flex gap-3">
-          <button id="download" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Download PNG</button>
-          <button id="addToCart" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700">Add design to cart (demo)</button>
-        </div>
-
-        <p class="text-xs text-neutral-500">Tip: best results under ~20–24 characters. Final customization opens post-launch.</p>
-      </section>
-
-      <!-- Preview -->
-      <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
-        <div class="text-sm text-neutral-400 mb-3">Live preview</div>
-
-        <div class="preview-box">
-          <div id="stage">
-            <div id="strapRect"></div>
-            <div id="strap-overlay"></div>
-            <div id="strapTextLayer"
-                 style="font-family: Inter, system-ui, sans-serif; font-size: 30px; letter-spacing: 1px;">
-              YOUR TEXT
-            </div>
-          </div>
-        </div>
-
-        <!-- Hidden canvas for export -->
-        <canvas id="exportCanvas" class="hidden" width="1600" height="1000"></canvas>
-
-        <div class="mt-4 text-xs text-neutral-500">
-          Visual mockup only. Print options (UV / pad / foil / emboss) and pricing will be announced at launch. SnapInk™ is patent-pending.
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <script src="/js/strap-customizer.js"></script>
+<!-- Mount the React app -->
+<script type="module" src="/src/customize.tsx"></script>
 </body>
 </html>
