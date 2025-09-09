@@ -16,13 +16,9 @@
   <link rel="stylesheet" href="/style.css">
 
   <!-- Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
-  rel="stylesheet"
-/>
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
 </head>
 <body class="bg-neutral-950 text-neutral-100 antialiased">
 
@@ -46,17 +42,11 @@
       <a href="/#faq" class="hover:text-white">FAQ</a>
 
       <!-- Fit Guide trigger -->
-      <button id="fitGuideBtn" type="button" class="hover:text-white underline underline-offset-4">
-        Fit Guide
-      </button>
+      <button id="fitGuideBtn" type="button" class="hover:text-white underline underline-offset-4">Fit Guide</button>
 
       <a href="/customize.html" class="hover:text-white">Customize (post-launch)</a>
-      <a href="/#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">
-        Join Waitlist
-      </a>
-      <button id="checkoutLink" class="hidden lg:inline-flex px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200" aria-label="Checkout">
-        Checkout
-      </button>
+      <a href="/#waitlist" class="px-3 py-1.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white shine">Join Waitlist</a>
+      <button id="checkoutLink" class="hidden lg:inline-flex px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200" aria-label="Checkout">Checkout</button>
     </nav>
 
     <!-- Right: Mobile menu + Cart -->
@@ -121,21 +111,9 @@
     <a class="underline hover:text-white" href="/#waitlist">join the waitlist</a> for Drop 001 (SnapInk OG).
   </p>
 
-  <div class="grid lg:grid-cols-2 gap-8">
-    <!-- Controls (keep your existing vanilla controls for now or replace later with React controls) -->
-    <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 space-y-5">
-      <!-- Optional: you can remove these if you will control everything from React -->
-      <div class="text-sm text-neutral-400">Controls are managed inside the React customizer.</div>
-      <p class="text-xs text-neutral-500">Tip: final customization opens post-launch. SnapInk™ is patent-pending.</p>
-    </section>
-
-    <!-- React Customizer Mount -->
-    <section class="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5">
-      <div class="text-sm text-neutral-400 mb-3">Live preview</div>
-      <div id="customizer-root"></div>
-      <noscript class="text-xs text-red-400">JavaScript is required to run the SnapInk customizer.</noscript>
-    </section>
-  </div>
+  <!-- React Customizer Mount (no box wrapper) -->
+  <div id="customizer-root"></div>
+  <noscript class="text-xs text-red-400">JavaScript is required to run the SnapInk customizer.</noscript>
 </main>
 
 <!-- Mount the React app -->

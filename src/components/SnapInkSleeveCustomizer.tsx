@@ -7,6 +7,7 @@ import React, {
   useState,
   useImperativeHandle,
   forwardRef,
+  useId,
 } from "react";
 
 // ---------- Types ----------
@@ -41,7 +42,7 @@ export interface SnapInkSleeveCustomizerRef {
   downloadPNG: () => void;
 }
 
-// Built-in vector fallback (can be replaced by your own SVG if you want)
+// Built-in vector fallback (simplified, no filters)
 const DEFAULT_BG =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(`
@@ -51,13 +52,9 @@ const DEFAULT_BG =
       <stop offset='0%' stop-color='#1f2937'/>
       <stop offset='100%' stop-color='#111827'/>
     </linearGradient>
-    <filter id='shadow' x='-20%' y='-20%' width='140%' height='140%'>
-      <feDropShadow dx='0' dy='22' stdDeviation='22' flood-opacity='0.25'/>
-    </filter>
   </defs>
-  <g filter='url(#shadow)'>
-    <path d='M 40 60 L 1260 60 Q 1500 60 1540 210 Q 1500 360 1260 360 L 40 360 Z' fill='url(#g)'/>
-  </g>
+  <rect width='1600' height='450' fill='#0b0b0b'/>
+  <path d='M 40 60 L 1260 60 Q 1500 60 1540 210 Q 1500 360 1260 360 L 40 360 Z' fill='url(#g)'/>
 </svg>`);
 
 const WEB_SAFE_FONTS: { label: string; stack: string }[] = [
@@ -97,7 +94,7 @@ const SnapInkSleeveCustomizer = forwardRef<SnapInkSleeveCustomizerRef, SnapInkSl
 function SnapInkSleeveCustomizer(
   {
     backgroundImageUrl,
-    width = 1000,
+    width = 1400,
     onChange,
     className = "",
     initial = {},
@@ -106,6 +103,7 @@ function SnapInkSleeveCustomizer(
 ) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dlRef = useRef<HTMLAnchorElement | null>(null);
+  const uid = useId();
 
   const [text, setText] = useState<string>(initial.text ?? "SNAPINK");
   const [font, setFont] = useState<string>(initial.font ?? WEB_SAFE_FONTS[0].stack);
@@ -123,7 +121,7 @@ function SnapInkSleeveCustomizer(
   const [showGuides, setShowGuides] = useState<boolean>(true);
   const [safeMargin, setSafeMargin] = useState<number>(initial.safeMargin ?? 6);
   const [bgType, setBgType] = useState<"image" | "vector">(initial.bgType ?? "image");
-  const [bgFit, setBgFit] = useState<"cover" | "contain">(initial.bgFit ?? "cover");
+  const [bgFit, setBgFit] = useState<"cover" | "contain">(initial.bgFit ?? "contain");
 
   // PNG export scale (1x–4x)
   const [exportScale, setExportScale] = useState<number>(2);
@@ -183,7 +181,7 @@ function SnapInkSleeveCustomizer(
   const viewH = 450;
   const margin = (safeMargin / 100) * viewH;
 
-  const pathId = "text-arc-path";
+  const pathId = `text-arc-path-${uid}`;
 
   // Arc path with control point clamped into safe area
   const arcPath = useMemo(() => {
@@ -236,7 +234,10 @@ function SnapInkSleeveCustomizer(
   const textAnchor = align === "start" ? "start" : align === "end" ? "end" : "middle";
 
   return (
-    <div className={`w-full ${className}`} style={{ maxWidth: width }}>
+    <div
+      className={`w-full ${className}`}
+      style={{ maxWidth: width ?? 1400, margin: "0 auto", padding: "0 1rem" }}
+    >
       {/* Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
@@ -278,7 +279,7 @@ function SnapInkSleeveCustomizer(
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Range label="Font size" min={60} max={240} step={1} value={fontSize} setValue={setFontSize} suffix="px" />
+            <Range label="Font size" min={60} max={340} step={1} value={fontSize} setValue={setFontSize} suffix="px" />
             <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
             <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
             <Range label="Arc (bow)" min={-15} max={20} step={1} value={arc} setValue={setArc} suffix="%" />
@@ -385,106 +386,107 @@ function SnapInkSleeveCustomizer(
       </div>
 
       {/* PREVIEW */}
-      <div className="relative w-full rounded-3xl border border-neutral-800 bg-neutral-950">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${viewW} ${viewH}`}
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-auto block rounded-3xl"
-          style={{ aspectRatio: `${viewW}/${viewH}` }}
-        >
-          <defs>
-            {/* Emboss / Lighting */}
-            <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="1.25" result="alpha" />
-              <feSpecularLighting in="alpha" surfaceScale="3" specularConstant="1.1" specularExponent="35" lightingColor="#ffffff" result="spec">
-                <fePointLight x="-200" y="-300" z="400" />
-              </feSpecularLighting>
-              <feComposite in="spec" in2="SourceAlpha" operator="in" result="specClip" />
-              <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="bevel" />
-              <feMerge>
-                <feMergeNode in="bevel" />
-                <feMergeNode in="specClip" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+      <div className="rounded-3xl border border-neutral-800 bg-neutral-800 p-4">
+        <div className="relative w-full overflow-hidden rounded-2xl" style={{ aspectRatio: `1600/450` }}>
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 1600 450`}
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute inset-0 block h-full w-full"
+          >
+            <defs>
+              {/* Emboss / Lighting */}
+              <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.25" result="alpha" />
+                <feSpecularLighting in="alpha" surfaceScale="3" specularConstant="1.1" specularExponent="35" lightingColor="#ffffff" result="spec">
+                  <fePointLight x="-200" y="-300" z="400" />
+                </feSpecularLighting>
+                <feComposite in="spec" in2="SourceAlpha" operator="in" result="specClip" />
+                <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="bevel" />
+                <feMerge>
+                  <feMergeNode in="bevel" />
+                  <feMergeNode in="specClip" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
 
-            {/* subtle text shadow for flat mode */}
-            <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
-            </filter>
+              {/* subtle text shadow for flat mode */}
+              <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
+              </filter>
 
-            {/* text path for arc */}
-            <path id={pathId} d={arcPath} />
-          </defs>
+              {/* text path for arc */}
+              <path id={pathId} d={arcPath} />
+            </defs>
 
-          {/* background as a direct <image> (fixes scaling vs patternUnits) */}
-          <image
-            href={safeBgUrl}
-            crossOrigin="anonymous"
-            x="0"
-            y="0"
-            width={viewW}
-            height={viewH}
-            preserveAspectRatio={bgFit === "cover" ? "xMidYMid slice" : "xMidYMid meet"}
-          />
+            {/* background as a direct <image> (scales predictably) */}
+            <image
+              href={safeBgUrl}
+              crossOrigin="anonymous"
+              x="0"
+              y="0"
+              width={1600}
+              height={450}
+              preserveAspectRatio={bgFit === "cover" ? "xMidYMid slice" : "xMidYMid meet"}
+            />
 
-          {/* safe area guides */}
-          {showGuides && (
-            <g opacity="0.18">
-              <rect x={margin} y={margin} width={viewW - margin * 2} height={viewH - margin * 2} fill="none" stroke="#ffffff" strokeDasharray="10 7" />
-              <line x1={viewW / 2} y1={margin} x2={viewW / 2} y2={viewH - margin} stroke="#fff" strokeDasharray="6 6" />
-              <line x1={margin} y1={viewH / 2} x2={viewW - margin} y2={viewH / 2} stroke="#fff" strokeDasharray="6 6" />
-            </g>
-          )}
+            {/* safe area guides */}
+            {showGuides && (
+              <g opacity="0.18">
+                <rect x={margin} y={margin} width={1600 - margin * 2} height={450 - margin * 2} fill="none" stroke="#ffffff" strokeDasharray="10 7" />
+                <line x1={1600 / 2} y1={margin} x2={1600 / 2} y2={450 - margin} stroke="#fff" strokeDasharray="6 6" />
+                <line x1={margin} y1={450 / 2} x2={1600 - margin} y2={450 / 2} stroke="#fff" strokeDasharray="6 6" />
+              </g>
+            )}
 
-          {/* TEXT */}
-          {Boolean(text) && (
-            <g style={{ filter: styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)" }}>
-              <text
-                fontFamily={font}
-                fontSize={fontSize}
-                letterSpacing={`${tracking}em`}
-                fill={fill}
-                stroke={strokeWidth > 0 ? stroke : "none"}
-                strokeWidth={strokeWidth}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                dominantBaseline="central"
-                textAnchor={textAnchor}
-                paintOrder="stroke fill"
-              >
-                {Math.abs(arc) < 1 ? (
-                  // Straight layout (supports multi-line)
-                  text.split("\n").map((line, i, arr) => (
-                    <tspan
-                      key={i}
-                      x={(posX / 100) * viewW}
-                      y={(posY / 100) * viewH + (i - (arr.length - 1) / 2) * (fontSize * lineHeight)}
-                    >
-                      {line}
-                    </tspan>
-                  ))
-                ) : (
-                  // Arced layout: stack lines by offsetting startOffset a bit
-                  (() => {
-                    const lines = text.split("\n");
-                    const centerOffset = clamp(posX, safeMargin, 100 - safeMargin);
-                    const lineGapPct = (fontSize * lineHeight) / viewH * 100; // visual approximation
-                    return lines.map((line, i) => {
-                      const offsetPct = centerOffset + (i - (lines.length - 1) / 2) * lineGapPct;
-                      return (
-                        <textPath key={i} href={`#${pathId}`} startOffset={`${clamp(offsetPct, safeMargin, 100 - safeMargin)}%`}>
-                          {line}
-                        </textPath>
-                      );
-                    });
-                  })()
-                )}
-              </text>
-            </g>
-          )}
-        </svg>
+            {/* TEXT */}
+            {Boolean(text) && (
+              <g style={{ filter: styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)" }}>
+                <text
+                  fontFamily={font}
+                  fontSize={fontSize}
+                  letterSpacing={`${tracking}em`}
+                  fill={fill}
+                  stroke={strokeWidth > 0 ? stroke : "none"}
+                  strokeWidth={strokeWidth}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  dominantBaseline="central"
+                  textAnchor={textAnchor}
+                  paintOrder="stroke fill"
+                >
+                  {Math.abs(arc) < 1 ? (
+                    // Straight layout (supports multi-line)
+                    text.split("\n").map((line, i, arr) => (
+                      <tspan
+                        key={i}
+                        x={(posX / 100) * 1600}
+                        y={(posY / 100) * 450 + (i - (arr.length - 1) / 2) * (fontSize * lineHeight)}
+                      >
+                        {line}
+                      </tspan>
+                    ))
+                  ) : (
+                    // Arced layout: stack lines by offsetting startOffset a bit
+                    (() => {
+                      const lines = text.split("\n");
+                      const centerOffset = clamp(posX, safeMargin, 100 - safeMargin);
+                      const lineGapPct = (fontSize * lineHeight) / 450 * 100; // visual approximation
+                      return lines.map((line, i) => {
+                        const offsetPct = centerOffset + (i - (lines.length - 1) / 2) * lineGapPct;
+                        return (
+                          <textPath key={i} href={`#${pathId}`} startOffset={`${clamp(offsetPct, safeMargin, 100 - safeMargin)}%`}>
+                            {line}
+                          </textPath>
+                        );
+                      });
+                    })()
+                  )}
+                </text>
+              </g>
+            )}
+          </svg>
+        </div>
       </div>
     </div>
   );
