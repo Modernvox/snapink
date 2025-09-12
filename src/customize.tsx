@@ -1,18 +1,20 @@
+import "./input.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import SnapInkSleeveCustomizer from "./components/SnapInkSleeveCustomizer";
 
-// Import your SVG so Vite emits it and gives us a URL
-// (make sure logo_shape.svg lives at src/assets/logo_shape.svg)
-import logoBg from "@/assets/logo_shape.svg";
+
+
+// If you still want to use a custom logo background, make sure the SVG actually exists
+// and the alias resolves, otherwise drop the import and let the customizer use its default
+// import logoBg from "@/assets/logo_shape.svg";
 
 function App() {
   return (
     <div className="mx-auto px-4 py-10" style={{ maxWidth: 1600 }}>
       <SnapInkSleeveCustomizer
-        backgroundImageUrl={logoBg} // ✅ use your SVG as the background
-        width={1600}                // cap page width so UI doesn’t blow up
-        initial={{                  // optional: sensible defaults
+        width={1600}
+        initial={{
           bgType: "image",
           bgFit: "contain",
           posX: 50,
