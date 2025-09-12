@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@config "./src/tailwind.config.js";
+@config "./tailwind.config.js";   /* both files live in src/, so no extra src/ */
+
 
 /* =========================
    COMPONENTS / CUSTOM CSS

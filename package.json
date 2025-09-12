@@ -8,8 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "dev:css": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --watch",
-    "build:css": "npx @tailwindcss/cli -i ./src/input.css -o ./style.css --minify",
+    "dev:css":   "npx @tailwindcss/cli -i ./src/input.css -o ./public/style.css --watch",
+    "build:css": "npx @tailwindcss/cli -i ./src/input.css -o ./public/style.css --minify",
     "prebuild": "npm run build:css"
   },
   "repository": {

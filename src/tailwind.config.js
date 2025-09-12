@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./*.html",
-    "./src/**/*.{js,jsx,ts,tsx,html}" // 👈 add this so production keeps your TSX classes
+    "./src/**/*.{js,jsx,ts,tsx,html}" 
   ],
   theme: {
     extend: {
