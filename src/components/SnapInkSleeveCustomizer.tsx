@@ -330,18 +330,30 @@ function SnapInkSleeveCustomizer(
             <Range label="Arc (bow)" min={-15} max={20} step={1} value={arc} setValue={setArc} suffix="%" />
           </div>
 
-          <div className="grid grid-cols-3 gap-3 items-end">
-            <div>
-              <label className="block text-xs text-neutral-400">Fill</label>
-              <input type="color" value={fill} onChange={(e) => setFill(e.target.value)} className="w-full h-9 rounded overflow-hidden" />
-            </div>
-            <div>
-              <label className="block text-xs text-neutral-400">Outline</label>
-              <input type="color" value={stroke} onChange={(e) => setStroke(e.target.value)} className="w-full h-9 rounded overflow-hidden" />
-            </div>
-            <Range label="Stroke" min={0} max={6} step={0.5} value={strokeWidth} setValue={setStrokeWidth} />
-          </div>
-        </div>
+<div className="grid grid-cols-4 gap-3 items-end">
+  <div>
+    <label className="block text-xs text-neutral-400">Fill</label>
+    <input type="color" value={fill} onChange={(e) => setFill(e.target.value)} className="w-full h-9 rounded overflow-hidden" />
+  </div>
+
+  <div>
+    <label className="block text-xs text-neutral-400">Outline</label>
+    <input type="color" value={stroke} onChange={(e) => setStroke(e.target.value)} className="w-full h-9 rounded overflow-hidden" />
+  </div>
+
+  <Range label="Stroke" min={0} max={6} step={0.5} value={strokeWidth} setValue={setStrokeWidth} />
+
+  {/* ⭐ NEW Background Color Picker */}
+  <div>
+    <label className="block text-xs text-neutral-400">Background</label>
+    <input
+      type="color"
+      value={backgroundColor}
+      onChange={(e) => setBackgroundColor(e.target.value)}
+      className="w-full h-9 rounded overflow-hidden"
+    />
+  </div>
+</div>
 
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
           <div className="grid grid-cols-3 gap-3 items-center">
