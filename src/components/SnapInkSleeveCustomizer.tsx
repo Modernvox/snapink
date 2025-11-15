@@ -478,8 +478,8 @@ function SnapInkSleeveCustomizer(
                 <feComposite in="spec" in2="SourceAlpha" operator="in" result="specClip" />
                 <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="bevel" />
                 <feMerge>
-                  <feMergeNode in="bevel" />
-                  <feMergeNode in="specClip" />
+                  <feMergeNode in="specClip"/>
+                  <feMergeNode in="bevel"/>
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
