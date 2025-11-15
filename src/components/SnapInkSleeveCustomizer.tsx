@@ -28,6 +28,7 @@ export type SleeveDraft = {
   safeMargin: number;
   bgType: "image" | "vector";
   bgFit: "cover" | "contain";
+  backgroundColor: string;
 };
 
 export interface SnapInkSleeveCustomizerProps {
@@ -161,6 +162,9 @@ function SnapInkSleeveCustomizer(
   const [safeMargin, setSafeMargin] = useState<number>(initial.safeMargin ?? 6);
   const [bgType, setBgType] = useState<"image" | "vector">(initial.bgType ?? "image");
   const [bgFit, setBgFit] = useState<"cover" | "contain">(initial.bgFit ?? "contain");
+  const [backgroundColor, setBackgroundColor] = useState<string>(
+  initial.backgroundColor ?? "#000000"
+);
 
   // PNG export scale (1x–4x)
   const [exportScale, setExportScale] = useState<number>(2);
@@ -208,11 +212,13 @@ function SnapInkSleeveCustomizer(
       text, font, fontSize, tracking, lineHeight,
       fill, stroke, strokeWidth, styleMode,
       arc, posX, posY, align, safeMargin, bgType, bgFit,
+      backgroundColor,
     });
   }, [
     text, font, fontSize, tracking, lineHeight,
     fill, stroke, strokeWidth, styleMode,
     arc, posX, posY, align, safeMargin, bgType, bgFit, onChange
+    backgroundColor
   ]);
 
   // Derived sizes
@@ -249,7 +255,7 @@ function SnapInkSleeveCustomizer(
       canvas.height = viewH * scale;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      ctx.fillStyle = "#0b0b0b";
+      ctx.fillStyle = backgroundColor;   // ⭐ NEW
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
@@ -457,6 +463,14 @@ function SnapInkSleeveCustomizer(
               {/* text path for arc */}
               <path id={pathId} d={arcPath} />
             </defs>
+            {/* ⭐ Solid background color layer */}
+            <rect
+              x="0"
+              y="0"
+              width="1600"
+              height="450"
+              fill={backgroundColor}
+            />
 
             {/* background as a direct <image> (scales predictably) */}
             <image
