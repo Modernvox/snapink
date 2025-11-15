@@ -373,7 +373,7 @@ function SnapInkSleeveCustomizer(
             <button
               onClick={() => {
                 setPosX(50);
-                setPosY(55);
+                setPosY(50);
               }}
               className="rounded-lg border border-neutral-700 bg-neutral-800/70 text-neutral-200 px-3 py-2"
             >
