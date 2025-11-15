@@ -43,7 +43,13 @@ export interface SnapInkSleeveCustomizerRef {
 }
 
 // Built-in vector fallback (simplified, no filters)
-const DEFAULT_BG = "";
+const DEFAULT_BG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='450'>
+  <rect width='1600' height='450' fill='#000000'/>
+</svg>
+`);
 
 /**
  * A curated list of typefaces for the customizer.  The first family in each
