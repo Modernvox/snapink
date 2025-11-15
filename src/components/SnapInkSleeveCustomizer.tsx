@@ -136,9 +136,9 @@ function SnapInkSleeveCustomizer(
   const [stroke, setStroke] = useState(initial.stroke ?? "#000000");
   const [strokeWidth, setStrokeWidth] = useState(initial.strokeWidth ?? 0);
   const [styleMode, setStyleMode] = useState(initial.styleMode ?? "emboss");
-  const [arc, setArc] = useState(initial.arc ?? 8);
+  const [arc, setArc] = useState<number>(initial.arc ?? 0);
   const [posX, setPosX] = useState(initial.posX ?? 50);
-  const [posY, setPosY] = useState(initial.posY ?? 55);
+  const [posY, setPosY] = useState(initial.posY ?? 50);
   const [align, setAlign] = useState(initial.align ?? "center");
   const [showGuides, setShowGuides] = useState(true);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? 6);
@@ -491,18 +491,29 @@ function SnapInkSleeveCustomizer(
               <path id={pathId} d={arcPath} />
             </defs>
 
-            {/* Solid background color */}
-            <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
-
-            {/* Image background */}
-            <image
-              href={safeBgUrl}
+            {/* Solid background always applied */}
+            <rect
               x="0"
               y="0"
               width="1600"
               height="450"
-              preserveAspectRatio={bgFit === "cover" ? "xMidYMid slice" : "xMidYMid meet"}
+              fill={backgroundColor}
             />
+
+            {/* Background image on top, only if user selects "image" */}
+            {bgType === "image" && (
+              <image
+                href={safeBgUrl}
+                crossOrigin="anonymous"
+                x="0"
+                y="0"
+                width="1600"
+                height="450"
+                preserveAspectRatio={
+                  bgFit === "cover" ? "xMidYMid slice" : "xMidYMid meet"
+                }
+              />
+            )}
 
             {/* Safe area guides */}
             {showGuides && (
@@ -513,7 +524,7 @@ function SnapInkSleeveCustomizer(
                   width={1600 - margin * 2}
                   height={450 - margin * 2}
                   fill="none"
-                  stroke="#ffffff"
+                  stroke="#ff0000"
                   strokeDasharray="10 7"
                 />
                 <line
