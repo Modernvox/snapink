@@ -435,7 +435,7 @@ function SnapInkSleeveCustomizer(
             Download PNG preview
           </button>
 
-          <div className="flex items-center gap-2 text-xs text-neutral-400">
+          <div className="flex items-center gap-2 text-xs text-neutral-420">
             <span>Scale</span>
             <select
               className="rounded bg-neutral-800/80 border border-neutral-700 px-2 py-1 text-neutral-200"
