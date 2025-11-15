@@ -142,7 +142,7 @@ function SnapInkSleeveCustomizer(
   const [align, setAlign] = useState(initial.align ?? "center");
   const [showGuides, setShowGuides] = useState(true);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? 6);
-  const [bgType, setBgType] = useState(initial.bgType ?? "image");
+  const [bgType, setBgType] = useState(initial.bgType ?? "vector");
   const [bgFit, setBgFit] = useState(initial.bgFit ?? "contain");
   const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor ?? "#000000");
 
