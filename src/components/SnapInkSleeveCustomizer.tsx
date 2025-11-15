@@ -64,20 +64,50 @@ const DEFAULT_BG =
  * selection dropdown.  Feel free to add or remove entries to suit your brand.
  */
 const WEB_SAFE_FONTS: { label: string; stack: string }[] = [
+  // Bold / Block / Display
   { label: "Impact / Arial Black", stack: "Impact, Arial Black, system-ui, sans-serif" },
-  { label: "Montserrat", stack: "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
-  { label: "Inter", stack: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Bebas Neue", stack: "'Bebas Neue', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Anton", stack: "'Anton', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Staatliches", stack: "'Staatliches', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Bungee", stack: "'Bungee', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Black Ops One", stack: "'Black Ops One', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Stint Ultra Expanded", stack: "'Stint Ultra Expanded', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Teko", stack: "'Teko', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Righteous", stack: "'Righteous', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Kanit", stack: "'Kanit', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Oxanium", stack: "'Oxanium', Impact, 'Arial Black', system-ui, sans-serif" },
+
+  // Modern Sans / Clean / Fashion
+  { label: "Montserrat", stack: "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Inter", stack: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Open Sans", stack: "'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Lato", stack: "'Lato', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Oswald", stack: "'Oswald', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Poppins", stack: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
-  { label: "Playfair Display", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
-  { label: "Abril Fatface", stack: "'Abril Fatface', Georgia, 'Times New Roman', serif" },
   { label: "Raleway", stack: "'Raleway', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
   { label: "Nunito", stack: "'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
-  { label: "Pacifico", stack: "'Pacifico', 'Comic Sans MS', cursive, sans-serif" },
+  { label: "Zalando Sans", stack: "'Zalando Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Julius Sans One", stack: "'Julius Sans One', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Unica One", stack: "'Unica One', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Sawarabi Gothic", stack: "'Sawarabi Gothic', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+
+  // Luxury Serif / High-End
+  { label: "Playfair Display", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
+  { label: "Abril Fatface", stack: "'Abril Fatface', Georgia, 'Times New Roman', serif" },
+  { label: "Cinzel", stack: "'Cinzel', Georgia, 'Times New Roman', serif" },
+  { label: "Cinzel Decorative", stack: "'Cinzel Decorative', Georgia, 'Times New Roman', serif" },
+  { label: "Marcellus", stack: "'Marcellus', Georgia, 'Times New Roman', serif" },
+  { label: "Cormorant Garamond", stack: "'Cormorant Garamond', Georgia, 'Times New Roman', serif" },
+  { label: "Prata", stack: "'Prata', Georgia, 'Times New Roman', serif" },
+  { label: "Cardo", stack: "'Cardo', Georgia, 'Times New Roman', serif" },
+  { label: "Libre Baskerville", stack: "'Libre Baskerville', Georgia, 'Times New Roman', serif" },
+  { label: "Zilla Slab", stack: "'Zilla Slab', Georgia, 'Times New Roman', serif" },
+
+  // Script / Cursive / Signature
+  { label: "Great Vibes", stack: "'Great Vibes', cursive" },
+  { label: "Tangerine", stack: "'Tangerine', cursive" },
+  { label: "Hurricane", stack: "'Hurricane', cursive" },
+  { label: "Pacifico", stack: "'Pacifico', 'Comic Sans MS', cursive, sans-serif" }
 ];
 
 function clamp(n: number, min: number, max: number) {
