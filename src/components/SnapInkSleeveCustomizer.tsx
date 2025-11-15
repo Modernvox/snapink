@@ -217,7 +217,7 @@ function SnapInkSleeveCustomizer(
   }, [
     text, font, fontSize, tracking, lineHeight,
     fill, stroke, strokeWidth, styleMode,
-    arc, posX, posY, align, safeMargin, bgType, bgFit, onChange
+    arc, posX, posY, align, safeMargin, bgType, bgFit, onChange,
     backgroundColor
   ]);
 
