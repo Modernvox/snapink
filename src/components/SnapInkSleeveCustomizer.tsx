@@ -57,12 +57,27 @@ const DEFAULT_BG =
   <path d='M 40 60 L 1260 60 Q 1500 60 1540 210 Q 1500 360 1260 360 L 40 360 Z' fill='url(#g)'/>
 </svg>`);
 
+/**
+ * A curated list of typefaces for the customizer.  The first family in each
+ * stack corresponds to a webfont loaded via Google Fonts (see `customize.html`),
+ * followed by sensible local fallbacks.  Each label appears in the font
+ * selection dropdown.  Feel free to add or remove entries to suit your brand.
+ */
 const WEB_SAFE_FONTS: { label: string; stack: string }[] = [
   { label: "Impact / Arial Black", stack: "Impact, Arial Black, system-ui, sans-serif" },
-  { label: "Montserrat", stack: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
-  { label: "Inter", stack: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
-  { label: "Bebas Neue", stack: "Bebas Neue, Impact, Arial Black, system-ui, sans-serif" },
-  { label: "Anton", stack: "Anton, Impact, Arial Black, system-ui, sans-serif" },
+  { label: "Montserrat", stack: "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Inter", stack: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Bebas Neue", stack: "'Bebas Neue', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Anton", stack: "'Anton', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Open Sans", stack: "'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Lato", stack: "'Lato', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Oswald", stack: "'Oswald', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Poppins", stack: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Playfair Display", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
+  { label: "Abril Fatface", stack: "'Abril Fatface', Georgia, 'Times New Roman', serif" },
+  { label: "Raleway", stack: "'Raleway', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Nunito", stack: "'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Pacifico", stack: "'Pacifico', 'Comic Sans MS', cursive, sans-serif" },
 ];
 
 function clamp(n: number, min: number, max: number) {
