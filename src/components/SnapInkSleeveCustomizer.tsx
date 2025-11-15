@@ -281,7 +281,7 @@ function SnapInkSleeveCustomizer(
           <label className="block text-sm text-neutral-300">Custom text</label>
           <input
             value={text}
-            onChange={(e) => setText(e.target.value.toUpperCase())}
+            onChange={(e) => setText(e.target.value)}
             placeholder="ENTER YOUR TEXT"
             maxLength={40}
             className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
