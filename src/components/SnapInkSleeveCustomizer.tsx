@@ -317,7 +317,7 @@ function SnapInkSleeveCustomizer(
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Range label="Font size" min={60} max={400} step={1} value={fontSize} setValue={setFontSize} suffix="px" />
+            <Range label="Font size" min={60} max={420} step={1} value={fontSize} setValue={setFontSize} suffix="px" />
             <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
             <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
             <Range label="Arc (bow)" min={-15} max={20} step={1} value={arc} setValue={setArc} suffix="%" />
