@@ -16,15 +16,16 @@ module.exports = {
         card: "0 10px 30px rgba(0,0,0,.35)",
       },
       fontFamily: {
+        // Default UI sans
         sans: ["Inter", "system-ui", "sans-serif"],
 
-        // Script & Signature
+        // === Script / Emotional ===
         greatvibes: ["'Great Vibes'", "cursive"],
         tangerine: ["'Tangerine'", "cursive"],
         hurricane: ["'Hurricane'", "cursive"],
         pacifico: ["'Pacifico'", "cursive"],
 
-        // Luxury Serif / High-End
+        // === Luxury Serif ===
         playfair: ["'Playfair Display'", "serif"],
         abril: ["'Abril Fatface'", "serif"],
         cinzel: ["'Cinzel'", "serif"],
@@ -36,7 +37,7 @@ module.exports = {
         baskerville: ["'Libre Baskerville'", "serif"],
         zillaslab: ["'Zilla Slab'", "serif"],
 
-        // Clean Modern Sans / Fashion
+        // === Clean Modern Sans ===
         montserrat: ["'Montserrat'", "sans-serif"],
         opensans: ["'Open Sans'", "sans-serif"],
         lato: ["'Lato'", "sans-serif"],
@@ -44,22 +45,29 @@ module.exports = {
         poppins: ["'Poppins'", "sans-serif"],
         raleway: ["'Raleway'", "sans-serif"],
         nunito: ["'Nunito'", "sans-serif"],
+        comfortaa: ["'Comfortaa'", "sans-serif"],
         zalando: ["'Zalando Sans'", "sans-serif"],
         julius: ["'Julius Sans One'", "sans-serif"],
         unica: ["'Unica One'", "sans-serif"],
         sawarabi: ["'Sawarabi Gothic'", "sans-serif"],
 
-        // Bold / Athletic / Display
+        // === Bold / Display / Athletic / Hype ===
+        impact: ["Impact", "'Arial Black'", "sans-serif"],
         bebasneue: ["'Bebas Neue'", "sans-serif"],
+        bebasneueExpanded: ["'Bebas Neue Expanded'", "sans-serif"],
         anton: ["'Anton'", "sans-serif"],
+        leaguegothic: ["'League Gothic'", "sans-serif"],
         staatliches: ["'Staatliches'", "sans-serif"],
         bungee: ["'Bungee'", "sans-serif"],
+        bungeeshade: ["'Bungee Shade'", "sans-serif"],
         blackops: ["'Black Ops One'", "sans-serif"],
         stint: ["'Stint Ultra Expanded'", "sans-serif"],
         teko: ["'Teko'", "sans-serif"],
         righteous: ["'Righteous'", "sans-serif"],
         kanit: ["'Kanit'", "sans-serif"],
-        oxanium: ["'Oxanium'", "sans-serif"]
+        oxanium: ["'Oxanium'", "sans-serif"],
+        archivo: ["'Archivo Black'", "sans-serif"],
+        fredoka: ["'Fredoka One'", "sans-serif"]
       }
     },
   },

@@ -52,29 +52,39 @@ const DEFAULT_BG =
 `);
 
 const WEB_SAFE_FONTS = [
+  // --- HYPE / MUSIC / STREET ---
   { label: "Impact / Arial Black", stack: "Impact, Arial Black, system-ui, sans-serif" },
   { label: "Bebas Neue", stack: "'Bebas Neue', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Anton", stack: "'Anton', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "League Gothic", stack: "'League Gothic', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Staatliches", stack: "'Staatliches', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Bungee", stack: "'Bungee', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Bungee Shade", stack: "'Bungee Shade', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Black Ops One", stack: "'Black Ops One', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Stint Ultra Expanded", stack: "'Stint Ultra Expanded', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Teko", stack: "'Teko', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Righteous", stack: "'Righteous', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Kanit", stack: "'Kanit', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Oxanium", stack: "'Oxanium', Impact, 'Arial Black', system-ui, sans-serif" },
+  { label: "Oswald", stack: "'Oswald', system-ui, sans-serif" },
+
+  // --- MODERN BRAND TEXT ---
   { label: "Montserrat", stack: "'Montserrat', system-ui, sans-serif" },
   { label: "Inter", stack: "'Inter', system-ui, sans-serif" },
   { label: "Open Sans", stack: "'Open Sans', system-ui, sans-serif" },
   { label: "Lato", stack: "'Lato', system-ui, sans-serif" },
-  { label: "Oswald", stack: "'Oswald', system-ui, sans-serif" },
+  { label: "Archivo Black", stack: "'Archivo Black', Impact, 'Arial Black', sans-serif" },
+  { label: "Unica One", stack: "'Unica One', system-ui, sans-serif" },
+  { label: "Julius Sans One", stack: "'Julius Sans One', system-ui, sans-serif" },
+  { label: "Sawarabi Gothic", stack: "'Sawarabi Gothic', system-ui, sans-serif" },
+
+  // --- EMOTIONAL / POSITIVE ---
   { label: "Poppins", stack: "'Poppins', system-ui, sans-serif" },
   { label: "Raleway", stack: "'Raleway', system-ui, sans-serif" },
   { label: "Nunito", stack: "'Nunito', system-ui, sans-serif" },
-  { label: "Zalando Sans", stack: "'Zalando Sans', system-ui, sans-serif" },
-  { label: "Julius Sans One", stack: "'Julius Sans One', system-ui, sans-serif" },
-  { label: "Unica One", stack: "'Unica One', system-ui, sans-serif" },
-  { label: "Sawarabi Gothic", stack: "'Sawarabi Gothic', system-ui, sans-serif" },
+  { label: "Comfortaa", stack: "'Comfortaa', system-ui, sans-serif" },
+
+  // --- LUXURY / FASHION SERIF ---
   { label: "Playfair Display", stack: "'Playfair Display', serif" },
   { label: "Abril Fatface", stack: "'Abril Fatface', serif" },
   { label: "Cinzel", stack: "'Cinzel', serif" },
@@ -85,10 +95,13 @@ const WEB_SAFE_FONTS = [
   { label: "Cardo", stack: "'Cardo', serif" },
   { label: "Libre Baskerville", stack: "'Libre Baskerville', serif" },
   { label: "Zilla Slab", stack: "'Zilla Slab', serif" },
+
+  // --- SCRIPT / FLOWING / PERSONAL ---
   { label: "Great Vibes", stack: "'Great Vibes', cursive" },
   { label: "Tangerine", stack: "'Tangerine', cursive" },
   { label: "Hurricane", stack: "'Hurricane', cursive" },
-  { label: "Pacifico", stack: "'Pacifico', cursive" }
+  { label: "Pacifico", stack: "'Pacifico', cursive" },
+  { label: "Fredoka One", stack: "'Fredoka One', system-ui, sans-serif" }
 ];
 
 function clamp(n: number, min: number, max: number) {
