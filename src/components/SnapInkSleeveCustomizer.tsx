@@ -411,7 +411,7 @@ function SnapInkSleeveCustomizer(
               <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur in="SourceAlpha" stdDeviation="1.25" result="alpha" />
                 <feSpecularLighting
-                  in="alpha"
+                  in="blur"
                   surfaceScale="3"
                   specularConstant="1.1"
                   specularExponent="35"
@@ -420,11 +420,9 @@ function SnapInkSleeveCustomizer(
                 >
                   <fePointLight x="-200" y="-300" z="400" />
                 </feSpecularLighting>
-                <feComposite in="spec" in2="SourceAlpha" operator="in" result="specClip" />
-                <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="bevel" />
+                <feComposite in="spec" in2="SourceGraphic" operator="in" result="litSpec" />
                 <feMerge>
-                  <feMergeNode in="specClip" />
-                  <feMergeNode in="bevel" />
+                  <feMergeNode in="litSpec"/>
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
@@ -473,7 +471,7 @@ function SnapInkSleeveCustomizer(
 
             {/* TEXT RENDER */}
             {Boolean(text) && (
-              <g style={{ filter: styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)" }}>
+              <g filter={styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"}>
                 <text
                   fontFamily={font}
                   fontSize={fontSize}
