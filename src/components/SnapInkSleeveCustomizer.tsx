@@ -40,6 +40,7 @@ export interface SnapInkSleeveCustomizerRef {
   downloadPNG: () => void;
 }
 
+// ---------- Fonts ----------
 const WEB_SAFE_FONTS = [
   // --- HYPE / MUSIC / STREET ---
   { label: "Impact / Arial Black", stack: "Impact, Arial Black, system-ui, sans-serif" },
@@ -92,12 +93,36 @@ const WEB_SAFE_FONTS = [
   { label: "Pacifico", stack: "'Pacifico', cursive" },
   { label: "Fredoka One", stack: "'Fredoka One', system-ui, sans-serif" },
 ];
+
+// ---------- Filament Color Swatches ----------
+// Cleaned from: #000000, 90999D, FFFFFF, D7021C, FFBDD1, A47C48, FFA11D,
+// FFDF03, 0378D0, 274E96, 8B69CE, 00EB75, Neon Red, Neon Green
+const COLOR_SWATCHES = [
+  { label: "Black", value: "#000000" },
+  { label: "Cool Grey", value: "#90999D" },
+  { label: "White", value: "#FFFFFF" },
+  { label: "Deep Red", value: "#D7021C" },
+  { label: "Soft Pink", value: "#FFBDD1" },
+  { label: "Brown / Tan", value: "#A47C48" },
+  { label: "Orange", value: "#FFA11D" },
+  { label: "Yellow", value: "#FFDF03" },
+  { label: "Bright Blue", value: "#0378D0" },
+  { label: "Navy Blue", value: "#274E96" },
+  { label: "Purple", value: "#8B69CE" },
+  { label: "Green", value: "#00EB75" },
+  { label: "Neon Red", value: "#FF073A" },
+  { label: "Neon Green", value: "#39FF14" },
+];
+
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-const SnapInkSleeveCustomizer = forwardRef<SnapInkSleeveCustomizerRef, SnapInkSleeveCustomizerProps>(
-function SnapInkSleeveCustomizer(
+// ---------- Component ----------
+const SnapInkSleeveCustomizer = forwardRef<
+  SnapInkSleeveCustomizerRef,
+  SnapInkSleeveCustomizerProps
+>(function SnapInkSleeveCustomizer(
   { width = 1400, onChange, className = "", initial = {} },
   ref
 ) {
@@ -112,20 +137,26 @@ function SnapInkSleeveCustomizer(
   const [fontWeight, setFontWeight] = useState(initial.fontWeight ?? 400);
   const [tracking, setTracking] = useState(initial.tracking ?? 0);
   const [lineHeight, setLineHeight] = useState(initial.lineHeight ?? 1.0);
-  const [fill, setFill] = useState(initial.fill ?? "#ffffff");
+  const [fill, setFill] = useState(initial.fill ?? "#FFFFFF");
   const [stroke, setStroke] = useState(initial.stroke ?? "#000000");
   const [strokeWidth, setStrokeWidth] = useState(initial.strokeWidth ?? 0);
-  const [styleMode, setStyleMode] = useState(initial.styleMode ?? "emboss");
+  const [styleMode, setStyleMode] = useState<"emboss" | "flat">(
+    initial.styleMode ?? "emboss"
+  );
   const [arc, setArc] = useState(initial.arc ?? 0);
   const [posX, setPosX] = useState(initial.posX ?? 50);
   const [posY, setPosY] = useState(initial.posY ?? 50);
-  const [align, setAlign] = useState(initial.align ?? "center");
+  const [align, setAlign] = useState<"start" | "center" | "end">(
+    initial.align ?? "center"
+  );
   const [showGuides, setShowGuides] = useState(true);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? 6);
-  const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor ?? "#000000");
+  const [backgroundColor, setBackgroundColor] = useState(
+    initial.backgroundColor ?? "#000000"
+  );
   const [exportScale, setExportScale] = useState(2);
 
-  // Normalize TM to ™
+  // Normalize (tm) -> ™
   useEffect(() => {
     const normalized = text.replace(/\(tm\)/gi, "™");
     if (normalized !== text) setText(normalized);
@@ -237,10 +268,8 @@ function SnapInkSleeveCustomizer(
     >
       {/* Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-
         {/* LEFT COLUMN */}
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-
           {/* TEXT INPUT */}
           <label className="block text-sm text-neutral-300">Custom text</label>
           <input
@@ -253,7 +282,11 @@ function SnapInkSleeveCustomizer(
 
           {/* CHARACTER COUNTER */}
           <div className="text-right text-xs mt-1">
-            <span className={`${text.length >= 40 ? "text-red-500" : "text-neutral-400"}`}>
+            <span
+              className={`${
+                text.length >= 40 ? "text-red-500" : "text-neutral-400"
+              }`}
+            >
               {text.length}/40 characters
             </span>
           </div>
@@ -268,7 +301,11 @@ function SnapInkSleeveCustomizer(
                 onChange={(e) => setFont(e.target.value)}
               >
                 {WEB_SAFE_FONTS.map((f) => (
-                  <option key={f.label} value={f.stack} style={{ fontFamily: f.stack }}>
+                  <option
+                    key={f.label}
+                    value={f.stack}
+                    style={{ fontFamily: f.stack }}
+                  >
                     {f.label}
                   </option>
                 ))}
@@ -281,7 +318,9 @@ function SnapInkSleeveCustomizer(
               <select
                 className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
                 value={styleMode}
-                onChange={(e) => setStyleMode(e.target.value as "emboss" | "flat")}
+                onChange={(e) =>
+                  setStyleMode(e.target.value as "emboss" | "flat")
+                }
               >
                 <option value="emboss">Embossed</option>
                 <option value="flat">Printed</option>
@@ -291,27 +330,73 @@ function SnapInkSleeveCustomizer(
 
           {/* SLIDERS */}
           <div className="grid grid-cols-2 gap-3">
-            <Range label="Font size" min={60} max={420} value={fontSize} setValue={setFontSize} suffix="px" />
-            <Range label="Font weight" min={100} max={900} step={50} value={fontWeight} setValue={setFontWeight} />
-            <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
-            <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
-            <Range label="Arc (bow)" min={-15} max={20} value={arc} setValue={setArc} suffix="%" />
+            <Range
+              label="Font size"
+              min={60}
+              max={420}
+              value={fontSize}
+              setValue={setFontSize}
+              suffix="px"
+            />
+            <Range
+              label="Font weight"
+              min={100}
+              max={900}
+              step={50}
+              value={fontWeight}
+              setValue={setFontWeight}
+            />
+            <Range
+              label="Tracking"
+              min={-0.1}
+              max={0.3}
+              step={0.01}
+              value={tracking}
+              setValue={setTracking}
+              suffix="em"
+            />
+            <Range
+              label="Line height"
+              min={0.9}
+              max={1.6}
+              step={0.01}
+              value={lineHeight}
+              setValue={setLineHeight}
+            />
+            <Range
+              label="Arc (bow)"
+              min={-15}
+              max={20}
+              value={arc}
+              setValue={setArc}
+              suffix="%"
+            />
           </div>
 
-          {/* COLORS */}
-          <div className="grid grid-cols-4 gap-3 items-end">
+          {/* COLORS via SWATCHES */}
+          <div className="space-y-3 mt-2">
             <div>
-              <label className="block text-xs text-neutral-400">Fill</label>
-              <input type="color" value={fill} onChange={(e) => setFill(e.target.value)} className="w-full h-9 rounded" />
+              <label className="block text-xs text-neutral-400 mb-1">
+                Fill color (text)
+              </label>
+              <ColorSwatchRow value={fill} onChange={setFill} />
             </div>
+
             <div>
-              <label className="block text-xs text-neutral-400">Outline</label>
-              <input type="color" value={stroke} onChange={(e) => setStroke(e.target.value)} className="w-full h-9 rounded" />
+              <label className="block text-xs text-neutral-400 mb-1">
+                Outline color
+              </label>
+              <ColorSwatchRow value={stroke} onChange={setStroke} />
             </div>
-            <Range label="Stroke" min={0} max={6} step={0.5} value={strokeWidth} setValue={setStrokeWidth} />
+
             <div>
-              <label className="block text-xs text-neutral-400">Background</label>
-              <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} className="w-full h-9 rounded" />
+              <label className="block text-xs text-neutral-400 mb-1">
+                Strap / background color
+              </label>
+              <ColorSwatchRow
+                value={backgroundColor}
+                onChange={setBackgroundColor}
+              />
             </div>
           </div>
         </div>
@@ -325,7 +410,7 @@ function SnapInkSleeveCustomizer(
                 {["start", "center", "end"].map((k) => (
                   <button
                     key={k}
-                    onClick={() => setAlign(k as any)}
+                    onClick={() => setAlign(k as "start" | "center" | "end")}
                     className={`px-3 py-1.5 rounded-lg border text-sm ${
                       align === k
                         ? "bg-pink-600/20 text-pink-200 border-pink-500"
@@ -350,17 +435,51 @@ function SnapInkSleeveCustomizer(
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Range label="Position X" min={safeMargin} max={100 - safeMargin} step={0.5} value={posX} setValue={setPosX} suffix="%" />
-            <Range label="Position Y" min={20} max={80} step={0.5} value={posY} setValue={setPosY} suffix="%" />
+            <Range
+              label="Position X"
+              min={safeMargin}
+              max={100 - safeMargin}
+              step={0.5}
+              value={posX}
+              setValue={setPosX}
+              suffix="%"
+            />
+            <Range
+              label="Position Y"
+              min={20}
+              max={80}
+              step={0.5}
+              value={posY}
+              setValue={setPosY}
+              suffix="%"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Range label="Safe margin" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
+            <Range
+              label="Safe margin"
+              min={0}
+              max={12}
+              step={0.5}
+              value={safeMargin}
+              setValue={setSafeMargin}
+              suffix="%"
+            />
             <div>
               <label className="block text-xs text-neutral-400">Guides</label>
               <div className="flex items-center gap-2">
-                <input id="guides" type="checkbox" checked={showGuides} onChange={(e) => setShowGuides(e.target.checked)} />
-                <label htmlFor="guides" className="text-neutral-300 text-sm">Show safe area</label>
+                <input
+                  id="guides"
+                  type="checkbox"
+                  checked={showGuides}
+                  onChange={(e) => setShowGuides(e.target.checked)}
+                />
+                <label
+                  htmlFor="guides"
+                  className="text-neutral-300 text-sm"
+                >
+                  Show safe area
+                </label>
               </div>
             </div>
           </div>
@@ -392,14 +511,19 @@ function SnapInkSleeveCustomizer(
             </select>
           </div>
 
-          <p className="text-xs text-neutral-400">Saves a PNG the cart can attach at checkout.</p>
+          <p className="text-xs text-neutral-400">
+            Saves a PNG the cart can attach at checkout.
+          </p>
           <a ref={dlRef} className="hidden" />
         </div>
       </div>
 
       {/* PREVIEW */}
       <div className="rounded-3xl border border-neutral-800 bg-neutral-800 p-4">
-        <div className="relative w-full overflow-hidden rounded-2xl" style={{ aspectRatio: "1600/450" }}>
+        <div
+          className="relative w-full overflow-hidden rounded-2xl"
+          style={{ aspectRatio: "1600/450" }}
+        >
           <svg
             ref={svgRef}
             viewBox="0 0 1600 450"
@@ -409,9 +533,13 @@ function SnapInkSleeveCustomizer(
             <defs>
               {/* Emboss filter */}
               <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="1.25" result="alpha" />
+                <feGaussianBlur
+                  in="SourceAlpha"
+                  stdDeviation="1.25"
+                  result="alpha"
+                />
                 <feSpecularLighting
-                  in="blur"
+                  in="alpha"
                   surfaceScale="3"
                   specularConstant="1.1"
                   specularExponent="35"
@@ -420,16 +548,26 @@ function SnapInkSleeveCustomizer(
                 >
                   <fePointLight x="-200" y="-300" z="400" />
                 </feSpecularLighting>
-                <feComposite in="spec" in2="SourceGraphic" operator="in" result="litSpec" />
+                <feComposite
+                  in="spec"
+                  in2="SourceAlpha"
+                  operator="in"
+                  result="litSpec"
+                />
                 <feMerge>
-                  <feMergeNode in="litSpec"/>
+                  <feMergeNode in="litSpec" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
 
               {/* Drop shadow */}
               <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
+                <feDropShadow
+                  dx="0"
+                  dy="2"
+                  stdDeviation="1.5"
+                  floodOpacity="0.3"
+                />
               </filter>
 
               <path id={pathId} d={arcPath} />
@@ -471,7 +609,11 @@ function SnapInkSleeveCustomizer(
 
             {/* TEXT RENDER */}
             {Boolean(text) && (
-              <g filter={styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"}>
+              <g
+                filter={
+                  styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
+                }
+              >
                 <text
                   fontFamily={font}
                   fontSize={fontSize}
@@ -489,7 +631,10 @@ function SnapInkSleeveCustomizer(
                       <tspan
                         key={i}
                         x={(posX / 100) * 1600}
-                        y={(posY / 100) * 450 + (i - (arr.length - 1) / 2) * (fontSize * lineHeight)}
+                        y={
+                          (posY / 100) * 450 +
+                          (i - (arr.length - 1) / 2) * (fontSize * lineHeight)
+                        }
                       >
                         {line}
                       </tspan>
@@ -497,17 +642,28 @@ function SnapInkSleeveCustomizer(
                   ) : (
                     (() => {
                       const lines = text.split("\n");
-                      const centerOffset = clamp(posX, safeMargin, 100 - safeMargin);
-                      const lineGapPct = ((fontSize * lineHeight) / 450) * 100;
+                      const centerOffset = clamp(
+                        posX,
+                        safeMargin,
+                        100 - safeMargin
+                      );
+                      const lineGapPct =
+                        ((fontSize * lineHeight) / 450) * 100;
 
                       return lines.map((line, i) => {
-                        const offsetPct = centerOffset + (i - (lines.length - 1) / 2) * lineGapPct;
+                        const offsetPct =
+                          centerOffset +
+                          (i - (lines.length - 1) / 2) * lineGapPct;
 
                         return (
                           <textPath
                             key={i}
                             href={`#${pathId}`}
-                            startOffset={`${clamp(offsetPct, safeMargin, 100 - safeMargin)}%`}
+                            startOffset={`${clamp(
+                              offsetPct,
+                              safeMargin,
+                              100 - safeMargin
+                            )}%`}
                           >
                             {line}
                           </textPath>
@@ -528,7 +684,23 @@ function SnapInkSleeveCustomizer(
 export default SnapInkSleeveCustomizer;
 
 // ---- Range Component ----
-function Range({ label, min, max, step = 1, value, setValue, suffix = "" }) {
+function Range({
+  label,
+  min,
+  max,
+  step = 1,
+  value,
+  setValue,
+  suffix = "",
+}: {
+  label: string;
+  min: number;
+  max: number;
+  step?: number;
+  value: number;
+  setValue: (n: number) => void;
+  suffix?: string;
+}) {
   return (
     <div>
       <label className="block text-xs text-neutral-400">{label}</label>
@@ -551,6 +723,36 @@ function Range({ label, min, max, step = 1, value, setValue, suffix = "" }) {
   );
 }
 
+// ---- Color Swatch Row ----
+function ColorSwatchRow({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {COLOR_SWATCHES.map((c) => {
+        const selected = c.value.toLowerCase() === value.toLowerCase();
+        return (
+          <button
+            key={c.label}
+            type="button"
+            onClick={() => onChange(c.value)}
+            className={`w-7 h-7 rounded-full border ${
+              selected
+                ? "ring-2 ring-pink-500 border-white"
+                : "border-neutral-600"
+            }`}
+            style={{ backgroundColor: c.value }}
+            title={c.label}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 // Dev tests
 if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
