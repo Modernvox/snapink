@@ -398,17 +398,21 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  return (
+  return 
     <div
-      className={`w-full ${className}`}
-      style={{ maxWidth: width, margin: "0 auto", padding: "0 1rem" }}
+        className={`
+            w-full
+            px-2 sm:px-3 lg:px-4
+            lg:max-w-[1400px] lg:mx-auto
+            ${className}
+        `}
     >
-      {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
-      <div className="lg:hidden space-y-4">
-        {/* Preview at top */}
-        <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
-          <StrapPreviewInner />
-        </div>
+        {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
+        <div className="lg:hidden space-y-4">
+            {/* Preview at top */}
+            <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
+                <StrapPreviewInner />
+            </div>
 
         {/* Text / Styling panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
