@@ -64,25 +64,22 @@ const WEB_SAFE_FONTS = [
   { label: "Cinzel Decorative", stack: "'Cinzel Decorative', serif" },
   { label: "Prata", stack: "'Prata', serif" },
 
- // --- SCRIPT / FLOWING / PERSONAL (true cursive for SnapInk straps) ---
-{ label: "Great Vibes", stack: "'Great Vibes', cursive" },
-{ label: "Pacifico", stack: "'Pacifico', cursive" },
-{ label: "Tangerine", stack: "'Tangerine', cursive" },
-{ label: "Hurricane", stack: "'Hurricane', cursive" },
+  // --- TRUE CURSIVE FONTS ---
+  { label: "Great Vibes", stack: "'Great Vibes', cursive" },
+  { label: "Pacifico", stack: "'Pacifico', cursive" },
+  { label: "Tangerine", stack: "'Tangerine', cursive" },
+  { label: "Hurricane", stack: "'Hurricane', cursive" },
 
-// NEW — High-quality cursive additions
-{ label: "Petemoss", stack: "'Petemoss', cursive" },
-{ label: "Ms Madi", stack: "'Ms Madi', cursive" },
-{ label: "Kristi", stack: "'Kristi', cursive" },
-{ label: "Clicker Script", stack: "'Clicker Script', cursive" },
-{ label: "Delius Swash Caps", stack: "'Delius Swash Caps', cursive" },
-{ label: "Norican", stack: "'Norican', cursive" },
-
+  // NEW — High-quality cursive additions
+  { label: "Petemoss", stack: "'Petemoss', cursive" },
+  { label: "Ms Madi", stack: "'Ms Madi', cursive" },
+  { label: "Kristi", stack: "'Kristi', cursive" },
+  { label: "Clicker Script", stack: "'Clicker Script', cursive" },
+  { label: "Delius Swash Caps", stack: "'Delius Swash Caps', cursive" },
+  { label: "Norican", stack: "'Norican', cursive" },
 ];
 
-// ---------- Filament Color Swatches ----------
-// Cleaned from: #000000, 90999D, FFFFFF, D7021C, FFBDD1, A47C48, FFA11D,
-// FFDF03, 0378D0, 274E96, 8B69CE, 00EB75, Neon Red, Neon Green
+// ---------- Color Swatches ----------
 const COLOR_SWATCHES = [
   { label: "Black", value: "#000000" },
   { label: "Cool Grey", value: "#90999D" },
@@ -116,10 +113,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const dlRef = useRef<HTMLAnchorElement | null>(null);
   const uid = useId();
 
-  // ---- State ----
+  // State
   const [text, setText] = useState(initial.text ?? "SNAPINK");
   const [font, setFont] = useState(initial.font ?? WEB_SAFE_FONTS[0].stack);
-  const [fontSize, setFontSize] = useState(initial.fontSize ?? 140);
+  const [fontSize, setFontSize] = useState(initial.fontSize ?? 240);
   const [fontWeight, setFontWeight] = useState(initial.fontWeight ?? 400);
   const [tracking, setTracking] = useState(initial.tracking ?? 0);
   const [lineHeight, setLineHeight] = useState(initial.lineHeight ?? 1.0);
@@ -142,13 +139,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
   const [exportScale, setExportScale] = useState(2);
 
-  // Normalize (tm) -> ™
+  // Normalize (tm)
   useEffect(() => {
     const normalized = text.replace(/\(tm\)/gi, "™");
     if (normalized !== text) setText(normalized);
   }, [text]);
 
-  // ---- send updates to parent ----
+  // Push changes upward
   useEffect(() => {
     onChange?.({
       text,
@@ -204,7 +201,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, margin, posY]);
 
-  // ---- Export PNG ----
+  // Export PNG
   function handleExportPNG() {
     const svg = svgRef.current;
     if (!svg) return;
@@ -242,7 +239,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     img.src = url;
   }
 
-  useImperativeHandle(ref, () => ({ downloadPNG: handleExportPNG }), [exportScale]);
+  useImperativeHandle(ref, () => ({ downloadPNG: handleExportPNG }), [
+    exportScale,
+  ]);
 
   const textAnchor =
     align === "start" ? "start" : align === "end" ? "end" : "middle";
@@ -252,28 +251,180 @@ const SnapInkSleeveCustomizer = forwardRef<
       className={`w-full ${className}`}
       style={{ maxWidth: width, margin: "0 auto", padding: "0 1rem" }}
     >
-      {/* Controls */}
+      {/* ---------- PREVIEW AT TOP ---------- */}
+      <div className="rounded-3xl border border-neutral-800 bg-neutral-800 p-4 mb-6">
+        <div
+          className="relative w-full overflow-hidden rounded-2xl"
+          style={{ aspectRatio: "1600/450" }}
+        >
+          <svg
+            ref={svgRef}
+            viewBox="0 0 1600 450"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute inset-0 block h-full w-full"
+          >
+            <defs>
+              {/* Emboss */}
+              <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur
+                  in="SourceAlpha"
+                  stdDeviation="1.25"
+                  result="alpha"
+                />
+                <feSpecularLighting
+                  in="alpha"
+                  surfaceScale="3"
+                  specularConstant="1.1"
+                  specularExponent="35"
+                  lightingColor="#ffffff"
+                  result="spec"
+                >
+                  <fePointLight x="-200" y="-300" z="400" />
+                </feSpecularLighting>
+                <feComposite
+                  in="spec"
+                  in2="SourceAlpha"
+                  operator="in"
+                  result="litSpec"
+                />
+                <feMerge>
+                  <feMergeNode in="litSpec" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Shadow */}
+              <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
+              </filter>
+
+              <path id={pathId} d={arcPath} />
+            </defs>
+
+            {/* Background */}
+            <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
+
+            {/* Guides */}
+            {showGuides && (
+              <g opacity="0.18">
+                <rect
+                  x={margin}
+                  y={margin}
+                  width={1600 - margin * 2}
+                  height={450 - margin * 2}
+                  fill="none"
+                  stroke="#ff0000"
+                  strokeDasharray="10 7"
+                />
+                <line
+                  x1={1600 / 2}
+                  y1={margin}
+                  x2={1600 / 2}
+                  y2={450 - margin}
+                  stroke="#fff"
+                  strokeDasharray="6 6"
+                />
+                <line
+                  x1={margin}
+                  y1={450 / 2}
+                  x2={1600 - margin}
+                  y2={450 / 2}
+                  stroke="#fff"
+                  strokeDasharray="6 6"
+                />
+              </g>
+            )}
+
+            {/* TEXT */}
+            {Boolean(text) && (
+              <g
+                filter={
+                  styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
+                }
+              >
+                <text
+                  fontFamily={font}
+                  fontSize={fontSize}
+                  fontWeight={fontWeight}
+                  letterSpacing={`${tracking}em`}
+                  fill={fill}
+                  stroke={strokeWidth > 0 ? stroke : "none"}
+                  strokeWidth={strokeWidth}
+                  dominantBaseline="central"
+                  textAnchor={textAnchor}
+                  paintOrder="stroke fill"
+                >
+                  {Math.abs(arc) < 1
+                    ? text.split("\n").map((line, i, arr) => (
+                        <tspan
+                          key={i}
+                          x={(posX / 100) * 1600}
+                          y={
+                            (posY / 100) * 450 +
+                            (i - (arr.length - 1) / 2) *
+                              (fontSize * lineHeight)
+                          }
+                        >
+                          {line}
+                        </tspan>
+                      ))
+                    : (() => {
+                        const lines = text.split("\n");
+                        const centerOffset = clamp(
+                          posX,
+                          safeMargin,
+                          100 - safeMargin
+                        );
+                        const lineGapPct =
+                          ((fontSize * lineHeight) / 450) * 100;
+
+                        return lines.map((line, i) => {
+                          const offsetPct =
+                            centerOffset +
+                            (i - (lines.length - 1) / 2) * lineGapPct;
+
+                          return (
+                            <textPath
+                              key={i}
+                              href={`#${pathId}`}
+                              startOffset={`${clamp(
+                                offsetPct,
+                                safeMargin,
+                                100 - safeMargin
+                              )}%`}
+                            >
+                              {line}
+                            </textPath>
+                          );
+                        });
+                      })()}
+                </text>
+              </g>
+            )}
+          </svg>
+        </div>
+      </div>
+
+      {/* ---------- CONTROLS BELOW PREVIEW ---------- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* LEFT COLUMN */}
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-          {/* TEXT INPUT */}
           <label className="block text-sm text-neutral-300">Custom text</label>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="ENTER YOUR TEXT"
-            maxLength={40}
+            maxLength={25}
             className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
           />
 
-          {/* CHARACTER COUNTER */}
           <div className="text-right text-xs mt-1">
             <span
               className={`${
-                text.length >= 40 ? "text-red-500" : "text-neutral-400"
+                text.length >= 25 ? "text-red-500" : "text-neutral-400"
               }`}
             >
-              {text.length}/40 characters
+              {text.length}/25 characters
             </span>
           </div>
 
@@ -298,7 +449,6 @@ const SnapInkSleeveCustomizer = forwardRef<
               </select>
             </div>
 
-            {/* STYLE MODE */}
             <div>
               <label className="block text-xs text-neutral-400">Style</label>
               <select
@@ -314,12 +464,11 @@ const SnapInkSleeveCustomizer = forwardRef<
             </div>
           </div>
 
-          {/* SLIDERS */}
           <div className="grid grid-cols-2 gap-3">
             <Range
               label="Font size"
               min={60}
-              max={420}
+              max={500}
               value={fontSize}
               setValue={setFontSize}
               suffix="px"
@@ -327,7 +476,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             <Range
               label="Font weight"
               min={100}
-              max={900}
+              max={1200}
               step={50}
               value={fontWeight}
               setValue={setFontWeight}
@@ -359,7 +508,6 @@ const SnapInkSleeveCustomizer = forwardRef<
             />
           </div>
 
-          {/* COLORS via SWATCHES */}
           <div className="space-y-3 mt-2">
             <div>
               <label className="block text-xs text-neutral-400 mb-1">
@@ -460,10 +608,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                   checked={showGuides}
                   onChange={(e) => setShowGuides(e.target.checked)}
                 />
-                <label
-                  htmlFor="guides"
-                  className="text-neutral-300 text-sm"
-                >
+                <label htmlFor="guides" className="text-neutral-300 text-sm">
                   Show safe area
                 </label>
               </div>
@@ -503,173 +648,13 @@ const SnapInkSleeveCustomizer = forwardRef<
           <a ref={dlRef} className="hidden" />
         </div>
       </div>
-
-      {/* PREVIEW */}
-      <div className="rounded-3xl border border-neutral-800 bg-neutral-800 p-4">
-        <div
-          className="relative w-full overflow-hidden rounded-2xl"
-          style={{ aspectRatio: "1600/450" }}
-        >
-          <svg
-            ref={svgRef}
-            viewBox="0 0 1600 450"
-            xmlns="http://www.w3.org/2000/svg"
-            className="absolute inset-0 block h-full w-full"
-          >
-            <defs>
-              {/* Emboss filter */}
-              <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur
-                  in="SourceAlpha"
-                  stdDeviation="1.25"
-                  result="alpha"
-                />
-                <feSpecularLighting
-                  in="alpha"
-                  surfaceScale="3"
-                  specularConstant="1.1"
-                  specularExponent="35"
-                  lightingColor="#ffffff"
-                  result="spec"
-                >
-                  <fePointLight x="-200" y="-300" z="400" />
-                </feSpecularLighting>
-                <feComposite
-                  in="spec"
-                  in2="SourceAlpha"
-                  operator="in"
-                  result="litSpec"
-                />
-                <feMerge>
-                  <feMergeNode in="litSpec" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
-              {/* Drop shadow */}
-              <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow
-                  dx="0"
-                  dy="2"
-                  stdDeviation="1.5"
-                  floodOpacity="0.3"
-                />
-              </filter>
-
-              <path id={pathId} d={arcPath} />
-            </defs>
-
-            {/* Background color */}
-            <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
-
-            {/* Guides */}
-            {showGuides && (
-              <g opacity="0.18">
-                <rect
-                  x={margin}
-                  y={margin}
-                  width={1600 - margin * 2}
-                  height={450 - margin * 2}
-                  fill="none"
-                  stroke="#ff0000"
-                  strokeDasharray="10 7"
-                />
-                <line
-                  x1={1600 / 2}
-                  y1={margin}
-                  x2={1600 / 2}
-                  y2={450 - margin}
-                  stroke="#fff"
-                  strokeDasharray="6 6"
-                />
-                <line
-                  x1={margin}
-                  y1={450 / 2}
-                  x2={1600 - margin}
-                  y2={450 / 2}
-                  stroke="#fff"
-                  strokeDasharray="6 6"
-                />
-              </g>
-            )}
-
-            {/* TEXT RENDER */}
-            {Boolean(text) && (
-              <g
-                filter={
-                  styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
-                }
-              >
-                <text
-                  fontFamily={font}
-                  fontSize={fontSize}
-                  fontWeight={fontWeight}
-                  letterSpacing={`${tracking}em`}
-                  fill={fill}
-                  stroke={strokeWidth > 0 ? stroke : "none"}
-                  strokeWidth={strokeWidth}
-                  dominantBaseline="central"
-                  textAnchor={textAnchor}
-                  paintOrder="stroke fill"
-                >
-                  {Math.abs(arc) < 1 ? (
-                    text.split("\n").map((line, i, arr) => (
-                      <tspan
-                        key={i}
-                        x={(posX / 100) * 1600}
-                        y={
-                          (posY / 100) * 450 +
-                          (i - (arr.length - 1) / 2) * (fontSize * lineHeight)
-                        }
-                      >
-                        {line}
-                      </tspan>
-                    ))
-                  ) : (
-                    (() => {
-                      const lines = text.split("\n");
-                      const centerOffset = clamp(
-                        posX,
-                        safeMargin,
-                        100 - safeMargin
-                      );
-                      const lineGapPct =
-                        ((fontSize * lineHeight) / 450) * 100;
-
-                      return lines.map((line, i) => {
-                        const offsetPct =
-                          centerOffset +
-                          (i - (lines.length - 1) / 2) * lineGapPct;
-
-                        return (
-                          <textPath
-                            key={i}
-                            href={`#${pathId}`}
-                            startOffset={`${clamp(
-                              offsetPct,
-                              safeMargin,
-                              100 - safeMargin
-                            )}%`}
-                          >
-                            {line}
-                          </textPath>
-                        );
-                      });
-                    })()
-                  )}
-                </text>
-              </g>
-            )}
-          </svg>
-        </div>
-      </div>
     </div>
   );
 });
 
 export default SnapInkSleeveCustomizer;
 
-// ---- Range Component ----
+// ---------- Range Component ----------
 function Range({
   label,
   min,
@@ -709,7 +694,7 @@ function Range({
   );
 }
 
-// ---- Color Swatch Row ----
+// ---------- Color Swatches ----------
 function ColorSwatchRow({
   value,
   onChange,
@@ -727,9 +712,7 @@ function ColorSwatchRow({
             type="button"
             onClick={() => onChange(c.value)}
             className={`w-7 h-7 rounded-full border ${
-              selected
-                ? "ring-2 ring-pink-500 border-white"
-                : "border-neutral-600"
+              selected ? "ring-2 ring-pink-500 border-white" : "border-neutral-600"
             }`}
             style={{ backgroundColor: c.value }}
             title={c.label}
@@ -740,7 +723,7 @@ function ColorSwatchRow({
   );
 }
 
-// Dev tests
+// ---------- Dev tests ----------
 if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
   console.assert(clamp(5, 0, 10) === 5);
   console.assert(clamp(-1, 0, 10) === 0);
