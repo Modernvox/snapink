@@ -62,20 +62,19 @@ const WEB_SAFE_FONTS = [
   // --- LUXURY / FASHION SERIF ---
   { label: "Playfair Display", stack: "'Playfair Display', serif" },
   { label: "Cinzel Decorative", stack: "'Cinzel Decorative', serif" },
-  { label: "Prata", stack: "'Prata', serif" }
+  { label: "Prata", stack: "'Prata', serif" },
 
   // --- SCRIPT / FLOWING / PERSONAL (optimized for SnapInk straps) ---
-{ label: "Pacifico", stack: "'Pacifico', cursive" },
-{ label: "Great Vibes", stack: "'Great Vibes', cursive" },
-{ label: "Satisfy", stack: "'Satisfy', cursive" },
-{ label: "Dancing Script", stack: "'Dancing Script', cursive" },
-{ label: "Allura", stack: "'Allura', cursive" },
-{ label: "Sacramento", stack: "'Sacramento', cursive" },
-{ label: "Parisienne", stack: "'Parisienne', cursive" },
-{ label: "Yellowtail", stack: "'Yellowtail', cursive" },
-{ label: "Courgette", stack: "'Courgette', cursive" },
-{ label: "Lobster", stack: "'Lobster', cursive" },
-
+  { label: "Pacifico", stack: "'Pacifico', cursive" },
+  { label: "Great Vibes", stack: "'Great Vibes', cursive" },
+  { label: "Satisfy", stack: "'Satisfy', cursive" },
+  { label: "Dancing Script", stack: "'Dancing Script', cursive" },
+  { label: "Allura", stack: "'Allura', cursive" },
+  { label: "Sacramento", stack: "'Sacramento', cursive" },
+  { label: "Parisienne", stack: "'Parisienne', cursive" },
+  { label: "Yellowtail", stack: "'Yellowtail', cursive" },
+  { label: "Courgette", stack: "'Courgette', cursive" },
+  { label: "Lobster", stack: "'Lobster', cursive" },
 ];
 
 // ---------- Filament Color Swatches ----------
