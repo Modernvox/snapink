@@ -16,7 +16,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "index.html"),
-        customize: path.resolve(__dirname, "customize.html"), // 👈 add this
+        customize: path.resolve(__dirname, "customize.html"), 
+        fitGuide: path.resolve(__dirname, "fit-guide.html")
       },
     },
   },
