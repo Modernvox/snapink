@@ -48,50 +48,34 @@ const WEB_SAFE_FONTS = [
   { label: "Anton", stack: "'Anton', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "League Gothic", stack: "'League Gothic', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Staatliches", stack: "'Staatliches', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Bungee", stack: "'Bungee', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Bungee Shade", stack: "'Bungee Shade', Impact, 'Arial Black', system-ui, sans-serif" },
   { label: "Black Ops One", stack: "'Black Ops One', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Stint Ultra Expanded", stack: "'Stint Ultra Expanded', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Teko", stack: "'Teko', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Righteous", stack: "'Righteous', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Kanit", stack: "'Kanit', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Oxanium", stack: "'Oxanium', Impact, 'Arial Black', system-ui, sans-serif" },
-  { label: "Oswald", stack: "'Oswald', system-ui, sans-serif" },
 
   // --- MODERN BRAND TEXT ---
   { label: "Montserrat", stack: "'Montserrat', system-ui, sans-serif" },
-  { label: "Inter", stack: "'Inter', system-ui, sans-serif" },
   { label: "Open Sans", stack: "'Open Sans', system-ui, sans-serif" },
-  { label: "Lato", stack: "'Lato', system-ui, sans-serif" },
-  { label: "Archivo Black", stack: "'Archivo Black', Impact, 'Arial Black', sans-serif" },
-  { label: "Unica One", stack: "'Unica One', system-ui, sans-serif" },
-  { label: "Julius Sans One", stack: "'Julius Sans One', system-ui, sans-serif" },
+  { label: "Raleway", stack: "'Raleway', system-ui, sans-serif" },
   { label: "Sawarabi Gothic", stack: "'Sawarabi Gothic', system-ui, sans-serif" },
 
   // --- EMOTIONAL / POSITIVE ---
   { label: "Poppins", stack: "'Poppins', system-ui, sans-serif" },
-  { label: "Raleway", stack: "'Raleway', system-ui, sans-serif" },
-  { label: "Nunito", stack: "'Nunito', system-ui, sans-serif" },
-  { label: "Comfortaa", stack: "'Comfortaa', system-ui, sans-serif" },
 
   // --- LUXURY / FASHION SERIF ---
   { label: "Playfair Display", stack: "'Playfair Display', serif" },
-  { label: "Abril Fatface", stack: "'Abril Fatface', serif" },
-  { label: "Cinzel", stack: "'Cinzel', serif" },
   { label: "Cinzel Decorative", stack: "'Cinzel Decorative', serif" },
-  { label: "Marcellus", stack: "'Marcellus', serif" },
-  { label: "Cormorant Garamond", stack: "'Cormorant Garamond', serif" },
-  { label: "Prata", stack: "'Prata', serif" },
-  { label: "Cardo", stack: "'Cardo', serif" },
-  { label: "Libre Baskerville", stack: "'Libre Baskerville', serif" },
-  { label: "Zilla Slab", stack: "'Zilla Slab', serif" },
+  { label: "Prata", stack: "'Prata', serif" }
 
-  // --- SCRIPT / FLOWING / PERSONAL ---
-  { label: "Great Vibes", stack: "'Great Vibes', cursive" },
-  { label: "Tangerine", stack: "'Tangerine', cursive" },
-  { label: "Hurricane", stack: "'Hurricane', cursive" },
-  { label: "Pacifico", stack: "'Pacifico', cursive" },
-  { label: "Fredoka One", stack: "'Fredoka One', system-ui, sans-serif" },
+  // --- SCRIPT / FLOWING / PERSONAL (optimized for SnapInk straps) ---
+{ label: "Pacifico", stack: "'Pacifico', cursive" },
+{ label: "Great Vibes", stack: "'Great Vibes', cursive" },
+{ label: "Satisfy", stack: "'Satisfy', cursive" },
+{ label: "Dancing Script", stack: "'Dancing Script', cursive" },
+{ label: "Allura", stack: "'Allura', cursive" },
+{ label: "Sacramento", stack: "'Sacramento', cursive" },
+{ label: "Parisienne", stack: "'Parisienne', cursive" },
+{ label: "Yellowtail", stack: "'Yellowtail', cursive" },
+{ label: "Courgette", stack: "'Courgette', cursive" },
+{ label: "Lobster", stack: "'Lobster', cursive" },
+
 ];
 
 // ---------- Filament Color Swatches ----------
@@ -267,7 +251,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       style={{ maxWidth: width, margin: "0 auto", padding: "0 1rem" }}
     >
       {/* Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* LEFT COLUMN */}
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
           {/* TEXT INPUT */}
