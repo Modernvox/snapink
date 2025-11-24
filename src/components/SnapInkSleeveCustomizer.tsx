@@ -64,17 +64,20 @@ const WEB_SAFE_FONTS = [
   { label: "Cinzel Decorative", stack: "'Cinzel Decorative', serif" },
   { label: "Prata", stack: "'Prata', serif" },
 
-  // --- SCRIPT / FLOWING / PERSONAL (optimized for SnapInk straps) ---
-  { label: "Pacifico", stack: "'Pacifico', cursive" },
-  { label: "Great Vibes", stack: "'Great Vibes', cursive" },
-  { label: "Satisfy", stack: "'Satisfy', cursive" },
-  { label: "Dancing Script", stack: "'Dancing Script', cursive" },
-  { label: "Allura", stack: "'Allura', cursive" },
-  { label: "Sacramento", stack: "'Sacramento', cursive" },
-  { label: "Parisienne", stack: "'Parisienne', cursive" },
-  { label: "Yellowtail", stack: "'Yellowtail', cursive" },
-  { label: "Courgette", stack: "'Courgette', cursive" },
-  { label: "Lobster", stack: "'Lobster', cursive" },
+ // --- SCRIPT / FLOWING / PERSONAL (true cursive for SnapInk straps) ---
+{ label: "Great Vibes", stack: "'Great Vibes', cursive" },
+{ label: "Pacifico", stack: "'Pacifico', cursive" },
+{ label: "Tangerine", stack: "'Tangerine', cursive" },
+{ label: "Hurricane", stack: "'Hurricane', cursive" },
+
+// NEW — High-quality cursive additions
+{ label: "Petemoss", stack: "'Petemoss', cursive" },
+{ label: "Ms Madi", stack: "'Ms Madi', cursive" },
+{ label: "Kristi", stack: "'Kristi', cursive" },
+{ label: "Clicker Script", stack: "'Clicker Script', cursive" },
+{ label: "Delius Swash Caps", stack: "'Delius Swash Caps', cursive" },
+{ label: "Norican", stack: "'Norican', cursive" },
+
 ];
 
 // ---------- Filament Color Swatches ----------
