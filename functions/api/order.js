@@ -22,7 +22,7 @@ Submitted At: ${data.submittedAt}
         }
       ],
       from: {
-        email: "no-reply@snapinkhats.com"
+        email: "orders@snapinkhats.com"
       },
       subject: "🧵 New SnapInk Strap Order",
       content: [
