@@ -1,20 +1,10 @@
-name = "snapink-waitlist"
-main = "./functions/api/waitlist.js"
-compatibility_date = "2025-08-29"
+name = "snapink"
+compatibility_date = "2024-11-20"
 
-# --- D1 DATABASE (already in your config)
+# REQUIRED FOR PAGES
+pages_build_output_dir = "./dist"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "snapink_waitlist"
 database_id = "9263527d-7f81-4277-a171-e20b364f918c"
-
-# --- EMAIL SERVICE (for sending custom strap orders)
-# Requires Cloudflare Email Routing or MailChannels (free)
-[[services]]
-binding = "SEND_EMAIL"
-service = "send-email"
-environment = "production"
-
-# Cloudflare Pages automatically maps:
-# /functions/api/order.js  →  domain.com/api/order
-
