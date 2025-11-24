@@ -140,7 +140,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [exportScale, setExportScale] = useState(2);
 
   // Mobile accordion
-  const [mobileOpen, setMobileOpen] = useState<"text" | "position" | "export">("text");
+  const [mobileOpen, setMobileOpen] = useState<"text" | "position" | "export">(
+    "text"
+  );
 
   // Normalize (tm)
   useEffect(() => {
@@ -400,44 +402,40 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   return (
     <div
-        className={`
-            w-full
-            px-2 sm:px-3 lg:px-4
-            lg:max-w-[1400px] lg:mx-auto
-            ${className}
-        `}
+      className={`
+        w-full
+        px-2 sm:px-3 lg:px-4
+        lg:max-w-[1400px] lg:mx-auto
+        ${className}
+      `}
+      style={{ maxWidth: width }}
     >
-        {/* ---------- MOBILE LAYOUT ---------- */}
-        <div className="lg:hidden space-y-4">
-            <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
-                <StrapPreviewInner />
-            </div>
-
-            { /* … your accordion panels … */ }
+      {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
+      <div className="lg:hidden space-y-4 pb-20">
+        {/* Preview at top */}
+        <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
+          <StrapPreviewInner />
         </div>
-
-        {/* ---------- DESKTOP LAYOUT ---------- */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-4">
-            { /* … rest of your desktop layout … */ }
-        </div>
-    </div>
-  );
 
         {/* Text / Styling panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
           <button
             type="button"
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-neutral-100"
-            onClick={() => setMobileOpen(mobileOpen === "text" ? "position" : "text")}
+            onClick={() =>
+              setMobileOpen(mobileOpen === "text" ? "position" : "text")
+            }
           >
-            <span>Text & Styling</span>
+            <span>Text &amp; Styling</span>
             <span className="text-neutral-400">
               {mobileOpen === "text" ? "−" : "+"}
             </span>
           </button>
           {mobileOpen === "text" && (
             <div className="px-4 pb-4 pt-1 space-y-3">
-              <label className="block text-sm text-neutral-300">Custom text</label>
+              <label className="block text-sm text-neutral-300">
+                Custom text
+              </label>
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -458,7 +456,9 @@ const SnapInkSleeveCustomizer = forwardRef<
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-neutral-400">Font</label>
+                  <label className="block text-xs text-neutral-400">
+                    Font
+                  </label>
                   <select
                     className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
                     value={font}
@@ -478,7 +478,9 @@ const SnapInkSleeveCustomizer = forwardRef<
                 </div>
 
                 <div>
-                  <label className="block text-xs text-neutral-400">Style</label>
+                  <label className="block text-xs text-neutral-400">
+                    Style
+                  </label>
                   <select
                     className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
                     value={styleMode}
@@ -570,9 +572,11 @@ const SnapInkSleeveCustomizer = forwardRef<
           <button
             type="button"
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-neutral-100"
-            onClick={() => setMobileOpen(mobileOpen === "position" ? "export" : "position")}
+            onClick={() =>
+              setMobileOpen(mobileOpen === "position" ? "export" : "position")
+            }
           >
-            <span>Position & Guides</span>
+            <span>Position &amp; Guides</span>
             <span className="text-neutral-400">
               {mobileOpen === "position" ? "−" : "+"}
             </span>
@@ -581,12 +585,16 @@ const SnapInkSleeveCustomizer = forwardRef<
             <div className="px-4 pb-4 pt-1 space-y-3">
               <div className="grid grid-cols-3 gap-3 items-center">
                 <div className="col-span-2">
-                  <label className="block text-xs text-neutral-400">Alignment</label>
+                  <label className="block text-xs text-neutral-400">
+                    Alignment
+                  </label>
                   <div className="flex gap-1">
                     {["start", "center", "end"].map((k) => (
                       <button
                         key={k}
-                        onClick={() => setAlign(k as "start" | "center" | "end")}
+                        onClick={() =>
+                          setAlign(k as "start" | "center" | "end")
+                        }
                         className={`px-3 py-1.5 rounded-lg border text-sm ${
                           align === k
                             ? "bg-pink-600/20 text-pink-200 border-pink-500"
@@ -642,7 +650,9 @@ const SnapInkSleeveCustomizer = forwardRef<
                   suffix="%"
                 />
                 <div>
-                  <label className="block text-xs text-neutral-400">Guides</label>
+                  <label className="block text-xs text-neutral-400">
+                    Guides
+                  </label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       id="guides-mobile"
@@ -664,11 +674,13 @@ const SnapInkSleeveCustomizer = forwardRef<
         </div>
 
         {/* Export panel */}
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden mb-16">
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
           <button
             type="button"
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-neutral-100"
-            onClick={() => setMobileOpen(mobileOpen === "export" ? "text" : "export")}
+            onClick={() =>
+              setMobileOpen(mobileOpen === "export" ? "text" : "export")
+            }
           >
             <span>Export</span>
             <span className="text-neutral-400">
@@ -708,8 +720,8 @@ const SnapInkSleeveCustomizer = forwardRef<
           )}
         </div>
 
-        {/* Sticky-ish mobile CTA (optional you can tweak) */}
-        <div className="fixed inset-x-0 bottom-2 px-4">
+        {/* Sticky-ish mobile CTA */}
+        <div className="fixed inset-x-0 bottom-2 px-4 lg:hidden">
           <button
             onClick={handleExportPNG}
             className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3 shadow-lg shadow-pink-500/30"
@@ -855,12 +867,16 @@ const SnapInkSleeveCustomizer = forwardRef<
           <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
             <div className="grid grid-cols-3 gap-3 items-center">
               <div className="col-span-2">
-                <label className="block text-xs text-neutral-400">Alignment</label>
+                <label className="block text-xs text-neutral-400">
+                  Alignment
+                </label>
                 <div className="flex gap-1">
                   {["start", "center", "end"].map((k) => (
                     <button
                       key={k}
-                      onClick={() => setAlign(k as "start" | "center" | "end")}
+                      onClick={() =>
+                        setAlign(k as "start" | "center" | "end")
+                      }
                       className={`px-3 py-1.5 rounded-lg border text-sm ${
                         align === k
                           ? "bg-pink-600/20 text-pink-200 border-pink-500"
@@ -916,7 +932,9 @@ const SnapInkSleeveCustomizer = forwardRef<
                 suffix="%"
               />
               <div>
-                <label className="block text-xs text-neutral-400">Guides</label>
+                <label className="block text-xs text-neutral-400">
+                  Guides
+                </label>
                 <div className="flex items-center gap-2">
                   <input
                     id="guides-desktop"
