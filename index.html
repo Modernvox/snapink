@@ -268,13 +268,17 @@
   <div class="relative max-w-7xl mx-auto px-4 py-8 md:py-24 w-full">
     <div class="grid md:grid-cols-2 gap-8 md:gap-10 items-center">
 
-     <!-- Collage / Slideshow -->
+  <!-- Static Image (No Slideshow) -->
 <div class="relative order-1 md:order-2">
-  <div class="relative aspect-[3/4] md:aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden slideshow">
-    <div class="absolute inset-0 w-full h-full slideshow-images">
-      <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/1156ced7-3f1f-4d57-4b17-8a934d857000/public" alt="SnapInk look 1" class="slideshow-image opacity-100">
+  <div class="relative aspect-[3/4] md:aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
+    <img 
+      src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/1156ced7-3f1f-4d57-4b17-8a934d857000/public" 
+      alt="SnapInk main look" 
+      class="w-full h-full object-cover"
+    >
+  </div>
+</div>
 
-    </div>
 
     <!-- Gradient overlay -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
@@ -322,34 +326,6 @@
 
     </div>
 
-    <!-- Countdown -->
-    <!-- On mobile: overlay at bottom; on desktop: normal grid below -->
-    <div class="mt-4 md:mt-12">
-      <div class="fixed left-4 right-4 bottom-4 z-30 md:static md:z-auto
-                  grid grid-cols-4 gap-3 text-center
-                  bg-neutral-900/70 backdrop-blur md:bg-transparent
-                  border border-neutral-800 md:border-0
-                  rounded-xl md:rounded-none p-3 md:p-0">
-        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
-          <div class="text-2xl md:text-3xl font-extrabold" id="dd">00</div>
-          <div class="text-neutral-400 text-[10px] md:text-xs">DAYS</div>
-        </div>
-        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
-          <div class="text-2xl md:text-3xl font-extrabold" id="hh">00</div>
-          <div class="text-neutral-400 text-[10px] md:text-xs">HOURS</div>
-        </div>
-        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
-          <div class="text-2xl md:text-3xl font-extrabold" id="mm">00</div>
-          <div class="text-neutral-400 text-[10px] md:text-xs">MINUTES</div>
-        </div>
-        <div class="rounded-xl bg-neutral-900/60 border border-neutral-800 p-3 md:p-4">
-          <div class="text-2xl md:text-3xl font-extrabold" id="ss">00</div>
-          <div class="text-neutral-400 text-[10px] md:text-xs">SECONDS</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </section>
 
 
@@ -392,181 +368,8 @@
         <a href="#" class="text-sm text-pink-400 hover:text-pink-300">Join waitlist for Drop 001 →</a>
       </div>
 
-<!-- Horizontal product carousel -->
-<div class="relative">
-  <!-- Scrollable container -->
-  <div id="carousel" class="carousel-viewport no-scrollbar flex gap-4 overflow-x-auto scroll-smooth pb-2">
-    
-    <!-- Product card 1 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/452e348a-5aae-4c4a-47fe-f1a40e284000/public" 
-             alt="SnapInk OG – Drop 001 (coming soon)" 
-             class="w-full h-full object-cover" 
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">DROP 001 • COMING SOON</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">SnapInk OG</h3>
-          <span class="text-sm text-neutral-300">Price TBD</span>
-        </div>
-        <div class="flex items-center gap-2" aria-label="Colorways">
-          <button class="h-5 w-5 rounded-full border border-neutral-700 aria-selected:ring-2 aria-selected:ring-pink-500" style="background:#111" aria-selected="true"></button>
-          <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#e5e7eb"></button>
-          <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#ef4444"></button>
-        </div>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_blackout","title":"Blackout Strap","price":24.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Notify me at launch</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Product card 2 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/8fb54743-5806-4f9f-45ac-05fca0f87200/public"
-             alt="Whiteout Strap (future drop)"
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-neutral-900/90 border border-neutral-700 text-[11px] font-bold">PREMIUM PKG. • COLLECTIBLE</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">TIN PACK</h3>
-          <span class="text-sm text-neutral-300"> TBD</span>
-        </div>
-        <div class="flex items-center gap-2" aria-label="Colorways">
-          <button class="h-5 w-5 rounded-full border border-neutral-700 aria-selected:ring-2 aria-selected:ring-pink-500" style="background:#e5e7eb" aria-selected="true"></button>
-          <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#111"></button>
-          <button class="h-5 w-5 rounded-full border border-neutral-700" style="background:#ef4444"></button>
-        </div>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_whiteout","title":"Whiteout Strap","price":24.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">On the roadmap</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product card 3 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/1429c5d2-f459-4cb7-c551-3ae227605400/public"
-             alt="Collab Strap (future drop)"
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">LIMITED COLLABS • FUTURE</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Collab Strap</h3>
-          <span class="text-sm text-neutral-300">Price TBD</span>
-        </div>
-        <p class="text-xs text-neutral-400">Creator / brand partnerships planned post-launch.</p>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_collab","title":"Collab Strap","price":59.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Register interest</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product card 4 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/49122432-f3c6-4710-09e8-10a7ade4d700/public"
-             alt="Special Edition Strap (future drop)"
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">SNAPINK™ • FUTURE</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Special Edition Strap</h3>
-          <span class="text-sm text-neutral-300">Price TBD</span>
-        </div>
-        <p class="text-xs text-neutral-400">Unique finishes and small runs planned.</p>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_special","title":"Special Edition Strap","price":29.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Planned release</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product card 5 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/d801ee14-9704-497b-ad38-2cb86528a800/public"
-             alt="Custom Strap (future plan)"
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">PERSONALIZE • FUTURE</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Custom Strap</h3>
-          <span class="text-sm text-neutral-300">Price TBD</span>
-        </div>
-        <p class="text-xs text-neutral-400">Names, brands, or logos post-launch.</p>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_personalize","title":"Custom Strap","price":39.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Coming after launch</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product card 6 -->
-    <div class="min-w-[280px] max-w-[280px] bg-neutral-900/60 border border-neutral-800 rounded-2xl card">
-      <div class="relative aspect-square overflow-hidden rounded-t-2xl">
-        <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/e579dcd8-aac3-47c5-91e5-71772a74d000/public"
-             alt="Exclusive Strap (future limited drop)"
-             class="w-full h-full object-cover"
-             loading="lazy">
-        <span class="absolute top-3 left-3 px-2 py-0.5 rounded bg-pink-600 text-[11px] font-bold">LIMITED • FUTURE</span>
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Exclusive Strap</h3>
-          <span class="text-sm text-neutral-300">Price TBD</span>
-        </div>
-        <p class="text-xs text-neutral-400">Small-batch exclusives planned.</p>
-        <div class="flex gap-2">
-          <button data-add='{"id":"strap_limited","title":"Exclusive Strap","price":49.99}' class="flex-1 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm shine">Future limited drop</button>
-          <button class="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm">Quick view</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Left arrow -->
-  <button onclick="scrollCarousel(-1)" 
-          class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/80 text-white z-10">
-    ◀
-  </button>
-
-  <!-- Right arrow -->
-  <button onclick="scrollCarousel(1)" 
-          class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/80 text-white z-10">
-    ▶
-  </button>
-</div>
-
-<script>
-function scrollCarousel(dir) {
-  const el = document.getElementById('carousel');
-  if (!el) return;
-  const card = el.querySelector('div');
-  const cardWidth = card?.offsetWidth || 280;
-  el.scrollBy({ left: dir * (cardWidth + 16), behavior: 'smooth' });
-}
-</script>
-  <!-- USP row -->
-      <div class="grid md:grid-cols-3 gap-4 mt-10">
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>🚚</span><div><div class="font-semibold">Launch shipping</div><div class="text-xs text-neutral-400">US shipping begins post-launch</div></div></div>
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>🛡️</span><div><div class="font-semibold">30-day guarantee</div><div class="text-xs text-neutral-400">Applies when retail opens</div></div></div>
-        <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex items-center gap-3"><span>✨</span><div><div class="font-semibold">Creator-ready</div><div class="text-xs text-neutral-400">Print, emboss, foil (post-launch)</div></div></div>
-      </div>
-    </div>
+ 
   </section>
 
  <!-- HOW IT WORKS -->
