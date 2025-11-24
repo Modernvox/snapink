@@ -18,68 +18,108 @@
   <style>
     body {
       font-family: Inter, sans-serif;
-      background:#0a0a0a;
-      color:white;
+      background: #0a0a0a;
+      color: white;
+      margin: 0;
+      padding: 0;
     }
+
+    header {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     .hero {
-      min-height:85vh;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      text-align:center;
-      padding:40px 20px;
-      background:linear-gradient(to bottom, #111, #000);
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(to bottom, #111, #000);
     }
+
     .hero img {
-      width:100%;
-      max-width:520px;
-      border-radius:20px;
-      box-shadow:0 10px 40px rgba(0,0,0,.45);
+      width: 100%;
+      max-width: 520px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .45);
     }
+
     .cta-btn {
-      display:inline-block;
-      margin-top:24px;
-      padding:14px 32px;
-      border-radius:14px;
-      background:#ec4899;
-      color:white;
-      font-weight:700;
-      font-size:1rem;
-      text-decoration:none;
-      transition:.2s;
+      display: inline-block;
+      margin-top: 24px;
+      padding: 14px 32px;
+      border-radius: 14px;
+      background: #ec4899;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: .2s;
     }
+
     .cta-btn:hover {
-      background:#db2777;
+      background: #db2777;
     }
 
     .section {
-      padding:60px 20px;
-      max-width:900px;
-      margin:0 auto;
-      text-align:center;
+      padding: 60px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
     }
 
     footer {
-      padding:40px 20px;
-      text-align:center;
-      color:#888;
-      border-top:1px solid #222;
-      margin-top:40px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #888;
+      border-top: 1px solid #222;
+      margin-top: 40px;
+    }
+
+    .socials img {
+      width: 28px;
+      margin: 0 8px;
+      opacity: .8;
+      transition: .2s;
+    }
+
+    .socials img:hover {
+      opacity: 1;
+    }
+
+    .alert {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .alert.success {
+      background: #064e3b;
+      color: #a7f3d0;
+    }
+
+    .alert.error {
+      background: #450a0a;
+      color: #fecaca;
     }
   </style>
 </head>
 
 <body>
 
-<!-- HEADER — extremely simple -->
-<header style="padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+<header>
   <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/5afcae7b-e96a-4465-ebbc-a7e7d6831000/public"
        alt="SnapInk Logo" style="height:40px;">
   <a href="#waitlist" class="cta-btn" style="padding:8px 18px; font-size:0.9rem;">Join Waitlist</a>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <img src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/993faf84-de3a-4c8e-97e8-c43d9985a300/public"
        alt="SnapInk Hero Image">
@@ -90,14 +130,12 @@
 
   <p style="margin-top:16px; color:#bbb; font-size:1.1rem; max-width:600px;">
     The world’s first <strong>swappable snapback strap</strong>.
-    Patent pending.  
-    Drop 001 is coming soon — get early access.
+    Patent pending. Drop 001 is coming soon — get early access.
   </p>
 
   <a href="#waitlist" class="cta-btn">Join the Waitlist</a>
 </section>
 
-<!-- HOW IT WORKS (simple 3-step row) -->
 <section class="section" id="how">
   <h2 style="font-size:2rem; font-weight:800;">How it Works</h2>
   <p style="margin-top:20px; color:#aaa;">
@@ -106,7 +144,6 @@
   </p>
 </section>
 
-<!-- EARLY FEEDBACK -->
 <section class="section" id="reviews">
   <h2 style="font-size:2rem; font-weight:800;">What People Say</h2>
   <p style="margin-top:20px; color:#aaa;">
@@ -114,21 +151,75 @@
   </p>
 </section>
 
-<!-- WAITLIST -->
 <section class="section" id="waitlist">
   <h2 style="font-size:2rem; font-weight:800;">Be First In Line</h2>
   <p style="color:#aaa;">We’ll email you 24 hours before Drop 001 goes live.</p>
 
-  <form action="/api/waitlist" method="post" style="margin-top:24px;">
-    <input type="email" name="email" placeholder="you@email.com" required
-           style="padding:14px; width:260px; max-width:80%; border-radius:12px; border:1px solid #333; background:#111; color:white;">
+  <form id="waitlist-form" style="margin-top:24px;">
+    <label class="visually-hidden" for="email">Email</label>
+    <input
+      type="email"
+      id="email"
+      name="email"
+      placeholder="you@email.com"
+      required
+      style="padding:14px; width:260px; max-width:80%;
+             border-radius:12px; border:1px solid #333;
+             background:#111; color:white;">
     <button class="cta-btn" type="submit" style="margin-left:8px;">Join</button>
   </form>
+
+  <div id="alert" class="alert"></div>
 </section>
 
 <footer>
+  <div class="socials" style="margin-bottom:18px;">
+    <a href="https://instagram.com" target="_blank">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" alt="Instagram">
+    </a>
+    <a href="https://tiktok.com" target="_blank">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/tiktok.svg" alt="TikTok">
+    </a>
+    <a href="https://facebook.com" target="_blank">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" alt="Facebook">
+    </a>
+  </div>
+
   © 2025 SnapInk™ — Patent Pending
 </footer>
+
+<script>
+document.getElementById("waitlist-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const alertBox = document.getElementById("alert");
+
+  try {
+    const res = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Something went wrong");
+
+    alertBox.textContent = "🎉 You're officially on the waitlist!";
+    alertBox.className = "alert success";
+    alertBox.style.display = "block";
+
+    setTimeout(() => alertBox.style.display = "none", 4000);
+    document.getElementById("waitlist-form").reset();
+
+  } catch (err) {
+    alertBox.textContent = err.message;
+    alertBox.className = "alert error";
+    alertBox.style.display = "block";
+  }
+});
+</script>
 
 </body>
 </html>
