@@ -251,164 +251,11 @@ const SnapInkSleeveCustomizer = forwardRef<
       className={`w-full ${className}`}
       style={{ maxWidth: width, margin: "0 auto", padding: "0 1rem" }}
     >
-      {/* ---------- PREVIEW AT TOP ---------- */}
-      <div className="rounded-3xl border border-neutral-800 bg-neutral-800 p-4 mb-6">
-        <div
-          className="relative w-full overflow-hidden rounded-2xl"
-          style={{ aspectRatio: "1600/450" }}
-        >
-          <svg
-            ref={svgRef}
-            viewBox="0 0 1600 450"
-            xmlns="http://www.w3.org/2000/svg"
-            className="absolute inset-0 block h-full w-full"
-          >
-            <defs>
-              {/* Emboss */}
-              <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur
-                  in="SourceAlpha"
-                  stdDeviation="1.25"
-                  result="alpha"
-                />
-                <feSpecularLighting
-                  in="alpha"
-                  surfaceScale="3"
-                  specularConstant="1.1"
-                  specularExponent="35"
-                  lightingColor="#ffffff"
-                  result="spec"
-                >
-                  <fePointLight x="-200" y="-300" z="400" />
-                </feSpecularLighting>
-                <feComposite
-                  in="spec"
-                  in2="SourceAlpha"
-                  operator="in"
-                  result="litSpec"
-                />
-                <feMerge>
-                  <feMergeNode in="litSpec" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
-              {/* Shadow */}
-              <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
-              </filter>
-
-              <path id={pathId} d={arcPath} />
-            </defs>
-
-            {/* Background */}
-            <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
-
-            {/* Guides */}
-            {showGuides && (
-              <g opacity="0.18">
-                <rect
-                  x={margin}
-                  y={margin}
-                  width={1600 - margin * 2}
-                  height={450 - margin * 2}
-                  fill="none"
-                  stroke="#ff0000"
-                  strokeDasharray="10 7"
-                />
-                <line
-                  x1={1600 / 2}
-                  y1={margin}
-                  x2={1600 / 2}
-                  y2={450 - margin}
-                  stroke="#fff"
-                  strokeDasharray="6 6"
-                />
-                <line
-                  x1={margin}
-                  y1={450 / 2}
-                  x2={1600 - margin}
-                  y2={450 / 2}
-                  stroke="#fff"
-                  strokeDasharray="6 6"
-                />
-              </g>
-            )}
-
-            {/* TEXT */}
-            {Boolean(text) && (
-              <g
-                filter={
-                  styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
-                }
-              >
-                <text
-                  fontFamily={font}
-                  fontSize={fontSize}
-                  fontWeight={fontWeight}
-                  letterSpacing={`${tracking}em`}
-                  fill={fill}
-                  stroke={strokeWidth > 0 ? stroke : "none"}
-                  strokeWidth={strokeWidth}
-                  dominantBaseline="central"
-                  textAnchor={textAnchor}
-                  paintOrder="stroke fill"
-                >
-                  {Math.abs(arc) < 1
-                    ? text.split("\n").map((line, i, arr) => (
-                        <tspan
-                          key={i}
-                          x={(posX / 100) * 1600}
-                          y={
-                            (posY / 100) * 450 +
-                            (i - (arr.length - 1) / 2) *
-                              (fontSize * lineHeight)
-                          }
-                        >
-                          {line}
-                        </tspan>
-                      ))
-                    : (() => {
-                        const lines = text.split("\n");
-                        const centerOffset = clamp(
-                          posX,
-                          safeMargin,
-                          100 - safeMargin
-                        );
-                        const lineGapPct =
-                          ((fontSize * lineHeight) / 450) * 100;
-
-                        return lines.map((line, i) => {
-                          const offsetPct =
-                            centerOffset +
-                            (i - (lines.length - 1) / 2) * lineGapPct;
-
-                          return (
-                            <textPath
-                              key={i}
-                              href={`#${pathId}`}
-                              startOffset={`${clamp(
-                                offsetPct,
-                                safeMargin,
-                                100 - safeMargin
-                              )}%`}
-                            >
-                              {line}
-                            </textPath>
-                          );
-                        });
-                      })()}
-                </text>
-              </g>
-            )}
-          </svg>
-        </div>
-      </div>
-
-      {/* ---------- CONTROLS BELOW PREVIEW ---------- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
         {/* LEFT COLUMN */}
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+
           <label className="block text-sm text-neutral-300">Custom text</label>
           <input
             value={text}
@@ -535,117 +382,272 @@ const SnapInkSleeveCustomizer = forwardRef<
           </div>
         </div>
 
-        {/* MIDDLE COLUMN */}
-        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-          <div className="grid grid-cols-3 gap-3 items-center">
-            <div className="col-span-2">
-              <label className="block text-xs text-neutral-400">Alignment</label>
-              <div className="flex gap-1">
-                {["start", "center", "end"].map((k) => (
-                  <button
-                    key={k}
-                    onClick={() => setAlign(k as "start" | "center" | "end")}
-                    className={`px-3 py-1.5 rounded-lg border text-sm ${
-                      align === k
-                        ? "bg-pink-600/20 text-pink-200 border-pink-500"
-                        : "bg-neutral-800/70 border-neutral-700 text-neutral-300"
-                    }`}
-                  >
-                    {k}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setPosX(50);
-                setPosY(50);
-              }}
-              className="rounded-lg border border-neutral-700 bg-neutral-800/70 text-neutral-200 px-3 py-2"
+        {/* PREVIEW IN MIDDLE */}
+        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm flex items-center justify-center">
+          <div
+            className="relative w-full overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-800"
+            style={{ aspectRatio: "1600/450" }}
+          >
+            <svg
+              ref={svgRef}
+              viewBox="0 0 1600 450"
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute inset-0 block h-full w-full"
             >
-              Center text
-            </button>
-          </div>
+              <defs>
+                <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur
+                    in="SourceAlpha"
+                    stdDeviation="1.25"
+                    result="alpha"
+                  />
+                  <feSpecularLighting
+                    in="alpha"
+                    surfaceScale="3"
+                    specularConstant="1.1"
+                    specularExponent="35"
+                    lightingColor="#ffffff"
+                    result="spec"
+                  >
+                    <fePointLight x="-200" y="-300" z="400" />
+                  </feSpecularLighting>
+                  <feComposite
+                    in="spec"
+                    in2="SourceAlpha"
+                    operator="in"
+                    result="litSpec"
+                  />
+                  <feMerge>
+                    <feMergeNode in="litSpec" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Range
-              label="Position X"
-              min={safeMargin}
-              max={100 - safeMargin}
-              step={0.5}
-              value={posX}
-              setValue={setPosX}
-              suffix="%"
-            />
-            <Range
-              label="Position Y"
-              min={20}
-              max={80}
-              step={0.5}
-              value={posY}
-              setValue={setPosY}
-              suffix="%"
-            />
-          </div>
+                <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
+                </filter>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Range
-              label="Safe margin"
-              min={0}
-              max={12}
-              step={0.5}
-              value={safeMargin}
-              setValue={setSafeMargin}
-              suffix="%"
-            />
-            <div>
-              <label className="block text-xs text-neutral-400">Guides</label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="guides"
-                  type="checkbox"
-                  checked={showGuides}
-                  onChange={(e) => setShowGuides(e.target.checked)}
-                />
-                <label htmlFor="guides" className="text-neutral-300 text-sm">
-                  Show safe area
-                </label>
-              </div>
-            </div>
+                <path id={pathId} d={arcPath} />
+              </defs>
+
+              <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
+
+              {showGuides && (
+                <g opacity="0.18">
+                  <rect
+                    x={margin}
+                    y={margin}
+                    width={1600 - margin * 2}
+                    height={450 - margin * 2}
+                    fill="none"
+                    stroke="#ff0000"
+                    strokeDasharray="10 7"
+                  />
+                  <line
+                    x1={1600 / 2}
+                    y1={margin}
+                    x2={1600 / 2}
+                    y2={450 - margin}
+                    stroke="#fff"
+                    strokeDasharray="6 6"
+                  />
+                  <line
+                    x1={margin}
+                    y1={450 / 2}
+                    x2={1600 - margin}
+                    y2={450 / 2}
+                    stroke="#fff"
+                    strokeDasharray="6 6"
+                  />
+                </g>
+              )}
+
+              {Boolean(text) && (
+                <g
+                  filter={
+                    styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
+                  }
+                >
+                  <text
+                    fontFamily={font}
+                    fontSize={fontSize}
+                    fontWeight={fontWeight}
+                    letterSpacing={`${tracking}em`}
+                    fill={fill}
+                    stroke={strokeWidth > 0 ? stroke : "none"}
+                    strokeWidth={strokeWidth}
+                    dominantBaseline="central"
+                    textAnchor={textAnchor}
+                    paintOrder="stroke fill"
+                  >
+                    {Math.abs(arc) < 1
+                      ? text.split("\n").map((line, i, arr) => (
+                          <tspan
+                            key={i}
+                            x={(posX / 100) * 1600}
+                            y={
+                              (posY / 100) * 450 +
+                              (i - (arr.length - 1) / 2) *
+                                (fontSize * lineHeight)
+                            }
+                          >
+                            {line}
+                          </tspan>
+                        ))
+                      : (() => {
+                          const lines = text.split("\n");
+                          const centerOffset = clamp(
+                            posX,
+                            safeMargin,
+                            100 - safeMargin
+                          );
+                          const lineGapPct =
+                            ((fontSize * lineHeight) / 450) * 100;
+
+                          return lines.map((line, i) => {
+                            const offsetPct =
+                              centerOffset +
+                              (i - (lines.length - 1) / 2) * lineGapPct;
+
+                            return (
+                              <textPath
+                                key={i}
+                                href={`#${pathId}`}
+                                startOffset={`${clamp(
+                                  offsetPct,
+                                  safeMargin,
+                                  100 - safeMargin
+                                )}%`}
+                              >
+                                {line}
+                              </textPath>
+                            );
+                          });
+                        })()}
+                  </text>
+                </g>
+              )}
+            </svg>
           </div>
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-          <h3 className="text-neutral-200 font-semibold">Actions</h3>
+        <div className="space-y-4">
 
-          <button
-            onClick={handleExportPNG}
-            className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3"
-          >
-            Download PNG preview
-          </button>
+          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
 
-          <div className="flex items-center gap-2 text-xs text-neutral-420">
-            <span>Scale</span>
-            <select
-              className="rounded bg-neutral-800/80 border border-neutral-700 px-2 py-1 text-neutral-200"
-              value={exportScale}
-              onChange={(e) => setExportScale(Number(e.target.value))}
-            >
-              {[1, 2, 3, 4].map((s) => (
-                <option key={s} value={s}>
-                  {s}×
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-3 gap-3 items-center">
+              <div className="col-span-2">
+                <label className="block text-xs text-neutral-400">Alignment</label>
+                <div className="flex gap-1">
+                  {["start", "center", "end"].map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => setAlign(k as "start" | "center" | "end")}
+                      className={`px-3 py-1.5 rounded-lg border text-sm ${
+                        align === k
+                          ? "bg-pink-600/20 text-pink-200 border-pink-500"
+                          : "bg-neutral-800/70 border-neutral-700 text-neutral-300"
+                      }`}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setPosX(50);
+                  setPosY(50);
+                }}
+                className="rounded-lg border border-neutral-700 bg-neutral-800/70 text-neutral-200 px-3 py-2"
+              >
+                Center text
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Range
+                label="Position X"
+                min={safeMargin}
+                max={100 - safeMargin}
+                step={0.5}
+                value={posX}
+                setValue={setPosX}
+                suffix="%"
+              />
+              <Range
+                label="Position Y"
+                min={20}
+                max={80}
+                step={0.5}
+                value={posY}
+                setValue={setPosY}
+                suffix="%"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Range
+                label="Safe margin"
+                min={0}
+                max={12}
+                step={0.5}
+                value={safeMargin}
+                setValue={setSafeMargin}
+                suffix="%"
+              />
+              <div>
+                <label className="block text-xs text-neutral-400">Guides</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="guides"
+                    type="checkbox"
+                    checked={showGuides}
+                    onChange={(e) => setShowGuides(e.target.checked)}
+                  />
+                  <label htmlFor="guides" className="text-neutral-300 text-sm">
+                    Show safe area
+                  </label>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <p className="text-xs text-neutral-400">
-            Saves a PNG the cart can attach at checkout.
-          </p>
-          <a ref={dlRef} className="hidden" />
+          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+            <h3 className="text-neutral-200 font-semibold">Actions</h3>
+
+            <button
+              onClick={handleExportPNG}
+              className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3"
+            >
+              Download PNG preview
+            </button>
+
+            <div className="flex items-center gap-2 text-xs text-neutral-420">
+              <span>Scale</span>
+              <select
+                className="rounded bg-neutral-800/80 border border-neutral-700 px-2 py-1 text-neutral-200"
+                value={exportScale}
+                onChange={(e) => setExportScale(Number(e.target.value))}
+              >
+                {[1, 2, 3, 4].map((s) => (
+                  <option key={s} value={s}>
+                    {s}×
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-xs text-neutral-400">
+              Saves a PNG the cart can attach at checkout.
+            </p>
+
+            <a ref={dlRef} className="hidden" />
+          </div>
+
         </div>
       </div>
     </div>
