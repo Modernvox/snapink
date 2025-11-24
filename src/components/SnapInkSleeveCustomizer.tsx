@@ -382,158 +382,10 @@ const SnapInkSleeveCustomizer = forwardRef<
           </div>
         </div>
 
-        {/* PREVIEW IN MIDDLE */}
-        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm flex items-center justify-center">
-          <div
-            className="relative w-full overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-800"
-            style={{ aspectRatio: "1600/450" }}
-          >
-            <svg
-              ref={svgRef}
-              viewBox="0 0 1600 450"
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute inset-0 block h-full w-full"
-            >
-              <defs>
-                <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur
-                    in="SourceAlpha"
-                    stdDeviation="1.25"
-                    result="alpha"
-                  />
-                  <feSpecularLighting
-                    in="alpha"
-                    surfaceScale="3"
-                    specularConstant="1.1"
-                    specularExponent="35"
-                    lightingColor="#ffffff"
-                    result="spec"
-                  >
-                    <fePointLight x="-200" y="-300" z="400" />
-                  </feSpecularLighting>
-                  <feComposite
-                    in="spec"
-                    in2="SourceAlpha"
-                    operator="in"
-                    result="litSpec"
-                  />
-                  <feMerge>
-                    <feMergeNode in="litSpec" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
+        {/* RIGHT SIDE (two boxes stacked) */}
+        <div className="col-span-2 space-y-4">
 
-                <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
-                </filter>
-
-                <path id={pathId} d={arcPath} />
-              </defs>
-
-              <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
-
-              {showGuides && (
-                <g opacity="0.18">
-                  <rect
-                    x={margin}
-                    y={margin}
-                    width={1600 - margin * 2}
-                    height={450 - margin * 2}
-                    fill="none"
-                    stroke="#ff0000"
-                    strokeDasharray="10 7"
-                  />
-                  <line
-                    x1={1600 / 2}
-                    y1={margin}
-                    x2={1600 / 2}
-                    y2={450 - margin}
-                    stroke="#fff"
-                    strokeDasharray="6 6"
-                  />
-                  <line
-                    x1={margin}
-                    y1={450 / 2}
-                    x2={1600 - margin}
-                    y2={450 / 2}
-                    stroke="#fff"
-                    strokeDasharray="6 6"
-                  />
-                </g>
-              )}
-
-              {Boolean(text) && (
-                <g
-                  filter={
-                    styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
-                  }
-                >
-                  <text
-                    fontFamily={font}
-                    fontSize={fontSize}
-                    fontWeight={fontWeight}
-                    letterSpacing={`${tracking}em`}
-                    fill={fill}
-                    stroke={strokeWidth > 0 ? stroke : "none"}
-                    strokeWidth={strokeWidth}
-                    dominantBaseline="central"
-                    textAnchor={textAnchor}
-                    paintOrder="stroke fill"
-                  >
-                    {Math.abs(arc) < 1
-                      ? text.split("\n").map((line, i, arr) => (
-                          <tspan
-                            key={i}
-                            x={(posX / 100) * 1600}
-                            y={
-                              (posY / 100) * 450 +
-                              (i - (arr.length - 1) / 2) *
-                                (fontSize * lineHeight)
-                            }
-                          >
-                            {line}
-                          </tspan>
-                        ))
-                      : (() => {
-                          const lines = text.split("\n");
-                          const centerOffset = clamp(
-                            posX,
-                            safeMargin,
-                            100 - safeMargin
-                          );
-                          const lineGapPct =
-                            ((fontSize * lineHeight) / 450) * 100;
-
-                          return lines.map((line, i) => {
-                            const offsetPct =
-                              centerOffset +
-                              (i - (lines.length - 1) / 2) * lineGapPct;
-
-                            return (
-                              <textPath
-                                key={i}
-                                href={`#${pathId}`}
-                                startOffset={`${clamp(
-                                  offsetPct,
-                                  safeMargin,
-                                  100 - safeMargin
-                                )}%`}
-                              >
-                                {line}
-                              </textPath>
-                            );
-                          });
-                        })()}
-                  </text>
-                </g>
-              )}
-            </svg>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="space-y-4">
-
+          {/* ALIGNMENT BOX */}
           <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
 
             <div className="grid grid-cols-3 gap-3 items-center">
@@ -616,7 +468,8 @@ const SnapInkSleeveCustomizer = forwardRef<
 
           </div>
 
-          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+          {/* ACTIONS BOX */}
+          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3 h-fit">
             <h3 className="text-neutral-200 font-semibold">Actions</h3>
 
             <button
@@ -646,6 +499,155 @@ const SnapInkSleeveCustomizer = forwardRef<
             </p>
 
             <a ref={dlRef} className="hidden" />
+          </div>
+
+          {/* PREVIEW — NOW SPANS BOTH RIGHT COLUMNS */}
+          <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
+            <div
+              className="relative w-full overflow-hidden rounded-2xl"
+              style={{ aspectRatio: "1600/450" }}
+            >
+              <svg
+                ref={svgRef}
+                viewBox="0 0 1600 450"
+                xmlns="http://www.w3.org/2000/svg"
+                className="absolute inset-0 block h-full w-full"
+              >
+                <defs>
+                  <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur
+                      in="SourceAlpha"
+                      stdDeviation="1.25"
+                      result="alpha"
+                    />
+                    <feSpecularLighting
+                      in="alpha"
+                      surfaceScale="3"
+                      specularConstant="1.1"
+                      specularExponent="35"
+                      lightingColor="#ffffff"
+                      result="spec"
+                    >
+                      <fePointLight x="-200" y="-300" z="400" />
+                    </feSpecularLighting>
+                    <feComposite
+                      in="spec"
+                      in2="SourceAlpha"
+                      operator="in"
+                      result="litSpec"
+                    />
+                    <feMerge>
+                      <feMergeNode in="litSpec" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
+                  </filter>
+
+                  <path id={pathId} d={arcPath} />
+                </defs>
+
+                <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
+
+                {showGuides && (
+                  <g opacity="0.18">
+                    <rect
+                      x={margin}
+                      y={margin}
+                      width={1600 - margin * 2}
+                      height={450 - margin * 2}
+                      fill="none"
+                      stroke="#ff0000"
+                      strokeDasharray="10 7"
+                    />
+                    <line
+                      x1={1600 / 2}
+                      y1={margin}
+                      x2={1600 / 2}
+                      y2={450 - margin}
+                      stroke="#fff"
+                      strokeDasharray="6 6"
+                    />
+                    <line
+                      x1={margin}
+                      y1={450 / 2}
+                      x2={1600 - margin}
+                      y2={450 / 2}
+                      stroke="#fff"
+                      strokeDasharray="6 6"
+                    />
+                  </g>
+                )}
+
+                {Boolean(text) && (
+                  <g
+                    filter={
+                      styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
+                    }
+                  >
+                    <text
+                      fontFamily={font}
+                      fontSize={fontSize}
+                      fontWeight={fontWeight}
+                      letterSpacing={`${tracking}em`}
+                      fill={fill}
+                      stroke={strokeWidth > 0 ? stroke : "none"}
+                      strokeWidth={strokeWidth}
+                      dominantBaseline="central"
+                      textAnchor={textAnchor}
+                      paintOrder="stroke fill"
+                    >
+                      {Math.abs(arc) < 1
+                        ? text.split("\n").map((line, i, arr) => (
+                            <tspan
+                              key={i}
+                              x={(posX / 100) * 1600}
+                              y={
+                                (posY / 100) * 450 +
+                                (i - (arr.length - 1) / 2) *
+                                  (fontSize * lineHeight)
+                              }
+                            >
+                              {line}
+                            </tspan>
+                          ))
+                        : (() => {
+                            const lines = text.split("\n");
+                            const centerOffset = clamp(
+                              posX,
+                              safeMargin,
+                              100 - safeMargin
+                            );
+                            const lineGapPct =
+                              ((fontSize * lineHeight) / 450) * 100;
+
+                            return lines.map((line, i) => {
+                              const offsetPct =
+                                centerOffset +
+                                (i - (lines.length - 1) / 2) * lineGapPct;
+
+                              return (
+                                <textPath
+                                  key={i}
+                                  href={`#${pathId}`}
+                                  startOffset={`${clamp(
+                                    offsetPct,
+                                    safeMargin,
+                                    100 - safeMargin
+                                  )}%`}
+                                >
+                                  {line}
+                                </textPath>
+                              );
+                            });
+                          })()}
+                    </text>
+                  </g>
+                )}
+              </svg>
+            </div>
           </div>
 
         </div>
