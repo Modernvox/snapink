@@ -1,10 +1,18 @@
-name = "snapink"
-compatibility_date = "2024-11-20"
+name = "snapink-waitlist"
+compatibility_date = "2025-08-29"
 
-# REQUIRED FOR PAGES
-pages_build_output_dir = "./dist"
-
+# Only D1 stays — Pages supports this
 [[d1_databases]]
 binding = "DB"
 database_name = "snapink_waitlist"
 database_id = "9263527d-7f81-4277-a171-e20b364f918c"
+
+# ❌ REMOVE ALL OF THIS:
+# main = "./functions/api/waitlist.js"
+# [[services]]
+# binding = "SEND_EMAIL"
+# service = "send-email"
+# environment = "production"
+
+# Pages automatically maps:
+# /functions/api/order.js → https://snapinkhats.com/api/order
