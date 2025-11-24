@@ -398,7 +398,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  return 
+  return (
     <div
         className={`
             w-full
@@ -407,12 +407,21 @@ const SnapInkSleeveCustomizer = forwardRef<
             ${className}
         `}
     >
-        {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
+        {/* ---------- MOBILE LAYOUT ---------- */}
         <div className="lg:hidden space-y-4">
-            {/* Preview at top */}
             <div className="p-4 rounded-3xl border border-neutral-800 bg-neutral-800">
                 <StrapPreviewInner />
             </div>
+
+            { /* … your accordion panels … */ }
+        </div>
+
+        {/* ---------- DESKTOP LAYOUT ---------- */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-4">
+            { /* … rest of your desktop layout … */ }
+        </div>
+    </div>
+  );
 
         {/* Text / Styling panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
