@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!--
+    HERO IMAGE (UPDATE THIS ONE VALUE IN 5 SPOTS BELOW)
+    Replace HERO_IMAGE_URL with your Cloudflare Images delivery URL for the stacked-hats SnapInk image.
+  -->
+  <!-- HERO_IMAGE_URL: https://imagedelivery.net/XXXXX/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/public -->
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RQ9MG3EGZ5"></script>
   <script>
@@ -14,19 +20,19 @@
   </script>
 
   <title>Drop 001 — Early Access | SnapInk™</title>
-  <meta name="description" content="Join the SnapInk™ Drop 001 early access list. The world’s first swappable snapback strap sleeve—get notified 24 hours before launch." />
+  <meta name="description" content="Join the SnapInk™ Drop 001 early access list. The world’s first swappable snapback strap—get notified 24 hours before launch." />
 
   <!-- Open Graph / Twitter -->
   <meta property="og:title" content="Drop 001 — Early Access | SnapInk™" />
   <meta property="og:description" content="Get first dibs on SnapInk™ Drop 001. Join the waitlist for early access." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://snapinkhats.com/drop001" />
-  <meta property="og:image" content="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/993faf84-de3a-4c8e-97e8-c43d9985a300/public/w=1200,h=630,fit=cover" />
-  <meta property="og:image:alt" content="SnapInk™ strap sleeve branding — hero" />
+  <meta property="og:image" content="HERO_IMAGE_URL?w=1200&h=630&fit=cover&gravity=center" />
+  <meta property="og:image:alt" content="SnapInk™ swappable snapback strap — Drop 001 hero" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Drop 001 — Early Access | SnapInk™" />
   <meta name="twitter:description" content="Join the SnapInk™ waitlist and get notified 24 hours before Drop 001 goes live." />
-  <meta name="twitter:image" content="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/1354f8ac-9701-41c3-00b9-91a800e11600/public/w=1200,h=630,fit=cover" />
+  <meta name="twitter:image" content="HERO_IMAGE_URL?w=1200&h=630&fit=cover&gravity=center" />
 
   <!-- Theme -->
   <meta name="theme-color" content="#0a0a0a" />
@@ -40,7 +46,11 @@
   <!-- Perf hints / preload hero image -->
   <link rel="preconnect" href="https://imagedelivery.net" />
   <link rel="dns-prefetch" href="https://imagedelivery.net" />
-  <link rel="preload" as="image" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/993faf84-de3a-4c8e-97e8-c43d9985a300/public">
+  <link rel="preload" as="image" href="HERO_IMAGE_URL?w=900&h=1200&fit=cover&gravity=center" imagesrcset="
+    HERO_IMAGE_URL?w=700&h=900&fit=cover&gravity=center 700w,
+    HERO_IMAGE_URL?w=900&h=1200&fit=cover&gravity=center 900w,
+    HERO_IMAGE_URL?w=1200&h=1600&fit=cover&gravity=center 1200w
+  " imagesizes="(max-width: 640px) 92vw, 420px">
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="/style.css">
@@ -95,16 +105,21 @@
       .shine:hover:after{ transition: none; }
     }
 
+    /* Hero image polish */
+    .hero-card{
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+
     @media (max-width: 640px) {
       header {
         background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
         border-bottom-color: rgba(38,38,38,.6);
       }
-      .hero { min-height: 88svh; }
-      .hero-inner { padding-top: 14svh; padding-bottom: 20px; }
+      .hero { min-height: 90svh; }
+      .hero-inner { padding-top: 10svh; padding-bottom: 20px; }
       #wl { display: flex; flex-direction: column; gap: 12px; }
       #wl input, #wl button { width: 100%; min-height: 48px; }
-      h1 { font-size: 2rem; line-height: 1.1; }
+      h1 { font-size: 2.05rem; line-height: 1.08; }
       .lead { font-size: 1rem; line-height: 1.5; }
       .rounded-2xl, .rounded-xl { border-radius: 16px !important; }
       .btn { min-height: 44px; }
@@ -124,7 +139,7 @@
         />
       </a>
       <div class="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800 text-xs text-neutral-300">
-        Small-batch launch
+        Patent-pending • Small-batch
       </div>
     </div>
   </header>
@@ -141,25 +156,35 @@
           <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800">
             ⚡ Drop 001 Early Access
           </div>
+          <div class="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800">
+            24-hour head start
+          </div>
         </div>
 
         <div class="mt-6 md:mt-8 grid md:grid-cols-5 gap-6 md:gap-8 items-center">
-          <!-- Visual -->
+          <!-- Visual (updated for tall hero image) -->
           <div class="md:col-span-2 order-2 md:order-1">
-            <div class="aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-900/60 border border-neutral-800 shadow-2xl">
+            <div class="rounded-2xl overflow-hidden bg-neutral-900/60 border border-neutral-800 hero-card">
               <img
-                src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/993faf84-de3a-4c8e-97e8-c43d9985a300/public"
-                alt="SnapInk Strap Sleeve on snapback strap"
-                class="w-full h-full object-cover"
+                src="HERO_IMAGE_URL?w=900&h=1200&fit=cover&gravity=center"
+                srcset="
+                  HERO_IMAGE_URL?w=700&h=900&fit=cover&gravity=center 700w,
+                  HERO_IMAGE_URL?w=900&h=1200&fit=cover&gravity=center 900w,
+                  HERO_IMAGE_URL?w=1200&h=1600&fit=cover&gravity=center 1200w
+                "
+                sizes="(max-width: 640px) 92vw, 420px"
+                alt="SnapInk™ swappable snapback strap sleeves shown across multiple hats"
+                class="w-full h-auto object-cover"
                 loading="eager"
                 decoding="async"
               />
             </div>
 
-            <div class="flex items-center gap-2 mt-3 text-[11px] text-neutral-400">
+            <div class="flex flex-wrap items-center gap-2 mt-3 text-[11px] text-neutral-400">
               <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Swappable</span>
               <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Strap-branded</span>
               <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">No new hat</span>
+              <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Limited Drop 001</span>
             </div>
           </div>
 
@@ -171,8 +196,8 @@
             </h1>
 
             <p class="mt-3 text-neutral-300 text-base md:text-lg lead">
-              SnapInk™ turns the snapback <em>strap</em> into the statement.
-              Join the list for <strong>24-hour early access</strong> to Drop 001 and first look at colorways.
+              SnapInk™ replaces the standard snapback strap with interchangeable, branded sleeves —
+              <strong>no new hat required</strong>. Join Drop 001 for early access and first colorway reveals.
             </p>
 
             <!-- Form area -->
@@ -214,7 +239,7 @@
 
               <div class="mt-2 flex items-center justify-between gap-3">
                 <p class="text-[11px] text-neutral-500">
-                  No spam. Unsubscribe anytime. <span class="text-neutral-400">No new hat required.</span>
+                  No spam. Unsubscribe anytime. <span class="text-neutral-400">Early access email arrives 24 hours before launch.</span>
                 </p>
                 <p class="text-[11px] text-neutral-500 hidden sm:block">
                   Fits most standard snapbacks.
@@ -236,8 +261,8 @@
 
         <!-- Credibility strip -->
         <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Built for live sellers</div>
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Creator-ready drops</div>
+          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Built for creators</div>
+          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Interchangeable system</div>
           <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Patent-pending</div>
           <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Small-batch launch</div>
         </div>
@@ -259,8 +284,8 @@
             <div class="mt-1">Hidden inner holes align with pegs — fasten as usual.</div>
           </div>
           <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-sm text-neutral-300">
-            <div class="font-semibold">3) Brand</div>
-            <div class="mt-1">The strap becomes prime real estate — swap styles anytime.</div>
+            <div class="font-semibold">3) Swap</div>
+            <div class="mt-1">Change styles anytime — the strap becomes prime real estate.</div>
           </div>
         </div>
 
