@@ -21,7 +21,6 @@
   <meta property="og:description" content="No new hat required. Join the waitlist for 24-hour early access to Drop 001." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://snapinkhats.com/" />
-  <!-- ✅ Swap this to your chosen homepage hero -->
   <meta property="og:image" content="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1200&h=630&fit=cover&gravity=center" />
   <meta property="og:image:alt" content="SnapInk™ swappable snapback strap sleeves — hero" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -32,7 +31,7 @@
   <!-- Theme -->
   <meta name="theme-color" content="#0a0a0a" />
 
-  <!-- Favicons (keep your existing paths) -->
+  <!-- Favicons -->
   <link rel="icon" href="/assets/favicon-B7vWfsAM.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16-BJmEdgya.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32-jw4p8Sgg.png">
@@ -44,7 +43,7 @@
   <!-- Perf hints -->
   <link rel="preconnect" href="https://imagedelivery.net" />
   <link rel="dns-prefetch" href="https://imagedelivery.net" />
-  <link rel="preload" as="image" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=900&h=1200&fit=cover&gravity=center" />
+  <link rel="preload" as="image" href="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1200&h=900&fit=cover&gravity=center" />
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="/style.css">
@@ -61,12 +60,16 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
       'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif;
     }
+
+    /* Subtle grid */
     .grid-bg{
       background-image:
         linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size:24px 24px
+      background-size:24px 24px;
     }
+
+    /* Buttons */
     .pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 2.2s infinite }
     @keyframes pulse{
       0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}
@@ -77,7 +80,7 @@
     .shine:after{
       content:""; position:absolute; inset:-100% -30%;
       background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%);
-      transform:translateX(-100%)
+      transform:translateX(-100%);
     }
     .shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
 
@@ -90,6 +93,15 @@
     }
     .msg-ok{ border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.12); color: rgba(187,247,208,1); }
     .msg-err{ border-color: rgba(239,68,68,.55); background: rgba(239,68,68,.12); color: rgba(254,202,202,1); }
+
+    /* IMPORTANT: stop any global CSS from stretching the header logo */
+    .site-logo{
+      height: 28px !important;
+      width: auto !important;
+      max-width: 160px !important;
+      display: block !important;
+      object-fit: contain !important;
+    }
 
     /* Mobile polish */
     input, button { font-size: 16px; }
@@ -105,166 +117,159 @@
         background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
         border-bottom-color: rgba(38,38,38,.6);
       }
-      .hero { min-height: 92svh; }
-      .hero-inner { padding-top: 12svh; padding-bottom: 20px; }
-      #wl { display:flex; flex-direction:column; gap:12px; }
-      #wl input, #wl button { width:100%; min-height:48px; }
       h1 { font-size: 2.05rem; line-height: 1.08; }
       .lead { font-size: 1rem; line-height: 1.55; }
       .rounded-2xl, .rounded-xl { border-radius: 16px !important; }
+      #wl { display:flex; flex-direction:column; gap:12px; }
+      #wl input, #wl button { width:100%; min-height:48px; }
     }
   </style>
 </head>
 
 <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
-  <!-- Minimal header (matches funnel pages) -->
+  <!-- Minimal header -->
   <header class="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur border-b border-neutral-900">
     <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" aria-label="SnapInk Home" class="flex items-center gap-2">
+      <a href="/" aria-label="SnapInk Home" class="flex items-center">
         <img
           src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/5afcae7b-e96a-4465-ebbc-a7e7d6831000/public"
           alt="SnapInk Logo"
-          class="h-7 w-auto"
+          class="site-logo"
         />
       </a>
-      <a href="/drop001.html" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/70 border border-neutral-800 text-xs text-neutral-200 hover:bg-neutral-900">
+
+      <a href="/drop001.html" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/70 border border-neutral-800 text-xs text-neutral-200 hover:bg-neutral-900">
         Drop 001 →
       </a>
     </div>
   </header>
 
   <main>
-    <!-- HERO (simple funnel-style) -->
-    <section class="relative overflow-hidden hero">
+    <!-- HERO (image directly under logo, then copy + waitlist) -->
+    <section class="relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-b from-neutral-900 via-neutral-950 to-black"></div>
       <div class="absolute inset-0 grid-bg opacity-60"></div>
 
-      <div class="relative max-w-3xl mx-auto px-4 py-10 md:py-16 hero-inner">
+      <div class="relative max-w-3xl mx-auto px-4 pt-6 pb-10 md:pt-10 md:pb-14">
+        <!-- top chips -->
         <div class="flex items-center justify-between text-xs text-neutral-300">
           <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800">
             ⚡ Drop 001 Early Access
           </div>
-          <div class="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800">
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900/70 border border-neutral-800">
             Patent-pending
           </div>
         </div>
 
-        <div class="mt-6 md:mt-8 grid md:grid-cols-5 gap-6 md:gap-8 items-center">
-          <!-- Visual -->
-          <div class="md:col-span-3 order-2">
-            <div class="rounded-2xl overflow-hidden bg-neutral-900/60 border border-neutral-800 shadow-2xl">
-              <img
-                src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=900&h=1200&fit=cover&gravity=center"
-                srcset="
-                  https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=700&h=900&fit=cover&gravity=center 700w,
-                  https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=900&h=1200&fit=cover&gravity=center 900w,
-                  https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1200&h=1600&fit=cover&gravity=center 1200w
-                "
-                sizes="(max-width: 640px) 92vw, 420px"
-                alt="SnapInk™ swappable snapback strap sleeves shown across multiple hats"
-                class="w-full h-auto object-cover"
-                loading="eager"
-                decoding="async"
-              />
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2 mt-3 text-[11px] text-neutral-400">
-              <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Swappable</span>
-              <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Strap-branded</span>
-              <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">No new hat</span>
-            </div>
+        <!-- HERO IMAGE (top) -->
+        <div class="mt-4 md:mt-6">
+          <div class="rounded-2xl overflow-hidden bg-neutral-900/60 border border-neutral-800 shadow-2xl">
+            <img
+              src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1600&h=900&fit=cover&gravity=center"
+              srcset="
+                https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=900&h=600&fit=cover&gravity=center 900w,
+                https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1200&h=750&fit=cover&gravity=center 1200w,
+                https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/a718ec8b-4b28-4b3a-ff5e-e49157257c00/public?w=1600&h=900&fit=cover&gravity=center 1600w
+              "
+              sizes="(max-width: 640px) 92vw, 768px"
+              alt="SnapInk™ swappable snapback strap sleeves shown across multiple hats"
+              class="w-full h-auto object-cover"
+              loading="eager"
+              decoding="async"
+            />
           </div>
 
-          <!-- Copy + Waitlist form (primary action) -->
-          <div class="md:col-span-3 order-1 md:order-2">
-            <h1 class="text-4xl md:text-5xl font-black leading-[1.05] tracking-tight">
-              The world’s first <span class="text-pink-500">swappable snapback strap</span>.
-              <span class="block mt-2 text-neutral-100">Waitlist gets a 24-hour head start.</span>
-            </h1>
-
-            <p class="mt-3 text-neutral-300 text-base md:text-lg lead">
-              SnapInk™ turns the snapback <em>strap</em> into the statement.
-              Join the list to get <strong>24-hour early access</strong> to Drop 001.
-            </p>
-
-            <!-- Waitlist -->
-            <div id="wl-wrap" class="mt-6">
-              <form id="wl" class="flex flex-col sm:flex-row gap-3" method="POST" action="/api/waitlist" novalidate>
-                <label class="sr-only" for="wl-email">Email</label>
-                <input
-                  id="wl-email"
-                  name="email"
-                  type="email"
-                  inputmode="email"
-                  autocomplete="email"
-                  required
-                  placeholder="your@email.com"
-                  class="w-full sm:w-80 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600"
-                />
-
-                <button
-                  id="wl-btn"
-                  type="submit"
-                  class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine pulse-glow disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  Join Waitlist
-                </button>
-
-                <!-- Attribution fields -->
-                <input type="hidden" name="src" id="wl-src" value="" />
-                <input type="hidden" name="campaign" id="wl-campaign" value="" />
-                <input type="hidden" name="medium" id="wl-medium" value="" />
-                <input type="hidden" name="content" id="wl-content" value="" />
-                <input type="hidden" name="ref" id="wl-ref" value="" />
-
-                <!-- Honeypot -->
-                <div style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;" aria-hidden="true">
-                  <label for="company">Company</label>
-                  <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
-                </div>
-              </form>
-
-              <div class="mt-2 flex items-center justify-between gap-3">
-                <p class="text-[11px] text-neutral-500">
-                  No spam. Unsubscribe anytime.
-                </p>
-                <a href="/fit-guide.html" class="text-[11px] text-neutral-400 hover:text-neutral-200 hidden sm:block">
-                  Fit Guide →
-                </a>
-              </div>
-
-              <div id="wl-status" class="mt-3 hidden" role="status" aria-live="polite"></div>
-
-              <div class="mt-5 flex flex-col sm:flex-row gap-3">
-                <a href="/drop001.html" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-100 font-semibold">
-                  View Drop 001
-                </a>
-                <a href="#how" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-900/40 border border-neutral-800 hover:bg-neutral-900 text-neutral-200">
-                  How it works
-                </a>
-              </div>
-            </div>
-
-            <!-- Compact bullets -->
-            <ul class="mt-6 space-y-2 text-sm text-neutral-300">
-              <li class="flex items-start gap-2"><span class="mt-1">✅</span><span><strong>First access</strong> to limited opening stock.</span></li>
-              <li class="flex items-start gap-2"><span class="mt-1">✅</span><span><strong>Early colorway reveals</strong> and collab drops.</span></li>
-              <li class="flex items-start gap-2"><span class="mt-1">✅</span><span>No new hat required — fits most standard snapbacks.</span></li>
-            </ul>
+          <div class="flex flex-wrap items-center gap-2 mt-3 text-[11px] text-neutral-400">
+            <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Swappable</span>
+            <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">Strap-branded</span>
+            <span class="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800">No new hat</span>
           </div>
         </div>
 
-        <!-- Minimal credibility strip -->
-        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Creator-ready</div>
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Interchangeable</div>
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Patent-pending</div>
-          <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Small-batch</div>
+        <!-- COPY + WAITLIST -->
+        <div class="mt-6 md:mt-8">
+          <h1 class="text-4xl md:text-5xl font-black leading-[1.05] tracking-tight">
+            The world’s first <span class="text-pink-500">swappable snapback strap</span>.
+            <span class="block mt-2 text-neutral-100">Waitlist gets a 24-hour head start.</span>
+          </h1>
+
+          <p class="mt-3 text-neutral-300 text-base md:text-lg lead">
+            SnapInk™ turns the snapback <em>strap</em> into the statement.
+            Join the list to get <strong>24-hour early access</strong> to Drop 001.
+          </p>
+
+          <div id="wl-wrap" class="mt-6">
+            <form id="wl" class="flex flex-col sm:flex-row gap-3" method="POST" action="/api/waitlist" novalidate>
+              <label class="sr-only" for="wl-email">Email</label>
+              <input
+                id="wl-email"
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                required
+                placeholder="your@email.com"
+                class="w-full sm:w-80 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-pink-600"
+              />
+
+              <button
+                id="wl-btn"
+                type="submit"
+                class="px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold shine pulse-glow disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Join Waitlist
+              </button>
+
+              <!-- Attribution fields -->
+              <input type="hidden" name="src" id="wl-src" value="" />
+              <input type="hidden" name="campaign" id="wl-campaign" value="" />
+              <input type="hidden" name="medium" id="wl-medium" value="" />
+              <input type="hidden" name="content" id="wl-content" value="" />
+              <input type="hidden" name="ref" id="wl-ref" value="" />
+
+              <!-- Honeypot -->
+              <div style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;" aria-hidden="true">
+                <label for="company">Company</label>
+                <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+            </form>
+
+            <div class="mt-2 flex items-center justify-between gap-3">
+              <p class="text-[11px] text-neutral-500">No spam. Unsubscribe anytime.</p>
+              <a href="/fit-guide.html" class="text-[11px] text-neutral-400 hover:text-neutral-200">
+                Fit Guide →
+              </a>
+            </div>
+
+            <div id="wl-status" class="mt-3 hidden" role="status" aria-live="polite"></div>
+
+            <div class="mt-5 flex flex-col sm:flex-row gap-3">
+              <a href="/drop001.html" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-100 font-semibold">
+                View Drop 001
+              </a>
+              <a href="#how" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-neutral-900/40 border border-neutral-800 hover:bg-neutral-900 text-neutral-200">
+                How it works
+              </a>
+            </div>
+          </div>
+
+          <ul class="mt-6 space-y-2 text-sm text-neutral-300">
+            <li class="flex items-start gap-2"><span class="mt-1">✅</span><span><strong>First access</strong> to limited opening stock.</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1">✅</span><span><strong>Early colorway reveals</strong> and collab drops.</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1">✅</span><span>No new hat required — fits most standard snapbacks.</span></li>
+          </ul>
+
+          <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Creator-ready</div>
+            <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Interchangeable</div>
+            <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Patent-pending</div>
+            <div class="px-3 py-2 rounded-lg bg-neutral-900/60 border border-neutral-800 text-center text-xs text-neutral-300">Small-batch</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- HOW IT WORKS (condensed) -->
+    <!-- HOW IT WORKS -->
     <section id="how" class="py-12 border-t border-neutral-900 bg-neutral-950">
       <div class="max-w-3xl mx-auto px-4">
         <h2 class="text-xl font-bold">How SnapInk™ works</h2>
@@ -284,85 +289,84 @@
           </div>
         </div>
 
-<details class="mt-6 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 text-sm text-neutral-300">
-  <summary class="font-semibold cursor-pointer">Will it fit my hat?</summary>
+        <details class="mt-6 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 text-sm text-neutral-300">
+          <summary class="font-semibold cursor-pointer">Will it fit my hat?</summary>
 
-  <div class="mt-3 text-neutral-400 space-y-4">
-    <p>
-      <strong class="text-neutral-200">SnapInk™ is designed for standard plastic snapback straps.</strong>
-      The system is engineered around the prevailing snapback strap format used across modern
-      streetwear and blank hat manufacturing.
-    </p>
+          <div class="mt-3 text-neutral-400 space-y-4">
+            <p>
+              <strong class="text-neutral-200">SnapInk™ is designed for standard plastic snapback straps.</strong>
+              The system is engineered around the prevailing snapback strap format used across modern
+              streetwear and blank hat manufacturing.
+            </p>
 
-    <p>
-      If your hat uses a <strong class="text-neutral-200">rigid plastic snapback closure</strong>
-      (the traditional peg-and-slot adjustable strap found on most snapbacks),
-      SnapInk™ is designed to fit.
-    </p>
+            <p>
+              If your hat uses a <strong class="text-neutral-200">rigid plastic snapback closure</strong>
+              (the traditional peg-and-slot adjustable strap found on most snapbacks),
+              SnapInk™ is designed to fit.
+            </p>
 
-    <div class="grid sm:grid-cols-3 gap-3">
-      <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
-        <div class="font-semibold text-neutral-200">✅ Compatible snapbacks</div>
-        <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
-          <li>Yupoong / Flexfit snapbacks</li>
-          <li>New Era 9FIFTY (snapback models)</li>
-          <li>Richardson snapbacks</li>
-          <li>OTTO snapbacks</li>
-          <li>Decky snapbacks</li>
-          <li>Nike snapbacks</li>
-          <li>Adidas snapbacks</li>
-          <li>Champion snapbacks</li>
-          <li>Modern streetwear brand snapbacks using plastic snap closures</li>
-        </ul>
-      </div>
+            <div class="grid sm:grid-cols-3 gap-3">
+              <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+                <div class="font-semibold text-neutral-200">✅ Compatible snapbacks</div>
+                <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
+                  <li>Yupoong / Flexfit snapbacks</li>
+                  <li>New Era 9FIFTY (snapback models)</li>
+                  <li>Richardson snapbacks</li>
+                  <li>OTTO snapbacks</li>
+                  <li>Decky snapbacks</li>
+                  <li>Nike snapbacks</li>
+                  <li>Adidas snapbacks</li>
+                  <li>Champion snapbacks</li>
+                  <li>Modern streetwear brand snapbacks using plastic snap closures</li>
+                </ul>
+              </div>
 
-      <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
-        <div class="font-semibold text-yellow-300">⚠️ Construction-dependent</div>
-        <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
-          <li>Vintage snapbacks with non-standard closure geometry</li>
-          <li>Youth-sized snapbacks</li>
-          <li>Low-cost promotional snapbacks</li>
-        </ul>
-        <p class="mt-2 text-[12px] text-neutral-500">
-          These categories may use alternate strap dimensions outside the SnapInk™ design specification.
-        </p>
-      </div>
+              <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+                <div class="font-semibold text-yellow-300">⚠️ Construction-dependent</div>
+                <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
+                  <li>Vintage snapbacks with non-standard closure geometry</li>
+                  <li>Youth-sized snapbacks</li>
+                  <li>Low-cost promotional snapbacks</li>
+                </ul>
+                <p class="mt-2 text-[12px] text-neutral-500">
+                  These categories may use alternate strap dimensions outside the SnapInk™ design specification.
+                </p>
+              </div>
 
-      <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
-        <div class="font-semibold text-pink-400">❌ Not compatible</div>
-        <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
-          <li>Fitted hats</li>
-          <li>Strapbacks with metal buckles or clasps</li>
-          <li>Velcro-back hats</li>
-          <li>Elastic or stretch-fit closures</li>
-          <li>Side-release clip systems</li>
-        </ul>
-      </div>
-    </div>
+              <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+                <div class="font-semibold text-pink-400">❌ Not compatible</div>
+                <ul class="mt-2 space-y-1 text-[13px] list-disc list-inside">
+                  <li>Fitted hats</li>
+                  <li>Strapbacks with metal buckles or clasps</li>
+                  <li>Velcro-back hats</li>
+                  <li>Elastic or stretch-fit closures</li>
+                  <li>Side-release clip systems</li>
+                </ul>
+              </div>
+            </div>
 
-    <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
-      <div class="font-semibold text-neutral-200">Quick compatibility check</div>
-      <ol class="mt-2 space-y-1 text-[13px] list-decimal list-inside">
-        <li>Turn the hat to view the rear closure.</li>
-        <li>If the adjustment mechanism is a <strong class="text-neutral-200">plastic snapback strap</strong>, SnapInk™ fits.</li>
-        <li>If the closure uses <strong class="text-neutral-200">metal hardware, Velcro, elastic, or buckles</strong>, it does not.</li>
-      </ol>
-    </div>
+            <div class="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+              <div class="font-semibold text-neutral-200">Quick compatibility check</div>
+              <ol class="mt-2 space-y-1 text-[13px] list-decimal list-inside">
+                <li>Turn the hat to view the rear closure.</li>
+                <li>If the adjustment mechanism is a <strong class="text-neutral-200">plastic snapback strap</strong>, SnapInk™ fits.</li>
+                <li>If the closure uses <strong class="text-neutral-200">metal hardware, Velcro, elastic, or buckles</strong>, it does not.</li>
+              </ol>
+            </div>
 
-    <p class="text-[12px] text-neutral-500">
-      A complete brand-and-model compatibility reference will be published prior to Drop 001.
-    </p>
-  </div>
-</details>
-
+            <p class="text-[12px] text-neutral-500">
+              A complete brand-and-model compatibility reference will be published prior to Drop 001.
+            </p>
+          </div>
+        </details>
       </div>
     </section>
   </main>
 
-  <!-- Sticky bar CTA (simple) -->
-  <div class="sticky bottom-3 z-30">
+  <!-- Sticky bar CTA -->
+  <div class="sticky bottom-3 z-30 pointer-events-none">
     <div class="max-w-3xl mx-auto px-4">
-      <div class="bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-2xl shadow-2xl p-3 flex items-center justify-between gap-3">
+      <div class="pointer-events-auto bg-neutral-900/90 backdrop-blur border border-neutral-800 rounded-2xl shadow-2xl p-3 flex items-center justify-between gap-3">
         <div class="text-sm text-neutral-300">
           <span class="font-semibold">Drop 001:</span> waitlist gets 24-hour early access.
         </div>
@@ -373,7 +377,7 @@
     </div>
   </div>
 
-  <!-- Footer (minimal) -->
+  <!-- Footer -->
   <footer class="mt-12 py-10 border-t border-neutral-900 bg-neutral-950">
     <div class="max-w-3xl mx-auto px-4 text-xs text-neutral-500 flex items-center justify-between">
       <div>© <span id="year"></span> SnapInk Hats • Patent-pending</div>
@@ -390,7 +394,7 @@
     // Year
     $('#year').textContent = new Date().getFullYear();
 
-    // UTM attribution + joined state (same behavior as funnel pages)
+    // UTM attribution + joined state
     (function(){
       const url = new URL(window.location.href);
 
