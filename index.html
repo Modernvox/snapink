@@ -53,77 +53,126 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <style>
-    :root{ --pink:#ec4899; --ok:#22c55e; --err:#ef4444; }
-    html{ scroll-behavior:smooth; }
-    body{
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-      'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif;
-    }
+<style>
+  :root{
+    --pink:#ec4899;
+    --ok:#22c55e;
+    --err:#ef4444;
 
-    /* Subtle grid */
-    .grid-bg{
-      background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size:24px 24px;
-    }
+    /* polish knobs */
+    --panel: rgba(17,17,17,.55);
+    --panel2: rgba(17,17,17,.35);
+    --border: rgba(255,255,255,.10);
+    --border2: rgba(255,255,255,.14);
+    --shadow: 0 18px 44px rgba(0,0,0,.45);
+  }
 
-    /* Buttons */
-    .pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 2.2s infinite }
-    @keyframes pulse{
-      0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}
-      70%{box-shadow:0 0 0 16px rgba(236,72,153,0)}
-      100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}
-    }
-    .shine{ position:relative; overflow:hidden }
-    .shine:after{
-      content:""; position:absolute; inset:-100% -30%;
-      background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%);
-      transform:translateX(-100%);
-    }
-    .shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol', sans-serif;
+  }
 
-    /* Inline status */
-    .msg{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(17,24,39,.38);
-      border-radius: 14px;
-      padding: 14px;
-    }
-    .msg-ok{ border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.12); color: rgba(187,247,208,1); }
-    .msg-err{ border-color: rgba(239,68,68,.55); background: rgba(239,68,68,.12); color: rgba(254,202,202,1); }
+  /* Subtle grid */
+  .grid-bg{
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
 
-    /* IMPORTANT: stop any global CSS from stretching the header logo */
+  /* Buttons */
+  .pulse-glow{ box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 2.2s infinite }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}
+    70%{box-shadow:0 0 0 16px rgba(236,72,153,0)}
+    100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}
+  }
+  .shine{ position:relative; overflow:hidden }
+  .shine:after{
+    content:""; position:absolute; inset:-100% -30%;
+    background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,.22), transparent 80%);
+    transform:translateX(-100%);
+  }
+  .shine:hover:after{ transition: transform .7s ease; transform:translateX(100%) }
+
+  /* Inline status */
+  .msg{
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(17,24,39,.38);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.25);
+  }
+  .msg-ok{ border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.12); color: rgba(187,247,208,1); }
+  .msg-err{ border-color: rgba(239,68,68,.55); background: rgba(239,68,68,.12); color: rgba(254,202,202,1); }
+
+  /* ---------- HEADER LOGO POLISH ---------- */
+
+  /* Wrap the logo in <span class="logo-wrap"> ... </span> */
+  .logo-wrap{
+    display:flex;
+    align-items:center;
+    padding: 8px 10px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+
+    /* subtle brand hint without "coloring in" the logo */
+    border-color: rgba(236,72,153,.18);
+
+    box-shadow:
+      0 10px 26px rgba(0,0,0,.40),
+      0 1px 0 rgba(255,255,255,.06) inset;
+    backdrop-filter: blur(10px);
+  }
+
+  /* IMPORTANT: stop any global CSS from stretching the header logo */
+  .site-logo{
+    height: 34px !important;
+    width: auto !important;
+    max-width: 220px !important;
+    display: block !important;
+    object-fit: contain !important;
+
+    /* crisp on dark */
+    filter: drop-shadow(0 2px 10px rgba(0,0,0,.35));
+  }
+
+  /* Optional: slightly richer header separation */
+  header{
+    box-shadow: 0 14px 36px rgba(0,0,0,.28);
+  }
+
+  /* Mobile polish */
+  input, button { font-size: 16px; }
+  img { max-width: 100%; height: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-glow{ animation: none; }
+    .shine:hover:after{ transition: none; }
+  }
+
+  @media (max-width: 640px) {
+    header {
+      background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
+      border-bottom-color: rgba(38,38,38,.6);
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+    }
+    h1 { font-size: 2.05rem; line-height: 1.08; }
+    .lead { font-size: 1rem; line-height: 1.55; }
+    .rounded-2xl, .rounded-xl { border-radius: 16px !important; }
+    #wl { display:flex; flex-direction:column; gap:12px; }
+    #wl input, #wl button { width:100%; min-height:48px; }
+
+    .logo-wrap{ padding: 7px 9px; border-radius: 13px; }
     .site-logo{
-      height: 28px !important;
-      width: auto !important;
-      max-width: 160px !important;
-      display: block !important;
-      object-fit: contain !important;
+      height: 30px !important;
+      max-width: 200px !important;
     }
+  }
+</style>
 
-    /* Mobile polish */
-    input, button { font-size: 16px; }
-    img { max-width: 100%; height: auto; }
-
-    @media (prefers-reduced-motion: reduce) {
-      .pulse-glow{ animation: none; }
-      .shine:hover:after{ transition: none; }
-    }
-
-    @media (max-width: 640px) {
-      header {
-        background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
-        border-bottom-color: rgba(38,38,38,.6);
-      }
-      h1 { font-size: 2.05rem; line-height: 1.08; }
-      .lead { font-size: 1rem; line-height: 1.55; }
-      .rounded-2xl, .rounded-xl { border-radius: 16px !important; }
-      #wl { display:flex; flex-direction:column; gap:12px; }
-      #wl input, #wl button { width:100%; min-height:48px; }
-    }
-  </style>
 </head>
 
 <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-pink-500/30 selection:text-white">
@@ -131,11 +180,13 @@
 <header class="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur border-b border-neutral-900">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <a href="/" aria-label="SnapInk Sleeves Home" class="flex items-center">
-      <img
-        src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/38c5ed45-ecbe-4cc5-508e-8eca8cdadf00/public"
-        alt="SnapInk Sleeves Logo"
-        class="site-logo"
-      />
+      <span class="logo-wrap">
+        <img
+          src="https://imagedelivery.net/fYqzQPf1CS3qAF1vZpfSLw/38c5ed45-ecbe-4cc5-508e-8eca8cdadf00/public"
+          alt="SnapInk Sleeves Logo"
+          class="site-logo"
+        />
+      </span>
     </a>
 
     <a href="/drop001.html" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/70 border border-neutral-800 text-xs text-neutral-200 hover:bg-neutral-900">
