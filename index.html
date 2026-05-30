@@ -12,43 +12,40 @@
     gtag('config', 'G-RQ9MG3EGZ5');
   </script>
 
-  <title>SnapInk | Custom Branding for Backwards Hats</title>
-  <meta name="description" content="SnapInk turns the blank strap area on backwards hats into customizable branding space. Snap it. Brand it. Represent." />
-
-  <meta property="og:title" content="SnapInk | Snap it. Brand it. Represent." />
-  <meta property="og:description" content="Custom snapping hat straps that turn backwards hats into branding space for teams, creators, businesses, and events." />
+  <title>SnapInk | Swappable Snapback Hat Straps</title>
+  <meta name="description" content="SnapInk is the first swappable snapback hat strap. Slide it on. Snap it in. Make it yours." />
+  <meta property="og:title" content="SnapInk | The First Swappable Snapback Hat Strap" />
+  <meta property="og:description" content="Slide it on. Snap it in. Make it yours." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://snapinkhats.com/" />
-  <meta property="og:image" content="https://snapinkhats.com/images/SnapInk_by_Mike_Stadium46.png" />
-  <meta property="og:image:alt" content="SnapInk custom strap on the back of a snapback hat" />
+  <meta property="og:image" content="https://snapinkhats.com/images/SnapInk_by_Mike_Stadium14.png" />
+  <meta property="og:image:alt" content="SnapInk strap installed on a backwards snapback hat" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="SnapInk | Snap it. Brand it. Represent." />
-  <meta name="twitter:description" content="Turn backwards hats into customizable branding space." />
-  <meta name="twitter:image" content="https://snapinkhats.com/images/SnapInk_by_Mike_Stadium46.png" />
-  <meta name="theme-color" content="#080808" />
+  <meta name="twitter:title" content="SnapInk | The First Swappable Snapback Hat Strap" />
+  <meta name="twitter:description" content="Slide it on. Snap it in. Make it yours." />
+  <meta name="twitter:image" content="https://snapinkhats.com/images/SnapInk_by_Mike_Stadium14.png" />
+  <meta name="theme-color" content="#050505" />
 
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preload" as="image" href="/images/SnapInk_by_Mike_Stadium46.png" />
-  <link rel="preload" as="image" href="/images/SnapInk_by_Mike_Stadium39.png" />
+  <link rel="preload" as="image" href="/images/SnapInk_by_Mike_Stadium14.png" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg: #070707;
-      --panel: #111111;
-      --panel-2: #171717;
-      --ink: #f8f6ef;
-      --muted: #b9b4a8;
-      --dim: #827c70;
-      --gold: #f5c542;
-      --gold-2: #ffdf76;
+      --bg: #050505;
+      --charcoal: #111;
+      --panel: #151515;
+      --panel-2: #1d1d1d;
+      --ink: #f7f7f2;
+      --muted: #b9b9ae;
+      --dim: #79796f;
+      --yellow: #f4c430;
       --line: rgba(255,255,255,.12);
-      --line-strong: rgba(245,197,66,.38);
-      --shadow: 0 30px 90px rgba(0,0,0,.45);
-      --radius: 22px;
+      --line-strong: rgba(244,196,48,.38);
+      --shadow: 0 30px 90px rgba(0,0,0,.48);
       color-scheme: dark;
     }
 
@@ -59,29 +56,20 @@
     }
     body {
       margin: 0;
-      min-width: 0;
       overflow-x: clip;
       font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
       background:
-        radial-gradient(circle at 18% 8%, rgba(245,197,66,.16), transparent 28rem),
-        radial-gradient(circle at 88% 16%, rgba(255,255,255,.08), transparent 26rem),
-        linear-gradient(180deg, #111 0%, var(--bg) 34%, #050505 100%);
+        radial-gradient(circle at 78% 2%, rgba(244,196,48,.14), transparent 28rem),
+        linear-gradient(180deg, #0c0c0c 0%, var(--bg) 52%, #030303 100%);
       color: var(--ink);
-      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
-
     img { display: block; max-width: 100%; height: auto; }
     a { color: inherit; text-decoration: none; }
-    button, input { font: inherit; }
-    input, button { font-size: 16px; }
+    button { font: inherit; }
 
-    .page-shell {
-      width: 100%;
-      overflow-x: clip;
-    }
     .container {
-      width: min(1420px, calc(100% - clamp(28px, 5vw, 72px)));
+      width: min(1440px, calc(100% - clamp(28px, 5vw, 80px)));
       margin-inline: auto;
     }
 
@@ -90,1168 +78,617 @@
       top: 0;
       z-index: 50;
       border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(7,7,7,.82);
+      background: rgba(5,5,5,.82);
       backdrop-filter: blur(18px);
     }
 
     .nav {
-      min-height: 72px;
+      min-height: 74px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 24px;
     }
 
-    .brand {
+    .logo {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      font-size: clamp(1.08rem, 1.6vw, 1.35rem);
       font-weight: 900;
-      letter-spacing: 0;
-      text-transform: uppercase;
+      letter-spacing: .02em;
     }
 
-    .brand-mark {
-      width: 38px;
-      height: 38px;
+    .logo-mark {
+      width: 36px;
+      height: 36px;
       display: grid;
       place-items: center;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--gold), #fff3b0 48%, #946c11);
-      color: #050505;
-      box-shadow: 0 12px 34px rgba(245,197,66,.22);
+      border: 2px solid var(--yellow);
+      border-radius: 50%;
+      color: var(--yellow);
+      font-size: .82rem;
+      font-weight: 900;
     }
-
-    .brand-word { font-size: 1.05rem; }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: clamp(14px, 2vw, 28px);
       color: var(--muted);
-      font-size: .93rem;
-      font-weight: 700;
-    }
-
-    .nav-links a:hover { color: var(--ink); }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0 20px;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      font-weight: 900;
-      letter-spacing: 0;
-      cursor: pointer;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+      font-size: .92rem;
+      font-weight: 800;
       white-space: nowrap;
     }
 
-    .btn:hover { transform: translateY(-1px); }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--gold), var(--gold-2));
-      color: #090909;
-      box-shadow: 0 18px 38px rgba(245,197,66,.22);
-    }
-    .btn-secondary {
-      background: rgba(255,255,255,.06);
-      border-color: var(--line);
+    .nav-links a:hover { color: white; }
+
+    .cart-link {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 16px;
       color: var(--ink);
     }
 
     .hero {
-      position: relative;
-      min-height: min(900px, calc(100svh - 72px));
-      display: grid;
-      align-items: center;
-      padding: clamp(28px, 5vw, 64px) 0 clamp(34px, 5vw, 58px);
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 42px 42px;
-      mask-image: linear-gradient(to bottom, #000, transparent 82%);
+      padding: clamp(28px, 4vw, 58px) 0 clamp(64px, 8vw, 112px);
     }
 
     .hero-grid {
-      position: relative;
       display: grid;
-      grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
-      gap: clamp(24px, 4.8vw, 72px);
+      grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+      gap: clamp(28px, 5vw, 76px);
       align-items: center;
+    }
+
+    .hero-copy {
+      max-width: 560px;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
       min-height: 34px;
-      padding: 0 13px;
       border: 1px solid var(--line-strong);
       border-radius: 999px;
-      background: rgba(245,197,66,.1);
-      color: var(--gold-2);
-      font-size: .78rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    h1, h2, h3, p { margin: 0; }
-
-    .hero h1 {
-      max-width: 10.5ch;
-      margin-top: clamp(16px, 2.3vw, 24px);
-      font-size: clamp(2.8rem, 6.1vw, 5.65rem);
-      line-height: .94;
-      font-weight: 900;
-      letter-spacing: 0;
-      text-transform: uppercase;
-      overflow-wrap: normal;
-      text-wrap: balance;
-    }
-
-    .hero h1 span { color: var(--gold); }
-
-    .hero-copy {
-      max-width: 62ch;
-      margin-top: clamp(16px, 2.3vw, 24px);
-      color: var(--muted);
-      font-size: clamp(1rem, 1.25vw, 1.24rem);
-      line-height: 1.55;
-    }
-
-    .hero-copy strong { color: var(--ink); }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: clamp(22px, 3vw, 30px);
-    }
-
-    .proof-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-      gap: 10px;
-      margin-top: clamp(24px, 3.4vw, 34px);
-      max-width: 630px;
-    }
-
-    .proof {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      background: rgba(255,255,255,.045);
-    }
-
-    .proof strong {
-      display: block;
-      font-size: 1.05rem;
-      color: var(--ink);
-    }
-
-    .proof span {
-      display: block;
-      margin-top: 2px;
-      color: var(--dim);
-      font-size: .82rem;
-      font-weight: 700;
-    }
-
-    .hero-media {
-      position: relative;
-      width: 100%;
-      min-width: 0;
-      height: clamp(34rem, 62svh, 48rem);
-      min-height: 0;
-      border-radius: 30px;
-      isolation: isolate;
-    }
-
-    .hero-card {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 30px;
-      background: #101010;
-      box-shadow: var(--shadow);
-    }
-
-    .hero-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .hero-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.72)),
-        linear-gradient(90deg, rgba(0,0,0,.42), transparent 56%);
-    }
-
-    .media-label {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 22px;
-      z-index: 2;
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .media-label strong {
-      display: block;
-      font-size: clamp(1.35rem, 3vw, 2.25rem);
-      line-height: .95;
-      text-transform: uppercase;
-      font-weight: 900;
-    }
-
-    .media-label span {
-      color: var(--gold-2);
-      font-size: .82rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      white-space: nowrap;
-    }
-
-    .floating-badge {
-      position: absolute;
-      z-index: 4;
-      top: clamp(14px, 2vw, 22px);
-      left: clamp(14px, 2vw, 22px);
-      max-width: min(280px, calc(100% - 28px));
-      border: 1px solid var(--line-strong);
-      border-radius: 18px;
-      padding: clamp(12px, 1.5vw, 16px);
-      background: rgba(9,9,9,.86);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 20px 50px rgba(0,0,0,.35);
-      color: var(--muted);
-      font-size: clamp(.82rem, .9vw, .9rem);
-      font-weight: 700;
-    }
-
-    .floating-badge strong {
-      display: block;
-      color: var(--ink);
-      font-size: 1.02rem;
-      margin-bottom: 2px;
-    }
-
-    .section {
-      padding: clamp(58px, 7vw, 96px) 0;
-      border-top: 1px solid rgba(255,255,255,.08);
-    }
-
-    .section-kicker {
-      color: var(--gold);
-      font-size: .78rem;
+      padding: 0 13px;
+      background: rgba(244,196,48,.1);
+      color: var(--yellow);
+      font-size: .76rem;
       font-weight: 900;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
 
+    h1, h2, h3, p { margin: 0; }
+
+    .hero h1 {
+      margin-top: 20px;
+      font-size: clamp(3rem, 6vw, 6rem);
+      line-height: .92;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+
+    .hero p {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: clamp(1.1rem, 1.55vw, 1.45rem);
+      line-height: 1.5;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 0 22px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--yellow);
+      color: #080808;
+      box-shadow: 0 18px 42px rgba(244,196,48,.2);
+    }
+
+    .btn-secondary {
+      border-color: var(--line);
+      background: rgba(255,255,255,.055);
+      color: var(--ink);
+    }
+
+    .hero-visual {
+      position: relative;
+      min-width: 0;
+    }
+
+    .hero-image-frame {
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: clamp(18px, 2vw, 30px);
+      background: var(--charcoal);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-image-frame img {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: contain;
+      object-position: center;
+      background: #050505;
+    }
+
+    .section {
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding: clamp(62px, 8vw, 112px) 0;
+    }
+
     .section-head {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(min(100%, 280px), 430px);
-      gap: clamp(18px, 3vw, 34px);
+      grid-template-columns: minmax(0, 1fr) minmax(min(100%, 280px), 420px);
+      gap: clamp(20px, 4vw, 48px);
       align-items: end;
-      margin-bottom: clamp(26px, 4vw, 40px);
+      margin-bottom: clamp(28px, 4vw, 46px);
+    }
+
+    .section-kicker {
+      color: var(--yellow);
+      font-size: .78rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
     }
 
     .section h2 {
       margin-top: 10px;
-      font-size: clamp(2rem, 4.1vw, 3.9rem);
-      line-height: .98;
+      font-size: clamp(2.2rem, 5vw, 4.8rem);
+      line-height: .95;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0;
+      text-wrap: balance;
     }
 
     .section-lede {
       color: var(--muted);
-      font-size: 1.05rem;
+      font-size: clamp(1rem, 1.3vw, 1.16rem);
       line-height: 1.65;
     }
 
-    .use-case-grid {
+    .before-after {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
     }
 
-    .use-case {
-      min-height: 128px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+    .strap-card,
+    .drop-card,
+    .custom-card,
+    .step-card {
       border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
       background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
     }
 
-    .use-case span {
-      color: var(--gold);
-      font-size: .78rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-    }
-
-    .use-case strong {
-      font-size: 1.15rem;
-      line-height: 1.12;
-      text-transform: uppercase;
-    }
-
-    .showcase {
+    .strap-card {
+      min-height: clamp(220px, 28vw, 360px);
       display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(min(100%, 280px), .88fr);
-      gap: 16px;
-      align-items: stretch;
+      align-content: center;
+      gap: 22px;
+      padding: clamp(18px, 3vw, 32px);
     }
 
-    .showcase-main,
-    .showcase-tile {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: #111;
-    }
-
-    .showcase-main { min-height: clamp(32rem, 58vw, 42rem); }
-    .showcase-main img,
-    .showcase-tile img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .showcase-main::after,
-    .showcase-tile::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,.78));
-    }
-
-    .showcase-copy {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 22px;
-      z-index: 2;
-    }
-
-    .showcase-copy strong {
-      display: block;
-      max-width: 580px;
-      font-size: clamp(1.8rem, 4vw, 3.7rem);
-      line-height: .95;
+    .strap-visual {
+      min-height: 72px;
+      border-radius: 999px;
+      background: #101010;
+      border: 1px solid rgba(255,255,255,.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.34);
       font-weight: 900;
+      letter-spacing: .08em;
       text-transform: uppercase;
     }
 
-    .showcase-copy p {
-      max-width: 530px;
-      margin-top: 12px;
+    .strap-visual.snapink {
+      background: linear-gradient(90deg, #050505, #151515);
+      border-color: rgba(244,196,48,.5);
+      color: white;
+      box-shadow: inset 0 0 0 3px rgba(244,196,48,.08);
+    }
+
+    .strap-label {
       color: var(--muted);
-      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
-    .showcase-side {
-      display: grid;
-      grid-template-rows: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+    .transform-caption {
+      margin-top: 18px;
+      color: var(--yellow);
+      font-size: clamp(1.25rem, 2vw, 1.85rem);
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
     }
 
-    .showcase-tile { min-height: 310px; }
-
-    .how-grid {
+    .steps,
+    .drops,
+    .custom-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-      gap: 14px;
-      counter-reset: steps;
+      gap: 16px;
     }
 
-    .step {
-      position: relative;
-      min-height: clamp(13rem, 20vw, 15.5rem);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 24px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
-        #0d0d0d;
+    .step-card,
+    .drop-card,
+    .custom-card {
+      min-height: 220px;
+      padding: clamp(20px, 3vw, 30px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    .step::before {
-      counter-increment: steps;
-      content: "0" counter(steps);
-      display: inline-grid;
+    .step-num {
+      width: 46px;
+      height: 46px;
+      display: grid;
       place-items: center;
-      width: 44px;
-      height: 44px;
       border-radius: 50%;
-      background: var(--gold);
+      background: var(--yellow);
       color: #080808;
       font-weight: 900;
-      margin-bottom: 42px;
     }
 
-    .step h3 {
-      font-size: 1.4rem;
-      line-height: 1.05;
+    .step-card h3,
+    .drop-card h3,
+    .custom-card h3 {
+      font-size: clamp(1.45rem, 2.3vw, 2.1rem);
+      line-height: 1;
       font-weight: 900;
       text-transform: uppercase;
     }
 
-    .step p {
+    .step-card p,
+    .drop-card p,
+    .custom-card p {
       margin-top: 12px;
       color: var(--muted);
+      line-height: 1.55;
     }
 
-    .benefits {
-      display: grid;
-      grid-template-columns: minmax(min(100%, 320px), .85fr) minmax(0, 1.15fr);
-      gap: clamp(22px, 4vw, 42px);
-      align-items: center;
-    }
-
-    .benefit-image {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background: #101010;
-      box-shadow: var(--shadow);
-    }
-
-    .benefit-image img {
-      width: 100%;
-      aspect-ratio: 4 / 5;
-      object-fit: cover;
-    }
-
-    .benefit-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .benefit {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      gap: 14px;
-      align-items: start;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 18px;
-      background: rgba(255,255,255,.045);
-    }
-
-    .check {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: rgba(245,197,66,.12);
-      color: var(--gold);
+    .drop-word {
+      font-size: clamp(2.4rem, 6vw, 5.25rem);
+      line-height: .9;
       font-weight: 900;
-    }
-
-    .benefit strong {
-      display: block;
-      font-size: 1.03rem;
       text-transform: uppercase;
     }
 
-    .benefit span {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-    }
+    .drop-card:nth-child(2) .drop-word { color: var(--yellow); }
 
-    .cta-panel {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(min(100%, 300px), 440px);
-      gap: clamp(22px, 4vw, 42px);
-      align-items: center;
-      border: 1px solid var(--line-strong);
-      border-radius: 30px;
-      padding: clamp(22px, 4.5vw, 48px);
+    .custom-card.featured {
+      min-height: 320px;
+      grid-column: span 2;
       background:
-        linear-gradient(135deg, rgba(245,197,66,.13), transparent 42%),
-        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
-        #0d0d0d;
-      box-shadow: var(--shadow);
+        linear-gradient(135deg, rgba(244,196,48,.16), transparent 45%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.025));
     }
 
-    .cta-panel h2 {
-      margin: 0;
-      max-width: 620px;
-      font-size: clamp(2.1rem, 4.8vw, 4.6rem);
-    }
-
-    .waitlist-form {
-      display: grid;
-      gap: 12px;
-    }
-
-    .input-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-    }
-
-    .email-input {
-      width: 100%;
-      min-height: 54px;
-      border: 1px solid rgba(255,255,255,.18);
+    .brand-placeholder {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid rgba(244,196,48,.5);
       border-radius: 999px;
-      padding: 0 18px;
-      background: rgba(0,0,0,.38);
-      color: var(--ink);
-      outline: none;
+      padding: 14px 22px;
+      color: var(--yellow);
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
     }
-
-    .email-input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 4px rgba(245,197,66,.12);
-    }
-
-    .fine-print {
-      color: var(--dim);
-      font-size: .82rem;
-    }
-
-    .msg {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      background: rgba(255,255,255,.055);
-      color: var(--muted);
-    }
-    .msg-ok {
-      border-color: rgba(79, 217, 128, .55);
-      background: rgba(79, 217, 128, .12);
-      color: #caf7d8;
-    }
-    .msg-err {
-      border-color: rgba(255, 94, 94, .55);
-      background: rgba(255, 94, 94, .12);
-      color: #ffd0d0;
-    }
-    .hidden { display: none !important; }
 
     .footer {
       border-top: 1px solid rgba(255,255,255,.08);
-      padding: 30px 0;
-      color: var(--dim);
-      background: #050505;
+      background: #030303;
+      padding: 34px 0;
     }
 
     .footer-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
-      font-size: .9rem;
+      gap: 22px;
+      color: var(--dim);
+      font-size: .92rem;
     }
 
     .footer-links {
       display: flex;
-      gap: 16px;
-      font-weight: 700;
-    }
-    .footer-links a:hover { color: var(--ink); }
-
-    .sticky-cta {
-      position: fixed;
-      left: 50%;
-      bottom: 16px;
-      z-index: 60;
-      transform: translateX(-50%);
-      width: min(540px, calc(100% - 28px));
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 999px;
-      padding: 10px 10px 10px 18px;
-      background: rgba(7,7,7,.88);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 20px 70px rgba(0,0,0,.45);
-    }
-
-    .sticky-cta span {
-      min-width: 0;
+      flex-wrap: wrap;
+      gap: 18px;
       color: var(--muted);
-      font-size: .88rem;
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    @media (max-width: 1100px) {
-      .hero-grid {
-        grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-        gap: clamp(22px, 3vw, 34px);
+    @media (max-width: 1120px) {
+      .nav-links {
+        gap: 14px;
+        font-size: .84rem;
       }
-      .hero h1 { font-size: clamp(2.65rem, 5.8vw, 4.25rem); }
-      .hero-media { height: clamp(31rem, 58svh, 40rem); }
+      .hero-grid {
+        grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+      }
     }
 
-    @media (max-width: 940px) {
-      .container { width: min(100% - clamp(28px, 5vw, 44px), 760px); }
-      .nav { min-height: 64px; }
-      .nav-links a:not(.btn) { display: none; }
-      .hero {
-        min-height: 0;
-        padding: clamp(18px, 4vw, 32px) 0 clamp(38px, 6vw, 56px);
+    @media (max-width: 900px) {
+      .nav {
+        min-height: 66px;
+      }
+      .nav-links a:not(.cart-link) {
+        display: none;
       }
       .hero-grid,
-      .section-head,
-      .showcase,
-      .benefits,
-      .cta-panel {
+      .section-head {
         grid-template-columns: 1fr;
       }
-      .hero-content { order: 2; }
-      .hero-media {
+      .hero-copy {
+        max-width: 720px;
+        order: 2;
+      }
+      .hero-visual {
         order: 1;
-        height: clamp(27rem, 70vw, 36rem);
       }
-      .floating-badge {
-        left: clamp(12px, 3vw, 18px);
-        top: clamp(12px, 3vw, 18px);
-        max-width: min(22rem, calc(100% - 24px));
+      .hero-image-frame img {
+        max-height: min(68svh, 760px);
+        object-fit: contain;
       }
-      .proof-row { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
-      .section { padding: clamp(52px, 8vw, 70px) 0; }
-      .section-head { align-items: start; }
-      .showcase-main { min-height: clamp(29rem, 68vw, 34rem); }
-      .step { min-height: 0; }
-      .step::before { margin-bottom: 28px; }
-      .sticky-cta { display: flex; }
+      .before-after {
+        grid-template-columns: 1fr;
+      }
+      .custom-card.featured {
+        grid-column: auto;
+      }
     }
 
     @media (max-width: 560px) {
-      .brand-mark { width: 34px; height: 34px; }
-      .brand-word { font-size: .98rem; }
-      .nav .btn { min-height: 42px; padding-inline: 14px; font-size: .86rem; }
-      .eyebrow {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-        font-size: clamp(.68rem, 2.5vw, .76rem);
-        padding-inline: 10px;
+      .container {
+        width: calc(100% - 28px);
       }
-      .hero h1 {
-        max-width: 11ch;
-        font-size: clamp(2.2rem, 12.4vw, 3.35rem);
-        line-height: .96;
+      .logo-mark {
+        width: 34px;
+        height: 34px;
       }
-      .hero-copy { font-size: 1rem; }
-      .hero-actions { display: grid; grid-template-columns: 1fr; }
-      .btn { width: 100%; min-height: 52px; }
-      .hero-media {
-        height: auto;
-        border-radius: 22px;
-      }
-      .hero-card {
-        position: relative;
-        height: auto;
-        min-height: clamp(20rem, 106vw, 29rem);
-        aspect-ratio: 4 / 5;
-        border-radius: 22px;
-      }
-      .media-label {
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
-        align-items: start;
-        flex-direction: column;
-      }
-      .media-label span { white-space: normal; }
-      .media-label strong { font-size: clamp(1.35rem, 8vw, 2rem); }
-      .floating-badge {
-        position: relative;
-        inset: auto;
-        max-width: none;
-        margin-bottom: 12px;
-      }
-      .section h2 { font-size: clamp(2rem, 10.5vw, 3rem); }
-      .showcase-main { min-height: clamp(27rem, 120vw, 32rem); }
-      .showcase-side { grid-template-rows: auto; }
-      .showcase-tile { min-height: clamp(15rem, 70vw, 20rem); }
-      .benefit { grid-template-columns: 34px minmax(0, 1fr); }
-      .check { width: 34px; height: 34px; }
-      .input-row { grid-template-columns: 1fr; }
-      .email-input { border-radius: 18px; }
-      .footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .sticky-cta span { font-size: .8rem; }
-      .sticky-cta .btn {
-        width: auto;
-        min-height: 42px;
+      .cart-link {
+        min-height: 40px;
         padding-inline: 14px;
       }
-    }
-
-    @media (max-width: 380px) {
-      .container { width: calc(100% - 24px); }
-      .hero h1 { font-size: clamp(2.05rem, 11.5vw, 2.75rem); }
-      .hero-card { min-height: clamp(19rem, 103vw, 25.5rem); }
-      .floating-badge { font-size: .78rem; }
-      .proof { padding: 12px; }
-      .use-case,
-      .step,
-      .benefit { padding: 16px; }
-      .sticky-cta {
-        width: calc(100% - 20px);
-        padding-left: 12px;
-        gap: 10px;
-      }
-    }
-
-    @media (min-width: 1600px) {
       .hero {
-        min-height: min(920px, calc(100svh - 72px));
+        padding-top: 18px;
       }
       .hero h1 {
-        font-size: clamp(4.8rem, 4.5vw, 5.75rem);
+        font-size: clamp(2.35rem, 13.5vw, 4rem);
       }
-      .hero-media {
-        height: clamp(42rem, 62svh, 50rem);
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .btn {
+        width: 100%;
+      }
+      .hero-image-frame {
+        border-radius: 18px;
+      }
+      .hero-image-frame img {
+        width: 100%;
+        max-height: 68svh;
+        object-fit: contain;
+        object-position: center top;
+      }
+      .section h2 {
+        font-size: clamp(2rem, 11vw, 3.1rem);
+      }
+      .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="page-shell">
-    <header class="site-header">
-      <div class="container nav">
-        <a class="brand" href="/" aria-label="SnapInk home">
-          <span class="brand-mark">SI</span>
-          <span class="brand-word">SnapInk</span>
-        </a>
-        <nav class="nav-links" aria-label="Primary navigation">
-          <a href="#use-cases">Use Cases</a>
-          <a href="#how">How It Works</a>
-          <a href="#showcase">Showcase</a>
-          <a class="btn btn-primary" href="#wl-anchor">Get Started</a>
-        </nav>
-      </div>
-    </header>
-
-    <main>
-      <section class="hero">
-        <div class="container hero-grid">
-          <div class="hero-content">
-            <div class="eyebrow">Custom snapback strap branding</div>
-            <h1>Snap it. <span>Brand it.</span> Represent.</h1>
-            <p class="hero-copy">
-              SnapInk turns the blank strap area on backwards hats into customizable branding space for
-              <strong>businesses, teams, creators, events, and everyday representation.</strong>
-            </p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="#wl-anchor">Customize Yours</a>
-              <a class="btn btn-secondary" href="#how">See How It Works</a>
-            </div>
-            <div class="proof-row" aria-label="Product highlights">
-              <div class="proof"><strong>Seconds</strong><span>snap and swap</span></div>
-              <div class="proof"><strong>Custom</strong><span>logos, text, handles</span></div>
-              <div class="proof"><strong>Snapbacks</strong><span>built for strap closures</span></div>
-            </div>
-          </div>
-
-          <div class="hero-media" aria-label="SnapInk product preview">
-            <div class="floating-badge">
-              <strong>Backwards hats finally get a billboard.</strong>
-              Your strap is no longer dead space. Make it visible, branded, and swappable.
-            </div>
-            <div class="hero-card">
-              <img
-                src="/images/SnapInk_by_Mike_Stadium46.png"
-                alt="SnapInk custom branded strap on a backwards hat"
-                fetchpriority="high"
-                decoding="async"
-              />
-              <div class="media-label">
-                <strong>Branding on lock</strong>
-                <span>Patent-pending strap product</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="use-cases" class="section">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-kicker">Who it is for</div>
-              <h2>Made for people who need to be seen.</h2>
-            </div>
-            <p class="section-lede">
-              SnapInk gives the back of the hat a purpose: team identity, local promotion, creator handles,
-              campaign drops, crew uniforms, event branding, and street-level visibility.
-            </p>
-          </div>
-
-          <div class="use-case-grid">
-            <div class="use-case"><span>01</span><strong>Businesses</strong></div>
-            <div class="use-case"><span>02</span><strong>Delivery drivers</strong></div>
-            <div class="use-case"><span>03</span><strong>Sports teams</strong></div>
-            <div class="use-case"><span>04</span><strong>Creators</strong></div>
-            <div class="use-case"><span>05</span><strong>Lifestyle brands</strong></div>
-            <div class="use-case"><span>06</span><strong>Events and drops</strong></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="showcase" class="section">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-kicker">Product showcase</div>
-              <h2>The strap becomes the statement.</h2>
-            </div>
-            <p class="section-lede">
-              Built around high-contrast visibility, fast customization, and the exact spot people see
-              when a hat is worn backwards.
-            </p>
-          </div>
-
-          <div class="showcase">
-            <div class="showcase-main">
-              <img src="/images/SnapInk_by_Mike_Stadium39.png" alt="SnapInk product ad with bold streetwear branding" loading="lazy" decoding="async" />
-              <div class="showcase-copy">
-                <strong>Custom brand space without buying a new hat.</strong>
-                <p>Swap the strap message for work, game day, launches, routes, pop-ups, or personal style.</p>
-              </div>
-            </div>
-            <div class="showcase-side">
-              <div class="showcase-tile">
-                <img src="/images/SnapInk_by_Mike_Stadium32.png" alt="SnapInk streetwear hat brand visual" loading="lazy" decoding="async" />
-              </div>
-              <div class="showcase-tile">
-                <img src="/images/SnapInk_by_Mike_Stadium26.png" alt="Closeup SnapInk hat branding concept" loading="lazy" decoding="async" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="how" class="section">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-kicker">How it works</div>
-              <h2>Three moves. New message.</h2>
-            </div>
-            <p class="section-lede">
-              Keep the hat. Change the strap identity whenever the brand, team, event, or moment changes.
-            </p>
-          </div>
-
-          <div class="how-grid">
-            <article class="step">
-              <h3>Choose your strap</h3>
-              <p>Select the SnapInk strap style and base look that matches your hat, brand, or drop.</p>
-            </article>
-            <article class="step">
-              <h3>Customize your design</h3>
-              <p>Add a logo, name, handle, team mark, route label, event text, or campaign design.</p>
-            </article>
-            <article class="step">
-              <h3>Snap it onto your hat</h3>
-              <p>Attach it to a compatible snapback-style closure and swap the message in seconds.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="container benefits">
-          <div class="benefit-image">
-            <img src="/images/snapink_by_Mike_Stadium_Gallery05.png" alt="SnapInk branded snapback product visual" loading="lazy" decoding="async" />
-          </div>
-          <div>
-            <div class="section-kicker">Benefits</div>
-            <h2>Built for fast, visible branding.</h2>
-            <div class="benefit-list" style="margin-top: 28px;">
-              <div class="benefit">
-                <span class="check">1</span>
-                <div><strong>Snap and swap in seconds</strong><span>Change the message without changing the hat.</span></div>
-              </div>
-              <div class="benefit">
-                <span class="check">2</span>
-                <div><strong>Custom logos, names, handles, or designs</strong><span>Make the strap fit the brand, person, team, or event.</span></div>
-              </div>
-              <div class="benefit">
-                <span class="check">3</span>
-                <div><strong>Built for teams, creators, and businesses</strong><span>Useful for staff, drivers, merch, drops, crews, and fan gear.</span></div>
-              </div>
-              <div class="benefit">
-                <span class="check">4</span>
-                <div><strong>Fits most snapback-style hats</strong><span>Designed for standard plastic snapback strap closures.</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="launch">
-        <div class="container">
-          <div class="cta-panel">
-            <div>
-              <div class="section-kicker">Launch list</div>
-              <h2>Get early access to custom SnapInk straps.</h2>
-              <p class="section-lede" style="margin-top: 18px;">
-                Join the launch list for product updates, customization access, and first notice when SnapInk opens.
-              </p>
-            </div>
-
-            <div id="wl-wrap">
-              <div id="wl-anchor"></div>
-              <form id="wl" class="waitlist-form" method="POST" action="/api/waitlist" novalidate>
-                <label class="sr-only" for="wl-email">Email</label>
-                <div class="input-row">
-                  <input
-                    id="wl-email"
-                    class="email-input"
-                    name="email"
-                    type="email"
-                    inputmode="email"
-                    autocomplete="email"
-                    required
-                    placeholder="Email address"
-                  />
-                  <button id="wl-btn" class="btn btn-primary" type="submit">Join the Launch List</button>
-                </div>
-
-                <input type="hidden" name="src" id="wl-src" value="" />
-                <input type="hidden" name="campaign" id="wl-campaign" value="" />
-                <input type="hidden" name="medium" id="wl-medium" value="" />
-                <input type="hidden" name="content" id="wl-content" value="" />
-                <input type="hidden" name="ref" id="wl-ref" value="" />
-
-                <div style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;" aria-hidden="true">
-                  <label for="company">Company</label>
-                  <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
-                </div>
-              </form>
-              <p class="fine-print" style="margin-top: 10px;">No spam. Product launch and customization updates only.</p>
-              <div id="wl-status" class="hidden" role="status" aria-live="polite"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <div class="sticky-cta" aria-label="Join the SnapInk launch list">
-      <span>Turn backwards hats into brand space.</span>
-      <a id="sticky-cta" class="btn btn-primary" href="#wl-anchor">Get Started</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="/" aria-label="SnapInk home">
+        <span class="logo-mark">SI</span>
+        <span>SNAPINK</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#shop">Shop</a>
+        <a href="#featured-drops">Featured Drops</a>
+        <a href="#custom-straps">Custom Straps</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#about">About</a>
+        <a class="cart-link" href="#cart">Cart</a>
+      </nav>
     </div>
+  </header>
 
-    <footer class="footer">
-      <div class="container footer-inner">
-        <div><strong>SnapInk</strong> <span id="year"></span>. Snap it. Brand it. Represent.</div>
-        <div class="footer-links">
-          <a href="/fit-guide.html">Fit Guide</a>
-          <a href="/press.html">Press</a>
-          <a href="mailto:support@snapinkhats.com">Contact</a>
+  <main>
+    <section class="hero" id="shop">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">Swappable strap system</div>
+          <h1>The First Swappable Snapback Hat Strap</h1>
+          <p>Slide it on. Snap it in. Make it yours.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#featured-drops">Shop Straps</a>
+            <a class="btn btn-secondary" href="#how-it-works">How It Works</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="SnapInk hero product visual">
+          <div class="hero-image-frame">
+            <img
+              src="/images/SnapInk_by_Mike_Stadium14.png"
+              alt="SnapInk strap installed on a backwards snapback hat"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
         </div>
       </div>
-    </footer>
-  </div>
+    </section>
 
-  <script>
-    const $ = (sel, root=document) => root.querySelector(sel);
+    <section class="section" id="about">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Before and after</div>
+            <h2>Transform any snapback in seconds</h2>
+          </div>
+          <p class="section-lede">
+            SnapInk turns the blank plastic closure into a clean branding surface without replacing the hat.
+          </p>
+        </div>
+        <div class="before-after">
+          <article class="strap-card">
+            <div class="strap-visual">Plain Strap</div>
+            <div class="strap-label">Plain snapback strap</div>
+          </article>
+          <article class="strap-card">
+            <div class="strap-visual snapink">SNAPINK</div>
+            <div class="strap-label">SnapInk strap installed</div>
+          </article>
+        </div>
+        <p class="transform-caption">Transform any snapback in seconds</p>
+      </div>
+    </section>
 
-    $('#year').textContent = new Date().getFullYear();
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">How it works</div>
+            <h2>Three moves. New identity.</h2>
+          </div>
+          <p class="section-lede">
+            Built for fast swaps, clean fit, and a stronger look from the back of the hat.
+          </p>
+        </div>
+        <div class="steps">
+          <article class="step-card">
+            <span class="step-num">01</span>
+            <div>
+              <h3>Slide Over Snap</h3>
+              <p>Slide the strap over the snapback closure.</p>
+            </div>
+          </article>
+          <article class="step-card">
+            <span class="step-num">02</span>
+            <div>
+              <h3>Snap In Securely</h3>
+              <p>Lock it into place using the snapback connection.</p>
+            </div>
+          </article>
+          <article class="step-card">
+            <span class="step-num">03</span>
+            <div>
+              <h3>Swap Anytime</h3>
+              <p>Change the message, drop, team, or brand whenever you want.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
 
-    const track = (name, params={}) => {
-      try { gtag('event', name, params); } catch {}
-    };
+    <section class="section" id="featured-drops">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Featured drops</div>
+            <h2>Streetwear-ready straps.</h2>
+          </div>
+          <p class="section-lede">
+            Minimal, loud, and built around the words people actually wear.
+          </p>
+        </div>
+        <div class="drops">
+          <article class="drop-card">
+            <div class="drop-word">SNAPINK</div>
+            <p>The signature mark.</p>
+          </article>
+          <article class="drop-card">
+            <div class="drop-word">HUSTLE</div>
+            <p>Yellow-accent energy for daily movement.</p>
+          </article>
+          <article class="drop-card">
+            <div class="drop-word">GRIND</div>
+            <p>Clean, bold, and built for repetition.</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
-    track('view_home_hero', { event_category: 'engagement', event_label: 'home_redesign' });
+    <section class="section" id="custom-straps">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Custom straps</div>
+            <h2>Your brand belongs on the strap.</h2>
+          </div>
+          <p class="section-lede">
+            Branded examples for companies, creators, teams, drivers, events, and local campaigns.
+          </p>
+        </div>
+        <div class="custom-grid">
+          <article class="custom-card featured">
+            <span class="brand-placeholder">Your Brand Here</span>
+            <div>
+              <h3>Business and creator applications</h3>
+              <p>Turn staff hats, creator merch, delivery routes, pop-ups, teams, and events into wearable brand space.</p>
+            </div>
+          </article>
+          <article class="custom-card">
+            <h3>Business</h3>
+            <p>Put your name where customers already look.</p>
+          </article>
+          <article class="custom-card">
+            <h3>Creators</h3>
+            <p>Handles, drops, communities, and personal brands.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    $('#sticky-cta')?.addEventListener('click', () => {
-      track('click_get_started_sticky', { event_category: 'engagement', event_label: 'home_redesign' });
-    });
-
-    (function(){
-      const url = new URL(window.location.href);
-      const src = url.searchParams.get('src') || url.searchParams.get('utm_source') || 'direct';
-      const camp = url.searchParams.get('utm_campaign') || url.searchParams.get('campaign') || '';
-      const med = url.searchParams.get('utm_medium') || '';
-      const cont = url.searchParams.get('utm_content') || '';
-      const ref = document.referrer || '';
-
-      const setVal = (id, val) => { const el = $('#'+id); if (el) el.value = val; };
-      setVal('wl-src', src);
-      setVal('wl-campaign', camp);
-      setVal('wl-medium', med);
-      setVal('wl-content', cont);
-      setVal('wl-ref', ref);
-
-      try {
-        const saved = localStorage.getItem('snapink_email');
-        const joined = localStorage.getItem('snapink_waitlist_joined') === '1';
-        const input = $('#wl-email');
-
-        if (saved && input && !input.value) input.value = saved;
-
-        if (joined) {
-          const form = $('#wl');
-          const status = $('#wl-status');
-          if (form && status) {
-            form.classList.add('hidden');
-            status.className = 'msg msg-ok';
-            status.innerHTML = '<strong>You are already on the list.</strong><div style="margin-top:4px;">You will get SnapInk launch and customization updates.</div>';
-            status.classList.remove('hidden');
-          }
-          const sticky = $('#sticky-cta');
-          if (sticky) {
-            sticky.textContent = 'You are in';
-            sticky.setAttribute('href', '#');
-            sticky.style.pointerEvents = 'none';
-            sticky.style.opacity = '.72';
-          }
-        }
-      } catch {}
-    })();
-
-    setTimeout(() => {
-      try {
-        const joined = localStorage.getItem('snapink_waitlist_joined') === '1';
-        if (!joined && window.matchMedia('(min-width: 900px)').matches) $('#wl-email')?.focus?.();
-      } catch {}
-    }, 300);
-
-    (function(){
-      const form = $('#wl');
-      const status = $('#wl-status');
-      const btn = $('#wl-btn');
-      const emailInput = $('#wl-email');
-      const sticky = $('#sticky-cta');
-
-      if (!form || !status || !btn || !emailInput) return;
-
-      const setStatus = (type, html) => {
-        status.className = '';
-        status.classList.add('msg');
-        status.classList.add(type === 'ok' ? 'msg-ok' : 'msg-err');
-        status.innerHTML = html;
-        status.classList.remove('hidden');
-      };
-
-      const setLoading = (on) => {
-        btn.disabled = on;
-        btn.textContent = on ? 'Joining...' : 'Join the Launch List';
-      };
-
-      const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-      form.addEventListener('submit', async (ev) => {
-        ev.preventDefault();
-
-        const fd = new FormData(form);
-        const email = (fd.get('email') || '').toString().trim();
-        const honeypot = (fd.get('company') || '').toString().trim();
-
-        if (honeypot) return;
-
-        if (!email || !isValidEmail(email)) {
-          setStatus('err', '<strong>Check your email.</strong> Please enter a valid email address.');
-          emailInput.focus();
-          return;
-        }
-
-        try { localStorage.setItem('snapink_email', email); } catch {}
-        setLoading(true);
-
-        try {
-          const r = await fetch(form.action || '/api/waitlist', {
-            method: 'POST',
-            body: fd,
-            headers: { 'Accept': 'application/json' }
-          });
-
-          let data = null;
-          try { data = await r.json(); } catch {}
-
-          if (!r.ok) {
-            const msg = data?.error || 'Something went wrong. Please try again.';
-            setStatus('err', '<strong>Could not join.</strong> ' + msg);
-            setLoading(false);
-            return;
-          }
-
-          const exists = data?.status === 'exists' || data?.exists === true;
-          track('waitlist_join', { event_category: 'engagement', event_label: 'home_redesign', value: 1 });
-
-          try { localStorage.setItem('snapink_waitlist_joined', '1'); } catch {}
-
-          form.classList.add('hidden');
-          setStatus(
-            'ok',
-            exists
-              ? '<strong>You are already on the list.</strong><div style="margin-top:4px;">You will get SnapInk launch and customization updates.</div>'
-              : '<strong>You are in.</strong><div style="margin-top:4px;">We will email you when SnapInk customization access opens.</div>'
-          );
-
-          if (sticky) {
-            sticky.textContent = 'You are in';
-            sticky.setAttribute('href', '#');
-            sticky.style.pointerEvents = 'none';
-            sticky.style.opacity = '.72';
-          }
-
-          setLoading(false);
-        } catch (e) {
-          setLoading(false);
-          form.submit();
-        }
-      });
-    })();
-  </script>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>Copyright SnapInk</div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="#shop">Shop</a>
+        <a href="mailto:support@snapinkhats.com">Contact</a>
+        <a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.tiktok.com/" target="_blank" rel="noopener">TikTok</a>
+      </nav>
+    </div>
+  </footer>
 </body>
 </html>
