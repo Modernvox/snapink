@@ -1,10 +1,13 @@
 import React, { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import SnapInkSleeveCustomizer from "./components/SnapInkSleeveCustomizer";
+import SnapInkSleeveCustomizer, {
+  type SnapInkSleeveCustomizerRef,
+  type SleeveDraft,
+} from "./components/SnapInkSleeveCustomizer";
 
 function App() {
-  const customizerRef = useRef(null);
-  const [draft, setDraft] = useState(null);
+  const customizerRef = useRef<SnapInkSleeveCustomizerRef | null>(null);
+  const [draft, setDraft] = useState<SleeveDraft | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -37,7 +40,7 @@ function App() {
       setCustomerName("");
       setCustomerEmail("");
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : "Failed to send order");
     }
 
     setSending(false);
@@ -49,46 +52,54 @@ function App() {
         ref={customizerRef}
         width={1600}
         initial={{
-          bgType: "image",
-          bgFit: "contain",
+          bgType: "vector",
           posX: 50,
           posY: 55,
         }}
         onChange={(d) => setDraft(d)}
       />
 
-      {/* Order Form */}
-      <div className="mt-10 bg-neutral-900 border border-neutral-800 p-6 rounded-xl max-w-xl mx-auto space-y-4">
-        <h2 className="text-xl font-semibold text-white text-center">
-          Send Your Custom Strap Order
-        </h2>
+      <div className="mt-10 grid gap-5 rounded-3xl border border-yellow-400/20 bg-neutral-950/70 p-5 shadow-2xl md:grid-cols-[1fr_1.1fr] md:p-7">
+        <div>
+          <p className="text-xs font-black uppercase tracking-widest text-yellow-300">
+            Submit your draft
+          </p>
+          <h2 className="mt-3 text-2xl font-black uppercase leading-tight text-white md:text-3xl">
+            Send your custom strap order.
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-neutral-400">
+            Your text, colors, logo placement, safe-area settings, and preview draft are sent to SnapInk for review.
+          </p>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Your Name"
-          className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-        />
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Your Name"
+            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-yellow-400"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
 
-        <input
-          type="email"
-          placeholder="Your Email"
-          className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-        />
+          <input
+            type="email"
+            placeholder="Your Email"
+            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-yellow-400"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+          />
 
-        <button
-          onClick={sendOrder}
-          disabled={sending}
-          className="w-full py-3 text-lg font-semibold bg-pink-600 hover:bg-pink-500 rounded-lg text-white disabled:opacity-50"
-        >
-          {sending ? "Sending…" : "Send Order"}
-        </button>
+          <button
+            onClick={sendOrder}
+            disabled={sending}
+            className="w-full rounded-full bg-yellow-400 px-5 py-3 text-lg font-black text-neutral-950 hover:bg-yellow-300 disabled:opacity-50"
+          >
+            {sending ? "Sending..." : "Send Order"}
+          </button>
 
-        {sent && <p className="text-green-400 text-center">Order sent! Check your inbox.</p>}
-        {error && <p className="text-red-400 text-center">{error}</p>}
+          {sent && <p className="text-center text-green-400">Order sent. Check your inbox.</p>}
+          {error && <p className="text-center text-red-400">{error}</p>}
+        </div>
       </div>
     </div>
   );

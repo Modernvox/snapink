@@ -27,6 +27,12 @@ export type SleeveDraft = {
   safeMargin: number;
   bgType: "vector";
   backgroundColor: string;
+  logoDataUrl?: string;
+  logoName?: string;
+  logoX: number;
+  logoY: number;
+  logoScale: number;
+  logoOpacity: number;
 };
 
 export interface SnapInkSleeveCustomizerProps {
@@ -138,9 +144,15 @@ const SnapInkSleeveCustomizer = forwardRef<
     initial.backgroundColor ?? "#000000"
   );
   const [exportScale, setExportScale] = useState(2);
+  const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
+  const [logoName, setLogoName] = useState(initial.logoName ?? "");
+  const [logoX, setLogoX] = useState(initial.logoX ?? 50);
+  const [logoY, setLogoY] = useState(initial.logoY ?? 50);
+  const [logoScale, setLogoScale] = useState(initial.logoScale ?? 24);
+  const [logoOpacity, setLogoOpacity] = useState(initial.logoOpacity ?? 100);
 
   // Mobile accordion
-  const [mobileOpen, setMobileOpen] = useState<"text" | "position" | "export">(
+  const [mobileOpen, setMobileOpen] = useState<"text" | "logo" | "position" | "export">(
     "text"
   );
 
@@ -170,6 +182,12 @@ const SnapInkSleeveCustomizer = forwardRef<
       safeMargin,
       bgType: "vector",
       backgroundColor,
+      logoDataUrl: logoDataUrl || undefined,
+      logoName: logoName || undefined,
+      logoX,
+      logoY,
+      logoScale,
+      logoOpacity,
     });
   }, [
     text,
@@ -188,6 +206,12 @@ const SnapInkSleeveCustomizer = forwardRef<
     align,
     safeMargin,
     backgroundColor,
+    logoDataUrl,
+    logoName,
+    logoX,
+    logoY,
+    logoScale,
+    logoOpacity,
     onChange,
   ]);
 
@@ -251,6 +275,97 @@ const SnapInkSleeveCustomizer = forwardRef<
   const textAnchor =
     align === "start" ? "start" : align === "end" ? "end" : "middle";
 
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a PNG, JPG, SVG, or another image file.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      setLogoDataUrl(reader.result);
+      setLogoName(file.name);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogo() {
+    setLogoDataUrl("");
+    setLogoName("");
+  }
+
+  const LogoControls = () => (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-xs text-neutral-400 mb-1">
+          Upload logo or mark
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+          className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-sm text-neutral-200 file:mr-3 file:rounded-lg file:border-0 file:bg-yellow-400 file:px-3 file:py-1.5 file:font-semibold file:text-neutral-950"
+        />
+        {logoName && (
+          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
+            <span className="truncate">{logoName}</span>
+            <button
+              type="button"
+              onClick={clearLogo}
+              className="rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Range
+          label="Logo X"
+          min={safeMargin}
+          max={100 - safeMargin}
+          step={0.5}
+          value={logoX}
+          setValue={setLogoX}
+          suffix="%"
+        />
+        <Range
+          label="Logo Y"
+          min={20}
+          max={80}
+          step={0.5}
+          value={logoY}
+          setValue={setLogoY}
+          suffix="%"
+        />
+        <Range
+          label="Logo size"
+          min={8}
+          max={70}
+          step={1}
+          value={logoScale}
+          setValue={setLogoScale}
+          suffix="%"
+        />
+        <Range
+          label="Logo opacity"
+          min={10}
+          max={100}
+          step={5}
+          value={logoOpacity}
+          setValue={setLogoOpacity}
+          suffix="%"
+        />
+      </div>
+    </div>
+  );
+
   // Shared preview inner block (used on mobile + desktop)
   const StrapPreviewInner = () => (
     <div
@@ -300,6 +415,18 @@ const SnapInkSleeveCustomizer = forwardRef<
         </defs>
 
         <rect x="0" y="0" width="1600" height="450" fill={backgroundColor} />
+
+        {logoDataUrl && (
+          <image
+            href={logoDataUrl}
+            x={(logoX / 100) * 1600 - (logoScale / 100) * 1600 / 2}
+            y={(logoY / 100) * 450 - (logoScale / 100) * 450 / 2}
+            width={(logoScale / 100) * 1600}
+            height={(logoScale / 100) * 450}
+            preserveAspectRatio="xMidYMid meet"
+            opacity={logoOpacity / 100}
+          />
+        )}
 
         {showGuides && (
           <g opacity="0.18">
@@ -428,7 +555,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           >
             <span>Text &amp; Styling</span>
             <span className="text-neutral-400">
-              {mobileOpen === "text" ? "−" : "+"}
+              {mobileOpen === "text" ? "-" : "+"}
             </span>
           </button>
           {mobileOpen === "text" && (
@@ -567,6 +694,27 @@ const SnapInkSleeveCustomizer = forwardRef<
           )}
         </div>
 
+        {/* Logo panel */}
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
+          <button
+            type="button"
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-neutral-100"
+            onClick={() =>
+              setMobileOpen(mobileOpen === "logo" ? "position" : "logo")
+            }
+          >
+            <span>Logo Upload</span>
+            <span className="text-neutral-400">
+              {mobileOpen === "logo" ? "-" : "+"}
+            </span>
+          </button>
+          {mobileOpen === "logo" && (
+            <div className="px-4 pb-4 pt-1">
+              <LogoControls />
+            </div>
+          )}
+        </div>
+
         {/* Position panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
           <button
@@ -578,7 +726,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           >
             <span>Position &amp; Guides</span>
             <span className="text-neutral-400">
-              {mobileOpen === "position" ? "−" : "+"}
+              {mobileOpen === "position" ? "-" : "+"}
             </span>
           </button>
           {mobileOpen === "position" && (
@@ -597,7 +745,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                         }
                         className={`px-3 py-1.5 rounded-lg border text-sm ${
                           align === k
-                            ? "bg-pink-600/20 text-pink-200 border-pink-500"
+                            ? "bg-yellow-400/15 text-yellow-200 border-yellow-400"
                             : "bg-neutral-800/70 border-neutral-700 text-neutral-300"
                         }`}
                       >
@@ -684,14 +832,14 @@ const SnapInkSleeveCustomizer = forwardRef<
           >
             <span>Export</span>
             <span className="text-neutral-400">
-              {mobileOpen === "export" ? "−" : "+"}
+              {mobileOpen === "export" ? "-" : "+"}
             </span>
           </button>
           {mobileOpen === "export" && (
             <div className="px-4 pb-4 pt-1 space-y-3">
               <button
                 onClick={handleExportPNG}
-                className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3"
+                className="w-full rounded-xl bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black px-4 py-3"
               >
                 Download PNG preview
               </button>
@@ -724,7 +872,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="fixed inset-x-0 bottom-2 px-4 lg:hidden">
           <button
             onClick={handleExportPNG}
-            className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3 shadow-lg shadow-pink-500/30"
+            className="w-full rounded-xl bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black px-4 py-3 shadow-lg shadow-yellow-500/20"
           >
             Download PNG
           </button>
@@ -732,7 +880,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
 
       {/* ---------- DESKTOP LAYOUT (3 columns, preview spans right side) ---------- */}
-      <div className="hidden lg:grid lg:grid-cols-3 gap-4">
+      <div className="hidden lg:grid lg:grid-cols-4 gap-4">
         {/* LEFT COLUMN */}
         <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
           <label className="block text-sm text-neutral-300">Custom text</label>
@@ -861,6 +1009,17 @@ const SnapInkSleeveCustomizer = forwardRef<
           </div>
         </div>
 
+        {/* LOGO BOX */}
+        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+          <div>
+            <h3 className="text-neutral-200 font-semibold">Logo placement</h3>
+            <p className="mt-1 text-xs text-neutral-400">
+              Upload a mark and position it inside the same strap preview.
+            </p>
+          </div>
+          <LogoControls />
+        </div>
+
         {/* RIGHT SIDE (two boxes + preview spanning) */}
         <div className="col-span-2 space-y-4">
           {/* ALIGNMENT BOX */}
@@ -879,7 +1038,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                       }
                       className={`px-3 py-1.5 rounded-lg border text-sm ${
                         align === k
-                          ? "bg-pink-600/20 text-pink-200 border-pink-500"
+                          ? "bg-yellow-400/15 text-yellow-200 border-yellow-400"
                           : "bg-neutral-800/70 border-neutral-700 text-neutral-300"
                       }`}
                     >
@@ -959,7 +1118,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
             <button
               onClick={handleExportPNG}
-              className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold px-4 py-3"
+              className="w-full rounded-xl bg-yellow-400 hover:bg-yellow-300 text-neutral-950 font-black px-4 py-3"
             >
               Download PNG preview
             </button>
@@ -1027,7 +1186,7 @@ function Range({
           step={step}
           value={value}
           onChange={(e) => setValue(Number(e.target.value))}
-          className="w-full accent-pink-500"
+          className="w-full accent-yellow-400"
         />
         <span className="w-16 text-right text-neutral-300 text-sm tabular-nums">
           {value}
@@ -1056,7 +1215,7 @@ function ColorSwatchRow({
             type="button"
             onClick={() => onChange(c.value)}
             className={`w-7 h-7 rounded-full border ${
-              selected ? "ring-2 ring-pink-500 border-white" : "border-neutral-600"
+              selected ? "ring-2 ring-yellow-400 border-white" : "border-neutral-600"
             }`}
             style={{ backgroundColor: c.value }}
             title={c.label}
@@ -1068,7 +1227,7 @@ function ColorSwatchRow({
 }
 
 // ---------- Dev tests ----------
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+if (import.meta.env.DEV) {
   console.assert(clamp(5, 0, 10) === 5);
   console.assert(clamp(-1, 0, 10) === 0);
   console.assert(clamp(11, 0, 10) === 10);
