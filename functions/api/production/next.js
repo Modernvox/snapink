@@ -1,6 +1,6 @@
 ﻿import { deviceFor, json, now } from "../../_lib/orders.js";
 
-import releaseState from "../../../scripts/production-release-state.json" with { type: "json" };
+import releaseState from "../../../scripts/production-release-state.json" assert { type: "json" };
 
 export async function onRequestGet({ request, env }) {
   if (!env.DB) return json({ error: "Production queue is unavailable." },503);

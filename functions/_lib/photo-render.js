@@ -1,5 +1,5 @@
 import { digest, json, now, randomId } from "./orders.js";
-import assetCatalog from "../../scripts/photo-render/cad-assets.json" with { type: "json" };
+import assetCatalog from "../../scripts/photo-render/cad-assets.json" assert { type: "json" };
 import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds } from "../../src/config/sleeveGeometry.ts";
 
 export const PHOTO_PRESETS = new Set(["cinematic", "marketplace", "studio"]);

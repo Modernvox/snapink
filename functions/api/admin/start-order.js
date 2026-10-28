@@ -1,7 +1,7 @@
 import { bearer, digest, json, now, randomId } from "../../_lib/orders.js";
 
-import productionManifest from "../../../scripts/production-model-manifest.json" with { type: "json" };
-import releaseState from "../../../scripts/production-release-state.json" with { type: "json" };
+import productionManifest from "../../../scripts/production-model-manifest.json" assert { type: "json" };
+import releaseState from "../../../scripts/production-release-state.json" assert { type: "json" };
 
 export async function onRequestPost({ request, env }) {
   if (!bearer(request, env.ADMIN_REVIEW_TOKEN)) return json({ error: "Unauthorized" }, 401);

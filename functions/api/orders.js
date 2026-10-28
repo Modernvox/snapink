@@ -1,6 +1,6 @@
 ﻿import { bearer, decodeDataUrl, digest, json, now, randomId, validEmail } from "../_lib/orders.js";
 import { validDraft } from "../_lib/draft.js";
-import releaseState from "../../scripts/production-release-state.json" with { type: "json" };
+import releaseState from "../../scripts/production-release-state.json" assert { type: "json" };
 
 const MAX_JSON_BYTES = 24 * 1024 * 1024;
 function safeSvg(bytes) {
