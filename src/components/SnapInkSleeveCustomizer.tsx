@@ -700,6 +700,11 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleeveGrooveFraction = variant === "billboard" ? billboardGrooveFraction : standardGrooveFraction;
   const sleeveColorRgb = backgroundColor.match(/[0-9a-f]{2}/gi)?.map((value) => parseInt(value, 16) / 255) ?? [0, 0, 0];
   const isBlackSleeve = backgroundColor.toLowerCase() === "#000000";
+  // The approved sleeve master is photographed in black. Preserve its texture
+  // by tinting its grayscale lighting, but lift the white material's base so
+  // the black source albedo does not make a selected white sleeve render gray.
+  const whiteSleeveFloor = backgroundColor.toLowerCase() === "#ffffff" ? 0.82 : 0;
+  const sleeveTextureAmplitude = 1 - whiteSleeveFloor;
   const sleeveColorFilterId = `sleeve-color-${uid}`;
   const scaledFontSize = fontSize * (viewH / 450);
   const margin = (safeMargin / 100) * viewH;
@@ -1378,9 +1383,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           {!isBlackSleeve && <filter id={sleeveColorFilterId} colorInterpolationFilters="sRGB">
             <feColorMatrix type="matrix" values={`0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0 0 0 1 0`} />
             <feComponentTransfer>
-              <feFuncR type="gamma" amplitude={sleeveColorRgb[0]} exponent="0.42" offset="0" />
-              <feFuncG type="gamma" amplitude={sleeveColorRgb[1]} exponent="0.42" offset="0" />
-              <feFuncB type="gamma" amplitude={sleeveColorRgb[2]} exponent="0.42" offset="0" />
+              <feFuncR type="gamma" amplitude={sleeveColorRgb[0] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[0] * whiteSleeveFloor} />
+              <feFuncG type="gamma" amplitude={sleeveColorRgb[1] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[1] * whiteSleeveFloor} />
+              <feFuncB type="gamma" amplitude={sleeveColorRgb[2] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[2] * whiteSleeveFloor} />
             </feComponentTransfer>
           </filter>}
         </defs>
