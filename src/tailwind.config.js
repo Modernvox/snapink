@@ -7,10 +7,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: "#ec4899",
-        ink: "#0a0a0a",
-        dark: "#111111",
-        muted: "#9aa7b8"
+        brand: "var(--si-marketing-pink)",
+        gold: "var(--si-gold)",
+        ink: "var(--si-bg)",
+        dark: "var(--si-panel)",
+        muted: "var(--si-muted)"
       },
       boxShadow: {
         card: "0 10px 30px rgba(0,0,0,.35)",

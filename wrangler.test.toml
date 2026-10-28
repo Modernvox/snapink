@@ -1,0 +1,26 @@
+name = "snapink-isolated-order-test"
+pages_build_output_dir = "./dist"
+compatibility_date = "2025-08-29"
+
+[vars]
+ENVIRONMENT = "isolated-local-test"
+SNAPINK_LOCAL_E2E = "true"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "snapink-isolated-order-test"
+database_id = "00000000-0000-0000-0000-000000000001"
+preview_database_id = "00000000-0000-0000-0000-000000000001"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "PRIVATE_ASSETS"
+bucket_name = "snapink-isolated-private-test"
+
+[[r2_buckets]]
+binding = "MODEL_BUCKET"
+bucket_name = "snapink-isolated-models-test"
+
+[[r2_buckets]]
+binding = "BACKUP_BUCKET"
+bucket_name = "snapink-isolated-backups-test"

@@ -1,6 +1,23 @@
 @import "tailwindcss";
 @config "./tailwind.config.js";   /* both files live in src/, so no extra src/ */
 
+@theme {
+  --color-si-accent: var(--si-accent);
+  --color-si-hover: var(--si-hover);
+  --color-si-button: var(--si-button);
+  --color-si-gold: var(--si-gold);
+  --color-si-gold-hover: var(--si-gold-hover);
+  --color-pink-400: var(--si-hover);
+  --color-pink-500: var(--si-accent);
+  --color-pink-600: var(--si-button);
+  --color-neutral-950: var(--si-bg);
+  --color-neutral-900: var(--si-panel);
+  --color-neutral-800: var(--si-line);
+  --color-neutral-700: var(--si-line);
+  --color-neutral-400: var(--si-muted);
+  --color-neutral-100: var(--si-text);
+}
+
 
 /* =========================
    COMPONENTS / CUSTOM CSS
@@ -35,11 +52,11 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   /* --- CTA glow pulse --- */
-  .pulse-glow { box-shadow: 0 0 0 0 rgba(236,72,153,.6); animation: pulse 2.2s infinite; }
+  .pulse-glow { box-shadow: 0 0 0 0 rgba(245,0,135,.6); animation: pulse 2.2s infinite; }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(236,72,153,.55) }
-    70% { box-shadow: 0 0 0 16px rgba(236,72,153,0) }
-    100% { box-shadow: 0 0 0 0 rgba(236,72,153,0) }
+    0% { box-shadow: 0 0 0 0 rgba(245,0,135,.55) }
+    70% { box-shadow: 0 0 0 16px rgba(245,0,135,0) }
+    100% { box-shadow: 0 0 0 0 rgba(245,0,135,0) }
   }
 
   /* --- Accordion caret --- */
@@ -148,6 +165,17 @@
 /* =========================
    UTILITIES / HELPERS
    ========================= */
+/* Size cards follow the actual width of their Studio panel, not the viewport.
+   Keep two roomy columns by default and use three only when each card can stay
+   comfortably readable. */
+.snapink-size-control { min-width: 0; width: 100%; container-type: inline-size; }
+.snapink-fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; min-width: 0; }
+.snapink-fit-card { min-width: 0; word-break: normal; overflow-wrap: normal; white-space: normal; }
+.snapink-fit-card-label { word-break: normal; overflow-wrap: normal; white-space: normal; }
+@container (min-width: 560px) {
+  .snapink-fit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @layer utilities {
   /* Subtle grid texture */
   .grid-bg {

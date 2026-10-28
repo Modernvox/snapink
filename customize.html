@@ -10,11 +10,25 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-RQ9MG3EGZ5');
+    gtag('event', 'studio_open');
+    document.addEventListener('pointerdown', function(event){ if(event.target.closest('#customizer-root')&&!window.__snapinkDesignStarted){window.__snapinkDesignStarted=true;gtag('event','studio_design_start');}});
   </script>
 
-  <title>Customize Your SnapInk Strap | SnapInk</title>
-  <meta name="theme-color" content="#0a0a0a" />
-  <meta name="description" content="Create a SnapInk strap mockup with custom text, colors, and logo placement for backwards-hat branding." />
+  <title>Custom Snapback Strap Sleeve Designer | SnapInk Studio</title>
+
+  <link rel="canonical" href="https://snapbacksleeves.com/customize" />
+  <meta property="og:title" content="Custom Snapback Strap Sleeve Designer | SnapInk Studio" />
+  <meta property="og:description" content="Design your own SnapInk snapback strap sleeve. Customize colors, text, and logos for a universal-fit plastic 7-peg snapback closure." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://snapbacksleeves.com/customize" />
+  <meta property="og:image" content="https://snapbacksleeves.com/images/website_images/optimized/Snapink%20Cap%20in%20Golden%20Reflections.webp" />
+  <meta property="og:image:alt" content="SnapInk customizable snapback strap sleeves" />
+  <meta property="og:site_name" content="SnapInk" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Custom Snapback Strap Sleeve Designer | SnapInk Studio" />
+  <meta name="twitter:description" content="Design your own SnapInk snapback strap sleeve. Customize colors, text, and logos for a universal-fit plastic 7-peg snapback closure." />
+  <meta name="twitter:image" content="https://snapbacksleeves.com/images/website_images/optimized/Snapink%20Cap%20in%20Golden%20Reflections.webp" /><meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Design your own SnapInk snapback strap sleeve. Customize colors, text, and logos for a universal-fit plastic 7-peg snapback closure." />
 
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -67,20 +81,20 @@
 
   <style>
     :root {
-      --snap-bg: #070707;
+      --snap-bg: var(--si-bg);
       --snap-panel: rgba(18, 18, 18, .82);
       --snap-line: rgba(255, 255, 255, .12);
-      --snap-gold: #f5c542;
-      --snap-gold-2: #ffdf76;
-      --snap-ink: #f8f6ef;
-      --snap-muted: #b9b4a8;
+      --snap-accent: var(--si-accent);
+      --snap-hover: var(--si-hover);
+      --snap-ink: var(--si-text);
+      --snap-muted: var(--si-muted);
     }
 
     body {
       margin: 0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
       background:
-        radial-gradient(circle at 16% 2%, rgba(245, 197, 66, .16), transparent 28rem),
+        radial-gradient(circle at 16% 2%, color-mix(in srgb, var(--si-accent) 12%, transparent), transparent 28rem),
         radial-gradient(circle at 88% 4%, rgba(255, 255, 255, .08), transparent 26rem),
         linear-gradient(180deg, #111 0%, var(--snap-bg) 42%, #050505 100%);
     }
@@ -116,14 +130,10 @@
     }
 
     .snap-mark {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--snap-gold), #fff3b0 48%, #946c11);
-      color: #050505;
-      box-shadow: 0 12px 34px rgba(245, 197, 66, .22);
+      width: clamp(120px, 14vw, 180px);
+      height: auto;
+      display: block;
+      border-radius: 0;
     }
 
     .snap-links {
@@ -135,8 +145,12 @@
       font-weight: 700;
     }
 
-    .snap-links a { color: inherit; text-decoration: none; }
+    .snap-links a { position: relative; color: inherit; text-decoration: none; transition: color .18s ease, background-color .18s ease, border-color .18s ease; }
     .snap-links a:hover { color: var(--snap-ink); }
+    .snap-links a[href="/pilot.html"] { display:inline-flex; min-height:38px; align-items:center; padding:0 13px; border:1px solid var(--si-button); border-radius:3px; background:var(--si-button); color:#fff; }
+    .snap-links a[href="/pilot.html"]:hover,.snap-links a[href="/pilot.html"]:focus-visible,.snap-links a[href="/pilot.html"][aria-current="page"] { background:var(--si-hover); border-color:var(--si-hover); color:#fff; }
+    .snap-links a[href="#customizer-root"] { color:var(--snap-hover); }
+    .snap-links a[aria-current="page"]::after { content:""; position:absolute; right:0; bottom:-6px; left:0; height:1px; background:var(--snap-accent); }
 
     .snap-btn {
       display: inline-flex;
@@ -145,29 +159,31 @@
       justify-content: center;
       border-radius: 999px;
       padding: 0 18px;
-      background: linear-gradient(135deg, var(--snap-gold), var(--snap-gold-2));
-      color: #080808 !important;
+      background: var(--si-button);
+      color: #fff !important;
       font-weight: 900;
       white-space: nowrap;
     }
 
     .snap-hero { padding: clamp(32px, 7vw, 82px) 0 28px; }
+    .snap-hero-promo { padding-top: 0; }
+    .snap-hero-promo .snap-hero-grid { grid-template-columns: minmax(0, 1fr); }
     .snap-hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, .95fr) minmax(280px, .55fr);
+      grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr);
       gap: 28px;
-      align-items: end;
+      align-items: start;
     }
 
     .snap-kicker {
       display: inline-flex;
       min-height: 34px;
       align-items: center;
-      border: 1px solid rgba(245, 197, 66, .38);
+      border: 1px solid color-mix(in srgb, var(--si-accent) 38%, transparent);
       border-radius: 999px;
       padding: 0 13px;
-      background: rgba(245, 197, 66, .1);
-      color: var(--snap-gold-2);
+      background: color-mix(in srgb, var(--si-accent) 10%, transparent);
+      color: var(--snap-hover);
       font-size: .78rem;
       font-weight: 900;
       letter-spacing: .08em;
@@ -184,7 +200,7 @@
       text-transform: uppercase;
     }
 
-    .snap-title span { color: var(--snap-gold); }
+    .snap-title span { color: var(--snap-accent); }
     .snap-lede {
       max-width: 680px;
       margin: 18px 0 0;
@@ -193,28 +209,50 @@
       line-height: 1.62;
     }
 
+    .snap-hero-side {
+      display: grid;
+      gap: 14px;
+      padding-top: 52px;
+    }
+
+    .snap-hero-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .snap-hero-image-wrap {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--si-accent) 22%, transparent);
+      border-radius: 16px;
+      box-shadow: 0 22px 54px rgba(0, 0, 0, .38);
+    }
+
     .snap-brief {
-      border: 1px solid var(--snap-line);
-      border-radius: 20px;
-      padding: 18px;
-      background: var(--snap-panel);
-      color: var(--snap-muted);
+      position: relative;
+      padding: 16px 18px;
+      color: #fff;
+      background: #10100e;
     }
 
     .snap-brief strong {
       display: block;
-      color: var(--snap-ink);
+      color: #fff;
       font-size: 1.1rem;
       line-height: 1.15;
+      font-weight: 900;
       text-transform: uppercase;
     }
 
+    .snap-brief p { margin: 7px 0 0; color: rgba(255, 255, 255, .92); line-height: 1.45; }
+
     .snap-tool-frame { padding: 0 0 70px; }
     .snap-tool-frame #customizer-root {
-      border: 1px solid rgba(245, 197, 66, .2);
+      border: 1px solid color-mix(in srgb, var(--si-accent) 20%, transparent);
       border-radius: 30px;
       background:
-        linear-gradient(135deg, rgba(245, 197, 66, .1), transparent 38%),
+        linear-gradient(135deg, color-mix(in srgb, var(--si-accent) 10%, transparent), transparent 38%),
         rgba(9, 9, 9, .72);
       box-shadow: 0 30px 90px rgba(0, 0, 0, .44);
       overflow: hidden;
@@ -222,59 +260,81 @@
 
     @media (max-width: 820px) {
       .snap-container { width: min(100% - 28px, 720px); }
-      .snap-links a:not(.snap-btn) { display: none; }
+      .snap-nav { flex-wrap: wrap; padding-block: 12px; }
+      .snap-links { width:100%; flex-wrap:wrap; justify-content:flex-end; gap:8px 14px; }
+      .snap-links a { font-size:.82rem; }
       .snap-hero-grid { grid-template-columns: 1fr; }
+      .snap-hero-side { padding-top: 0; }
       .snap-nav { min-height: 64px; }
       .snap-title { font-size: clamp(2.55rem, 14vw, 4.5rem); }
     }
-  </style>
-</head>
 
-<body class="antialiased">
+    @media (max-width: 768px) {
+      .snap-hero { padding-top: 24px; }
+      .snap-hero-grid { gap: 18px; }
+
+      .snap-kicker { min-height: 32px; }
+      .snap-title {
+        margin-top: 10px;
+        font-size: clamp(38px, 10.5vw, 42px);
+        line-height: 1.07;
+        letter-spacing: -.02em;
+      }
+      .snap-lede {
+        margin-top: 12px;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/mobile-navigation.css"><script defer src="/mobile-navigation.js"></script><link rel="stylesheet" href="/site-theme.css"></head>
+
+<body class="antialiased snapink-studio-content">
   <div class="snap-shell">
     <header class="snap-header">
       <div class="snap-container snap-nav">
         <a href="/" class="snap-brand" aria-label="SnapInk home">
-          <span class="snap-mark">SI</span>
-          <span>SnapInk</span>
+          <img class="snap-mark" src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100" />
         </a>
         <nav class="snap-links" aria-label="Customize navigation">
           <a href="/">Home</a>
-          <a href="/fit-guide.html">Fit Guide</a>
-          <a href="/#use-cases">Use Cases</a>
-          <a href="#customizer-root" class="snap-btn">Start Designing</a>
+          <a href="/pilot.html">Pilot Partners</a>
+          <a href="/partner-portal.html">Partner Portal</a>
+          <a href="#customizer-root" class="snap-btn" aria-current="page">Start Designing</a>
         </nav>
       </div>
     </header>
 
-    <main>
-      <section class="snap-hero">
-        <div class="snap-container snap-hero-grid">
-          <div>
-            <div class="snap-kicker">SnapInk custom studio</div>
-            <h1 class="snap-title">Design the strap people see <span>first.</span></h1>
-            <p class="snap-lede">
-              Mock up custom text, colors, positioning, and logo placement for the blank strap area on backwards hats.
-              Export a PNG preview or send the draft to SnapInk.
-            </p>
-          </div>
-          <div class="snap-brief">
-            <strong>Built for brand space.</strong>
-            <p class="mt-3">
-              Use this prelaunch studio to test team marks, business names, creator handles, delivery labels,
-              event tags, and launch concepts before production access opens.
-            </p>
-          </div>
+    <main><section aria-label="About SnapInk Studio" class="mx-auto max-w-7xl px-4 pt-6 text-sm text-neutral-300"><p>Choose Standard or Billboard style, select your exposed-peg configuration, customize text and colors, upload a logo, and preview your sleeve on a hat. Export a design preview when ready. Sizes 0&#8211;5 match exposed pegs; sleeves fit standard plastic 7-peg snapback closures. <a class="underline" href="/fit-guide.html">Will It Fit? View the Fit Guide.</a> Production access is available through reviewed pilot-partner applications.</p></section>
+      <section class="snap-hero" aria-labelledby="studio-title">
+        <div class="snap-container">
+          <div class="snap-kicker">SnapInk custom studio</div>
+          <h1 id="studio-title" class="snap-title">Design the strap people see <span>first.</span></h1>
+          <p class="snap-lede">Mock up custom text, colors, positioning, and logo placement for the blank strap area on backwards hats. Export a PNG preview or send the draft to SnapInk.</p>
         </div>
       </section>
 
-      <div class="snap-container snap-tool-frame">
+      <div class="snap-container snap-tool-frame" aria-label="Interactive SnapInk sleeve customizer">
         <div id="customizer-root"></div>
         <noscript class="text-xs text-red-400">JavaScript is required to run the SnapInk customizer.</noscript>
       </div>
+
+      <section class="snap-hero snap-hero-promo" aria-label="SnapInk sleeve example">
+        <div class="snap-container snap-hero-grid">
+          <div class="snap-hero-side">
+            <div class="snap-hero-image-wrap">
+              <img class="snap-hero-image" src="/images/website_images/optimized/installed-lift-rear.webp" srcset="/images/website_images/optimized/installed-lift-rear-768.webp 768w, /images/website_images/optimized/installed-lift-rear.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Rear view of a black mesh snapback with raised LIFT sleeve artwork" width="1536" height="1024" loading="lazy" decoding="async" />
+              <div class="snap-brief">
+                <strong>Built for brand space.</strong>
+                <p>Designs made here are previews only. Production orders are available only to approved pilot partners.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
   <script type="module" src="/src/customize.tsx"></script>
-</body>
+<script>document.addEventListener("click",function(e){const a=e.target.closest("a[href=\"/customize.html\"],a[href=\"/fit-guide.html\"],a[href=\"/pilot.html\"],a[href=\"/wholesale-info.html\"]");if(a&&typeof gtag==="function")gtag("event","primary_cta_click",{destination:a.getAttribute("href")});});</script></body>
 </html>

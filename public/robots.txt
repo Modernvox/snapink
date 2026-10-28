@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# ChatGPT search discovery. GPTBot remains covered by the existing wildcard policy.
+User-agent: OAI-SearchBot
+Allow: /
+
+Sitemap: https://snapbacksleeves.com/sitemap.xml

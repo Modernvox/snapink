@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "sourceRoot": "../snapink_cad",
+  "geometryVersion": "blank-flap-candidate-v1",
+  "status": "validation_candidate_only",
+  "models": [
+    {
+      "variant": "standard",
+      "size": 0,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_0/SnapInk_Standard_Size_0_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "e7522f4c8c2ac6dd565087880a0082bc54169e45d7a3f031e36726596808096b",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "standard",
+      "size": 1,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_1/SnapInk_Standard_Size_1_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "2337ab649b63462f30baf3c4559da008c427639f818b13f36ad83b38be09d15b",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "standard",
+      "size": 2,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_2/SnapInk_Standard_Size_2_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "c57000a365bd58c59c9151e7827a1ce74600e6dfcf32a1e5f144416d25183fc7",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "standard",
+      "size": 3,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_3/SnapInk_Standard_Size_3_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "2eb3c8df3e1a828419eb9c84fd29825d97edbb391518636fe2fbc184986cebef",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "standard",
+      "size": 4,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_4/SnapInk_Standard_Size_4_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "f97f1c513480e0571b84380c549c1a61680488ab8a58303af9dc37cac3a74b9d",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "standard",
+      "size": 5,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Standard/Size_5/SnapInk_Standard_Size_5_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "c20b465124f8677da6e589a3506cfbb058ace3ab4ea543dd3db940098129c737",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 0,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_0/SnapInk_Billboard_Size_0_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "2468c1503de814f9ab8ad539605bed09265ce7d267e081c936ac6b16785631f1",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 1,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_1/SnapInk_Billboard_Size_1_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "bc4759a4a803f84e890260d400a1e59cb6ce23fdee98e1b3e86b7e6676c7d409",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 2,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_2/SnapInk_Billboard_Size_2_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "ee53bff75b62b4862003c0d3a334f1748344cf062a3706f6b5d793e62dd8a6a5",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 3,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_3/SnapInk_Billboard_Size_3_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "61a204f5d33b2a8e10c3c726a3691777aef052b9885a2bdd1f9263144829a2df",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 4,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_4/SnapInk_Billboard_Size_4_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "e4c3920d3cab52b5ee290d58674723870d0829cb5b887436839101bcb5c0cc19",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    },
+    {
+      "variant": "billboard",
+      "size": 5,
+      "file": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/CANDIDATE_3MF_v3/Billboard/Size_5/SnapInk_Billboard_Size_5_Blank_Flap_CANDIDATE.3mf",
+      "sha256": "20fe3fb19005111b144259e025571ea27038fdfbcabc2cce168952c1f0f1aceb",
+      "sourceLabel": "Versioned blank-flap validation candidate; not production-approved"
+    }
+  ],
+  "validationFromManifestSha256": "2a7ee29281d8bdd9a005ff946a076c4ee65b9ab93ee01bc8a77343450b27a38c"
+}

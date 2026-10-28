@@ -1,0 +1,139 @@
+﻿{
+    "schemaVersion":  1,
+    "configurations":  [
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "5375028312df3fd454a4805023140e2687b8fd935aff118b28e1305b0b1f2991",
+                               "assetFile":  "SnapInk_Standard_Size_0_TPU_APPROVED.stl",
+                               "size":  0,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_0/SnapInk_Standard_Size_0_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "c867d048e913d613ffcbdda5014a24ad92c99a08e0ad023cc1f7e22d5b7f9f6e",
+                               "assetFile":  "SnapInk_Standard_Size_1_TPU_APPROVED.stl",
+                               "size":  1,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_1/SnapInk_Standard_Size_1_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "1f094ff29ba3e539c6c83033ae613a4ec8f9f9a77632ed944cf8d754843ac697",
+                               "assetFile":  "SnapInk_Standard_Size_2_TPU_APPROVED.stl",
+                               "size":  2,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_2/SnapInk_Standard_Size_2_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "b2903a8742cbe8f4bb2d5f7f970a98445a880b65a021204e37bb2d045f32e77e",
+                               "assetFile":  "SnapInk_Standard_Size_3_TPU_APPROVED.stl",
+                               "size":  3,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_3/SnapInk_Standard_Size_3_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "5d94067606a28641b23baaf5668a1e69059503c7b8551d973ab03f34ae3f1fb8",
+                               "assetFile":  "SnapInk_Standard_Size_4_TPU_APPROVED.stl",
+                               "size":  4,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_4/SnapInk_Standard_Size_4_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "MANUAL ORCA LOAD + SLICE PASS; geometry/physical-print approval tracked separately.",
+                               "renderEligible":  true,
+                               "variant":  "standard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "0031ac835598ba43da99e8856354a68c50fbee8c71d7c9cf90c5ed3fcfb38308",
+                               "assetFile":  "SnapInk_Standard_Size_5_TPU_APPROVED.stl",
+                               "size":  5,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Standard/Size_5/SnapInk_Standard_Size_5_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VALIDATION HOLD - requires complete STL integrity and fresh Orca slice checks.",
+                               "renderEligible":  false,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "42693f75ccc2c2eb5e05b31dc01b9f0dfd06c54cd8a53c537c6e3eecb4ad79ac",
+                               "assetFile":  "SnapInk_Billboard_Size_0_TPU_APPROVED.stl",
+                               "size":  0,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_0/SnapInk_Billboard_Size_0_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VALIDATION HOLD - requires complete STL integrity and fresh Orca slice checks.",
+                               "renderEligible":  false,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "6f186840e32a97a4a5380fc7766d298ec6daecb1198897b89794266787cbdf2e",
+                               "assetFile":  "SnapInk_Billboard_Size_1_TPU_APPROVED.stl",
+                               "size":  1,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_1/SnapInk_Billboard_Size_1_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VALIDATION HOLD - requires complete STL integrity and fresh Orca slice checks.",
+                               "renderEligible":  false,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "84bc39799f674db9c24ff6d0414bf225db6b57d54f23bf6ccf951a5082ff1990",
+                               "assetFile":  "SnapInk_Billboard_Size_2_TPU_APPROVED.stl",
+                               "size":  2,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_2/SnapInk_Billboard_Size_2_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VERIFIED CANDIDATE - STEP-derived body STL is watertight and fresh Orca slice passes; 12-configuration audit remains open.",
+                               "renderEligible":  true,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "48cc94464a8c56ad9829a577e16473c0b5b3d126f2e2fc3e437447c72adf6689",
+                               "assetFile":  "SnapInk_Billboard_Size_3_TPU_APPROVED.stl",
+                               "size":  3,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_3/SnapInk_Billboard_Size_3_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VERIFIED CANDIDATE: HatLaunch NoLogo body/support integrity and fresh Orca slice pass; family-wide review remains open.",
+                               "renderEligible":  true,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "3d1897a839d774478c18b4b8276cb6480b52bf54f647fb885128c41e2e6bb611",
+                               "assetFile":  "SnapInk_Billboard_Size_4_TPU_APPROVED.stl",
+                               "size":  4,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_4/SnapInk_Billboard_Size_4_TPU_APPROVED.stl"
+                           },
+                           {
+                               "validationStatus":  "VERIFIED CANDIDATE - corrected-STEP body STL is watertight and fresh Orca slice passes; 12-configuration audit remains open.",
+                               "renderEligible":  true,
+                               "variant":  "billboard",
+                               "sourceIsReadOnly":  true,
+                               "format":  "stl",
+                               "sha256":  "af563697a2cb109332c190820f53cf1bdbefc95d539a978d459ceb0e9156d905",
+                               "assetFile":  "SnapInk_Billboard_Size_5_TPU_APPROVED.stl",
+                               "size":  5,
+                               "assetRelativePath":  "SnapInk_Production/APPROVED/Billboard/Size_5/SnapInk_Billboard_Size_5_TPU_APPROVED.stl"
+                           }
+                       ],
+    "cadRoot":  "C:/Users/lovei/OneDrive/Documents/snapink_cad",
+    "sourceStatus":  "read_only_hash_catalog"
+}

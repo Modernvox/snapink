@@ -1,4 +1,13 @@
 export async function onRequestPost(context) {
+  // Production ordering stays closed until SnapInk provisions a partner-only
+  // server secret. The public design demo must never be an ordering path.
+  const partnerToken = context.env.PARTNER_ORDER_TOKEN;
+  if (!partnerToken || context.request.headers.get("authorization") !== `Bearer ${partnerToken}`) {
+    return new Response(JSON.stringify({ error: "Partner authorization required." }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
   try {
     const data = await context.request.json();
 

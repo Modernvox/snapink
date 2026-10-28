@@ -59,9 +59,9 @@ function App() {
         onChange={(d) => setDraft(d)}
       />
 
-      <div className="mt-10 grid gap-5 rounded-3xl border border-yellow-400/20 bg-neutral-950/70 p-5 shadow-2xl md:grid-cols-[1fr_1.1fr] md:p-7">
+      <div className="mt-10 grid gap-5 rounded-3xl border border-si-accent/20 bg-neutral-950/70 p-5 shadow-2xl md:grid-cols-[1fr_1.1fr] md:p-7">
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-yellow-300">
+          <p className="text-xs font-black uppercase tracking-widest text-si-accent">
             Submit your draft
           </p>
           <h2 className="mt-3 text-2xl font-black uppercase leading-tight text-white md:text-3xl">
@@ -76,7 +76,7 @@ function App() {
           <input
             type="text"
             placeholder="Your Name"
-            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-yellow-400"
+            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-si-accent"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
           />
@@ -84,7 +84,7 @@ function App() {
           <input
             type="email"
             placeholder="Your Email"
-            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-yellow-400"
+            className="w-full rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-white outline-none focus:border-si-accent"
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
           />
@@ -92,7 +92,7 @@ function App() {
           <button
             onClick={sendOrder}
             disabled={sending}
-            className="w-full rounded-full bg-yellow-400 px-5 py-3 text-lg font-black text-neutral-950 hover:bg-yellow-300 disabled:opacity-50"
+            className="w-full rounded-full bg-si-button px-5 py-3 text-lg font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50"
           >
             {sending ? "Sending..." : "Send Order"}
           </button>
