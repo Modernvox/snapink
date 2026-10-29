@@ -20,13 +20,13 @@
   <meta property="og:description" content="Find your SnapInk sleeve size in seconds. Our sleeves fit standard plastic 7-peg snapback closures. Count your exposed pegs to select Sizes 0&#8211;5." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://snapbacksleeves.com/fit-guide" />
-  <meta property="og:image" content="https://snapbacksleeves.com/images/website_images/optimized/blank_sleeve_on_snapback.webp" />
+  <meta property="og:image" content="https://snapbacksleeves.com/images/website_images/fit_guide.png" />
   <meta property="og:image:alt" content="SnapInk customizable snapback strap sleeves" />
   <meta property="og:site_name" content="SnapInk" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Snapback Strap Sleeve Fit Guide | Universal 7-Peg Fit | SnapInk" />
   <meta name="twitter:description" content="Find your SnapInk sleeve size in seconds. Our sleeves fit standard plastic 7-peg snapback closures. Count your exposed pegs to select Sizes 0&#8211;5." />
-  <meta name="twitter:image" content="https://snapbacksleeves.com/images/website_images/optimized/blank_sleeve_on_snapback.webp" /><meta name="description" content="Find your SnapInk sleeve size in seconds. Our sleeves fit standard plastic 7-peg snapback closures. Count your exposed pegs to select Sizes 0&#8211;5." />
+  <meta name="twitter:image" content="https://snapbacksleeves.com/images/website_images/fit_guide.png" /><meta name="description" content="Find your SnapInk sleeve size in seconds. Our sleeves fit standard plastic 7-peg snapback closures. Count your exposed pegs to select Sizes 0&#8211;5." />
 
   <!-- Open Graph -->
   <!-- Twitter -->
@@ -52,24 +52,24 @@ header nav a { position: relative; transition: color .18s ease, background-color
 header nav a[href="/customize.html"] { color: var(--si-accent) !important; }
 header nav a[aria-current="page"] { text-decoration-color: var(--si-accent); }
 header nav a[aria-current="page"]::after { content: ""; position: absolute; right: 0; bottom: -6px; left: 0; height: 1px; background: var(--si-accent); }
-.install-steps { display:grid; grid-template-columns:1fr; gap:1.25rem; }
-.install-step { min-width:0; overflow:hidden; border:1px solid #292929; border-radius:1rem; background:linear-gradient(145deg,#171717,#0d0d0d); box-shadow:0 16px 36px rgba(0,0,0,.2); }
-.install-step-copy { padding:1.25rem 1.25rem .5rem; }
-.install-step-number { color:var(--si-accent); font-size:.7rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
-.install-step h3 { margin:.4rem 0 0; color:#f5f5f4; font-size:1.25rem; font-weight:800; letter-spacing:.04em; }
-.install-step p { margin:.5rem 0 0; color:#c4c4c4; font-size:.95rem; line-height:1.65; }
-.install-image-button { display:flex; width:100%; min-height:220px; align-items:center; justify-content:center; margin-top:1rem; padding:.75rem; border:0; background:#090909; cursor:zoom-in; }
-.install-image-button img { display:block; width:100%; height:auto; max-height:360px; object-fit:contain; }
-.install-image-button:focus-visible { outline:2px solid var(--si-accent); outline-offset:-4px; }
-.install-lightbox { width:min(96vw,1280px); max-width:none; max-height:94dvh; margin:auto; padding:1rem; border:1px solid #56554f; border-radius:.75rem; background:#111; color:#f5f5f4; }
-.install-lightbox::backdrop { background:rgba(0,0,0,.88); backdrop-filter:blur(4px); }
-.install-lightbox-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }
-.install-lightbox-head h2 { margin:0; color:var(--si-accent); font-size:1rem; font-weight:800; letter-spacing:.08em; }
-.install-lightbox-close { display:grid; width:44px; height:44px; flex:0 0 44px; place-items:center; border:1px solid #555; border-radius:.5rem; background:#222; color:#fff; font-size:1.5rem; cursor:pointer; }
-.install-lightbox img { display:block; width:auto; height:auto; max-width:100%; max-height:calc(94dvh - 90px); margin:auto; object-fit:contain; }
-@media(min-width:768px) { .install-steps { grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.5rem; } .install-step { display:flex; flex-direction:column; } .install-image-button { flex:1; } }
-@media(max-width:767px) { .install-step-copy { padding:1.25rem 1.25rem .25rem; } .install-image-button { min-height:0; margin-top:.75rem; padding:.5rem; } .install-image-button img { max-height:none; } .install-lightbox { width:100vw; max-height:100dvh; padding:.75rem; border:0; border-radius:0; } .install-lightbox img { max-height:calc(100dvh - 90px); } }
-</style><link rel="stylesheet" href="/mobile-navigation.css"><script defer src="/mobile-navigation.js"></script><link rel="stylesheet" href="/site-theme.css"></head>
+.fit-guide-main{width:min(100%,1536px);margin:0 auto;padding:0 12px 24px;background:var(--si-bg)}
+.fit-guide-image-trigger{display:block;width:100%;margin:0;padding:0;border:0;background:transparent;cursor:zoom-in}
+.fit-guide-image-trigger:focus-visible{outline:3px solid var(--si-gold);outline-offset:-3px}
+.fit-guide-image{display:block;width:100%;height:auto;aspect-ratio:3/2;background:#000}
+.fit-guide-actions{display:flex;justify-content:center;padding:18px 0 0}
+.fit-guide-create{display:inline-flex;min-height:52px;align-items:center;justify-content:center;padding:0 30px;border:1px solid var(--si-gold);border-radius:.65rem;background:var(--si-gold);color:var(--si-gold-ink);font-size:.95rem;font-weight:800;letter-spacing:.07em;text-align:center;transition:background-color .18s ease,transform .18s ease}
+.fit-guide-create:hover{background:var(--si-gold-hover);transform:translateY(-1px)}
+.fit-guide-create:focus-visible,.fit-guide-viewer-close:focus-visible,.fit-guide-zoom-button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.fit-guide-viewer{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#070708;color:#fff;overflow:hidden}
+.fit-guide-viewer::backdrop{background:#070708}
+.fit-guide-viewer-toolbar{position:relative;z-index:2;display:flex;height:64px;align-items:center;justify-content:flex-end;gap:10px;padding:env(safe-area-inset-top) 14px 0;color:#e4e4e7;font-size:.82rem}
+.fit-guide-viewer-hint{margin-right:auto}
+.fit-guide-zoom-button,.fit-guide-viewer-close{display:grid;width:44px;height:44px;place-items:center;border:1px solid #444;background:#171719;color:#fff;font-size:1.45rem;line-height:1;cursor:pointer}
+.fit-guide-viewer-close{border-color:var(--si-gold);background:var(--si-gold);color:var(--si-gold-ink);font-size:1.7rem;font-weight:600}
+.fit-guide-zoom-stage{position:relative;width:100%;height:calc(100dvh - 64px);overflow:hidden;touch-action:none;overscroll-behavior:contain;cursor:grab}
+.fit-guide-zoom-stage:active{cursor:grabbing}
+.fit-guide-zoom-image{position:absolute;top:50%;left:50%;display:block;width:1536px;max-width:none;height:auto;margin:0;transform:translate(-50%,-50%);transform-origin:center;pointer-events:none;user-select:none;-webkit-user-drag:none}
+@media(max-width:767px){.fit-guide-main{padding:0 0 20px}.fit-guide-actions{padding:16px 16px 0}.fit-guide-viewer-toolbar{height:60px;padding:env(safe-area-inset-top) 12px 0}.fit-guide-zoom-stage{height:calc(100dvh - 60px)}}</style><link rel="stylesheet" href="/mobile-navigation.css"><script defer src="/mobile-navigation.js"></script><link rel="stylesheet" href="/site-theme.css"></head>
 <body class="bg-neutral-950 text-neutral-100 antialiased">
 
   <!-- Header -->
@@ -97,42 +97,159 @@ header nav a[aria-current="page"]::after { content: ""; position: absolute; righ
     </div>
   </header>
 
-  <!-- HERO -->
-  <section class="relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black"></div>
-    <div class="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
-      <div class="grid md:grid-cols-2 gap-10 items-center">
-        <div>
-          <span class="inline-flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900/60 border border-neutral-800 rounded-full px-3 py-1">🧢 Compatibility</span>
-          <h1 class="mt-4 text-4xl md:text-6xl font-black leading-tight tracking-tight">SnapInk™ <span class="text-pink-500">Fit Guide</span></h1>
-          <p class="mt-4 text-neutral-300 text-lg">SnapInk™ sleeves are designed to fit hats with a standard plastic 7-peg snapback closure. Each sleeve slides over the existing female strap (the strap with adjustment holes), allowing the original snapback pegs to snap naturally into place. No modifications, replacement straps, or tools required.</p>
-        </div>
-        <div class="relative">
-          <div class="aspect-[4/3] rounded-3xl bg-neutral-900/60 border border-neutral-800 shadow-2xl overflow-hidden">
-            <img src="/images/website_images/optimized/blank_sleeve_on_snapback.webp" srcset="/images/website_images/optimized/blank_sleeve_on_snapback-768.webp 768w, /images/website_images/optimized/blank_sleeve_on_snapback.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Black SnapInk sleeve installed across the rear opening of a mesh snapback" class="w-full h-full object-cover" />
-          </div>
-          <div class="absolute -bottom-5 -right-3 bg-white text-neutral-900 px-6 py-3 rounded-full font-black text-lg shadow-xl">SnapInk<span class="align-super text-[.6em]">™</span></div>
-        </div>
-      </div>
+  <main class="fit-guide-main">
+    <button class="fit-guide-image-trigger" id="fit-guide-open" type="button" aria-label="Open the full SnapInk Fit Guide image viewer">
+      <img class="fit-guide-image" id="fit-guide-image" src="/images/website_images/fit_guide.png" width="1536" height="1024" alt="SnapInk fit guide showing Sizes 0–5 by exposed snapback pegs, the standard seven-peg closures that fit, and incompatible closure types" fetchpriority="high" decoding="async" />
+    </button>
+    <div class="fit-guide-actions"><a class="fit-guide-create" href="/customize.html">CREATE YOUR SNAPINK</a></div>
+  </main>
+  <dialog class="fit-guide-viewer" id="fit-guide-viewer" aria-label="Expanded SnapInk Fit Guide">
+    <div class="fit-guide-viewer-toolbar">
+      <span class="fit-guide-viewer-hint">Pinch to zoom · Drag to explore</span>
+      <button class="fit-guide-zoom-button" id="fit-guide-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button class="fit-guide-zoom-button" id="fit-guide-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button class="fit-guide-viewer-close" id="fit-guide-viewer-close" type="button" aria-label="Close Fit Guide viewer">×</button>
     </div>
-  </section>
-
-<section class="py-16 bg-black border-t border-neutral-800"><div class="max-w-7xl mx-auto px-4"><div class="grid md:grid-cols-2 gap-8 items-center"><img src="/images/website_images/sleeve_being_snapped_on.png" width="1536" height="1024" alt="Hands pressing the SnapInk sleeve into place over the snapback strap" class="rounded-xl border border-neutral-800 shadow-xl" loading="lazy" decoding="async"><div class="p-6 rounded-xl bg-neutral-900/60 border border-neutral-800"><h3 class="font-semibold text-white text-lg mb-3">Not compatible with</h3><ul class="space-y-2 text-neutral-300"><li>Fitted hats</li><li>Buckle-style strapbacks</li><li>Velcro closures</li><li>Elastic closures</li><li>Nonstandard snapback closures</li></ul></div></div></div></section>
-
-  <section class="py-16 bg-black border-t border-neutral-800"><div class="max-w-7xl mx-auto px-4"><h2 class="text-3xl md:text-4xl font-black mb-5">Choose your SnapInk size by exposed pegs</h2><p class="text-neutral-300 mb-8">Sizes 0&#8211;5 are sleeve configurations, not hat sizes. Count the snapback pegs left exposed when you wear your hat and select the matching number.</p><div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-neutral-200"><div class="p-4 border border-neutral-800 rounded-xl">Size 0 &#8212; 0 exposed pegs</div><div class="p-4 border border-neutral-800 rounded-xl">Size 1 &#8212; 1 exposed peg</div><div class="p-4 border border-neutral-800 rounded-xl">Size 2 &#8212; 2 exposed pegs</div><div class="p-4 border border-neutral-800 rounded-xl">Size 3 &#8212; 3 exposed pegs</div><div class="p-4 border border-neutral-800 rounded-xl">Size 4 &#8212; 4 exposed pegs</div><div class="p-4 border border-neutral-800 rounded-xl">Size 5 &#8212; 5 exposed pegs</div></div><h3 class="text-2xl font-bold mt-10 mb-3">How to install a SnapInk sleeve</h3><div class="install-steps" aria-label="Three steps to install a SnapInk sleeve"><article class="install-step"><div class="install-step-copy"><span class="install-step-number">Step 1</span><h3>SLIDE ON</h3><p>Slide the sleeve over the female snapback strap, the strap with seven adjustment holes.</p></div><button class="install-image-button" type="button" data-install-title="Step 1 — Slide On" aria-label="Enlarge Step 1 installation image: slide the sleeve over the female strap"><img src="/images/website_images/optimized/sleeve_being_slid_on.webp" srcset="/images/website_images/optimized/sleeve_being_slid_on-768.webp 768w, /images/website_images/optimized/sleeve_being_slid_on.webp 1536w" sizes="(max-width: 767px) calc(100vw - 3rem), (100vw - 8rem) / 3" data-full-size="/images/website_images/sleeve_being_slid_on.png" alt="SnapInk sleeve partway over a snapback hat's female seven-hole strap" loading="lazy" decoding="async"></button></article><article class="install-step"><div class="install-step-copy"><span class="install-step-number">Step 2</span><h3>SNAP IN</h3><p>Align the original pegs with the female strap's adjustment holes, then press the closure together until the pegs snap into place.</p></div><button class="install-image-button" type="button" data-install-title="Step 2 — Snap In" aria-label="Enlarge Step 2 installation image: snap the plastic pegs into place"><img src="/images/website_images/sleeve_being_snapped_on.png" width="1536" height="1024" data-full-size="/images/website_images/sleeve_being_snapped_on.png" alt="Hands pressing the SnapInk sleeve into place over the snapback strap" loading="lazy" decoding="async"></button></article><article class="install-step"><div class="install-step-copy"><span class="install-step-number">Step 3</span><h3>STAND OUT</h3><p>Wear the finished sleeve on your favorite snapback and show off your design.</p></div><button class="install-image-button" type="button" data-install-title="Step 3 — Stand Out" aria-label="Enlarge Step 3 finished sleeve image"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" data-full-size="/images/website_images/lift_sleeve_on_model.png" alt="Finished SnapInk sleeve with raised LIFT lettering worn on a snapback" loading="lazy" decoding="async"></button></article></div><p class="mt-8 text-neutral-300">Want to try a design? <a class="underline text-white" href="/customize.html">Design your snapback strap sleeve in SnapInk Studio</a>.</p></div></section>
-  <dialog class="install-lightbox" id="install-lightbox" aria-labelledby="install-lightbox-title"><div class="install-lightbox-head"><h2 id="install-lightbox-title"></h2><button class="install-lightbox-close" id="install-lightbox-close" type="button" aria-label="Close enlarged installation image">×</button></div><img id="install-lightbox-image" alt=""></dialog>
+    <div class="fit-guide-zoom-stage" id="fit-guide-zoom-stage">
+      <img class="fit-guide-zoom-image" id="fit-guide-zoom-image" src="/images/website_images/fit_guide.png" width="1536" height="1024" alt="SnapInk fit guide, enlarged for reading" draggable="false" />
+    </div>
+  </dialog>
   <script>
-    (()=>{const dialog=document.getElementById('install-lightbox'),title=document.getElementById('install-lightbox-title'),image=document.getElementById('install-lightbox-image'),closeButton=document.getElementById('install-lightbox-close');let lastTrigger=null;document.querySelectorAll('.install-image-button').forEach(button=>button.addEventListener('click',()=>{const thumbnail=button.querySelector('img');lastTrigger=button;title.textContent=button.dataset.installTitle;image.src=thumbnail.dataset.fullSize;image.alt=thumbnail.alt;dialog.showModal();closeButton.focus()}));function closePreview(){if(dialog.open)dialog.close()}closeButton.addEventListener('click',closePreview);dialog.addEventListener('click',event=>{if(event.target===dialog)closePreview()});dialog.addEventListener('close',()=>{if(lastTrigger?.isConnected)lastTrigger.focus()})})();
-  </script>
-  <!-- CTA -->
-  <section class="py-16 bg-neutral-950 border-t border-neutral-800">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-      <h2 class="text-3xl md:text-4xl font-black">Still not sure?</h2>
-      <p class="mt-3 text-neutral-400">Count the exposed pegs on your standard plastic 7-peg snapback closure to choose your sleeve configuration.</p>
-      <a href="/customize.html" class="mt-6 inline-block px-5 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Design Your Sleeve</a>
+    (() => {
+      const opener = document.getElementById('fit-guide-open');
+      const dialog = document.getElementById('fit-guide-viewer');
+      const stage = document.getElementById('fit-guide-zoom-stage');
+      const image = document.getElementById('fit-guide-zoom-image');
+      const closeButton = document.getElementById('fit-guide-viewer-close');
+      const zoomIn = document.getElementById('fit-guide-zoom-in');
+      const zoomOut = document.getElementById('fit-guide-zoom-out');
+      if (!opener || !dialog || !stage || !image || !closeButton) return;
 
-    </div>
-  </section>
+      let fitScale = 1;
+      let zoom = 1;
+      let panX = 0;
+      let panY = 0;
+      let lastTrigger = null;
+      let lastTapAt = 0;
+      const pointers = new Map();
+      let gesture = null;
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const maxZoom = () => Math.max(1, Math.min(5, 1536 / (1536 * fitScale)));
+      const clampPan = () => {
+        const width = image.naturalWidth * fitScale * zoom;
+        const height = image.naturalHeight * fitScale * zoom;
+        panX = clamp(panX, -Math.max(0, (width - stage.clientWidth) / 2), Math.max(0, (width - stage.clientWidth) / 2));
+        panY = clamp(panY, -Math.max(0, (height - stage.clientHeight) / 2), Math.max(0, (height - stage.clientHeight) / 2));
+      };
+      const render = () => {
+        const width = image.naturalWidth || 1536;
+        const height = image.naturalHeight || 1024;
+        fitScale = Math.min(stage.clientWidth / width, stage.clientHeight / height);
+        image.style.width = `${width * fitScale * zoom}px`;
+        image.style.left = `calc(50% + ${panX}px)`;
+        image.style.top = `calc(50% + ${panY}px)`;
+      };
+      const resetView = () => {
+        zoom = 1;
+        panX = 0;
+        panY = 0;
+        render();
+      };
+      const setZoomAt = (nextZoom, clientX, clientY) => {
+        const bounds = stage.getBoundingClientRect();
+        const centerX = bounds.left + bounds.width / 2;
+        const centerY = bounds.top + bounds.height / 2;
+        const localX = (clientX - centerX - panX) / zoom;
+        const localY = (clientY - centerY - panY) / zoom;
+        zoom = clamp(nextZoom, 1, maxZoom());
+        panX = clientX - centerX - localX * zoom;
+        panY = clientY - centerY - localY * zoom;
+        clampPan();
+        render();
+      };
+      opener.addEventListener('click', () => {
+        lastTrigger = opener;
+        dialog.showModal();
+        resetView();
+        closeButton.focus();
+      });
+      closeButton.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('close', () => {
+        pointers.clear();
+        gesture = null;
+        if (lastTrigger?.isConnected) lastTrigger.focus();
+      });
+      zoomIn.addEventListener('click', () => setZoomAt(zoom * 1.5, stage.getBoundingClientRect().left + stage.clientWidth / 2, stage.getBoundingClientRect().top + stage.clientHeight / 2));
+      zoomOut.addEventListener('click', () => setZoomAt(zoom / 1.5, stage.getBoundingClientRect().left + stage.clientWidth / 2, stage.getBoundingClientRect().top + stage.clientHeight / 2));
+      stage.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        stage.setPointerCapture(event.pointerId);
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size === 1) {
+          gesture = { type: 'pan', x: event.clientX, y: event.clientY, panX, panY };
+        } else if (pointers.size >= 2) {
+          const [first, second] = [...pointers.values()];
+          const midX = (first.x + second.x) / 2;
+          const midY = (first.y + second.y) / 2;
+          gesture = {
+            type: 'pinch',
+            distance: Math.hypot(first.x - second.x, first.y - second.y),
+            zoom,
+            localX: (midX - stage.getBoundingClientRect().left - stage.clientWidth / 2 - panX) / zoom,
+            localY: (midY - stage.getBoundingClientRect().top - stage.clientHeight / 2 - panY) / zoom
+          };
+        }
+      });
+      stage.addEventListener('pointermove', event => {
+        if (!pointers.has(event.pointerId)) return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size >= 2 && gesture?.type === 'pinch') {
+          const [first, second] = [...pointers.values()];
+          const distance = Math.hypot(first.x - second.x, first.y - second.y);
+          const midX = (first.x + second.x) / 2 - stage.getBoundingClientRect().left - stage.clientWidth / 2;
+          const midY = (first.y + second.y) / 2 - stage.getBoundingClientRect().top - stage.clientHeight / 2;
+          zoom = clamp(gesture.zoom * distance / Math.max(1, gesture.distance), 1, maxZoom());
+          panX = midX - gesture.localX * zoom;
+          panY = midY - gesture.localY * zoom;
+          clampPan();
+          render();
+        } else if (pointers.size === 1 && gesture?.type === 'pan' && zoom > 1) {
+          panX = gesture.panX + event.clientX - gesture.x;
+          panY = gesture.panY + event.clientY - gesture.y;
+          clampPan();
+          render();
+        }
+      });
+      const endPointer = event => {
+        const point = pointers.get(event.pointerId);
+        if (!point) return;
+        const wasTap = gesture?.type === 'pan' && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 8;
+        pointers.delete(event.pointerId);
+        if (wasTap && zoom === 1) {
+          const now = Date.now();
+          if (now - lastTapAt < 350) setZoomAt(2, event.clientX, event.clientY);
+          lastTapAt = now;
+        }
+        if (pointers.size === 1) {
+          const [remaining] = [...pointers.entries()];
+          gesture = { type: 'pan', x: remaining[1].x, y: remaining[1].y, panX, panY };
+        } else if (!pointers.size) gesture = null;
+      };
+      stage.addEventListener('pointerup', endPointer);
+      stage.addEventListener('pointercancel', endPointer);
+      stage.addEventListener('wheel', event => {
+        event.preventDefault();
+        setZoomAt(zoom * (event.deltaY < 0 ? 1.15 : 1 / 1.15), event.clientX, event.clientY);
+      }, { passive: false });
+      window.addEventListener('resize', () => {
+        if (dialog.open) {
+          clampPan();
+          render();
+        }
+      });
+      image.addEventListener('load', () => { if (dialog.open) render(); });
+    })();
+  </script>
 
   <!-- Footer -->
   <footer class="py-10 bg-neutral-950 border-t border-neutral-800">
