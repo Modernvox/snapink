@@ -269,12 +269,12 @@ const SLEEVE_PREVIEW_CALIBRATION: Record<SleeveVariant, readonly SleevePreviewCa
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
   ],
   billboard: [
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 30 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
   ],
 };
 const LONGEST_SLEEVE_LENGTH_MM =
