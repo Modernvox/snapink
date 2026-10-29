@@ -1239,7 +1239,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // Shared preview inner block (used on mobile + desktop)
   const strapPreviewInner = (
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
-      <div className={`snapink-preview-controls flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 ${fixedProductConfiguration ? "hidden" : ""}`}>
+      <div className={`snapink-preview-controls order-2 flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 lg:order-none ${fixedProductConfiguration ? "hidden" : ""}`}>
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
           <label className="flex min-w-0 flex-col gap-1 text-xs text-neutral-300">
             <span>Sleeve Style</span>
@@ -1277,7 +1277,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div
       ref={attachStageRef}
-      className={`snapink-product-stage relative w-full overflow-hidden rounded-2xl border ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
+      className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
       style={{ aspectRatio: "1000/650", backgroundColor: "#303030", borderColor: "#505050" }}
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
