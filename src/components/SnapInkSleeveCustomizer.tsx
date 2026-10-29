@@ -275,7 +275,7 @@ const SLEEVE_PREVIEW_CALIBRATION: Record<SleeveVariant, readonly SleevePreviewCa
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20, verticalBottomExtraPreviewPx: 10 },
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20, verticalBottomExtraPreviewPx: 10 },
   ],
 };
@@ -1267,7 +1267,6 @@ const SnapInkSleeveCustomizer = forwardRef<
             <select aria-label="Choose Your Size" disabled={fixedProductConfiguration} value={sleeveSize} onChange={(e) => handleSizeChange(Number(e.target.value))} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
               {[0, 1, 2, 3, 4, 5].map((size) => <option key={size} value={size}>{`Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"}`}</option>)}
             </select>
-            {sleeveSize === 0 && <span className="block text-xs leading-5 text-amber-300">Size 0 preview uses its supported Studio sleeve geometry.</span>}
             <div className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations">
               {[0, 1, 2, 3, 4, 5].map((size) => (
                 <button key={size} type="button" aria-label={"Choose size " + size + ": " + size + " exposed " + (size === 1 ? "peg" : "pegs")} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 text-left transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900 hover:border-neutral-500")}>
