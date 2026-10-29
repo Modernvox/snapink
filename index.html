@@ -114,6 +114,14 @@
   .hero p.hero-image-slogan{display:none}
   .hero-copy{padding-top:10px}
 }
+@media(min-width:801px){
+  .hero{isolation:isolate}
+  .hero-desktop-video{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center 42%;background:#0b0b0d}
+  .hero:before{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,#111 4%,#111d 38%,#1114 72%);pointer-events:none}
+  .hero:after{z-index:1}
+  .hero-copy{z-index:2}
+}
+@media(max-width:800px){.hero-desktop-video{display:none}}
 @media(max-width:800px) and (prefers-reduced-motion:reduce){
   .hero-mobile-video{display:none}
   .hero-mobile-poster{display:block}
@@ -122,7 +130,7 @@
 <body>
   <header class="header"><div class="wrap nav"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100" /></a><nav class="links" aria-label="Main navigation"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Studio</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav><button class="menu" aria-expanded="false" aria-controls="mobile-menu">Menu</button></div><nav class="mobile-menu wrap" id="mobile-menu"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Design Your Sleeve</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav></header>
   <main>
-    <section class="hero"><div class="hero-mobile-media"><video class="hero-mobile-video" width="720" height="1280" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/website_images/mobile_hero.png" aria-label="SnapInk sleeve demonstration showing sleeves being installed on compatible snapback hats"><source data-src="/videos/mobile_hero_video.mp4" type="video/mp4" /></video><img class="hero-mobile-poster" src="/images/website_images/mobile_hero.png" width="1536" height="1024" alt="Three snapback hats showing three-star, SnapInk, and LIFT sleeve designs" decoding="async" /></div><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Interchangeable snapback strap sleeves</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the hat you already own. SnapInk's interchangeable sleeves slide over your existing snapback strap, letting you swap raised designs, logos, and statements in seconds.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
+    <section class="hero"><video class="hero-desktop-video" width="1920" height="1080" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/website_images/desktop_hero.png" aria-hidden="true"><source data-src="/videos/desktop_hero_video.mp4" type="video/mp4" /></video><div class="hero-mobile-media"><video class="hero-mobile-video" width="720" height="1280" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/website_images/mobile_hero.png" aria-label="SnapInk sleeve demonstration showing sleeves being installed on compatible snapback hats"><source data-src="/videos/mobile_hero_video.mp4" type="video/mp4" /></video><img class="hero-mobile-poster" src="/images/website_images/mobile_hero.png" width="1536" height="1024" alt="Three snapback hats showing three-star, SnapInk, and LIFT sleeve designs" decoding="async" /></div><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Interchangeable snapback strap sleeves</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the hat you already own. SnapInk's interchangeable sleeves slide over your existing snapback strap, letting you swap raised designs, logos, and statements in seconds.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
     <script>
       (() => {
         const video = document.querySelector('.hero-mobile-video');
@@ -145,6 +153,28 @@
         syncPlayback();
         mobile.addEventListener?.('change', syncPlayback);
         reducedMotion.addEventListener?.('change', syncPlayback);
+      })();
+    </script>
+    <script>
+      (() => {
+        const video = document.querySelector('.hero-desktop-video');
+        const source = video?.querySelector('source[data-src]');
+        if (!video || !source || !window.matchMedia) return;
+        const desktop = window.matchMedia('(min-width: 801px)');
+        const syncPlayback = () => {
+          if (!desktop.matches) {
+            video.pause();
+            return;
+          }
+          if (!source.src) {
+            source.src = source.dataset.src;
+            video.load();
+          }
+          const playback = video.play();
+          if (playback?.catch) playback.catch(() => {});
+        };
+        syncPlayback();
+        desktop.addEventListener?.('change', syncPlayback);
       })();
     </script>
     <section class="section" id="shop"><div class="wrap shop-grid"><figure class="product-showcase"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" fetchpriority="high" decoding="async" /><figcaption>Concept designs for demonstration only. Third-party brands are not affiliated with SnapInk.</figcaption></figure><div class="shop-copy"><div class="eyebrow">Your hat, reimagined</div><h2>ONE HAT. ENDLESS POSSIBILITIES.</h2><p class="lede">Your hat doesn't have to look the same every day. Switch between names, logos, colors, and designs with interchangeable SnapInk sleeves. No need to buy another hat just to change your look.</p><a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a></div></div></section>
