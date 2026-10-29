@@ -37,7 +37,6 @@
     button:disabled{opacity:.65;cursor:wait}
     .status{min-height:1.5em;margin:0;color:#D8C49A;font-size:14px}
     .status[data-error="true"]{color:#FDA4AF}
-    .trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
     footer{padding:24px 0;border-top:1px solid #303035;color:#A1A1AA;font-size:13px}
     @media(max-width:680px){.nav-links{gap:12px;font-size:12px}.nav-links a:nth-child(n+2){display:none}.nav{min-height:64px}}
   </style>
@@ -58,7 +57,6 @@
       <label for="contact-email">Email *<input id="contact-email" name="email" type="email" maxlength="254" autocomplete="email" required></label>
       <label for="inquiry-type">Inquiry type *<select id="inquiry-type" name="inquiryType" required><option value="">Select a topic</option><option value="support">Customer support</option><option value="partners">Pilot partners and wholesale</option><option value="general">General inquiry</option></select></label>
       <label for="contact-message">Message *<textarea id="contact-message" name="message" maxlength="5000" required></textarea></label>
-      <label class="trap" aria-hidden="true">Leave blank<input name="companyFax" tabindex="-1" autocomplete="off"></label>
       <button type="submit">Send Message</button>
       <p class="status" role="status" aria-live="polite"></p>
     </form>
@@ -72,12 +70,16 @@
       event.preventDefault();
       status.textContent='';status.dataset.error='false';
       if(!form.reportValidity())return;
-      const values=Object.fromEntries(new FormData(form));
+      const formData=new FormData(form);
+      const values={name:formData.get('name'),email:formData.get('email'),inquiryType:formData.get('inquiryType'),message:formData.get('message')};
       button.disabled=true;button.textContent='Sending…';
       try{
         const response=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
-        const result=await response.json();
-        if(!response.ok)throw new Error(result.error||'Your message could not be sent. Please try again later.');
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok){
+          const invalidFields=result.code==='invalid_fields'&&Array.isArray(result.fields)?` Please check: ${result.fields.join(', ')}.`:'';
+          throw new Error((result.error||'Your message could not be sent. Please try again later.')+invalidFields);
+        }
         form.reset();status.textContent='Your message has been sent to the SnapInk team.';
       }catch(error){status.textContent=error.message||'Your message could not be sent. Please try again later.';status.dataset.error='true';}
       finally{button.disabled=false;button.textContent='Send Message';}
