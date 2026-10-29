@@ -22,7 +22,6 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"SnapInk","url":"https://snapbacksleeves.com/","logo":"https://snapbacksleeves.com/images/logos/Futuristic%20White%20SNAPINK%20Logo.png","sameAs":["https://www.instagram.com/snapinkhats/"]},{"@type":"WebSite","name":"SnapInk","url":"https://snapbacksleeves.com/"}]}</script>
   <link rel="preload" as="image" href="/images/website_images/desktop_hero.png" media="(min-width: 801px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/images/website_images/mobile_hero.png" media="(max-width: 800px)" fetchpriority="high" />
-  <link rel="preload" as="image" href="/images/website_images/0_pegs.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -48,36 +47,8 @@
     .product-showcase figcaption{padding:12px 4px 2px;color:#c5c2b8;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
     .shop-copy h2{font:800 clamp(38px,5vw,64px)/.99 Manrope,sans-serif;letter-spacing:-.055em;margin:14px 0}
     .shop-copy>.button{margin-top:20px}
-    .fit-label{margin:28px 0 12px;font-size:12px;color:#e4e1d9;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-    .fit-gallery{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;margin-top:14px}
-    .fit-gallery-main{min-width:0}
-    .fit-gallery-carousel{position:relative;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#111;outline:none}
-    .fit-gallery-carousel:focus-visible{outline:2px solid var(--si-gold);outline-offset:3px}
-    .fit-gallery-track{display:flex;min-width:0;overflow:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-width:none}
-    .fit-gallery-track::-webkit-scrollbar{display:none}
-    .fit-slide{display:none;flex:0 0 100%;min-width:0;margin:0;scroll-snap-align:center;scroll-snap-stop:always}
-    .fit-slide.is-active{display:block}
-    .fit-slide-button{display:flex;width:100%;aspect-ratio:3/2;align-items:center;justify-content:center;padding:12px;border:0;background:#f3f3f1;cursor:zoom-in}
-    .fit-slide-button img{display:block;width:100%;height:100%;object-fit:contain}
-    .fit-gallery-arrow{position:absolute;top:50%;z-index:2;display:grid;width:44px;height:44px;place-items:center;transform:translateY(-50%);border:1px solid #D8C49A;border-radius:50%;background:rgba(11,11,13,.9);color:#D8C49A;font-size:24px;line-height:1;cursor:pointer}
-    .fit-gallery-arrow:hover,.fit-gallery-arrow:focus-visible{background:#D8C49A;color:#0B0B0D}
-    .fit-gallery-arrow--prev{left:12px}.fit-gallery-arrow--next{right:12px}
-    .fit-gallery-caption{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:12px;color:var(--ink)}
-    .fit-gallery-caption strong{font-size:18px;font-weight:850;letter-spacing:.04em}
-    .fit-gallery-caption span{color:var(--muted);font-size:14px}
-    .fit-gallery-pagination{display:flex;justify-content:center;align-items:center;gap:9px;margin-top:12px}
-    .fit-gallery-dot{width:9px;height:9px;padding:0;border:1px solid #77766e;border-radius:50%;background:#333;cursor:pointer}
-    .fit-gallery-dot[aria-pressed="true"]{width:22px;border-color:#D8C49A;border-radius:99px;background:#D8C49A}
-    .fit-gallery-swipe-hint{margin:9px 0 0;color:var(--muted);font-size:12px;text-align:center}
-    .fit-gallery-thumbnails{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
-    .fit-card{min-width:0;padding:5px;border:1px solid var(--line);border-radius:6px;background:#181817;text-align:center;cursor:pointer;transition:border-color .2s,transform .2s}
-    .fit-card:hover{transform:translateY(-2px)}
-    .fit-card:focus-visible,.fit-card[aria-current="true"]{border-color:#D8C49A;outline:2px solid #D8C49A;outline-offset:1px}
-    .fit-card img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;background:#f3f3f1}
-    .fit-card .fit-size{display:block;padding:5px 0 1px;font-size:13px;font-weight:800;color:var(--ink)}
-    .fit-card .fit-pegs{display:block;padding-bottom:2px;font-size:10px;color:var(--muted);font-weight:500}
     .fit-lightbox{width:min(96vw,1280px);height:min(94dvh,1000px);max-width:none;max-height:none;margin:auto;padding:18px;border:1px solid #62615a;border-radius:8px;background:#141413;color:var(--ink)}.fit-lightbox::backdrop{background:rgba(0,0,0,.84);backdrop-filter:blur(4px)}.fit-lightbox-shell{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:14px}.fit-lightbox-head,.fit-lightbox-controls{display:flex;align-items:center;justify-content:space-between;gap:12px}.fit-lightbox-head h2{margin:0;font:700 clamp(18px,3vw,26px) Manrope,sans-serif}.fit-lightbox-controls{justify-content:center;flex-wrap:wrap}.fit-lightbox button{min-height:42px;padding:8px 14px;border:1px solid #77766e;border-radius:4px;background:#242421;color:var(--ink);font:600 14px 'DM Sans',sans-serif;cursor:pointer}.fit-lightbox button:hover,.fit-lightbox button:focus-visible{border-color:#D8C49A;color:#D8C49A}.fit-lightbox .fit-lightbox-close{min-width:44px;font-size:22px;line-height:1}.fit-lightbox-viewport{min-height:0;width:100%;height:100%;overflow:auto;overscroll-behavior:contain;display:flex;align-items:center;justify-content:center;background:#090909;border:1px solid #30302d;touch-action:none}.fit-lightbox-image{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center}.fit-lightbox-zoom{min-width:58px;text-align:center;color:var(--muted);font-size:12px}.fit-lightbox button:focus-visible{outline:2px solid #D8C49A;outline-offset:2px}
-    @media(max-width:700px){.fit-lightbox{width:100vw;height:100dvh;padding:10px;border-radius:0}.fit-lightbox-shell{gap:10px}.fit-lightbox-head h2{font-size:19px}.fit-lightbox-controls{gap:7px}.fit-lightbox button{min-height:44px;padding:8px 10px;font-size:13px}}    .fit-note,.example-note{font-size:12px;line-height:1.65;color:var(--muted)}.steps .step-image{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;background:#111;border:1px solid var(--line);margin:18px 0 12px}
+    @media(max-width:700px){.fit-lightbox{width:100vw;height:100dvh;padding:10px;border-radius:0}.fit-lightbox-shell{gap:10px}.fit-lightbox-head h2{font-size:19px}.fit-lightbox-controls{gap:7px}.fit-lightbox button{min-height:44px;padding:8px 10px;font-size:13px}}    .example-note{font-size:12px;line-height:1.65;color:var(--muted)}.steps .step-image{width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;background:#111;border:1px solid var(--line);margin:18px 0 12px}
     .inspiration-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .lifestyle-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.lifestyle-gallery .photo{height:clamp(250px,30vw,390px);border-radius:8px}.lifestyle-gallery .photo img{width:100%;height:100%;object-fit:contain;object-position:center}.lifestyle-gallery figure{min-width:0;margin:0}.lifestyle-gallery figcaption{margin-top:8px}
     .inspiration-card{margin:0;padding:clamp(10px,2vw,20px);border:1px solid var(--line);background:linear-gradient(145deg,#20201e,#131312)}
@@ -85,8 +56,8 @@
     .inspiration-card figcaption{padding:12px 4px 2px;color:#e2dfd7;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
     .example-note{margin-top:16px}
     .footer-brand{display:flex;flex:none;flex-direction:column;align-items:center;gap:4px}.footer-mark{width:clamp(82.6px,9.8vw,116.2px);height:auto;object-fit:contain}.footer-patent{color:#85847f;font-size:9px;line-height:1.2;letter-spacing:.16em;text-align:center;text-transform:uppercase}
-    @media(max-width:760px){.fit-gallery{grid-template-columns:minmax(0,1fr);gap:10px}.fit-gallery-track{overflow-x:auto;scrollbar-width:none}.fit-gallery-track .fit-slide{display:block}.fit-gallery-thumbnails{display:none}.fit-slide-button{aspect-ratio:3/2}.fit-gallery-caption{margin-top:10px}.fit-gallery-swipe-hint{display:block}}
-    @media(min-width:761px){.fit-gallery-swipe-hint{display:none}}
+
+
     @media(max-width:800px){.shop-grid{grid-template-columns:1fr}.shop-copy{order:-1}.inspiration-grid,.lifestyle-gallery{grid-template-columns:1fr}.lifestyle-gallery{gap:16px}.lifestyle-gallery .photo{height:auto;aspect-ratio:auto;overflow:visible;background:transparent}.lifestyle-gallery .photo img{width:100%;height:auto;object-fit:contain;object-position:center;border-radius:8px}.product-showcase{max-width:680px;margin-inline:auto}}
     .embroidery-sheet{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.embroidery-sheet h4{margin:0 0 10px;font:700 16px Manrope,sans-serif;color:#f4f2ec}.embroidery-sheet-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:14px}.embroidery-apply{color:var(--accent);font-size:13px;font-weight:600}.patent-pending{display:block;width:max-content;margin:14px 0 8px;padding-left:10px;border-left:2px solid var(--accent);color:var(--si-accent);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
     @media(max-width:800px){.hero{background-image:linear-gradient(90deg,rgba(17,17,17,.28) 0%,rgba(17,17,17,.12) 36%,transparent 76%),url("/images/website_images/mobile_hero.png");background-repeat:no-repeat;background-position:center,center -28px;background-size:100% 100%,100% auto}.hero:after{background:linear-gradient(to bottom,transparent 48%,rgba(17,17,17,.08) 67%,rgba(17,17,17,.42) 100%)}}
@@ -120,7 +91,6 @@
   .protection-benefits{gap:16px;margin-bottom:22px}
   .embroidery-sheet{margin-top:18px;padding-top:16px}
   .embroidery-sheet-actions{gap:12px}
-  .fit-label{margin:16px 0 8px}
 }
 @media(max-width:540px){.section{padding:44px 0}.pilot{padding:20px}}
 @media(max-width:800px){
@@ -149,30 +119,7 @@
   <header class="header"><div class="wrap nav"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100" /></a><nav class="links" aria-label="Main navigation"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Studio</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav><button class="menu" aria-expanded="false" aria-controls="mobile-menu">Menu</button></div><nav class="mobile-menu wrap" id="mobile-menu"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Design Your Sleeve</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav></header>
   <main>
     <section class="hero"><picture class="hero-mobile-visual"><img src="/images/website_images/mobile_hero.png" width="1536" height="1024" alt="Three snapback hats showing three-star, SnapInk, and LIFT sleeve designs" fetchpriority="high" decoding="async" /></picture><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span><span class="hero-slogan-mobile">SLIDE ON.<br>SNAP IN.<br>STAND OUT.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Interchangeable snapback strap sleeves</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the hat you already own. SnapInk's interchangeable sleeves slide over your existing snapback strap, letting you swap raised designs, logos, and statements in seconds.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
-    <section class="section" id="shop"><div class="wrap shop-grid"><figure class="product-showcase"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" fetchpriority="high" decoding="async" /><figcaption>Concept designs for demonstration only. Third-party brands are not affiliated with SnapInk.</figcaption></figure><div class="shop-copy"><div class="eyebrow">Your hat, reimagined</div><h2>ONE HAT. ENDLESS POSSIBILITIES.</h2><p class="lede">Your hat doesn't have to look the same every day. Switch between names, logos, colors, and designs with interchangeable SnapInk sleeves. No need to buy another hat just to change your look.</p><a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a><p class="fit-label">Choose a compatibility fit</p><p class="fit-lightbox-hint">Tap an image to enlarge and compare your snapback fit.</p><div class="fit-gallery" id="fit-gallery" aria-label="Snapback compatibility fit gallery">
-  <div class="fit-gallery-main">
-    <div class="fit-gallery-carousel" id="fit-gallery-carousel" role="region" aria-roledescription="carousel" aria-label="Snapback sizes by exposed pegs" tabindex="0">
-      <button class="fit-gallery-arrow fit-gallery-arrow--prev" type="button" id="fit-gallery-prev" aria-label="Previous size">&#8249;</button>
-      <div class="fit-gallery-track" id="fit-gallery-track">
-        <figure class="fit-slide is-active" data-fit-index="0"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 0, 0 exposed pegs"><img src="/images/website_images/0_pegs.png" width="914" height="609" alt="Snapback compatibility reference showing Size 0, 0 exposed pegs" loading="eager" fetchpriority="high" decoding="async"></button></figure>
-        <figure class="fit-slide" data-fit-index="1"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 1, 1 exposed peg"><img src="/images/website_images/1_pegs.png" width="318" height="247" alt="Snapback compatibility reference showing Size 1, 1 exposed peg" loading="lazy" decoding="async"></button></figure>
-        <figure class="fit-slide" data-fit-index="2"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 2, 2 exposed pegs"><img src="/images/website_images/2_pegs.png" width="963" height="642" alt="Snapback compatibility reference showing Size 2, 2 exposed pegs" loading="lazy" decoding="async"></button></figure>
-        <figure class="fit-slide" data-fit-index="3"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 3, 3 exposed pegs"><img src="/images/website_images/3_pegs.png" width="963" height="642" alt="Snapback compatibility reference showing Size 3, 3 exposed pegs" loading="lazy" decoding="async"></button></figure>
-        <figure class="fit-slide" data-fit-index="4"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 4, 4 exposed pegs"><img src="/images/website_images/4_pegs.png" width="963" height="642" alt="Snapback compatibility reference showing Size 4, 4 exposed pegs" loading="lazy" decoding="async"></button></figure>
-        <figure class="fit-slide" data-fit-index="5"><button class="fit-slide-button" type="button" aria-label="Enlarge Size 5, 5 exposed pegs"><img src="/images/website_images/5_pegs.png" width="963" height="642" alt="Snapback compatibility reference showing Size 5, 5 exposed pegs" loading="lazy" decoding="async"></button></figure>
-      </div>
-      <button class="fit-gallery-arrow fit-gallery-arrow--next" type="button" id="fit-gallery-next" aria-label="Next size">&#8250;</button>
-    </div>
-    <div class="fit-gallery-caption" aria-live="polite"><strong id="fit-gallery-size">SIZE 0</strong><span id="fit-gallery-count">0 exposed pegs</span></div>
-    <div class="fit-gallery-pagination" role="group" aria-label="Choose a fit size">
-      <button class="fit-gallery-dot" type="button" data-fit-index="0" aria-label="Show Size 0, 0 exposed pegs" aria-pressed="true"></button><button class="fit-gallery-dot" type="button" data-fit-index="1" aria-label="Show Size 1, 1 exposed peg" aria-pressed="false"></button><button class="fit-gallery-dot" type="button" data-fit-index="2" aria-label="Show Size 2, 2 exposed pegs" aria-pressed="false"></button><button class="fit-gallery-dot" type="button" data-fit-index="3" aria-label="Show Size 3, 3 exposed pegs" aria-pressed="false"></button><button class="fit-gallery-dot" type="button" data-fit-index="4" aria-label="Show Size 4, 4 exposed pegs" aria-pressed="false"></button><button class="fit-gallery-dot" type="button" data-fit-index="5" aria-label="Show Size 5, 5 exposed pegs" aria-pressed="false"></button>
-    </div>
-    <p class="fit-gallery-swipe-hint">Swipe to compare sizes</p>
-  </div>
-  <div class="fit-gallery-thumbnails" role="group" aria-label="Choose a snapback fit size">
-    <button type="button" class="fit-card" data-fit-index="0" aria-current="true" aria-label="Select Size 0, 0 exposed pegs"><img src="/images/website_images/0_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 0</span><small class="fit-pegs">0 exposed pegs</small></button><button type="button" class="fit-card" data-fit-index="1" aria-current="false" aria-label="Select Size 1, 1 exposed peg"><img src="/images/website_images/1_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 1</span><small class="fit-pegs">1 exposed peg</small></button><button type="button" class="fit-card" data-fit-index="2" aria-current="false" aria-label="Select Size 2, 2 exposed pegs"><img src="/images/website_images/2_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 2</span><small class="fit-pegs">2 exposed pegs</small></button><button type="button" class="fit-card" data-fit-index="3" aria-current="false" aria-label="Select Size 3, 3 exposed pegs"><img src="/images/website_images/3_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 3</span><small class="fit-pegs">3 exposed pegs</small></button><button type="button" class="fit-card" data-fit-index="4" aria-current="false" aria-label="Select Size 4, 4 exposed pegs"><img src="/images/website_images/4_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 4</span><small class="fit-pegs">4 exposed pegs</small></button><button type="button" class="fit-card" data-fit-index="5" aria-current="false" aria-label="Select Size 5, 5 exposed pegs"><img src="/images/website_images/5_pegs.png" alt="" loading="lazy" decoding="async"><span class="fit-size">SIZE 5</span><small class="fit-pegs">5 exposed pegs</small></button>
-  </div>
-</div><p class="fit-note">Each image shows the matching sleeve configuration by exposed-peg count, not a hat-size category. Designed for standard plastic 7-peg snapback closures, regardless of hat brand. <a href="/fit-guide.html" style="color:var(--accent);text-decoration:underline">Will It Fit? Read the Fit Guide.</a></p></div></div></section>
+    <section class="section" id="shop"><div class="wrap shop-grid"><figure class="product-showcase"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" fetchpriority="high" decoding="async" /><figcaption>Concept designs for demonstration only. Third-party brands are not affiliated with SnapInk.</figcaption></figure><div class="shop-copy"><div class="eyebrow">Your hat, reimagined</div><h2>ONE HAT. ENDLESS POSSIBILITIES.</h2><p class="lede">Your hat doesn't have to look the same every day. Switch between names, logos, colors, and designs with interchangeable SnapInk sleeves. No need to buy another hat just to change your look.</p><a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a></div></div></section>
 
     <section class="section"><div class="wrap"><div class="section-head"><div><div class="eyebrow">The opportunity</div><h2>Put a brand where the blank space is.</h2></div><p class="lede">A customizable walking billboard on a backwards-worn snapback. SnapInk gives hat makers, embroidery shops, apparel brands and retailers a new way to build identity into every hat.</p></div><div class="gallery lifestyle-gallery"><figure><div class="photo"><img loading="lazy" decoding="async" src="/images/website_images/optimized/blank_sleeve_on_snapback.webp" srcset="/images/website_images/optimized/blank_sleeve_on_snapback-768.webp 768w, /images/website_images/optimized/blank_sleeve_on_snapback.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Black mesh snapback with a blank SnapInk sleeve installed across the rear strap" width="1536" height="1024" /></div><figcaption>Start with a blank sleeve</figcaption></figure><figure><div class="photo"><img loading="lazy" decoding="async" src="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp" srcset="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase-768.webp 768w, /images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Black mesh snapback with white SnapInk branding in warm studio light" /></div><figcaption>Swap the look, keep the cap</figcaption></figure><figure><div class="photo"><img src="/images/website_images/lift_sleeve_on_table.png" width="1672" height="941" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" loading="lazy" decoding="async" /></div><figcaption>Explore design directions</figcaption></figure></div><p class="example-note">Concept designs are shown for inspiration and may not be offered as finished products.</p></div></section>
     <section class="section" id="how"><div class="wrap"><div class="section-head"><div><div class="eyebrow">How it works</div><h2>Three simple moves.</h2></div><p class="lede">An interchangeable sleeve goes on and off your snapback strap in three simple steps.</p></div><div class="steps"><article class="card"><span class="number">01 / SLIDE ON</span><h3>SLIDE ON</h3><img class="step-image" src="/images/website_images/optimized/sleeve_being_slid_on.webp" srcset="/images/website_images/optimized/sleeve_being_slid_on-768.webp 768w, /images/website_images/optimized/sleeve_being_slid_on.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Sliding the SnapInk sleeve over a snapback strap" loading="lazy" decoding="async" /><p>Slide the sleeve over the female strap with seven adjustment holes.</p></article><article class="card"><span class="number">02 / SNAP IN</span><h3>SNAP IN</h3><img class="step-image" src="/images/website_images/sleeve_being_snapped_on.png" width="1536" height="1024" alt="Snapping the SnapInk sleeve onto the rear strap of a snapback" loading="lazy" decoding="async" /><p>Align the original pegs with the female strap's adjustment holes, then press the closure together until the pegs snap into place.</p></article><article class="card"><span class="number">03 / SWAP ANYTIME</span><h3>SWAP ANYTIME</h3><img class="step-image" src="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp" srcset="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase-768.webp 768w, /images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="SnapInk cap with a swappable branded sleeve" loading="lazy" decoding="async" /><p>Remove the sleeve and replace it with another design.</p></article></div><div class="callout">Six sizes are numbered 0–5 by exposed pegs: size 0 means zero exposed pegs; size 5 means five exposed pegs.</div></div></section>
@@ -184,122 +131,31 @@
   <script>const menuButton=document.querySelector('.menu');const mobileMenu=document.querySelector('.mobile-menu');menuButton.addEventListener('click',()=>{const open=mobileMenu.classList.toggle('open');menuButton.setAttribute('aria-expanded',String(open));});mobileMenu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{mobileMenu.classList.remove('open');menuButton.setAttribute('aria-expanded','false');}));</script>
   <dialog class="fit-lightbox" id="fit-lightbox" aria-labelledby="fit-lightbox-title">
     <div class="fit-lightbox-shell">
-      <header class="fit-lightbox-head"><h2 id="fit-lightbox-title" aria-live="polite"></h2><button type="button" class="fit-lightbox-close" id="fit-lightbox-close" aria-label="Close fit preview">×</button></header>
-      <div class="fit-lightbox-viewport" id="fit-lightbox-viewport" aria-label="Fit preview image; swipe left or right to compare images"><img class="fit-lightbox-image" id="fit-lightbox-image" alt=""></div>
-      <footer class="fit-lightbox-controls"><button type="button" id="fit-lightbox-prev" aria-label="Previous fit image">← Previous</button><button type="button" id="fit-lightbox-zoom-out" aria-label="Zoom out">−</button><span class="fit-lightbox-zoom" id="fit-lightbox-zoom" aria-live="polite">100%</span><button type="button" id="fit-lightbox-zoom-in" aria-label="Zoom in">+</button><button type="button" id="fit-lightbox-zoom-reset">Reset zoom</button><button type="button" id="fit-lightbox-next" aria-label="Next fit image">Next →</button></footer>
+      <header class="fit-lightbox-head"><h2 id="fit-lightbox-title" aria-live="polite"></h2><button type="button" class="fit-lightbox-close" id="fit-lightbox-close" aria-label="Close image preview">×</button></header>
+      <div class="fit-lightbox-viewport" id="fit-lightbox-viewport" aria-label="Image preview"><img class="fit-lightbox-image" id="fit-lightbox-image" alt=""></div>
+      <footer class="fit-lightbox-controls"><button type="button" id="fit-lightbox-zoom-out" aria-label="Zoom out">−</button><span class="fit-lightbox-zoom" id="fit-lightbox-zoom" aria-live="polite">100%</span><button type="button" id="fit-lightbox-zoom-in" aria-label="Zoom in">+</button><button type="button" id="fit-lightbox-zoom-reset">Reset zoom</button></footer>
     </div>
   </dialog>
   <script>
   (()=>{
-    const slides=[...document.querySelectorAll('.fit-slide')];
-    const thumbnails=[...document.querySelectorAll('.fit-gallery-thumbnails .fit-card')];
-    const dots=[...document.querySelectorAll('.fit-gallery-dot')];
-    const carousel=document.getElementById('fit-gallery-carousel');
-    const track=document.getElementById('fit-gallery-track');
-    const sizeLabel=document.getElementById('fit-gallery-size');
-    const countLabel=document.getElementById('fit-gallery-count');
     const dialog=document.getElementById('fit-lightbox');
     const title=document.getElementById('fit-lightbox-title');
     const image=document.getElementById('fit-lightbox-image');
     const viewport=document.getElementById('fit-lightbox-viewport');
     const closeButton=document.getElementById('fit-lightbox-close');
     const zoomLabel=document.getElementById('fit-lightbox-zoom');
-    const previousButton=document.getElementById('fit-lightbox-prev');
-    const nextButton=document.getElementById('fit-lightbox-next');
-    let current=0,modalIndex=-1,zoom=1,lastFocused=null,touchStart=null,pinchStart=null,panLast=null,gesturePinched=false,scrollFrame=0;
-    const isMobile=()=>window.matchMedia('(max-width: 760px)').matches;
-    const sourceFor=index=>slides[index].querySelector('img').currentSrc||slides[index].querySelector('img').src;
-    const pegText=index=>`${index} exposed peg${index===1?'':'s'}`;
-    const heading=index=>`SIZE ${index} — ${index} EXPOSED PEG${index===1?'':'S'}`;
-    function updateGallery(index,scroll=true){
-      current=(index+slides.length)%slides.length;
-      slides.forEach((slide,i)=>slide.classList.toggle('is-active',i===current));
-      thumbnails.forEach((button,i)=>button.setAttribute('aria-current',String(i===current)));
-      dots.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===current)));
-      sizeLabel.textContent=`SIZE ${current}`;
-      countLabel.textContent=pegText(current);
-      if(scroll&&isMobile())track.scrollTo({left:current*track.clientWidth,behavior:'smooth'});
-    }
-    function syncFromScroll(){
-      if(!isMobile())return;
-      cancelAnimationFrame(scrollFrame);
-      scrollFrame=requestAnimationFrame(()=>{
-        const width=track.clientWidth;
-        if(width)updateGallery(Math.round(track.scrollLeft/width),false);
-      });
-    }
-    document.getElementById('fit-gallery-prev').addEventListener('click',()=>updateGallery(current-1));
-    document.getElementById('fit-gallery-next').addEventListener('click',()=>updateGallery(current+1));
-    thumbnails.forEach(button=>button.addEventListener('click',()=>updateGallery(Number(button.dataset.fitIndex))));
-    dots.forEach(button=>button.addEventListener('click',()=>updateGallery(Number(button.dataset.fitIndex))));
-    track.addEventListener('scroll',syncFromScroll,{passive:true});
-    carousel.addEventListener('keydown',event=>{
-      if(event.key==='ArrowLeft'||event.key==='ArrowRight'){
-        event.preventDefault();updateGallery(current+(event.key==='ArrowRight'?1:-1));
-      }
-    });
-    function setZoom(value){
-      zoom=Math.max(1,Math.min(3,value));zoomLabel.textContent=`${Math.round(zoom*100)}%`;
-      if(zoom===1){image.style.width='';image.style.maxWidth='100%';image.style.maxHeight='100%';viewport.style.alignItems='center';viewport.style.justifyContent='center';viewport.scrollLeft=0;viewport.scrollTop=0}
-      else{image.style.width=`${zoom*100}%`;image.style.maxWidth='none';image.style.maxHeight='none';viewport.style.alignItems='flex-start';viewport.style.justifyContent='flex-start'}
-      viewport.style.touchAction='none';
-    }
-    function setModalImage(index){
-      modalIndex=(index+slides.length)%slides.length;
-      title.textContent=heading(modalIndex);
-      image.src=sourceFor(modalIndex);
-      image.alt=`Snapback rear strap compatibility reference: ${heading(modalIndex)}`;
-      setZoom(1);
-    }
-    function openFitPreview(button){
-      lastFocused=button;previousButton.hidden=false;nextButton.hidden=false;
-      setModalImage(current);dialog.showModal();closeButton.focus();
-    }
-    function openPilotPreview(button){
-      lastFocused=button;modalIndex=-1;title.textContent='SnapInk Blank Sleeve — Snapback Fit';
-      const thumb=button.querySelector('img');image.src=thumb.currentSrc||thumb.src;image.alt='Black mesh snapback with a blank SnapInk sleeve across the rear strap';
-      setZoom(1);previousButton.hidden=true;nextButton.hidden=true;dialog.showModal();closeButton.focus();
-    }
-    document.querySelectorAll('.fit-slide-button').forEach(button=>button.addEventListener('click',()=>openFitPreview(button)));
-    document.getElementById('pilot-image-trigger').addEventListener('click',event=>openPilotPreview(event.currentTarget));
-    function closePreview(){if(dialog.open)dialog.close()}
-    closeButton.addEventListener('click',closePreview);
-    previousButton.addEventListener('click',()=>{if(modalIndex>=0)setModalImage(modalIndex-1)});
-    nextButton.addEventListener('click',()=>{if(modalIndex>=0)setModalImage(modalIndex+1)});
-    document.getElementById('fit-lightbox-zoom-in').addEventListener('click',()=>setZoom(zoom+.5));
-    document.getElementById('fit-lightbox-zoom-out').addEventListener('click',()=>setZoom(zoom-.5));
-    document.getElementById('fit-lightbox-zoom-reset').addEventListener('click',()=>setZoom(1));
-    dialog.addEventListener('click',event=>{if(event.target===dialog)closePreview()});
-    dialog.addEventListener('cancel',event=>{event.preventDefault();closePreview()});
-    dialog.addEventListener('close',()=>{if(lastFocused?.isConnected)lastFocused.focus()});
-    document.addEventListener('keydown',event=>{
-      if(!dialog.open)return;
-      if(event.key==='Escape'){event.preventDefault();closePreview()}
-      else if(modalIndex>=0&&event.key==='ArrowRight'){event.preventDefault();setModalImage(modalIndex+1)}
-      else if(modalIndex>=0&&event.key==='ArrowLeft'){event.preventDefault();setModalImage(modalIndex-1)}
-    });
     const activeTouches=new Map();
-    viewport.addEventListener('pointerdown',event=>{
-      if(event.pointerType!=='touch')return;
-      activeTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
-      if(activeTouches.size===1){touchStart={x:event.clientX,y:event.clientY};panLast={x:event.clientX,y:event.clientY}}
-      else if(activeTouches.size===2){gesturePinched=true;touchStart=null;const points=[...activeTouches.values()];pinchStart={distance:Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y),zoom}}
-    });
-    viewport.addEventListener('pointermove',event=>{
-      if(!activeTouches.has(event.pointerId))return;
-      activeTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
-      if(activeTouches.size>=2&&pinchStart){const points=[...activeTouches.values()],distance=Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y);if(pinchStart.distance>0){event.preventDefault();setZoom(pinchStart.zoom*distance/pinchStart.distance)}}
-      else if(zoom>1&&panLast){viewport.scrollLeft-=event.clientX-panLast.x;viewport.scrollTop-=event.clientY-panLast.y;panLast={x:event.clientX,y:event.clientY}}
-    });
-    function finishTouch(event){
-      if(!activeTouches.has(event.pointerId))return;
-      const start=touchStart,wasPinched=gesturePinched;activeTouches.delete(event.pointerId);
-      if(activeTouches.size===0){if(start&&!wasPinched&&zoom===1){const dx=event.clientX-start.x,dy=event.clientY-start.y;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)&&modalIndex>=0)setModalImage(modalIndex+(dx<0?1:-1))}touchStart=null;pinchStart=null;panLast=null;gesturePinched=false}
-      else if(activeTouches.size===1){const point=[...activeTouches.values()][0];touchStart=wasPinched?null:point;panLast=point;pinchStart=null}
-    }
+    let zoom=1,lastFocused=null,pinchStart=null,panLast=null;
+    function setZoom(value){zoom=Math.max(1,Math.min(3,value));zoomLabel.textContent=`${Math.round(zoom*100)}%`;if(zoom===1){image.style.width='';image.style.maxWidth='100%';image.style.maxHeight='100%';viewport.style.alignItems='center';viewport.style.justifyContent='center';viewport.scrollLeft=0;viewport.scrollTop=0}else{image.style.width=`${zoom*100}%`;image.style.maxWidth='none';image.style.maxHeight='none';viewport.style.alignItems='flex-start';viewport.style.justifyContent='flex-start'}viewport.style.touchAction='none'}
+    function openPreview(button){lastFocused=button;title.textContent='SnapInk Blank Sleeve Preview';const thumb=button.querySelector('img');image.src=thumb.currentSrc||thumb.src;image.alt='Black mesh snapback with a blank SnapInk sleeve across the rear strap';setZoom(1);dialog.showModal();closeButton.focus()}
+    function closePreview(){if(dialog.open)dialog.close()}
+    document.getElementById('pilot-image-trigger').addEventListener('click',event=>openPreview(event.currentTarget));
+    closeButton.addEventListener('click',closePreview);document.getElementById('fit-lightbox-zoom-in').addEventListener('click',()=>setZoom(zoom+.5));document.getElementById('fit-lightbox-zoom-out').addEventListener('click',()=>setZoom(zoom-.5));document.getElementById('fit-lightbox-zoom-reset').addEventListener('click',()=>setZoom(1));
+    dialog.addEventListener('click',event=>{if(event.target===dialog)closePreview()});dialog.addEventListener('cancel',event=>{event.preventDefault();closePreview()});dialog.addEventListener('close',()=>{if(lastFocused?.isConnected)lastFocused.focus()});document.addEventListener('keydown',event=>{if(dialog.open&&event.key==='Escape'){event.preventDefault();closePreview()}});
+    viewport.addEventListener('pointerdown',event=>{if(event.pointerType!=='touch')return;activeTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});if(activeTouches.size===1)panLast={x:event.clientX,y:event.clientY};else if(activeTouches.size===2){const p=[...activeTouches.values()];pinchStart={distance:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),zoom}}});
+    viewport.addEventListener('pointermove',event=>{if(!activeTouches.has(event.pointerId))return;activeTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});if(activeTouches.size>=2&&pinchStart){const p=[...activeTouches.values()],d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinchStart.distance>0){event.preventDefault();setZoom(pinchStart.zoom*d/pinchStart.distance)}}else if(zoom>1&&panLast){viewport.scrollLeft-=event.clientX-panLast.x;viewport.scrollTop-=event.clientY-panLast.y;panLast={x:event.clientX,y:event.clientY}}});
+    function finishTouch(event){if(!activeTouches.has(event.pointerId))return;activeTouches.delete(event.pointerId);if(activeTouches.size===0){pinchStart=null;panLast=null}else if(activeTouches.size===1){panLast=[...activeTouches.values()][0];pinchStart=null}}
     viewport.addEventListener('pointerup',finishTouch);viewport.addEventListener('pointercancel',finishTouch);
-    window.addEventListener('resize',()=>{if(isMobile())track.scrollLeft=current*track.clientWidth});
-    updateGallery(0,false);
   })();
   </script>
 </body>
