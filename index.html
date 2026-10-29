@@ -95,12 +95,14 @@
 @media(max-width:540px){.section{padding:44px 0}.pilot{padding:20px}}
 @media(max-width:800px){
   .hero{display:block;min-height:0;margin:0;padding:0;background-color:#0b0b0d;background-image:none!important}
-  .hero-mobile-visual{position:relative;display:block;width:100vw;height:auto;margin:0 calc(50% - 50vw);overflow:hidden;background:#0b0b0d}
-  .hero-mobile-visual img{position:relative;display:block;width:100%;height:auto;margin:0;object-fit:contain;object-position:center;}
+  .hero:after{display:none}
+  .hero-mobile-media{position:relative;display:block;width:100vw;height:auto;margin:0 calc(50% - 50vw);overflow:hidden;background:#0b0b0d}
+  .hero-mobile-video{display:block;width:100%;height:auto;aspect-ratio:9/16;object-fit:contain;background:#0b0b0d}
+  .hero-mobile-poster{display:none;width:100%;height:auto;margin:0}
   .hero>.wrap{width:100%;}
   .hero-copy{align-self:auto;margin:0 auto;padding:24px 16px 48px;}
 }
-@media(min-width:801px){.hero-mobile-visual{display:none}}
+@media(min-width:801px){.hero-mobile-media{display:none}}
 .hero-image-caption{display:none}
 .hero-image-slogan{position:absolute;z-index:2;right:16px;bottom:24px;left:16px;margin:0;color:#fff;font:800 clamp(16px,2vw,26px)/1.1 Manrope,sans-serif;letter-spacing:.02em;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.95),0 1px 3px rgba(0,0,0,.95);pointer-events:none}
 .hero-slogan-mobile{display:none}
@@ -109,16 +111,42 @@
 .hero .pilot-hero-button:hover,.hero .pilot-hero-button:focus-visible{border-color:var(--si-button);background:var(--si-button);color:#fff}
 @media(max-width:800px){
   .hero-image-caption{display:none;margin:0;padding:0 16px;color:var(--si-gold);font-size:10px;font-weight:700;line-height:1.2;letter-spacing:.16em;text-align:center;text-transform:uppercase}
-  .hero p.hero-image-slogan{top:20px;right:auto;bottom:auto;left:15px;transform:none;max-width:60%;font-family:'Bebas Neue',Impact,sans-serif;font-size:clamp(34px,9.75vw,38px);font-weight:700;line-height:.92;letter-spacing:-.025em;text-align:left;text-shadow:0 1px 4px rgba(0,0,0,.45);white-space:nowrap}
-  .hero-slogan-desktop{display:none}
-  .hero-slogan-mobile{display:block}
+  .hero p.hero-image-slogan{display:none}
   .hero-copy{padding-top:10px}
+}
+@media(max-width:800px) and (prefers-reduced-motion:reduce){
+  .hero-mobile-video{display:none}
+  .hero-mobile-poster{display:block}
 }
 </style></head>
 <body>
   <header class="header"><div class="wrap nav"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100" /></a><nav class="links" aria-label="Main navigation"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Studio</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav><button class="menu" aria-expanded="false" aria-controls="mobile-menu">Menu</button></div><nav class="mobile-menu wrap" id="mobile-menu"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Design Your Sleeve</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav></header>
   <main>
-    <section class="hero"><picture class="hero-mobile-visual"><img src="/images/website_images/mobile_hero.png" width="1536" height="1024" alt="Three snapback hats showing three-star, SnapInk, and LIFT sleeve designs" fetchpriority="high" decoding="async" /></picture><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span><span class="hero-slogan-mobile">SLIDE ON.<br>SNAP IN.<br>STAND OUT.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Interchangeable snapback strap sleeves</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the hat you already own. SnapInk's interchangeable sleeves slide over your existing snapback strap, letting you swap raised designs, logos, and statements in seconds.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
+    <section class="hero"><div class="hero-mobile-media"><video class="hero-mobile-video" width="720" height="1280" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/website_images/mobile_hero.png" aria-label="SnapInk sleeve demonstration showing sleeves being installed on compatible snapback hats"><source data-src="/videos/mobile_hero_video.mp4" type="video/mp4" /></video><img class="hero-mobile-poster" src="/images/website_images/mobile_hero.png" width="1536" height="1024" alt="Three snapback hats showing three-star, SnapInk, and LIFT sleeve designs" decoding="async" /></div><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Interchangeable snapback strap sleeves</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the hat you already own. SnapInk's interchangeable sleeves slide over your existing snapback strap, letting you swap raised designs, logos, and statements in seconds.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
+    <script>
+      (() => {
+        const video = document.querySelector('.hero-mobile-video');
+        const source = video?.querySelector('source[data-src]');
+        if (!video || !source || !window.matchMedia) return;
+        const mobile = window.matchMedia('(max-width: 800px)');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const syncPlayback = () => {
+          if (!mobile.matches || reducedMotion.matches) {
+            video.pause();
+            return;
+          }
+          if (!source.src) {
+            source.src = source.dataset.src;
+            video.load();
+          }
+          const playback = video.play();
+          if (playback?.catch) playback.catch(() => {});
+        };
+        syncPlayback();
+        mobile.addEventListener?.('change', syncPlayback);
+        reducedMotion.addEventListener?.('change', syncPlayback);
+      })();
+    </script>
     <section class="section" id="shop"><div class="wrap shop-grid"><figure class="product-showcase"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" fetchpriority="high" decoding="async" /><figcaption>Concept designs for demonstration only. Third-party brands are not affiliated with SnapInk.</figcaption></figure><div class="shop-copy"><div class="eyebrow">Your hat, reimagined</div><h2>ONE HAT. ENDLESS POSSIBILITIES.</h2><p class="lede">Your hat doesn't have to look the same every day. Switch between names, logos, colors, and designs with interchangeable SnapInk sleeves. No need to buy another hat just to change your look.</p><a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a></div></div></section>
 
     <section class="section"><div class="wrap"><div class="section-head"><div><div class="eyebrow">The opportunity</div><h2>Put a brand where the blank space is.</h2></div><p class="lede">A customizable walking billboard on a backwards-worn snapback. SnapInk gives hat makers, embroidery shops, apparel brands and retailers a new way to build identity into every hat.</p></div><div class="gallery lifestyle-gallery"><figure><div class="photo"><img loading="lazy" decoding="async" src="/images/website_images/optimized/blank_sleeve_on_snapback.webp" srcset="/images/website_images/optimized/blank_sleeve_on_snapback-768.webp 768w, /images/website_images/optimized/blank_sleeve_on_snapback.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Black mesh snapback with a blank SnapInk sleeve installed across the rear strap" width="1536" height="1024" /></div><figcaption>Start with a blank sleeve</figcaption></figure><figure><div class="photo"><img loading="lazy" decoding="async" src="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp" srcset="/images/website_images/optimized/snapink-cap-golden-rimlight-showcase-768.webp 768w, /images/website_images/optimized/snapink-cap-golden-rimlight-showcase.webp 1536w" sizes="(max-width: 700px) 100vw, 60vw" alt="Black mesh snapback with white SnapInk branding in warm studio light" /></div><figcaption>Swap the look, keep the cap</figcaption></figure><figure><div class="photo"><img src="/images/website_images/lift_sleeve_on_table.png" width="1672" height="941" alt="Model wearing a black snapback backwards with raised LIFT lettering on the rear strap sleeve" loading="lazy" decoding="async" /></div><figcaption>Explore design directions</figcaption></figure></div><p class="example-note">Concept designs are shown for inspiration and may not be offered as finished products.</p></div></section>
