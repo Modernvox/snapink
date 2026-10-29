@@ -1295,6 +1295,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
+      <span className="pointer-events-none absolute left-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
+        PREVIEW ONLY
+      </span>
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
         src={HAT_PREVIEW[sleeveSize].src}
