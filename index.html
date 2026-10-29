@@ -117,8 +117,7 @@
 @media(min-width:801px){
   .hero{isolation:isolate}
   .hero-desktop-video{position:absolute;z-index:0;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center 42%;background:#0b0b0d}
-  .hero:before{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,#111 4%,#111d 38%,#1114 72%);pointer-events:none}
-  .hero:after{z-index:1}
+  .hero:before,.hero:after{display:none}
   .hero-copy{z-index:2}
 }
 @media(max-width:800px){.hero-desktop-video{display:none}}
