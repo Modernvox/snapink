@@ -161,6 +161,30 @@ button[type="submit"]:hover, input[type="submit"]:hover,
 .card, .panel, .form, .pilot, .product-showcase, .box {
   background-color: var(--si-panel);
 }
+.site-band { position: relative; width: 100%; }
+.site-band--dark { background: #0B0B0D; color: #F4F4F5; }
+.site-band--light { background: #F4F4F5 !important; color: #0B0B0D !important; border-color: #D4D4D8 !important; }
+.site-band--light:not(.studio-editor-band) { color-scheme: light; }
+.site-band--light:not(.studio-editor-band) :is(h1, h2, h3, h4, h5, strong, label, .text-white, .text-neutral-100, .text-neutral-200) { color: #0B0B0D !important; }
+.site-band--light:not(.studio-editor-band) :is(.fit-guide-size-card strong, .fit-guide-install-copy strong) { color: #80652F !important; }
+.site-band--light:not(.studio-editor-band) :is(p, li, figcaption, small, .lede, .lead, .text-neutral-300, .text-neutral-400, .text-neutral-500) { color: #45454D !important; }
+.site-band--light:not(.studio-editor-band) .eyebrow { color: #80652F !important; }
+.site-band--light:not(.studio-editor-band) :is(.number, .status) { color: #970052 !important; }
+.site-band--light:not(.studio-editor-band) a:not(.button):not(.snap-btn):not(.fit-guide-create):not(.studio-cta):not([href^="/customize.html"]) { color: #970052; }
+.site-band--light:not(.studio-editor-band) a:not(.button):not(.snap-btn):not(.fit-guide-create):not(.studio-cta):not([href^="/customize.html"]):hover { color: #B00063; }
+.site-band--light:not(.studio-editor-band) :is(.card, .method, .form, .note, .callout, .embroidery-sheet, .snap-brief, .product-showcase, .inspiration-card, .pilot-caption) { background: #FFFFFF !important; border-color: #D4D4D8 !important; color: #18181B !important; }
+.site-band--light:not(.studio-editor-band) :is(.card, .method, .form, .note, .callout, .embroidery-sheet, .snap-brief, .product-showcase, .inspiration-card, .pilot-caption) :is(h2, h3, h4, strong, label) { color: #0B0B0D !important; }
+.site-band--light:not(.studio-editor-band) :is(.card, .method, .form, .note, .callout, .embroidery-sheet, .snap-brief, .product-showcase, .inspiration-card, .pilot-caption) :is(p, li, small) { color: #45454D !important; }
+.site-band--light:not(.studio-editor-band) [class*="bg-neutral-900"] { background: #FFFFFF !important; border-color: #D4D4D8 !important; color: #18181B !important; }
+.site-band--light:not(.studio-editor-band) [class*="text-neutral-"] { color: #45454D !important; }
+.site-band--light:not(.studio-editor-band) details { background: #FFFFFF !important; border-color: #D4D4D8 !important; color: #18181B !important; }
+.site-band--light:not(.studio-editor-band) .pilot { background: transparent !important; border-color: #D4D4D8; }
+.site-band--light:not(.studio-editor-band).main { padding: clamp(40px, 5vw, 72px) 0; }
+.site-band--light:not(.studio-editor-band) .button.secondary { border-color: #45454D; color: #18181B; }
+.site-band--light:not(.studio-editor-band) input:not([type="hidden"]), .site-band--light:not(.studio-editor-band) select, .site-band--light:not(.studio-editor-band) textarea { background: #FFFFFF; color: #18181B; border-color: #A1A1AA; }
+.site-band--light:not(.studio-editor-band) input::placeholder, .site-band--light:not(.studio-editor-band) textarea::placeholder { color: #71717A; }
+.site-band--light:not(.studio-editor-band) :where(button, a, input, select, textarea, summary):focus-visible { outline-color: #80652F; }
+.site-band--light:not(.studio-editor-band) :is(.bg-pink-600, .button.primary, .primary, .submit):not(.studio-cta):not([href^="/customize.html"]) { color: #FFFFFF !important; }
 button:disabled, input:disabled, select:disabled, textarea:disabled {
   cursor: not-allowed;
   opacity: .55;

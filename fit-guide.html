@@ -52,15 +52,41 @@ header nav a { position: relative; transition: color .18s ease, background-color
 header nav a[href="/customize.html"] { color: var(--si-accent) !important; }
 header nav a[aria-current="page"] { text-decoration-color: var(--si-accent); }
 header nav a[aria-current="page"]::after { content: ""; position: absolute; right: 0; bottom: -6px; left: 0; height: 1px; background: var(--si-accent); }
-.fit-guide-main{width:min(100%,1536px);margin:0 auto;padding:0 12px 24px;background:var(--si-bg)}
+.fit-guide-main{width:100%;margin:0;padding:0;background:var(--si-bg)}
+.fit-guide-container{width:min(1280px,calc(100% - 36px));margin:0 auto}
+.fit-guide-intro{padding:clamp(30px,5vw,58px) 0 26px}
+.fit-guide-intro-copy{max-width:900px;margin:0 auto 22px;text-align:center}
+.fit-guide-intro-copy p{margin:0;color:#A1A1AA;font-size:clamp(15px,1.7vw,18px);line-height:1.65}
 .fit-guide-image-trigger{display:block;width:100%;margin:0;padding:0;border:0;background:transparent;cursor:zoom-in}
 .fit-guide-image-trigger:focus-visible{outline:3px solid var(--si-gold);outline-offset:-3px}
 .fit-guide-image{display:block;width:100%;height:auto;aspect-ratio:3/2;background:#000}
-.fit-guide-actions{display:flex;justify-content:center;padding:18px 0 0}
-.fit-guide-create{display:inline-flex;min-height:52px;align-items:center;justify-content:center;padding:0 30px;border:1px solid var(--si-gold);border-radius:.65rem;background:var(--si-gold);color:var(--si-gold-ink);font-size:.95rem;font-weight:800;letter-spacing:.07em;text-align:center;transition:background-color .18s ease,transform .18s ease}
-.fit-guide-create:hover{background:var(--si-gold-hover);transform:translateY(-1px)}
-.fit-guide-create:focus-visible,.fit-guide-viewer-close:focus-visible,.fit-guide-zoom-button:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.fit-guide-viewer{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#070708;color:#fff;overflow:hidden}
+.fit-guide-section{padding:clamp(42px,6vw,72px) 0}
+.fit-guide-section-heading{max-width:780px;margin:0 auto 30px;text-align:center}
+.fit-guide-section-heading h2{margin:0 0 12px;font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+.fit-guide-section-heading p{margin:0;font-size:clamp(15px,1.6vw,17px);line-height:1.7}
+.fit-guide-size-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.fit-guide-size-card{display:grid;min-height:110px;align-content:center;justify-items:center;gap:8px;padding:16px 10px;border:1px solid #D4D4D8;border-radius:8px;background:#fff;text-align:center}
+.fit-guide-size-card strong{color:#80652F;font-size:1.2rem;font-weight:900}
+.fit-guide-size-card span{color:#45454D;font-size:.9rem;font-weight:700}
+.fit-guide-compatibility-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.fit-guide-compatibility-card{padding:24px;border:1px solid var(--si-line);border-radius:8px;background:#151518}
+.fit-guide-compatibility-card h3{margin:0 0 14px;color:var(--si-gold);font-size:1.1rem;font-weight:800}
+.fit-guide-compatibility-card p,.fit-guide-compatibility-card li{color:#D4D4D8;line-height:1.65}
+.fit-guide-compatibility-card ul{margin:0;padding-left:20px}
+.fit-guide-install-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.fit-guide-install-card{overflow:hidden;border:1px solid #D4D4D8;border-radius:8px;background:#fff;color:#0B0B0D}
+.fit-guide-install-card img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;background:#F4F4F5}
+.fit-guide-install-copy{padding:18px}
+.fit-guide-install-copy strong{display:block;margin-bottom:8px;color:#80652F;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase}
+.fit-guide-install-copy h3{margin:0 0 8px;color:#0B0B0D;font-size:1.15rem;font-weight:900}
+.fit-guide-install-copy p{margin:0;color:#45454D;font-size:.95rem;line-height:1.6}
+.fit-guide-final{padding:48px 0 56px;text-align:center}
+.fit-guide-final h2{margin:0 0 10px;color:#F4F4F5;font-size:clamp(28px,4vw,42px);font-weight:900;letter-spacing:-.04em}
+.fit-guide-final p{margin:0 auto 20px;max-width:640px;color:#A1A1AA;line-height:1.6}
+.fit-guide-actions{display:flex;justify-content:center;padding:0 0 4px}
+.fit-guide-actions a.fit-guide-create[href="/customize.html"],.fit-guide-actions a.fit-guide-create[href="/customize.html"]:visited{display:inline-flex;width:min(100%,360px);min-height:54px;align-items:center;justify-content:center;padding:0 24px;border:1px solid #E8D6B2;border-radius:.65rem;background:linear-gradient(180deg,#E8D6B2 0%,#D8C49A 52%,#B89B62 100%);color:#0B0B0D!important;font-size:clamp(.82rem,3.8vw,.95rem);font-weight:900;letter-spacing:.07em;line-height:1.15;text-align:center;text-decoration:none;white-space:nowrap;text-shadow:none;transition:background .18s ease,transform .18s ease}
+.fit-guide-actions a.fit-guide-create[href="/customize.html"]:hover,.fit-guide-actions a.fit-guide-create[href="/customize.html"]:focus-visible,.fit-guide-actions a.fit-guide-create[href="/customize.html"]:active{background:linear-gradient(180deg,#F1E2C4 0%,#E8D6B2 52%,#C9AE79 100%);color:#0B0B0D!important;transform:translateY(-1px)}
+.fit-guide-create:focus-visible,.fit-guide-viewer-close:focus-visible,.fit-guide-zoom-button:focus-visible{outline:3px solid #fff;outline-offset:3px}.fit-guide-viewer{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#070708;color:#fff;overflow:hidden}
 .fit-guide-viewer::backdrop{background:#070708}
 .fit-guide-viewer-toolbar{position:relative;z-index:2;display:flex;height:64px;align-items:center;justify-content:flex-end;gap:10px;padding:env(safe-area-inset-top) 14px 0;color:#e4e4e7;font-size:.82rem}
 .fit-guide-viewer-hint{margin-right:auto}
@@ -69,7 +95,7 @@ header nav a[aria-current="page"]::after { content: ""; position: absolute; righ
 .fit-guide-zoom-stage{position:relative;width:100%;height:calc(100dvh - 64px);overflow:hidden;touch-action:none;overscroll-behavior:contain;cursor:grab}
 .fit-guide-zoom-stage:active{cursor:grabbing}
 .fit-guide-zoom-image{position:absolute;top:50%;left:50%;display:block;width:1536px;max-width:none;height:auto;margin:0;transform:translate(-50%,-50%);transform-origin:center;pointer-events:none;user-select:none;-webkit-user-drag:none}
-@media(max-width:767px){.fit-guide-main{padding:0 0 20px}.fit-guide-actions{padding:16px 16px 0}.fit-guide-viewer-toolbar{height:60px;padding:env(safe-area-inset-top) 12px 0}.fit-guide-zoom-stage{height:calc(100dvh - 60px)}}</style><link rel="stylesheet" href="/mobile-navigation.css"><script defer src="/mobile-navigation.js"></script><link rel="stylesheet" href="/site-theme.css"></head>
+@media(max-width:767px){.fit-guide-container{width:calc(100% - 32px)}.fit-guide-intro{padding:30px 0 22px}.fit-guide-intro-copy{margin-bottom:16px}.fit-guide-section{padding:44px 0}.fit-guide-section-heading{margin-bottom:22px}.fit-guide-size-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.fit-guide-size-card{min-height:88px;padding:12px 8px}.fit-guide-compatibility-grid,.fit-guide-install-grid{grid-template-columns:1fr;gap:12px}.fit-guide-final{padding:42px 0 48px}.fit-guide-viewer-toolbar{height:60px;padding:env(safe-area-inset-top) 12px 0}.fit-guide-zoom-stage{height:calc(100dvh - 60px)}}</style><link rel="stylesheet" href="/mobile-navigation.css"><script defer src="/mobile-navigation.js"></script><link rel="stylesheet" href="/site-theme.css"></head>
 <body class="bg-neutral-950 text-neutral-100 antialiased">
 
   <!-- Header -->
@@ -98,10 +124,31 @@ header nav a[aria-current="page"]::after { content: ""; position: absolute; righ
   </header>
 
   <main class="fit-guide-main">
-    <button class="fit-guide-image-trigger" id="fit-guide-open" type="button" aria-label="Open the full SnapInk Fit Guide image viewer">
-      <img class="fit-guide-image" id="fit-guide-image" src="/images/website_images/fit_guide.png" width="1536" height="1024" alt="SnapInk fit guide showing Sizes 0–5 by exposed snapback pegs, the standard seven-peg closures that fit, and incompatible closure types" fetchpriority="high" decoding="async" />
-    </button>
-    <div class="fit-guide-actions"><a class="fit-guide-create" href="/customize.html">CREATE YOUR SNAPINK</a></div>
+    <section class="site-band site-band--dark fit-guide-intro">
+      <div class="fit-guide-container">
+        <div class="fit-guide-intro-copy"><h1 class="sr-only">SnapInk Fit Guide</h1><p>Choose your SnapInk configuration by counting the pegs left exposed when you wear your snapback. The same system fits standard plastic seven-peg closures across hat brands.</p></div>
+        <button class="fit-guide-image-trigger" id="fit-guide-open" type="button" aria-label="Open the full SnapInk Fit Guide image viewer"><img class="fit-guide-image" id="fit-guide-image" src="/images/website_images/fit_guide.png" width="1536" height="1024" alt="SnapInk fit guide showing Sizes 0–5 by exposed snapback pegs, compatible standard seven-peg closures, and incompatible closure types" fetchpriority="high" decoding="async" /></button>
+      </div>
+    </section>
+    <section class="site-band site-band--light fit-guide-section" id="size-selection">
+      <div class="fit-guide-container">
+        <div class="fit-guide-section-heading"><h2>Choose your fit by exposed pegs</h2><p>Sizes 0–5 are sleeve configurations, not hat sizes. Select the number of pegs that remain visible when you wear your hat.</p></div>
+        <div class="fit-guide-size-grid" aria-label="SnapInk size by exposed snapback pegs"><div class="fit-guide-size-card"><strong>SIZE 0</strong><span>0 exposed pegs</span></div><div class="fit-guide-size-card"><strong>SIZE 1</strong><span>1 exposed peg</span></div><div class="fit-guide-size-card"><strong>SIZE 2</strong><span>2 exposed pegs</span></div><div class="fit-guide-size-card"><strong>SIZE 3</strong><span>3 exposed pegs</span></div><div class="fit-guide-size-card"><strong>SIZE 4</strong><span>4 exposed pegs</span></div><div class="fit-guide-size-card"><strong>SIZE 5</strong><span>5 exposed pegs</span></div></div>
+      </div>
+    </section>
+    <section class="site-band site-band--dark fit-guide-section" id="compatibility">
+      <div class="fit-guide-container">
+        <div class="fit-guide-section-heading"><h2>Universal fit for standard plastic 7-peg closures</h2><p>SnapInk sleeves slide over the existing female strap, the side with seven adjustment holes. The original snapback closure stays in place.</p></div>
+        <div class="fit-guide-compatibility-grid"><article class="fit-guide-compatibility-card"><h3>Works with</h3><p>Standard plastic seven-peg snapback closures, regardless of hat brand.</p></article><article class="fit-guide-compatibility-card"><h3>Not designed for</h3><ul><li>Fitted hats</li><li>Buckle-style strapbacks</li><li>Velcro or elastic closures</li><li>Nonstandard snapback closures</li></ul></article></div>
+      </div>
+    </section>
+    <section class="site-band site-band--light fit-guide-section" id="installation">
+      <div class="fit-guide-container">
+        <div class="fit-guide-section-heading"><h2>Slide on. Snap in. Ready to wear.</h2><p>No modifications, replacement straps, or tools are required.</p></div>
+        <div class="fit-guide-install-grid"><article class="fit-guide-install-card"><img src="/images/website_images/optimized/sleeve_being_slid_on.webp" srcset="/images/website_images/optimized/sleeve_being_slid_on-768.webp 768w, /images/website_images/optimized/sleeve_being_slid_on.webp 1536w" sizes="(max-width:760px) 100vw, 33vw" width="1536" height="1024" alt="Sliding the SnapInk sleeve over the snapback's female strap with seven adjustment holes" loading="lazy" decoding="async" /><div class="fit-guide-install-copy"><strong>Step 1</strong><h3>Slide on</h3><p>Slide the sleeve over the female snapback strap with seven adjustment holes.</p></div></article><article class="fit-guide-install-card"><img src="/images/website_images/sleeve_being_snapped_on.png" width="1536" height="1024" alt="Pressing the original snapback pegs into the sleeve and female strap" loading="lazy" decoding="async" /><div class="fit-guide-install-copy"><strong>Step 2</strong><h3>Snap in</h3><p>Align the existing pegs with the holes and press the closure together.</p></div></article><article class="fit-guide-install-card"><img src="/images/website_images/lift_sleeve_on_model.png" width="1536" height="1024" alt="Finished SnapInk sleeve installed on the back of a snapback hat" loading="lazy" decoding="async" /><div class="fit-guide-install-copy"><strong>Step 3</strong><h3>Wear and switch</h3><p>Change sleeves whenever you want a different look on your favorite hat.</p></div></article></div>
+      </div>
+    </section>
+    <section class="site-band site-band--dark fit-guide-final"><div class="fit-guide-container"><h2>Ready to create your SnapInk?</h2><p>Design a sleeve for a standard plastic seven-peg snapback closure in SnapInk Studio.</p><div class="fit-guide-actions"><a class="fit-guide-create" href="/customize.html">CREATE YOUR SNAPINK</a></div></div></section>
   </main>
   <dialog class="fit-guide-viewer" id="fit-guide-viewer" aria-label="Expanded SnapInk Fit Guide">
     <div class="fit-guide-viewer-toolbar">
