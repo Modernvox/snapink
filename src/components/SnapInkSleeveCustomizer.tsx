@@ -256,6 +256,7 @@ type SleevePreviewCalibration = {
   verticalOffsetHatSourcePx: number;
   verticalExtraPreviewPx: number;
   verticalOffsetPreviewPx?: number;
+  verticalBottomExtraPreviewPx?: number;
 };
 // Independent per-photo, per-style preview calibration. Horizontal anchors
 // use each photo's measured opening/strap bounds; vertical bounds are measured
@@ -275,7 +276,7 @@ const SLEEVE_PREVIEW_CALIBRATION: Record<SleeveVariant, readonly SleevePreviewCa
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
     { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
+    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20, verticalBottomExtraPreviewPx: 10 },
   ],
 };
 const LONGEST_SLEEVE_LENGTH_MM =
@@ -759,10 +760,18 @@ const SnapInkSleeveCustomizer = forwardRef<
     ? ((stageComposition.calibration.verticalOffsetPreviewPx ?? 0)
       / (STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX / STUDIO_STAGE_WIDTH_HEIGHT_RATIO)) * 100
     : 0;
-  const sleevePreviewBottomYPercent = sleevePreviewBaseBottomYPercent + sleeveOffsetPreviewPercent;
+  const sleeveBottomExtraHeightPercent = ghostHat
+    ? ((stageComposition.calibration.verticalBottomExtraPreviewPx ?? 0)
+      / (STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX / STUDIO_STAGE_WIDTH_HEIGHT_RATIO)) * 100
+    : 0;
+  const sleevePreviewBottomYPercent = sleevePreviewBaseBottomYPercent
+    + sleeveOffsetPreviewPercent
+    + sleeveBottomExtraHeightPercent;
   const sleevePreviewHeightPercent = ghostHat
     ? ((stageComposition.strapBottom - stageComposition.strapTop) / 650) * 100
-      * stageComposition.calibration.verticalScale + sleeveExtraHeightPercent
+      * stageComposition.calibration.verticalScale
+      + sleeveExtraHeightPercent
+      + sleeveBottomExtraHeightPercent
     : sleevePreviewBaseHeightPercent;
   const sleeveSvgHeight = previewViewH;
   const sleevePreviewCenterYPercent = sleevePreviewBottomYPercent - sleevePreviewHeightPercent / 2;
@@ -1321,7 +1330,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         data-stage-sleeve-preview-offset-px={stageComposition.calibration.verticalOffsetPreviewPx ?? 0}
         data-stage-css-width-px={currentStageClientWidth}
         data-stage-sleeve-bottom-cover-source-px={0}
-        data-stage-sleeve-bottom-extra-px={0}
+        data-stage-sleeve-bottom-extra-px={stageComposition.calibration.verticalBottomExtraPreviewPx ?? 0}
         data-stage-sleeve-vertical-scale={stageComposition.calibration.verticalScale}
         data-stage-sleeve-extra-height-preview-px={stageComposition.calibration.verticalExtraPreviewPx}
         data-stage-hat-strap-top-percent={(stageComposition.strapTop / 650) * 100}
