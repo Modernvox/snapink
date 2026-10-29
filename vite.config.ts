@@ -29,6 +29,7 @@ export default defineConfig({
         press: path.resolve(__dirname, "press.html"),
         drop001: path.resolve(__dirname, "drop001.html"),
         wholesaleInfo: path.resolve(__dirname, "wholesale-info.html"),
+        contact: path.resolve(__dirname, "contact.html"),
         partnerPortal: path.resolve(__dirname, "partner-portal.html"),
         wholesale: path.resolve(__dirname, "wholesale.html"),
         wholesaleStudio: path.resolve(__dirname, "wholesale-studio.html")

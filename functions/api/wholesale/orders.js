@@ -1,6 +1,7 @@
 import { bearer, digest, json, now, randomId, validEmail } from "../../_lib/orders.js";
 import { APPROVED_WHOLESALE_DESIGNS, leadTimeFor, priceWholesaleLines } from "../../_lib/wholesale.js";
 import { cleanAddress, cleanText, partnerUnauthorized, validateWholesaleArtwork, wholesalePartnerFor } from "../../_lib/wholesale-auth.js";
+import { sendSnapInkEmail } from "../../_lib/snapink-email.js";
 
 const MAX_REQUEST_BYTES = 24 * 1024 * 1024;
 const MAX_LINE_ARTWORKS_BYTES = 20 * 1024 * 1024;
@@ -180,24 +181,26 @@ export async function onRequestPost({ request, env }) {
       env.DB.prepare(`INSERT INTO wholesale_order_events(order_id,actor_type,actor_id,event_type,to_status,detail_json,created_at) VALUES(?,'partner',?,'order_submitted','pending_review',?,?)`)
         .bind(orderId,partner.id,JSON.stringify({totalQuantity:pricing.totalQuantity,blankQuantity:pricing.blankQuantity,customQuantity:pricing.customQuantity,blankTier:pricing.tier.blank,customTier:pricing.tier.custom,blankSubtotalCents:pricing.blankSubtotalCents,customSubtotalCents:pricing.customSubtotalCents,pricingTier:pricing.tier.label,merchandiseSubtotalCents:pricing.subtotalCents,customReviewRequired:needsReview}),time),
     ];
-    try{await env.DB.batch(statements)}catch(error){await Promise.allSettled(uploadedKeys.map((key)=>env.PRIVATE_ASSETS.delete(key)));uploadedKeys=[];const duplicate=await env.DB.prepare("SELECT id,order_number AS orderNumber,status,total_quantity AS totalQuantity,merchandise_subtotal_cents AS merchandiseSubtotalCents,created_at AS createdAt FROM wholesale_orders WHERE partner_id=? AND idempotency_key=?").bind(partner.id,body.idempotencyKey).first();if(duplicate)return json({ok:true,duplicate:true,order:duplicate},200);throw error}
     const order={id:orderId,orderNumber,status:"pending_review",totalQuantity:pricing.totalQuantity,pricingTier:pricing.tier.label,merchandiseSubtotalCents:pricing.subtotalCents,leadTimeLabel:lead.label,customReviewRequired:needsReview,customizationQuoteStatus:"not_required",createdAt:time};
-    await notifyWholesaleOrder(env,{order,lines:preparedLines,contact:{businessName,contactName,email:email.toLowerCase()},shippingAddress,specialInstructions:instructions}).catch(()=>{});
+    await notifyWholesaleOrder(env,{order,lines:preparedLines,contact:{businessName,contactName,email:email.toLowerCase()},shippingAddress,specialInstructions:instructions});
+    try{await env.DB.batch(statements)}catch(error){await Promise.allSettled(uploadedKeys.map((key)=>env.PRIVATE_ASSETS.delete(key)));uploadedKeys=[];const duplicate=await env.DB.prepare("SELECT id,order_number AS orderNumber,status,total_quantity AS totalQuantity,merchandise_subtotal_cents AS merchandiseSubtotalCents,created_at AS createdAt FROM wholesale_orders WHERE partner_id=? AND idempotency_key=?").bind(partner.id,body.idempotencyKey).first();if(duplicate)return json({ok:true,duplicate:true,order:duplicate},200);throw error}
     return json({ok:true,order,pricing:{totalQuantity:pricing.totalQuantity,blankQuantity:pricing.blankQuantity,customQuantity:pricing.customQuantity,blankTier:pricing.tier.blank,customTier:pricing.tier.custom,blankSubtotalCents:pricing.blankSubtotalCents,customSubtotalCents:pricing.customSubtotalCents,tier:pricing.tier.label,lines:pricing.lines.map(({size,quantity,designType,unitPriceCents,subtotalCents})=>({size,quantity,designType,unitPriceCents,subtotalCents})),merchandiseSubtotalCents:pricing.subtotalCents,customizationQuoteStatus:"not_required",leadTime:lead.label,shipping:"To be quoted",taxes:"To be determined",finalPayableTotal:"Pending confirmation"}},201);
   }catch(error){
     await Promise.allSettled(uploadedKeys.map((key)=>env.PRIVATE_ASSETS.delete(key)));
     console.error("Wholesale request processing failed",error instanceof Error?error.message:"unknown");
-    return json({error:error?.status===413?"Order request is too large.":"The wholesale request could not be saved. Please retry with the same request and contact SnapInk if the issue continues."},error?.status===413?413:500);
+    return json({error:error?.status===413?"Order request is too large.":error?.status===503?"Your request could not be delivered to the SnapInk team. Please try again later.":"The wholesale request could not be saved. Please retry with the same request and contact SnapInk if the issue continues."},error?.status===413?413:error?.status===503?503:500);
   }
 }
 
 async function notifyWholesaleOrder(env,{order,lines,contact,shippingAddress,specialInstructions}){
   if(env.SNAPINK_LOCAL_E2E==="true")return;
-  const adminEmail=env.WHOLESALE_ADMIN_EMAIL||"orders@snapinkhats.com";
   const lineText=lines.map((line)=>`Size ${line.size}: ${line.quantity} × $${(line.unitPriceCents/100).toFixed(2)} = $${(line.subtotalCents/100).toFixed(2)} (${line.designType}${line.designReference?`, ${line.designReference}`:""}${line.artworkName?`, artwork ${line.artworkName}`:""})`).join("\n");
   const address=Object.values(shippingAddress).filter(Boolean).join(", ");
   const message=`Wholesale request ${order.orderNumber}\nPartner: ${contact.businessName}\nContact: ${contact.contactName}\nEmail: ${contact.email}\nQuantity: ${order.totalQuantity}\nTier: ${order.pricingTier}\nMerchandise subtotal: $${(order.merchandiseSubtotalCents/100).toFixed(2)}\nLead-time estimate: ${order.leadTimeLabel}\nShipping: ${address}\n\n${lineText}\n\nInstructions: ${specialInstructions||"None"}\n\nStatus: Pending Review. This request is not a production confirmation and no payment was collected.`;
-  const emailPayload={personalizations:[{to:[{email:adminEmail}]},{to:[{email:contact.email}]}],from:{email:"orders@snapinkhats.com",name:"SnapInk Wholesale",domain:"snapinkhats.com"},subject:`SnapInk wholesale request ${order.orderNumber} received`,content:[{type:"text/plain",value:message}]};
-  const result=await fetch("https://api.mailchannels.net/tx/v1/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(emailPayload)});
-  if(!result.ok)throw new Error(`Existing MailChannels notification returned ${result.status}.`);
+  await sendSnapInkEmail(env,{
+    to:"partners@snapbacksleeves.com",
+    replyTo:contact.email,
+    subject:`SnapInk wholesale request ${order.orderNumber}`,
+    text:`Inquiry type: Wholesale order request\n\n${message}`,
+  });
 }

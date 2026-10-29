@@ -1,4 +1,5 @@
 import { digest, randomId } from "../_lib/orders.js";
+import { EmailDeliveryError, enforcePublicFormRateLimit, sendSnapInkEmail } from "../_lib/snapink-email.js";
 
 const MAX_BODY = 16_000;
 
@@ -49,6 +50,7 @@ export async function onRequestPost({ request, env }) {
     const raw = await request.text();
     if (new TextEncoder().encode(raw).length > MAX_BODY) return json({ error: "Application is too large." }, 413);
     const data = JSON.parse(raw);
+    if (typeof data.companyFax === "string" && data.companyFax.trim()) return json({ error: "Unable to submit this application." }, 400);
     if (data.phone != null && typeof data.phone !== "string") return json({ error: "Enter a valid phone number." }, 400);
     if (data.phone == null) data.phone = "";
     if (data.sampleStyle != null && !["standard", "billboard"].includes(data.sampleStyle)) {
@@ -73,7 +75,36 @@ export async function onRequestPost({ request, env }) {
     }
     if (clean.website && !/^https?:\/\//i.test(clean.website)) return json({ error: "Website must begin with http:// or https://." }, 400);
 
+    if (!env.CLOUDFLARE_EMAIL_API_TOKEN) {
+      return json({ error: "Applications are temporarily unavailable. Please try again later." }, 503);
+    }
+
     await ensureTable(env.DB);
+    if (!(await enforcePublicFormRateLimit(env.DB, request, env.CLOUDFLARE_EMAIL_API_TOKEN, "pilot-application", 5))) {
+      return json({ error: "Too many applications were submitted. Please wait and try again." }, 429);
+    }
+    await sendSnapInkEmail(env, {
+      to: "partners@snapbacksleeves.com",
+      replyTo: clean.email.toLowerCase(),
+      subject: "New SnapInk pilot partner application",
+      text: [
+        "Inquiry type: Pilot partner application",
+        `Business: ${clean.businessName}`,
+        `Contact: ${clean.contactName}`,
+        `Email: ${clean.email.toLowerCase()}`,
+        `Phone: ${clean.phone || "Not provided"}`,
+        `Website: ${clean.website || "Not provided"}`,
+        `Business type: ${clean.businessType}`,
+        `Sample style: ${clean.sampleStyle}`,
+        `Estimated monthly demand: ${clean.monthlyDemand}`,
+        "",
+        "Intended use:",
+        clean.intendedUse,
+        "",
+        "Additional comments:",
+        clean.comments || "None",
+      ].join("\n"),
+    });
     await env.DB.prepare(`INSERT INTO pilot_applications
       (business_name, contact_name, email, phone, website, business_type, intended_use, monthly_demand, sample_style, comments, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -81,6 +112,7 @@ export async function onRequestPost({ request, env }) {
         clean.businessType, clean.intendedUse, clean.monthlyDemand, clean.sampleStyle || null, clean.comments || null, new Date().toISOString()).run();
     return json({ ok: true }, 201);
   } catch (error) {
+    if (error instanceof EmailDeliveryError) return json({ error: "Your application could not be delivered. Please try again later." }, error.status);
     console.error("Pilot application submission failed:", error instanceof Error ? error.message : "unknown error");
     return json({ error: "Unable to submit right now. Please try again later." }, 500);
   }

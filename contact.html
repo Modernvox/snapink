@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0B0D">
+  <meta name="description" content="Contact SnapInk customer support, pilot partners, wholesale, and general inquiries." />
+  <link rel="canonical" href="https://snapbacksleeves.com/contact" />
+  <meta property="og:title" content="Contact SnapInk | Snapback Strap Sleeves" />
+  <meta property="og:description" content="Send a message to SnapInk customer support, pilot partners, wholesale, and general inquiries." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://snapbacksleeves.com/contact" />
+  <title>Contact SnapInk | Snapback Strap Sleeves</title>
+  <link rel="stylesheet" href="/site-theme.css?v=20261029-header1">
+  <link rel="stylesheet" href="/mobile-navigation.css?v=20261029-header1">
+  <script defer src="/mobile-navigation.js"></script>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#0B0B0D;color:#F4F4F5}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:#0B0B0D;color:#F4F4F5;line-height:1.6}
+    a{color:#D8C49A}
+    .wrap{width:min(760px,calc(100% - 36px));margin-inline:auto}
+    header{border-bottom:1px solid #303035}
+    .nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .nav img{display:block;width:min(170px,42vw);height:auto}
+    .nav-links{display:flex;gap:20px;align-items:center;font-size:14px}
+    main{padding:clamp(40px,8vw,84px) 0}
+    .eyebrow{color:#D8C49A;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:10px 0 12px;font-size:clamp(38px,7vw,58px);line-height:1;letter-spacing:-.05em}
+    .intro{color:#A1A1AA;margin:0 0 28px}
+    form{display:grid;gap:18px;padding:clamp(20px,5vw,32px);background:#1B1B1E;border:1px solid #303035;border-radius:12px}
+    label{display:grid;gap:7px;font-size:14px;font-weight:600}
+    input,select,textarea{width:100%;min-width:0;padding:12px 13px;color:#F4F4F5;background:#0B0B0D;border:1px solid #45454B;border-radius:6px;font:inherit}
+    input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #D8C49A;outline-offset:2px}
+    textarea{min-height:160px;resize:vertical}
+    button{min-height:50px;padding:12px 18px;border:1px solid #D8C49A;border-radius:6px;background:linear-gradient(180deg,#E8D6B2,#D8C49A 60%,#B89B62);color:#0B0B0D;font:700 15px system-ui,sans-serif;cursor:pointer}
+    button:disabled{opacity:.65;cursor:wait}
+    .status{min-height:1.5em;margin:0;color:#D8C49A;font-size:14px}
+    .status[data-error="true"]{color:#FDA4AF}
+    .trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+    footer{padding:24px 0;border-top:1px solid #303035;color:#A1A1AA;font-size:13px}
+    @media(max-width:680px){.nav-links{gap:12px;font-size:12px}.nav-links a:nth-child(n+2){display:none}.nav{min-height:64px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100"></a>
+      <nav class="nav-links" aria-label="Main navigation"><a href="/fit-guide.html">Fit Guide</a><a href="/customize.html">Studio</a><a href="/pilot.html">Pilot Partners</a></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <p class="eyebrow">We’re here to help</p>
+    <h1>Contact SnapInk</h1>
+    <p class="intro">Choose the topic that best fits your message. Required fields are marked with an asterisk.</p>
+    <form id="contact-form" novalidate>
+      <label for="contact-name">Name *<input id="contact-name" name="name" maxlength="120" autocomplete="name" required></label>
+      <label for="contact-email">Email *<input id="contact-email" name="email" type="email" maxlength="254" autocomplete="email" required></label>
+      <label for="inquiry-type">Inquiry type *<select id="inquiry-type" name="inquiryType" required><option value="">Select a topic</option><option value="support">Customer support</option><option value="partners">Pilot partners and wholesale</option><option value="general">General inquiry</option></select></label>
+      <label for="contact-message">Message *<textarea id="contact-message" name="message" maxlength="5000" required></textarea></label>
+      <label class="trap" aria-hidden="true">Leave blank<input name="companyFax" tabindex="-1" autocomplete="off"></label>
+      <button type="submit">Send Message</button>
+      <p class="status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <footer><div class="wrap">© 2025–2026 SnapInk™ · Slide On. Snap In. Stand Out.</div></footer>
+  <script>
+    const form=document.querySelector('#contact-form');
+    const status=document.querySelector('.status');
+    const button=form.querySelector('button[type="submit"]');
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      status.textContent='';status.dataset.error='false';
+      if(!form.reportValidity())return;
+      const values=Object.fromEntries(new FormData(form));
+      button.disabled=true;button.textContent='Sending…';
+      try{
+        const response=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
+        const result=await response.json();
+        if(!response.ok)throw new Error(result.error||'Your message could not be sent. Please try again later.');
+        form.reset();status.textContent='Your message has been sent to the SnapInk team.';
+      }catch(error){status.textContent=error.message||'Your message could not be sent. Please try again later.';status.dataset.error='true';}
+      finally{button.disabled=false;button.textContent='Send Message';}
+    });
+  </script>
+</body>
+</html>

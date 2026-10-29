@@ -1,3 +1,5 @@
+import { EmailDeliveryError, sendSnapInkEmail } from "../_lib/snapink-email.js";
+
 export async function onRequestPost(context) {
   // Production ordering stays closed until SnapInk provisions a partner-only
   // server secret. The public design demo must never be an ordering path.
@@ -23,46 +25,20 @@ ${JSON.stringify(data.draft, null, 2)}
 Submitted At: ${data.submittedAt}
 `;
 
-    // MailChannels email payload
-    const emailPayload = {
-      personalizations: [
-        {
-          to: [{ email: "orders@snapinkhats.com" }]
-        }
-      ],
-      from: {
-        email: "orders@snapinkhats.com",
-        name: "SnapInk Orders",
-        domain: "snapinkhats.com"
-      },
-      subject: "🧵 New SnapInk Strap Order",
-      content: [
-        {
-          type: "text/plain",
-          value: formatted
-        }
-      ]
-    };
-
-    // Send through MailChannels (Cloudflare built-in)
-    const result = await fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailPayload)
+    const customerEmail = typeof data.customerEmail === "string" ? data.customerEmail.trim() : "";
+    await sendSnapInkEmail(context.env, {
+      to: "partners@snapbacksleeves.com",
+      replyTo: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ? customerEmail : undefined,
+      subject: "New SnapInk Strap Order",
+      text: formatted,
     });
-
-    if (!result.ok) {
-      const text = await result.text();
-      throw new Error("MailChannels error: " + text);
-    }
-
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+      status: err instanceof EmailDeliveryError ? err.status : 500,
       headers: { "Content-Type": "application/json" }
     });
   }

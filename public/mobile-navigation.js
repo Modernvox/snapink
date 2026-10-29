@@ -21,6 +21,7 @@
       { label: "Press", href: "/press.html", key: "/press.html" },
       { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
       { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
+      { label: "Contact", href: "/contact.html", key: "/contact.html" },
     ];
     const activeKey = pageKey === "/" ? "home" : pageKey;
     const linkMarkup = links.map(({ label, href, key }) => {
