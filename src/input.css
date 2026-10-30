@@ -169,8 +169,36 @@
    Keep two roomy columns by default and use three only when each card can stay
    comfortably readable. */
 .snapink-size-control { min-width: 0; width: 100%; container-type: inline-size; }
-.snapink-size-examples-toggle { display: none; }
-.snapink-fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; min-width: 0; }
+.snapink-size-examples-toggle {
+  display: flex;
+  width: fit-content;
+  min-width: 0;
+  min-height: 42px;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 2px;
+  color: #8A7040;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  touch-action: manipulation;
+}
+.snapink-size-examples-toggle svg {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  flex: 0 0 16px !important;
+  transition: transform .18s ease;
+}
+.snapink-size-examples-toggle svg.is-expanded { transform: rotate(180deg); }
+.snapink-fit-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; min-width: 0; }
+.snapink-fit-grid[hidden] { display: none !important; }
 .snapink-fit-card { min-width: 0; word-break: normal; overflow-wrap: normal; white-space: normal; }
 .snapink-fit-card-label { word-break: normal; overflow-wrap: normal; white-space: normal; }
 @container (min-width: 560px) {
@@ -324,12 +352,10 @@
   .snapink-studio-customizer .snapink-toolbar-guides input { accent-color: #D8C08C; }
   .snapink-studio-customizer .snapink-preview-controls { order: 2; gap: 6px; padding: 0 !important; }
   .snapink-studio-customizer .snapink-preview-controls > .grid { gap: 6px; }
-  .snapink-studio-customizer .snapink-size-control > select,
-  .snapink-studio-customizer .snapink-size-control > .mt-2,
   .snapink-studio-customizer .snapink-preview-controls > p { display: none; }
   .snapink-studio-customizer .snapink-size-control { grid-column: 1 / -1; }
   .snapink-studio-customizer .snapink-fit-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     margin-top: 2px;
   }
@@ -358,23 +384,6 @@
 }
 
 @media (max-width: 1023px) {
-  .snapink-studio-customizer .snapink-size-examples-toggle {
-    display: flex;
-    width: fit-content;
-    min-height: 36px;
-    align-items: center;
-    gap: 7px;
-    margin-top: 2px;
-    padding: 4px 2px;
-    color: #8A7040;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: left;
-    touch-action: manipulation;
-  }
-  .snapink-studio-customizer .snapink-size-examples-toggle svg { width: 16px; height: 16px; transition: transform .18s ease; }
-  .snapink-studio-customizer .snapink-size-examples-toggle svg.is-expanded { transform: rotate(180deg); }
-  .snapink-studio-customizer .snapink-size-control[data-size-examples-open="false"] .snapink-fit-grid { display: none; }
   .snapink-studio-application { padding: 12px; border-radius: 14px; }
   .snapink-studio-submission { margin: 18px 2px 0; padding-top: 16px; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile {

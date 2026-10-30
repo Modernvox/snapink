@@ -1295,7 +1295,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   // Shared preview inner block (used on mobile + desktop)
-  const strapPreviewInner = (
+  const strapPreviewInner = (instance: "mobile" | "desktop") => (
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
       <div className={`snapink-preview-controls order-2 flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 lg:order-none ${fixedProductConfiguration ? "hidden" : ""}`}>
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
@@ -1308,6 +1308,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               type="button"
               className="snapink-size-examples-toggle"
               aria-expanded={sizeExamplesOpen}
+              aria-controls={`snapink-size-examples-${uid}-${instance}`}
               onClick={() => setSizeExamplesOpen((open) => !open)}
             >
               <span>{sizeExamplesOpen ? "Hide Size Examples" : "View Size Examples"}</span>
@@ -1315,7 +1316,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
               </svg>
             </button>
-            <div className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations">
+            <div id={`snapink-size-examples-${uid}-${instance}`} className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations" hidden={!sizeExamplesOpen}>
               {[0, 1, 2, 3, 4, 5].map((size) => (
                 <button key={size} type="button" aria-label={"Choose size " + size + ": " + size + " exposed " + (size === 1 ? "peg" : "pegs")} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 text-left transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900 hover:border-neutral-500")}>
                   <img src={"/images/website_images/" + size + "_pegs.png"} alt={"Compatibility view showing " + size + " exposed " + (size === 1 ? "peg" : "pegs")} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-neutral-100 object-contain" />
@@ -1609,7 +1610,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div className="snapink-studio-workspace-mobile lg:hidden space-y-4 pb-20">
         {/* Preview at top */}
         <div className="snapink-preview-card p-2.5 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/20">
-          {strapPreviewInner}
+          {strapPreviewInner("mobile")}
         </div>
       <div className="snapink-mobile-controls min-h-0 space-y-4 pb-4">
 
@@ -2074,7 +2075,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="min-w-0 space-y-4">
           {/* The live product render leads the desktop workspace. */}
           <div className="snapink-preview-card p-3 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/25">
-            {strapPreviewInner}
+            {strapPreviewInner("desktop")}
           </div>
           {/* ALIGNMENT BOX */}
           <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
