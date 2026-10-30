@@ -91,7 +91,8 @@ function App() {
           ref={customizerRef}
           width={1440}
           className="snapink-studio-customizer"
-          initial={{ bgType: "vector", posX: 50, posY: 55 }}
+          initial={{ bgType: "vector" }}
+          defaultArtworkPosition={{ posX: 53.3, posY: 80 }}
           onChange={changeDesign}
         />
 
