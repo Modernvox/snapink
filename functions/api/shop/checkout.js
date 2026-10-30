@@ -67,7 +67,7 @@ export async function onRequestPost({ request, env }) {
       const key = `${line.productId}:${line.variantId}:${line.size}`;
       const existing = normalizedMap.get(key);
       if (existing) existing.quantity += line.quantity;
-      else normalizedMap.set(key, { ...line, name: product.name, variantName: variant.name, imageUrl: product.imageUrl });
+      else normalizedMap.set(key, { ...line, name: product.name, variantName: variant.name, imageUrl: variant.sleeveImageUrl, imageAlt: variant.sleeveImageAlt });
     }
     const normalized = [...normalizedMap.values()];
     if (normalized.reduce((sum, line) => sum + line.quantity, 0) > RETAIL_MAX_QUANTITY) return json({ error: `Combined cart quantity cannot exceed ${RETAIL_MAX_QUANTITY}.` }, 400);
@@ -87,7 +87,7 @@ export async function onRequestPost({ request, env }) {
     const id = randomId(16);
     const orderNumber = `SI-SHOP-${time.slice(0, 10).replaceAll("-", "")}-${randomId(4).slice(0, 8).toUpperCase()}`;
     createdOrderId = id;
-    const items = pricing.items.map((line, index) => ({ ...line, name: normalized[index].name, variantName: normalized[index].variantName, imageUrl: normalized[index].imageUrl }));
+    const items = pricing.items.map((line, index) => ({ ...line, name: normalized[index].name, variantName: normalized[index].variantName, imageUrl: normalized[index].imageUrl, imageAlt: normalized[index].imageAlt }));
     const insert = await env.DB.prepare(`INSERT INTO shop_orders(id,order_number,idempotency_key,customer_name,customer_email,customer_phone,shipping_address_json,items_json,quantity,merchandise_subtotal_cents,discount_cents,shipping_cents,status,created_at,updated_at)
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'CHECKOUT_PENDING',?,?)`).bind(id, orderNumber, body.idempotencyKey, customer.name, customer.email, customer.phone, JSON.stringify(shipping), JSON.stringify(items), pricing.quantity, pricing.merchandiseSubtotalCents, pricing.discountCents, pricing.shippingCents, time, time).run();
     void insert;

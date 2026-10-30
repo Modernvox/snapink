@@ -33,12 +33,13 @@ export function mountShopCart(products){
       const product=productMap[item.productId];if(!product)return;
       const variant=product.variants.find((entry)=>entry.variantId===item.variantId)||product.variants[0];
       const row=document.createElement("article");row.className="shop-cart-line";
-      const image=document.createElement("img");image.src=product.imageUrl;image.alt=product.imageAlt;image.loading="lazy";
-      const info=document.createElement("div"),title=document.createElement("strong"),desc=document.createElement("p"),controls=document.createElement("div"),qty=document.createElement("input"),remove=document.createElement("button");
+      const image=document.createElement("img");image.src=variant?.sleeveImageUrl||product.imageUrl;image.alt=variant?.sleeveImageAlt||`${product.name} SnapInk Sleeve only; hat not included`;image.loading="lazy";
+      const info=document.createElement("div"),title=document.createElement("strong"),clarification=document.createElement("p"),desc=document.createElement("p"),controls=document.createElement("div"),qty=document.createElement("input"),remove=document.createElement("button");
       title.textContent=product.name;desc.textContent=`${variant?.name||"Black sleeve / white artwork"} · Size ${item.size} · ${usd(product.prices[item.size])} each`;
+      clarification.className="shop-cart-product-note";clarification.textContent="SnapInk Sleeve™ — Hat not included";
       controls.className="shop-cart-controls";qty.type="number";qty.min="1";qty.max="100";qty.value=String(item.quantity);qty.setAttribute("aria-label",`${product.name} quantity`);qty.addEventListener("change",()=>{const next=safeCart();next[index].quantity=Math.max(1,Math.min(100,Number(qty.value)||1));persist(next)});
       remove.type="button";remove.className="shop-remove";remove.textContent="Remove";remove.addEventListener("click",()=>persist(safeCart().filter((_,line)=>line!==index)));
-      controls.append(qty,remove);info.append(title,desc,controls);row.append(image,info);lines.append(row);
+      controls.append(qty,remove);info.append(title,clarification,desc,controls);row.append(image,info);lines.append(row);
     });
     try{
       const priced=calculateShopCartPricing(cart,productMap);

@@ -11,7 +11,7 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
   for (const row of rows.results || []) {
     const prices = parseShopJson(row.pricesJson, null);
     if (!Array.isArray(prices) || prices.length !== 6 || prices.some((price) => !Number.isSafeInteger(price) || price < 1)) continue;
-    const variantsResult = await db.prepare(`SELECT variant_id AS variantId,variant_name AS name,sleeve_color AS sleeveColor,artwork_color AS artworkColor,available_sizes_json AS availableSizesJson,active
+    const variantsResult = await db.prepare(`SELECT variant_id AS variantId,variant_name AS name,sleeve_color AS sleeveColor,artwork_color AS artworkColor,available_sizes_json AS availableSizesJson,sleeve_image_url AS sleeveImageUrl,sleeve_image_alt AS sleeveImageAlt,active
       FROM shop_product_variants WHERE product_id=? ${includeInactive ? "" : "AND active=1"} ORDER BY variant_id`).bind(row.productId).all();
     const variants = [];
     for (const variant of variantsResult.results || []) {
@@ -20,7 +20,7 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
       const inventory = new Map((inventoryResult.results || []).map((entry) => [Number(entry.size), Math.max(0,Number(entry.availableQuantity)-Number(entry.reservedQuantity))]));
       const configuredSizes = (Array.isArray(sizes) ? sizes : []).filter((size) => Number.isInteger(size) && size >= 0 && size <= 5);
       const availableSizes = includeInactive ? configuredSizes : configuredSizes.filter((size) => !inventory.has(size) || inventory.get(size) > 0);
-      variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
+      variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,sleeveImageUrl:variant.sleeveImageUrl,sleeveImageAlt:variant.sleeveImageAlt,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
     }
     products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,prices,active:Boolean(row.active),variants});
   }
