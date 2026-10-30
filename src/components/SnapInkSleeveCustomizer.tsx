@@ -1243,7 +1243,22 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const previewToolbar = (
+  const mobileColorGroups = (
+    <div className="snapink-mobile-color-groups" role="group" aria-label="Sleeve and artwork colors" data-preview-only="true">
+      {([
+        { key: "text" as const, label: "Text Fill Color", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
+        { key: "outline" as const, label: "Outline Color", value: stroke, onChange: setStroke, locked: false },
+        { key: "sleeve" as const, label: "Sleeve Color", value: backgroundColor, onChange: setBackgroundColor, locked: Boolean(fixedProductConfiguration) },
+      ]).map((color) => (
+        <fieldset className="snapink-mobile-color-group" key={color.key} disabled={color.locked}>
+          <legend>{color.label}</legend>
+          <ColorSwatchRow value={color.value} onChange={color.onChange} />
+        </fieldset>
+      ))}
+    </div>
+  );
+
+  const previewToolbar = (instance: "mobile" | "desktop") => (
     <div className="snapink-preview-toolbar">
       <div className="snapink-toolbar-primary">
         <label className="snapink-toolbar-text">
@@ -1274,6 +1289,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           </select>
         </label>
       </div>
+      {instance === "mobile" && mobileColorGroups}
       <div className="snapink-toolbar-secondary">
         <span className="snapink-toolbar-count" aria-live="polite">{text.length}/25</span>
         <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
@@ -1378,7 +1394,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </button>
       </div>
       <div className="snapink-stage-wrap">
-      {previewToolbar}
+      {previewToolbar(instance)}
       <div className="snapink-preview-stage-frame">
       <div
       ref={attachStageRef}
@@ -1390,7 +1406,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
         PREVIEW ONLY
       </span>
-      {previewColorControls}
+      {instance === "desktop" && previewColorControls}
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
         src={HAT_PREVIEW[sleeveSize].src}
