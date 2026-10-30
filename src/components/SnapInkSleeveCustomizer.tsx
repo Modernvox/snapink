@@ -107,7 +107,7 @@ export interface SnapInkSleeveCustomizerProps {
   onChange?: (draft: SleeveDraft) => void;
   className?: string;
   initial?: Partial<SleeveDraft>;
-  defaultArtworkPosition?: Pick<SleeveDraft, "posX" | "posY">;
+  defaultArtworkPosition?: Pick<SleeveDraft, "posX" | "posY"> & { desktopPosY?: number };
   fixedProductConfiguration?: boolean;
   fixedArtworkColor?: string;
   forcedStyleMode?: "emboss" | "flat";
@@ -116,6 +116,17 @@ export interface SnapInkSleeveCustomizerProps {
 export interface SnapInkSleeveCustomizerRef {
   downloadPNG: () => void;
   getOrderFiles: () => Promise<{ artworkSvg: string; previewPng: string; sourceArtwork: string }>;
+}
+
+function defaultArtworkYForViewport(defaultPosition?: { posY: number; desktopPosY?: number }) {
+  if (
+    defaultPosition?.desktopPosY !== undefined &&
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 1024px)").matches
+  ) {
+    return defaultPosition.desktopPosY;
+  }
+  return defaultPosition?.posY ?? OFFICIAL_STUDIO_DEFAULTS.posY;
 }
 
 // ---------- Fonts ----------
@@ -398,7 +409,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const initialVariant = initial.variant ?? OFFICIAL_STUDIO_DEFAULTS.variant;
   const initialSize = initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size;
   const [posX, setPosX] = useState(initial.posX ?? defaultArtworkPosition?.posX ?? brandingCenterCanvasPercentFor(initialVariant, initialSize));
-  const [posY, setPosY] = useState(initial.posY ?? defaultArtworkPosition?.posY ?? OFFICIAL_STUDIO_DEFAULTS.posY);
+  const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport(defaultArtworkPosition));
   const [align, setAlign] = useState<"start" | "center" | "end">(
     initial.align ?? OFFICIAL_STUDIO_DEFAULTS.align
   );
@@ -465,7 +476,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     setStyleMode(OFFICIAL_STUDIO_DEFAULTS.styleMode);
     setArc(OFFICIAL_STUDIO_DEFAULTS.arc);
     setPosX(defaultArtworkPosition?.posX ?? brandingCenterCanvasPercentFor(OFFICIAL_STUDIO_DEFAULTS.variant, OFFICIAL_STUDIO_DEFAULTS.size));
-    setPosY(defaultArtworkPosition?.posY ?? OFFICIAL_STUDIO_DEFAULTS.posY);
+    setPosY(defaultArtworkYForViewport(defaultArtworkPosition));
     setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
     setSafeMargin(OFFICIAL_STUDIO_DEFAULTS.safeMargin);
     setBackgroundColor(OFFICIAL_STUDIO_DEFAULTS.backgroundColor);
@@ -833,7 +844,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (defaultArtworkPosition) {
       setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
       setPosX(defaultArtworkPosition.posX);
-      setPosY(defaultArtworkPosition.posY);
+      setPosY(defaultArtworkYForViewport(defaultArtworkPosition));
       return;
     }
     // Reset uses the same CAD-derived center as Center, including the 1 mm

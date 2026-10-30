@@ -92,7 +92,7 @@ function App() {
           width={1440}
           className="snapink-studio-customizer"
           initial={{ bgType: "vector" }}
-          defaultArtworkPosition={{ posX: 53.3, posY: 80 }}
+          defaultArtworkPosition={{ posX: 53.3, posY: 80, desktopPosY: 56.5 }}
           onChange={changeDesign}
         />
 
