@@ -193,10 +193,12 @@
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
 .snapink-preview-color-controls {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 16px;
+  left: 16px;
   z-index: 30;
   display: flex;
+  width: max-content;
+  max-width: calc(100% - 32px);
   flex-direction: column;
   gap: 8px;
   padding: 6px;
@@ -208,9 +210,10 @@
 .snapink-preview-color-item { position: relative; min-width: 0; }
 .snapink-preview-color-trigger {
   display: flex;
+  box-sizing: border-box;
   width: 78px;
   min-width: 78px;
-  min-height: 28px;
+  min-height: 34px;
   align-items: center;
   gap: 7px;
   padding: 3px 5px;
@@ -218,6 +221,7 @@
   border-radius: 6px;
   background: #FFFFFF;
   color: #111111;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -230,17 +234,17 @@
 .snapink-preview-color-dot { width: 16px; height: 16px; flex: 0 0 16px; border: 1px solid #B8B8B8; border-radius: 50%; }
 .snapink-preview-color-palette {
   position: absolute;
-  top: 0;
+  top: 28px;
   left: calc(100% + 8px);
   z-index: 40;
-  width: 184px;
+  width: 128px;
   padding: 8px;
   border: 1px solid #E8D8B0;
   border-radius: 9px;
   background: #FFFFFF;
   box-shadow: 0 6px 18px rgba(0,0,0,.2);
 }
-.snapink-preview-color-palette .flex { display: grid; grid-template-columns: repeat(5, 1fr); justify-items: center; gap: 6px; }
+.snapink-preview-color-palette .flex { display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; gap: 4px; }
 .snapink-preview-color-palette .flex > button {
   width: 24px;
   height: 24px;
@@ -351,8 +355,8 @@
   }
   .snapink-studio-customizer .snapink-preview-toolbar[data-overlay="true"] {
     position: absolute;
-    top: 122px;
-    left: 102px;
+    top: 172px;
+    left: 112px;
     right: 10px;
   }
   .snapink-studio-customizer .snapink-toolbar-primary {
@@ -442,7 +446,6 @@
   .snapink-studio-customizer .snapink-stage-wrap { position: relative; min-width: 0; display: flex; flex-direction: column; order: 1; }
   .snapink-studio-customizer .snapink-stage-wrap > .snapink-preview-stage-frame { order: 1; }
   .snapink-studio-customizer .snapink-stage-wrap > .snapink-preview-toolbar { order: 0; position: static !important; margin: 0 0 8px; padding: 10px; border: 1px solid #E8D8B0; border-radius: 12px; background: #FFFFFF; color: #111111; box-shadow: none; }
-  .snapink-studio-customizer .snapink-preview-color-palette { left: 0; top: calc(100% + 6px); }
   .snapink-studio-customizer .snapink-toolbar-primary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; min-width: 0; gap: 10px 8px; }
   .snapink-studio-customizer .snapink-toolbar-primary > label { display: grid; min-width: 0; gap: 5px; }
   .snapink-studio-customizer .snapink-toolbar-text,

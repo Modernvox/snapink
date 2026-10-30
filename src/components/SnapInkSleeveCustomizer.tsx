@@ -1237,7 +1237,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   const sleevePreviewTopPercent = sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2;
-  const toolbarCanFloat = !logoDataUrl && sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 260;
+  const toolbarCanFloat = !logoDataUrl && sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 350;
   const previewToolbar = (
     <div className="snapink-preview-toolbar" data-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
       <div className="snapink-toolbar-primary">
@@ -1312,16 +1312,23 @@ const SnapInkSleeveCustomizer = forwardRef<
             <span aria-hidden="true" className="snapink-preview-color-dot" style={{ backgroundColor: color.value }} />
             <span>{color.label}</span>
           </button>
-          {!color.locked && openPreviewColor === color.key && (
-            <div className="snapink-preview-color-palette" role="group" aria-label={`${color.label} color options`}>
-              <ColorSwatchRow
-                value={color.value}
-                onChange={(nextColor) => { color.onChange(nextColor); setOpenPreviewColor(null); }}
-              />
-            </div>
-          )}
         </div>
       ))}
+      {openPreviewColor && (() => {
+        const activeColor = openPreviewColor === "text"
+          ? { label: "Text", value: fill, onChange: setFill }
+          : openPreviewColor === "outline"
+            ? { label: "Outline", value: stroke, onChange: setStroke }
+            : { label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor };
+        return (
+          <div className="snapink-preview-color-palette" role="group" aria-label={`${activeColor.label} color options`}>
+            <ColorSwatchRow
+              value={activeColor.value}
+              onChange={(nextColor) => { activeColor.onChange(nextColor); setOpenPreviewColor(null); }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 
@@ -1368,7 +1375,6 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div className="snapink-stage-wrap" data-toolbar-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
       {previewToolbar}
       <div className="snapink-preview-stage-frame">
-      {previewColorControls}
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
@@ -1379,6 +1385,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
         PREVIEW ONLY
       </span>
+      {previewColorControls}
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
         src={HAT_PREVIEW[sleeveSize].src}
