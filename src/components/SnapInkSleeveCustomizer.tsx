@@ -433,7 +433,18 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
+  const [openPreviewColor, setOpenPreviewColor] = useState<"text" | "outline" | "sleeve" | null>(null);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!openPreviewColor) return;
+    const dismissOnOutsidePointer = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest(".snapink-preview-color-controls")) return;
+      setOpenPreviewColor(null);
+    };
+    document.addEventListener("pointerdown", dismissOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer);
+  }, [openPreviewColor]);
 
   useEffect(() => {
     const stage = svgRef.current?.closest(".snapink-product-stage") as HTMLDivElement | null;
@@ -1259,18 +1270,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         </label>
       </div>
       <div className="snapink-toolbar-secondary">
-        <label className="snapink-toolbar-color">
-          <span>Text fill</span>
-          {fixedArtworkColor ? <span className="snapink-color-chip" style={{ backgroundColor: fill }} aria-label="Fixed artwork color" /> : <input aria-label="Text fill color" type="color" value={fill} onChange={(event) => setFill(event.target.value)} />}
-        </label>
-        {!fixedProductConfiguration && <label className="snapink-toolbar-color">
-          <span>Sleeve</span>
-          <input aria-label="Sleeve color" type="color" value={backgroundColor} onChange={(event) => setBackgroundColor(event.target.value)} />
-        </label>}
-        <label className="snapink-toolbar-color">
-          <span>Outline</span>
-          <input aria-label="Outline color" type="color" value={stroke} onChange={(event) => setStroke(event.target.value)} />
-        </label>
         <span className="snapink-toolbar-count" aria-live="polite">{text.length}/25</span>
         <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
           {toolbarAdvancedOpen ? "Close advanced" : "Advanced controls"}
@@ -1291,6 +1290,38 @@ const SnapInkSleeveCustomizer = forwardRef<
         </>}
         <label className="snapink-toolbar-guides"><input type="checkbox" checked={showGuides} onChange={(event) => setShowGuides(event.target.checked)} /> Show safe area</label>
       </div>}
+    </div>
+  );
+
+  const previewColorControls = (
+    <div className="snapink-preview-color-controls" data-preview-only="true" role="group" aria-label="Preview color controls">
+      {([
+        { key: "text" as const, label: "Text", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
+        { key: "outline" as const, label: "Outline", value: stroke, onChange: setStroke, locked: false },
+        { key: "sleeve" as const, label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor, locked: Boolean(fixedProductConfiguration) },
+      ]).filter((color) => color.key !== "sleeve" || !fixedProductConfiguration).map((color) => (
+        <div className="snapink-preview-color-item" key={color.key}>
+          <button
+            type="button"
+            className="snapink-preview-color-trigger"
+            aria-label={`${color.label} color${color.locked ? " (fixed)" : ""}`}
+            aria-expanded={!color.locked && openPreviewColor === color.key}
+            disabled={color.locked}
+            onClick={() => setOpenPreviewColor((open) => open === color.key ? null : color.key)}
+          >
+            <span aria-hidden="true" className="snapink-preview-color-dot" style={{ backgroundColor: color.value }} />
+            <span>{color.label}</span>
+          </button>
+          {!color.locked && openPreviewColor === color.key && (
+            <div className="snapink-preview-color-palette" role="group" aria-label={`${color.label} color options`}>
+              <ColorSwatchRow
+                value={color.value}
+                onChange={(nextColor) => { color.onChange(nextColor); setOpenPreviewColor(null); }}
+              />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 
@@ -1336,6 +1367,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div className="snapink-stage-wrap" data-toolbar-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
       {previewToolbar}
+      <div className="snapink-preview-stage-frame">
+      {previewColorControls}
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
@@ -1343,7 +1376,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
-      <span className="pointer-events-none absolute left-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
+      <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
         PREVIEW ONLY
       </span>
       {ghostHat && !fixedProductConfiguration && <img
@@ -1590,6 +1623,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </svg>
       </div>
       </div>
+      </div>
     </div>
   );
 
@@ -1733,32 +1767,6 @@ const SnapInkSleeveCustomizer = forwardRef<
                 />
               </div>
 
-              <div className="space-y-3 mt-2 border-t border-neutral-700 pt-3">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">Colors</h3>
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">
-                    Fill color (text)
-                  </label>
-                  {fixedArtworkColor ? <span className="text-sm text-neutral-200">Selected matte TPU color</span> : <ColorSwatchRow value={fill} onChange={setFill} />}
-                </div>
-
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">
-                    Outline color
-                  </label>
-                  <ColorSwatchRow value={stroke} onChange={setStroke} />
-                </div>
-
-                {!fixedProductConfiguration && <div>
-                  <label className="block text-xs text-neutral-400 mb-1">
-                    Sleeve color
-                  </label>
-                  <ColorSwatchRow
-                    value={backgroundColor}
-                    onChange={setBackgroundColor}
-                  />
-                </div>}
-              </div>
             </div>
           )}
         </div>
@@ -2029,32 +2037,6 @@ const SnapInkSleeveCustomizer = forwardRef<
               />
             </div>
 
-            <div className="space-y-3 mt-2 border-t border-neutral-700 pt-3">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">Colors</h3>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">
-                  Fill color (text)
-                </label>
-                {fixedArtworkColor ? <span className="text-sm text-neutral-200">Selected matte TPU color</span> : <ColorSwatchRow value={fill} onChange={setFill} />}
-              </div>
-
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">
-                  Outline color
-                </label>
-                <ColorSwatchRow value={stroke} onChange={setStroke} />
-              </div>
-
-              {!fixedProductConfiguration && <div>
-                <label className="block text-xs text-neutral-400 mb-1">
-                  Sleeve color
-                </label>
-                <ColorSwatchRow
-                  value={backgroundColor}
-                  onChange={setBackgroundColor}
-                />
-              </div>}
-            </div>
         </div>
 
         {/* LOGO BOX */}
@@ -2266,6 +2248,8 @@ function ColorSwatchRow({
           <button
             key={c.label}
             type="button"
+            aria-label={c.label}
+            aria-pressed={selected}
             onClick={() => onChange(c.value)}
             className={`w-7 h-7 rounded-full border ${
               selected ? "ring-2 ring-si-accent border-white" : "border-neutral-600"
