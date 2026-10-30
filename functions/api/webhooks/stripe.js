@@ -3,6 +3,7 @@ import { json, now } from "../../_lib/orders.js";
 import { EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { safeOrderJson, verifyStripeSignature } from "../../_lib/retail-order-utils.js";
 import { handleShopStripeEvent } from "../../_lib/shop-stripe.js";
+import { stripeSessionTax } from "../../_lib/stripe-tax.js";
 
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
@@ -76,7 +77,8 @@ export async function onRequestPost({request,env}) {
     }
     if(order.stripeSessionId!==session.id) return json({error:"Checkout session does not match the approved order."},409);
     const pricing=calculateRetailPricing(order.size,order.quantity);
-    const taxCents=Number(session.total_details?.amount_tax);
+    const tax=stripeSessionTax(session);
+    const taxCents=tax?.taxCents;
     const shippingCents=Number(session.total_details?.amount_shipping||0);
     const totalCents=Number(session.amount_total);
     const stripeAddress=session.shipping_details?.address;
@@ -89,8 +91,7 @@ export async function onRequestPost({request,env}) {
       postalCode:typeof stripeAddress.postal_code==="string"?stripeAddress.postal_code:originalAddress.postalCode,
       country:typeof stripeAddress.country==="string"?stripeAddress.country:originalAddress.country,
     }:null;
-    if(session.currency!=="usd"||session.payment_status!=="paid"||!Number.isInteger(taxCents)||taxCents<0
-      ||session.automatic_tax?.enabled!==true||session.automatic_tax?.status!=="complete"
+    if(session.currency!=="usd"||session.payment_status!=="paid"||!tax
       ||!paidAddress?.line1||!paidAddress.city||!paidAddress.postalCode||paidAddress.country!==originalAddress.country
       ||Number(session.amount_subtotal)!==pricing.discountedMerchandiseCents||shippingCents!==pricing.shippingCents
       ||totalCents!==pricing.totalBeforeTaxCents+taxCents) {

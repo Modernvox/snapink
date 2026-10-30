@@ -2,6 +2,7 @@ import { bearer, json, now } from "../../_lib/orders.js";
 import { calculateRetailPricing } from "../../_lib/retail-pricing.mjs";
 import { createSnapInkEmailAttachment, EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { safeOrderJson } from "../../_lib/retail-order-utils.js";
+import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
 
 const STATUSES = ["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT","PAID","IN_PRODUCTION","SHIPPED","COMPLETED"];
 const SITE = "https://snapbacksleeves.com";
@@ -67,7 +68,7 @@ async function sendPaymentLinkEmail(env, order, { claim = true } = {}) {
     const attachments = await designAttachments(env, order);
     const attachmentNote = attachments.length ? "A copy of your design is attached as a PNG." : "Your design preview remains saved securely with your order.";
     await sendSnapInkEmail(env,{ to:order.customerEmail,subject:`Your SnapInk order ${order.orderNumber} is approved`,text:
-      `Your SnapInk custom sleeve order has been approved for production. ${attachmentNote}\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(draft)}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nComplete payment securely with Stripe: ${order.checkoutUrl}\nStripe Checkout will calculate any applicable sales tax from your shipping address. SnapInk does not receive or store your card details.`,attachments });
+      `Your SnapInk custom sleeve order has been approved for production. ${attachmentNote}\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(draft)}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nComplete payment securely with Stripe: ${order.checkoutUrl}\n${stripeAutomaticTaxEnabled(env) ? "Stripe Checkout will calculate applicable sales tax from your shipping address." : "Taxes are not calculated in this checkout; the displayed total excludes any applicable taxes."} SnapInk does not receive or store your card details.`,attachments });
     await env.DB.prepare("UPDATE retail_orders SET payment_email_status='sent',updated_at=? WHERE id=? AND status='AWAITING_PAYMENT'").bind(now(),order.id).run();
     return { sent:true };
   } catch (error) {
@@ -79,7 +80,7 @@ async function sendPaymentLinkEmail(env, order, { claim = true } = {}) {
 
 async function createCheckoutSession(env, order, attempt) {
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) throw new Error("Payment links are disabled until STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are configured in Cloudflare Pages secrets.");
-  if (env.STRIPE_AUTOMATIC_TAX_ENABLED !== "true") throw new Error("Payment links are disabled until Stripe Tax is configured and STRIPE_AUTOMATIC_TAX_ENABLED=true is set.");
+  if (env.LIVE_CHECKOUT_ENABLED !== "true") throw new Error("Live customer checkout is not enabled yet.");
   const address = safeOrderJson(order.shippingAddressJson);
   const pricing = calculateRetailPricing(order.size,order.quantity);
   if (Number(order.unitPriceCents)!==pricing.unitPriceCents
@@ -99,19 +100,20 @@ async function createCheckoutSession(env, order, attempt) {
   form.set("metadata[order_number]",order.orderNumber);
   form.set("payment_intent_data[metadata][order_id]",order.id);
   form.set("payment_intent_data[metadata][order_number]",order.orderNumber);
-  form.set("automatic_tax[enabled]","true");
+  const useAutomaticTax = stripeAutomaticTaxEnabled(env);
+  if (useAutomaticTax) form.set("automatic_tax[enabled]","true");
   form.set("shipping_address_collection[allowed_countries][0]",address.country);
   form.set("line_items[0][quantity]","1");
   form.set("line_items[0][price_data][currency]","usd");
   form.set("line_items[0][price_data][unit_amount]",String(pricing.discountedMerchandiseCents));
-  form.set("line_items[0][price_data][tax_behavior]","exclusive");
+  if (useAutomaticTax) form.set("line_items[0][price_data][tax_behavior]","exclusive");
   form.set("line_items[0][price_data][product_data][name]",`SnapInk ${order.variant} Sleeve · Size ${order.size} · ${order.quantity} sleeve${order.quantity===1?"":"s"}`);
   if (pricing.shippingCents > 0) {
     form.set("shipping_options[0][shipping_rate_data][type]","fixed_amount");
     form.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]",String(pricing.shippingCents));
     form.set("shipping_options[0][shipping_rate_data][fixed_amount][currency]","usd");
     form.set("shipping_options[0][shipping_rate_data][display_name]","Flat-rate shipping");
-    form.set("shipping_options[0][shipping_rate_data][tax_behavior]","exclusive");
+    if (useAutomaticTax) form.set("shipping_options[0][shipping_rate_data][tax_behavior]","exclusive");
   }
   let response;
   try {
@@ -121,11 +123,12 @@ async function createCheckoutSession(env, order, attempt) {
   if(!response.ok||!result?.id||!result?.url||result.currency!=="usd") {
     const code=result?.error?.code?` (${result.error.code})`:"";
     console.error("Stripe Checkout session creation failed",{orderNumber:order.orderNumber,status:response.status,code:result?.error?.code||"unknown"});
-    throw new Error(`Stripe did not create a checkout session${code}. Confirm Stripe Tax, tax defaults, and account settings, then retry.`);
+    throw new Error(`Stripe did not create a checkout session${code}. Confirm the Stripe API key and Checkout settings, then retry.`);
   }
-  if(result.amount_subtotal!==pricing.discountedMerchandiseCents
+  const tax = stripeSessionTax(result, useAutomaticTax);
+  if(!tax||result.amount_subtotal!==pricing.discountedMerchandiseCents
     || Number(result.total_details?.amount_shipping||0)!==pricing.shippingCents
-    || Number(result.amount_total||0)-Number(result.total_details?.amount_tax||0)!==pricing.totalBeforeTaxCents) {
+    || Number(result.amount_total||0)!==pricing.totalBeforeTaxCents+tax.taxCents) {
     throw new Error("Stripe returned a checkout breakdown that does not match the approved order total. No payment link was saved.");
   }
   return result;

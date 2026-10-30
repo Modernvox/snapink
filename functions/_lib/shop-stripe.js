@@ -2,6 +2,7 @@ import {json,now} from "./orders.js";
 import {calculateShopTotals} from "./retail-pricing.mjs";
 import {EmailDeliveryError,sendSnapInkEmail} from "./snapink-email.js";
 import {safeOrderJson} from "./retail-order-utils.js";
+import {stripeSessionTax} from "./stripe-tax.js";
 
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
 
@@ -36,9 +37,9 @@ export async function handleShopStripeEvent(env,event,session){
   if(!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type)){await record();return json({received:true,ignored:true})}
   if(event.type==="checkout.session.completed"&&session.payment_status!=="paid"){await record();return json({received:true,pendingPayment:true})}
   if(order.status==="PAID"&&order.stripeSessionId===session.id){await record();return json({received:true,duplicate:true,paid:true})}
-  const taxCents=Number(session.total_details?.amount_tax),discountCents=Number(session.total_details?.amount_discount||0),shippingCents=Number(session.total_details?.amount_shipping||0),totalCents=Number(session.amount_total);
+  const tax=stripeSessionTax(session),taxCents=tax?.taxCents,discountCents=Number(session.total_details?.amount_discount||0),shippingCents=Number(session.total_details?.amount_shipping||0),totalCents=Number(session.amount_total);
   if(order.status!=="AWAITING_PAYMENT"||order.stripeSessionId!==session.id||session.currency!=="usd"||session.payment_status!=="paid"
-    ||session.automatic_tax?.enabled!==true||session.automatic_tax?.status!=="complete"||!Number.isSafeInteger(taxCents)||taxCents<0
+    ||!tax
     ||Number(session.amount_subtotal)!==merchandiseSubtotalCents||discountCents!==totals.discountCents||shippingCents!==totals.shippingCents
     ||totalCents!==totals.totalBeforeTaxCents+taxCents)return json({error:"Stripe payment amount or currency did not match the Shop order."},409);
   const intent=typeof session.payment_intent==="string"?session.payment_intent:session.payment_intent?.id;
