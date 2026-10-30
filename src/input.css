@@ -190,6 +190,38 @@
 .snapink-fit-grid[hidden] { display: none !important; }
 .snapink-fit-card { min-width: 0; word-break: normal; overflow-wrap: normal; white-space: normal; }
 .snapink-fit-card-label { word-break: normal; overflow-wrap: normal; white-space: normal; }
+.snapink-fit-example-trigger { position: relative; display: block; width: 100%; padding: 0; overflow: hidden; border: 0; border-radius: 5px; background: #f5f5f5; cursor: zoom-in; }
+.snapink-fit-example-trigger img { display: block; }
+.snapink-fit-zoom-icon { position: absolute; right: 5px; bottom: 5px; display: grid; width: 26px; height: 26px; place-items: center; border: 1px solid #D8C08C; border-radius: 999px; background: rgb(11 11 13 / 78%); color: #F4F4F5; }
+.snapink-fit-zoom-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.snapink-fit-card-select { min-height: 34px; border: 0; background: transparent; cursor: pointer; }
+.snapink-fit-lightbox { position: fixed; z-index: 2147483000; inset: 0; display: flex; flex-direction: column; box-sizing: border-box; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); overflow: hidden; background: rgb(5 5 7 / 96%); color: #fff; }
+.snapink-fit-lightbox-header { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; padding: 2px 2px 12px; }
+.snapink-fit-lightbox-header h2 { margin: 0; color: #fff; font-size: 18px; font-weight: 800; line-height: 1.25; }
+.snapink-fit-lightbox-close { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; border: 1px solid rgb(216 192 140 / 65%); border-radius: 999px; background: rgb(27 27 30 / 92%); color: #fff; cursor: pointer; }
+.snapink-fit-lightbox-close svg, .snapink-fit-lightbox-arrow svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.snapink-fit-lightbox-viewer { position: relative; display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; overflow: hidden; touch-action: none; }
+.snapink-fit-lightbox-image { display: block; width: auto; height: auto; max-width: 92vw; max-height: 78vh; object-fit: contain; user-select: none; -webkit-user-drag: none; touch-action: none; transform-origin: center; }
+@supports (height: 100dvh) { .snapink-fit-lightbox-image { max-height: 78dvh; } }
+.snapink-fit-lightbox-arrow { position: absolute; z-index: 2; top: 50%; display: grid; width: 48px; height: 56px; place-items: center; transform: translateY(-50%); border: 1px solid rgb(216 192 140 / 65%); border-radius: 999px; background: rgb(11 11 13 / 76%); color: white; cursor: pointer; }
+.snapink-fit-lightbox-prev { left: 8px; }
+.snapink-fit-lightbox-next { right: 8px; }
+.snapink-fit-lightbox-footer { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 4px 2px; color: #d4d4d8; font-size: 12px; }
+.snapink-fit-lightbox-footer > div { display: flex; align-items: center; gap: 12px; }
+.snapink-fit-lightbox-footer button { width: 38px; height: 38px; border: 1px solid #D8C08C; border-radius: 999px; background: #1B1B1E; color: white; font-size: 20px; cursor: pointer; }
+.snapink-fit-lightbox-footer button:disabled { opacity: .45; cursor: default; }
+@media (max-width: 640px) {
+  .snapink-fit-lightbox { padding: max(10px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .snapink-fit-lightbox-header { min-height: 44px; padding-bottom: 8px; }
+  .snapink-fit-lightbox-header h2 { font-size: 16px; }
+  .snapink-fit-lightbox-close { width: 42px; height: 42px; flex-basis: 42px; }
+  .snapink-fit-lightbox-image { max-width: calc(100vw - 16px); max-height: calc(100vh - 160px); }
+  @supports (height: 100dvh) { .snapink-fit-lightbox-image { max-height: calc(100dvh - 160px); } }
+  .snapink-fit-lightbox-arrow { width: 42px; height: 50px; background: rgb(11 11 13 / 86%); }
+  .snapink-fit-lightbox-prev { left: 4px; }
+  .snapink-fit-lightbox-next { right: 4px; }
+  .snapink-fit-lightbox-footer { align-items: flex-end; font-size: 11px; }
+}
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
 .snapink-color-groups { min-width: 0; }
 .snapink-color-group { min-width: 0; margin: 0; padding: 0; border: 0; }

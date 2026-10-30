@@ -8,6 +8,7 @@ import React, {
   useId,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   BRANDING_GROOVE_WIDTH_MM,
   GEOMETRY_VERSION,
@@ -446,6 +447,120 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
+  const [fitLightboxSize, setFitLightboxSize] = useState<number | null>(null);
+  const [fitLightboxZoom, setFitLightboxZoom] = useState(1);
+  const [fitLightboxPan, setFitLightboxPan] = useState({ x: 0, y: 0 });
+  const fitLightboxOpen = fitLightboxSize !== null;
+  const fitLightboxDialogRef = useRef<HTMLDivElement | null>(null);
+  const fitLightboxRef = useRef<HTMLDivElement | null>(null);
+  const fitLightboxImageRef = useRef<HTMLImageElement | null>(null);
+  const fitLightboxCloseRef = useRef<HTMLButtonElement | null>(null);
+  const fitLightboxPreviousFocusRef = useRef<HTMLElement | null>(null);
+  const fitGestureRef = useRef<{
+    pointers: Map<number, { x: number; y: number }>;
+    startX: number;
+    startY: number;
+    startZoom: number;
+    startPan: { x: number; y: number };
+    startDistance: number;
+    pinching: boolean;
+  }>({ pointers: new Map(), startX: 0, startY: 0, startZoom: 1, startPan: { x: 0, y: 0 }, startDistance: 0, pinching: false });
+
+  const navigateFitLightbox = useCallback((direction: -1 | 1) => {
+    setFitLightboxSize((current) => current === null ? current : (current + direction + 6) % 6);
+    setFitLightboxZoom(1);
+    setFitLightboxPan({ x: 0, y: 0 });
+    fitGestureRef.current.pointers.clear();
+  }, []);
+
+  useEffect(() => {
+    if (!fitLightboxOpen) return;
+    fitLightboxPreviousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    fitLightboxCloseRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setFitLightboxSize(null); }
+      else if (event.key === "ArrowLeft") { event.preventDefault(); navigateFitLightbox(-1); }
+      else if (event.key === "ArrowRight") { event.preventDefault(); navigateFitLightbox(1); }
+      else if (event.key === "Tab") {
+        const controls = fitLightboxDialogRef.current?.querySelectorAll<HTMLElement>("button:not(:disabled)");
+        if (!controls?.length) return;
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      fitGestureRef.current.pointers.clear();
+      if (fitLightboxPreviousFocusRef.current?.isConnected) fitLightboxPreviousFocusRef.current.focus();
+    };
+  }, [fitLightboxOpen, navigateFitLightbox]);
+
+  function beginFitGesture(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const gesture = fitGestureRef.current;
+    gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (gesture.pointers.size === 1) {
+      gesture.startX = event.clientX;
+      gesture.startY = event.clientY;
+      gesture.startZoom = fitLightboxZoom;
+      gesture.startPan = fitLightboxPan;
+      gesture.pinching = false;
+    } else if (gesture.pointers.size === 2) {
+      const [a, b] = [...gesture.pointers.values()];
+      gesture.startDistance = Math.hypot(a.x - b.x, a.y - b.y);
+      gesture.startZoom = fitLightboxZoom;
+      gesture.startPan = fitLightboxPan;
+      gesture.pinching = true;
+    }
+  }
+
+  function moveFitGesture(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = fitGestureRef.current;
+    if (!gesture.pointers.has(event.pointerId)) return;
+    gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (gesture.pointers.size >= 2 && gesture.startDistance > 0) {
+      const [a, b] = [...gesture.pointers.values()];
+      const distance = Math.hypot(a.x - b.x, a.y - b.y);
+      const zoom = Math.min(4, Math.max(1, gesture.startZoom * distance / gesture.startDistance));
+      setFitLightboxZoom(zoom);
+      if (zoom <= 1) setFitLightboxPan({ x: 0, y: 0 });
+      event.preventDefault();
+    } else if (fitLightboxZoom > 1) {
+      const image = fitLightboxImageRef.current;
+      const viewport = fitLightboxRef.current;
+      if (!image || !viewport) return;
+      const dx = event.clientX - gesture.startX, dy = event.clientY - gesture.startY;
+      const maxX = Math.max(0, (image.offsetWidth * fitLightboxZoom - viewport.clientWidth) / 2);
+      const maxY = Math.max(0, (image.offsetHeight * fitLightboxZoom - viewport.clientHeight) / 2);
+      setFitLightboxPan({ x: Math.min(maxX, Math.max(-maxX, gesture.startPan.x + dx)), y: Math.min(maxY, Math.max(-maxY, gesture.startPan.y + dy)) });
+      event.preventDefault();
+    }
+  }
+
+  function endFitGesture(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = fitGestureRef.current;
+    if (!gesture.pointers.has(event.pointerId)) return;
+    gesture.pointers.delete(event.pointerId);
+    if (gesture.pointers.size === 0) {
+      const dx = event.clientX - gesture.startX;
+      if (!gesture.pinching && fitLightboxZoom <= 1 && Math.abs(dx) >= 55) navigateFitLightbox(dx < 0 ? 1 : -1);
+      gesture.pinching = false;
+      gesture.startDistance = 0;
+    } else if (gesture.pointers.size === 1) {
+      const remaining = [...gesture.pointers.values()][0];
+      gesture.startX = remaining.x;
+      gesture.startY = remaining.y;
+      gesture.startPan = fitLightboxPan;
+      gesture.startZoom = fitLightboxZoom;
+      gesture.pinching = false;
+    }
+  }
 
   useEffect(() => {
     const stage = svgRef.current?.closest(".snapink-product-stage") as HTMLDivElement | null;
@@ -1338,10 +1453,15 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
             <div id={`snapink-size-examples-${uid}-${instance}`} className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations" hidden={!sizeExamplesOpen}>
               {[0, 1, 2, 3, 4, 5].map((size) => (
-                <button key={size} type="button" aria-label={"Choose size " + size + ": " + size + " exposed " + (size === 1 ? "peg" : "pegs")} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 text-left transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900 hover:border-neutral-500")}>
-                  <img src={"/images/website_images/" + size + "_pegs.png"} alt={"Compatibility view showing " + size + " exposed " + (size === 1 ? "peg" : "pegs")} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-neutral-100 object-contain" />
-                  <span className="snapink-fit-card-label block px-1 py-1.5 text-center text-xs font-semibold text-neutral-200">Size {size} — {size} exposed {size === 1 ? "peg" : "pegs"}</span>
-                </button>
+                <div key={size} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900")}>
+                  <button type="button" aria-label={`Enlarge Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"} example`} className="snapink-fit-example-trigger" onClick={() => { setFitLightboxSize(size); setFitLightboxZoom(1); setFitLightboxPan({ x: 0, y: 0 }); }}>
+                    <img src={`/images/website_images/${size}_pegs.png`} alt={`Compatibility view showing ${size} exposed ${size === 1 ? "peg" : "pegs"}`} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-neutral-100 object-contain" />
+                    <span className="snapink-fit-zoom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2M10.8 7.7v6.2M7.7 10.8h6.2"/></svg></span>
+                  </button>
+                  <button type="button" aria-label={`Choose size ${size}: ${size} exposed ${size === 1 ? "peg" : "pegs"}`} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className="snapink-fit-card-select block w-full px-1 py-1.5 text-center text-xs font-semibold text-neutral-200">
+                    Size {size} — {size} exposed {size === 1 ? "peg" : "pegs"}
+                  </button>
+                </div>
               ))}
             </div>
             <span className="mt-2 block text-xs leading-5 text-neutral-500">Select a fit above to update the sleeve preview. Size 0 has no retaining holes and retains its sliding channel.</span>
@@ -1619,6 +1739,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   return (
+    <>
     <div
       className={`
         w-full
@@ -2178,6 +2299,52 @@ const SnapInkSleeveCustomizer = forwardRef<
         </div>
       </div>
     </div>
+    {fitLightboxSize !== null && typeof document !== "undefined" && createPortal(
+      <div ref={fitLightboxDialogRef} className="snapink-fit-lightbox" role="dialog" aria-modal="true" aria-labelledby={`snapink-fit-lightbox-title-${uid}`} onClick={(event) => { if (event.target === event.currentTarget && fitLightboxZoom <= 1) setFitLightboxSize(null); }}>
+        <div className="snapink-fit-lightbox-header">
+          <h2 id={`snapink-fit-lightbox-title-${uid}`}>Size {fitLightboxSize} — {fitLightboxSize} exposed {fitLightboxSize === 1 ? "peg" : "pegs"}</h2>
+          <button ref={fitLightboxCloseRef} type="button" className="snapink-fit-lightbox-close" aria-label="Close enlarged size example" onClick={() => setFitLightboxSize(null)}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div
+          ref={fitLightboxRef}
+          className="snapink-fit-lightbox-viewer"
+          onClick={(event) => { if (event.target === event.currentTarget && fitLightboxZoom <= 1) setFitLightboxSize(null); }}
+          onPointerDown={beginFitGesture}
+          onPointerMove={moveFitGesture}
+          onPointerUp={endFitGesture}
+          onPointerCancel={endFitGesture}
+        >
+          <button type="button" className="snapink-fit-lightbox-arrow snapink-fit-lightbox-prev" aria-label="Previous size" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); navigateFitLightbox(-1); }}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <img
+            ref={fitLightboxImageRef}
+            className="snapink-fit-lightbox-image"
+            src={`/images/website_images/${fitLightboxSize}_pegs.png`}
+            alt={`Size ${fitLightboxSize} compatibility example with ${fitLightboxSize} exposed ${fitLightboxSize === 1 ? "peg" : "pegs"}`}
+            draggable={false}
+            decoding="async"
+            style={{ transform: `translate(${fitLightboxPan.x}px, ${fitLightboxPan.y}px) scale(${fitLightboxZoom})` }}
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button type="button" className="snapink-fit-lightbox-arrow snapink-fit-lightbox-next" aria-label="Next size" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); navigateFitLightbox(1); }}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div className="snapink-fit-lightbox-footer">
+          <span>Swipe between sizes · Pinch to zoom · Drag to pan</span>
+          <div>
+            <button type="button" aria-label="Zoom out" disabled={fitLightboxZoom <= 1} onClick={() => { const zoom = Math.max(1, fitLightboxZoom - 0.5); setFitLightboxZoom(zoom); if (zoom === 1) setFitLightboxPan({ x: 0, y: 0 }); }}>−</button>
+            <span>{Math.round(fitLightboxZoom * 100)}%</span>
+            <button type="button" aria-label="Zoom in" disabled={fitLightboxZoom >= 4} onClick={() => setFitLightboxZoom(Math.min(4, fitLightboxZoom + 0.5))}>+</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 });
 
