@@ -32,7 +32,6 @@ export function publicShopProduct(product) {
 }
 
 export function checkoutUnavailable(env) {
-  if (env.LIVE_CHECKOUT_ENABLED !== "true") return "Live checkout is not enabled yet.";
   if (env.SHOP_ORDERS_ENABLED !== "true") return "Shop checkout is not enabled yet.";
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) return "Secure checkout is being configured. Please try again later.";
   return null;

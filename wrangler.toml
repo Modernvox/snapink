@@ -18,6 +18,6 @@ bucket_name = "snapink-private-assets"
 
 [env.production.vars]
 RETAIL_ORDERS_ENABLED = "true"
-LIVE_CHECKOUT_ENABLED = "false"
 SHOP_ORDERS_ENABLED = "false"
+RETAIL_PAYMENT_LINKS_ENABLED = "false"
 STRIPE_AUTOMATIC_TAX_ENABLED = "false"

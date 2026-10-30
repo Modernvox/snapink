@@ -4,6 +4,7 @@ import { calculateShopCartPricing, RETAIL_MAX_QUANTITY } from "../../_lib/retail
 import { EmailDeliveryError, enforcePublicFormRateLimit, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { readShopProducts, checkoutUnavailable } from "../../_lib/shop.js";
 import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
+import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-methods.js";
 
 const SITE = "https://snapbacksleeves.com";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -113,6 +114,7 @@ export async function onRequestPost({ request, env }) {
     if (!customerResponse.ok || !stripeCustomer?.id) throw new Error("Stripe could not securely prepare the customer checkout profile.");
     const form = new URLSearchParams();
     form.set("mode", "payment");
+    setSnapInkCheckoutPaymentMethods(form);
     form.set("success_url", `${SITE}/shop/complete?order=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`);
     form.set("cancel_url", `${SITE}/shop?checkout=cancelled&order=${encodeURIComponent(orderNumber)}`);
     form.set("customer", stripeCustomer.id);

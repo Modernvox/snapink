@@ -3,6 +3,7 @@ import { calculateRetailPricing } from "../../_lib/retail-pricing.mjs";
 import { createSnapInkEmailAttachment, EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { safeOrderJson } from "../../_lib/retail-order-utils.js";
 import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
+import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-methods.js";
 
 const STATUSES = ["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT","PAID","IN_PRODUCTION","SHIPPED","COMPLETED"];
 const SITE = "https://snapbacksleeves.com";
@@ -80,7 +81,7 @@ async function sendPaymentLinkEmail(env, order, { claim = true } = {}) {
 
 async function createCheckoutSession(env, order, attempt) {
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) throw new Error("Payment links are disabled until STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are configured in Cloudflare Pages secrets.");
-  if (env.LIVE_CHECKOUT_ENABLED !== "true") throw new Error("Live customer checkout is not enabled yet.");
+  if (env.RETAIL_PAYMENT_LINKS_ENABLED !== "true") throw new Error("Retail order payment links are not enabled yet.");
   const address = safeOrderJson(order.shippingAddressJson);
   const pricing = calculateRetailPricing(order.size,order.quantity);
   if (Number(order.unitPriceCents)!==pricing.unitPriceCents
@@ -92,6 +93,7 @@ async function createCheckoutSession(env, order, attempt) {
   }
   const form = new URLSearchParams();
   form.set("mode","payment");
+  setSnapInkCheckoutPaymentMethods(form);
   form.set("success_url",`${SITE}/customize.html?retailPayment=return&order=${encodeURIComponent(order.orderNumber)}`);
   form.set("cancel_url",`${SITE}/customize.html?retailPayment=cancelled&order=${encodeURIComponent(order.orderNumber)}`);
   form.set("customer_email",order.customerEmail);

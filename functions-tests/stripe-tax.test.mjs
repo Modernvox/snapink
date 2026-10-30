@@ -10,6 +10,7 @@ async function loadFunction(entry) {
 
 const { stripeAutomaticTaxEnabled, stripeSessionTax } = await loadFunction("../functions/_lib/stripe-tax.js");
 const { checkoutUnavailable } = await loadFunction("../functions/_lib/shop.js");
+const { setSnapInkCheckoutPaymentMethods } = await loadFunction("../functions/_lib/stripe-payment-methods.js");
 
 test("Stripe Tax disabled is valid for checkout when payment and shop gates are explicitly enabled", () => {
   assert.equal(stripeAutomaticTaxEnabled({ STRIPE_AUTOMATIC_TAX_ENABLED: "false" }), false);
@@ -24,8 +25,14 @@ test("Stripe Tax disabled is valid for checkout when payment and shop gates are 
 
 test("live and public Shop checkout gates remain independently disabled", () => {
   const secrets = { STRIPE_SECRET_KEY: "configured", STRIPE_WEBHOOK_SECRET: "configured", STRIPE_AUTOMATIC_TAX_ENABLED: "false" };
-  assert.equal(checkoutUnavailable({ ...secrets, LIVE_CHECKOUT_ENABLED: "false", SHOP_ORDERS_ENABLED: "true" }), "Live checkout is not enabled yet.");
-  assert.equal(checkoutUnavailable({ ...secrets, LIVE_CHECKOUT_ENABLED: "true", SHOP_ORDERS_ENABLED: "false" }), "Shop checkout is not enabled yet.");
+  assert.equal(checkoutUnavailable({ ...secrets, SHOP_ORDERS_ENABLED: "false" }), "Shop checkout is not enabled yet.");
+  assert.equal(checkoutUnavailable({ ...secrets, SHOP_ORDERS_ENABLED: "true" }), null);
+});
+
+test("SnapInk Checkout Sessions allow only card and Cash App Pay", () => {
+  const form = new URLSearchParams();
+  setSnapInkCheckoutPaymentMethods(form);
+  assert.deepEqual([...form.entries()], [["payment_method_types[0]", "card"], ["payment_method_types[1]", "cashapp"]]);
 });
 
 test("no-tax Checkout Sessions reconcile only with zero tax", () => {
