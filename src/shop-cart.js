@@ -15,7 +15,7 @@ export function mountShopCart(products){
   let dialog=document.querySelector("#shop-cart-dialog");
   if(!dialog){
     dialog=document.createElement("dialog");dialog.id="shop-cart-dialog";dialog.className="shop-cart-dialog";
-    dialog.innerHTML=`<div class="shop-cart-head"><div><p class="shop-eyebrow">Your bag</p><h2>Review your order</h2></div><button type="button" class="shop-close" aria-label="Close cart">×</button></div><div class="shop-cart-lines"></div><div class="shop-totals"></div><form class="shop-checkout-form"><h3>Shipping details</h3><div class="shop-checkout-grid"><label>Name<input name="name" autocomplete="name" required maxlength="120"></label><label>Email<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Phone <small>(optional)</small><input name="phone" type="tel" autocomplete="tel" maxlength="40"></label><label>Street address<input name="line1" autocomplete="address-line1" required maxlength="150"></label><label>Apartment / unit <small>(optional)</small><input name="line2" autocomplete="address-line2" maxlength="150"></label><label>City<input name="city" autocomplete="address-level2" required maxlength="100"></label><label>State / province<input name="region" autocomplete="address-level1" required maxlength="100"></label><label>ZIP / postal code<input name="postalCode" autocomplete="postal-code" required maxlength="24"></label><label>Country code<input name="country" value="US" autocomplete="country" required pattern="[A-Za-z]{2}" maxlength="2" aria-describedby="shop-country-help"><small id="shop-country-help">Two-letter code, such as US or CA.</small></label></div><p class="shop-tax-note">Tax is not calculated or included in this order total. No card details are stored on SnapInk servers.</p><p class="shop-cart-message" role="status" aria-live="polite"></p><button class="shop-checkout-button" type="submit">CONTINUE TO SECURE CHECKOUT</button></form>`;
+    dialog.innerHTML=`<div class="shop-cart-head"><div><p class="shop-eyebrow">Your bag</p><h2>Review your order</h2></div><button type="button" class="shop-close" aria-label="Close cart">×</button></div><div class="shop-cart-lines"></div><div class="shop-totals"></div><div class="shop-checkout-actions"><p class="shop-checkout-copy">Stripe securely collects your name, email, and US shipping address.</p><p class="shop-cart-message" role="status" aria-live="polite"></p><button class="shop-checkout-button" type="button">Secure Checkout with Stripe</button></div>`;
     document.body.append(dialog);
     dialog.querySelector(".shop-close").addEventListener("click",()=>dialog.close());
     dialog.addEventListener("click",(event)=>{if(event.target===dialog)dialog.close()});
@@ -27,8 +27,8 @@ export function mountShopCart(products){
     const count=cart.reduce((sum,item)=>sum+item.quantity,0);
     document.querySelectorAll(".shop-cart-count").forEach((node)=>node.textContent=String(count));
     const lines=dialog.querySelector(".shop-cart-lines"),totals=dialog.querySelector(".shop-totals");lines.replaceChildren();totals.replaceChildren();
-    if(!cart.length){lines.textContent="Your bag is empty.";dialog.querySelector(".shop-checkout-form").hidden=true;return}
-    dialog.querySelector(".shop-checkout-form").hidden=false;
+    if(!cart.length){lines.textContent="Your bag is empty.";dialog.querySelector(".shop-checkout-actions").hidden=true;return}
+    dialog.querySelector(".shop-checkout-actions").hidden=false;
     cart.forEach((item,index)=>{
       const product=productMap[item.productId];if(!product)return;
       const variant=product.variants.find((entry)=>entry.variantId===item.variantId)||product.variants[0];
@@ -54,12 +54,12 @@ export function mountShopCart(products){
     if(found)found.quantity=Math.min(100,found.quantity+quantity);else cart.push({productId,variantId,size,quantity});
     persist(cart);dialog.showModal();
   };
-  dialog.querySelector(".shop-checkout-form").addEventListener("submit",async(event)=>{
-    event.preventDefault();const form=event.currentTarget,button=form.querySelector("button[type=submit]"),message=dialog.querySelector(".shop-cart-message");
+  dialog.querySelector(".shop-checkout-button").addEventListener("click",async(event)=>{
+    const button=event.currentTarget,message=dialog.querySelector(".shop-cart-message");
     const cart=safeCart();if(!cart.length){message.textContent="Your bag is empty.";return}
-    const data=new FormData(form);button.disabled=true;message.className="shop-cart-message";message.textContent="Preparing secure checkout…";
+    button.disabled=true;message.className="shop-cart-message";message.textContent="Preparing secure checkout…";
     try{
-      const response=await fetch("/api/shop/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idempotencyKey:crypto.randomUUID(),items:cart,customer:{name:data.get("name"),email:data.get("email"),phone:data.get("phone")},shippingAddress:{line1:data.get("line1"),line2:data.get("line2"),city:data.get("city"),region:data.get("region"),postalCode:data.get("postalCode"),country:String(data.get("country")).toUpperCase()}})});
+      const response=await fetch("/api/shop/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idempotencyKey:crypto.randomUUID(),items:cart})});
       const result=await response.json().catch(()=>null);if(!response.ok||!result?.checkoutUrl)throw new Error(result?.error||"Secure checkout could not be started. Please try again.");
       localStorage.removeItem(STORAGE_KEY);location.assign(result.checkoutUrl);
     }catch(error){message.className="shop-cart-message shop-error";message.textContent=error instanceof Error?error.message:"Checkout failed. Please try again.";button.disabled=false}

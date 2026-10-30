@@ -1,5 +1,4 @@
 import { json, now, randomId } from "../../_lib/orders.js";
-import { cleanRetailCustomer, cleanShippingAddress } from "../../_lib/retail-order-utils.js";
 import { calculateShopCartPricing, RETAIL_MAX_QUANTITY } from "../../_lib/retail-pricing.mjs";
 import { EmailDeliveryError, enforcePublicFormRateLimit, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { readShopProducts, checkoutUnavailable } from "../../_lib/shop.js";
@@ -15,21 +14,18 @@ async function releaseReservations(db, items, time) {
     .bind(item.quantity, time, item.productId, item.variantId, item.size).run();
 }
 
-async function notifyOrder(env, order, items, shipping) {
+async function notifyOrder(env, order, items) {
   const lines = items.map((item) => `${item.quantity} x ${item.name} / ${item.variantName} / Size ${item.size} — ${usd(item.lineSubtotalCents)}`).join("\n");
   const taxSummary = stripeAutomaticTaxEnabled(env) ? "Tax: calculated by Stripe Checkout" : "Tax: not calculated in this checkout";
-  const summary = `Order ${order.orderNumber}\n${lines}\nMerchandise subtotal: ${usd(order.merchandiseSubtotalCents)}\nQuantity discount: ${order.discountCents ? `-${usd(order.discountCents)}` : "$0.00"}\nShipping: ${usd(order.shippingCents)}\n${taxSummary}\nTotal before tax: ${usd(order.totalBeforeTaxCents)}\n\nShip to: ${shipping.line1}${shipping.line2 ? `, ${shipping.line2}` : ""}, ${shipping.city}, ${shipping.region} ${shipping.postalCode} ${shipping.country}`;
-  const results = { customer: "failed", owner: "failed" };
-  for (const recipient of ["customer", "owner"]) {
-    const to = recipient === "customer" ? order.customerEmail : "mikejstpierre@gmail.com";
-    try {
-      await sendSnapInkEmail(env, { to, replyTo: recipient === "owner" ? order.customerEmail : undefined, subject: recipient === "customer" ? `SnapInk Shop order ${order.orderNumber}` : `New SnapInk Shop order ${order.orderNumber}`, text: `${recipient === "customer" ? "Thanks for your order. Stripe will email your payment confirmation after payment succeeds." : "An exclusive Shop order is awaiting payment/fulfillment in the admin dashboard."}\n\n${summary}\n\nSecure Stripe checkout: ${order.checkoutUrl}` });
-      results[recipient] = "sent";
-    } catch (error) {
-      console.error("Exclusive shop order email failed", { orderNumber: order.orderNumber, recipient, error: error instanceof EmailDeliveryError ? error.message : "Unexpected email error" });
-    }
+  const summary = `Order ${order.orderNumber}\n${lines}\nMerchandise subtotal: ${usd(order.merchandiseSubtotalCents)}\nQuantity discount: ${order.discountCents ? `-${usd(order.discountCents)}` : "$0.00"}\nShipping: ${usd(order.shippingCents)}\n${taxSummary}\nTotal before tax: ${usd(order.totalBeforeTaxCents)}`;
+  let ownerStatus = "sent";
+  try {
+    await sendSnapInkEmail(env, { to: "mikejstpierre@gmail.com", subject: `New SnapInk Shop order ${order.orderNumber}`, text: `An exclusive Shop order is awaiting payment/fulfillment in the admin dashboard. Customer details will be attached to the order after Stripe confirms payment.\n\n${summary}\n\nSecure Stripe checkout: ${order.checkoutUrl}` });
+  } catch (error) {
+    ownerStatus = "failed";
+    console.error("Exclusive Shop owner notification failed", { orderNumber: order.orderNumber, error: error instanceof EmailDeliveryError ? error.message : "Unexpected email error" });
   }
-  try { await env.DB.prepare("UPDATE shop_orders SET customer_email_status=?,owner_email_status=?,updated_at=? WHERE id=?").bind(results.customer, results.owner, now(), order.id).run(); }
+  try { await env.DB.prepare("UPDATE shop_orders SET owner_email_status=?,updated_at=? WHERE id=?").bind(ownerStatus, now(), order.id).run(); }
   catch (error) { console.error("Shop order email status could not be saved", { orderNumber: order.orderNumber, message: error instanceof Error ? error.message : "unknown" }); }
 }
 
@@ -43,14 +39,10 @@ export async function onRequestPost({ request, env }) {
     if (length > 128 * 1024) return json({ error: "The checkout request is too large." }, 413);
     body = await request.json();
     if (JSON.stringify(body).length > 128 * 1024) return json({ error: "The checkout request is too large." }, 413);
-  } catch { return json({ error: "Enter your contact and shipping details, then try again." }, 400); }
+  } catch { return json({ error: "Check your cart and try again." }, 400); }
   if (typeof body.idempotencyKey !== "string" || !/^[a-f0-9-]{16,64}$/i.test(body.idempotencyKey)) return json({ error: "Refresh the cart and try checkout again." }, 400);
   if (!Array.isArray(body.items) || body.items.length < 1 || body.items.length > 50 || !body.items.every(validLine)) return json({ error: "Add a valid product, size, and quantity to the cart." }, 400);
   if (!(await enforcePublicFormRateLimit(env.DB, request, env.CLOUDFLARE_EMAIL_API_TOKEN || env.ADMIN_REVIEW_TOKEN || "snapink-shop-checkout-rate-limit", "shop-checkout", 12))) return json({ error: "Too many checkout attempts. Please wait before trying again." }, 429);
-  let customer, shipping;
-  try { customer = cleanRetailCustomer(body.customer); shipping = cleanShippingAddress(body.shippingAddress); }
-  catch (error) { return json({ error: error instanceof Error ? error.message : "Check your checkout details." }, 400); }
-
   const time = now();
   let reserved = [];
   let createdOrderId = null;
@@ -92,7 +84,7 @@ export async function onRequestPost({ request, env }) {
     createdOrderId = id;
     const items = pricing.items.map((line, index) => ({ ...line, name: normalized[index].name, variantName: normalized[index].variantName, imageUrl: normalized[index].imageUrl, imageAlt: normalized[index].imageAlt }));
     const insert = await env.DB.prepare(`INSERT INTO shop_orders(id,order_number,idempotency_key,customer_name,customer_email,customer_phone,shipping_address_json,items_json,quantity,merchandise_subtotal_cents,discount_cents,shipping_cents,status,created_at,updated_at)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'CHECKOUT_PENDING',?,?)`).bind(id, orderNumber, body.idempotencyKey, customer.name, customer.email, customer.phone, JSON.stringify(shipping), JSON.stringify(items), pricing.quantity, pricing.merchandiseSubtotalCents, pricing.discountCents, pricing.shippingCents, time, time).run();
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'CHECKOUT_PENDING',?,?)`).bind(id, orderNumber, body.idempotencyKey, "", "", null, "{}", JSON.stringify(items), pricing.quantity, pricing.merchandiseSubtotalCents, pricing.discountCents, pricing.shippingCents, time, time).run();
     void insert;
     await env.DB.prepare("INSERT INTO shop_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)").bind(id, "customer", "checkout_started", JSON.stringify({ quantity: pricing.quantity, totalBeforeTaxCents: pricing.totalBeforeTaxCents }), time).run();
 
@@ -104,21 +96,15 @@ export async function onRequestPost({ request, env }) {
       if (!couponResponse.ok || !coupon?.id) throw new Error("Stripe could not prepare the approved quantity discount.");
       couponId = coupon.id;
     }
-    const customerForm = new URLSearchParams({ email: customer.email, name: customer.name, "shipping[name]": customer.name,
-      "shipping[address][line1]": shipping.line1, "shipping[address][city]": shipping.city, "shipping[address][state]": shipping.region,
-      "shipping[address][postal_code]": shipping.postalCode, "shipping[address][country]": shipping.country });
-    if (customer.phone) customerForm.set("phone", customer.phone);
-    if (shipping.line2) customerForm.set("shipping[address][line2]", shipping.line2);
-    const customerResponse = await fetch("https://api.stripe.com/v1/customers", { method: "POST", headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": `snapink-shop-${id}-customer` }, body: customerForm.toString() });
-    const stripeCustomer = await customerResponse.json().catch(() => null);
-    if (!customerResponse.ok || !stripeCustomer?.id) throw new Error("Stripe could not securely prepare the customer checkout profile.");
     const form = new URLSearchParams();
     form.set("mode", "payment");
     setSnapInkCheckoutPaymentMethods(form);
     form.set("success_url", `${SITE}/shop/complete?order=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`);
     form.set("cancel_url", `${SITE}/shop?checkout=cancelled&order=${encodeURIComponent(orderNumber)}`);
-    form.set("customer", stripeCustomer.id);
-    form.set("customer_update[shipping]", "auto");
+    form.set("customer_creation", "always");
+    form.set("name_collection[individual][enabled]", "true");
+    form.set("name_collection[individual][optional]", "false");
+    form.set("phone_number_collection[enabled]", "true");
     form.set("client_reference_id", orderNumber);
     form.set("metadata[shop_order_id]", id);
     form.set("metadata[order_number]", orderNumber);
@@ -126,7 +112,7 @@ export async function onRequestPost({ request, env }) {
     form.set("payment_intent_data[metadata][order_number]", orderNumber);
     const useAutomaticTax = stripeAutomaticTaxEnabled(env);
     if (useAutomaticTax) form.set("automatic_tax[enabled]", "true");
-    form.set("shipping_address_collection[allowed_countries][0]", shipping.country);
+    form.set("shipping_address_collection[allowed_countries][0]", "US");
     pricing.items.forEach((line, index) => {
       const base = `line_items[${index}]`, item = items[index];
       form.set(`${base}[quantity]`, String(line.quantity));
@@ -151,7 +137,7 @@ export async function onRequestPost({ request, env }) {
     reserved = [];
     try { await env.DB.prepare("INSERT INTO shop_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)").bind(id, "system", "checkout_created", JSON.stringify({ stripeSessionId: session.id }), now()).run(); }
     catch (error) { console.error("Shop checkout event could not be recorded", { orderNumber, message: error instanceof Error ? error.message : "unknown" }); }
-    await notifyOrder(env, { id, orderNumber, customerEmail: customer.email, checkoutUrl: session.url, ...pricing }, items, shipping);
+    await notifyOrder(env, { id, orderNumber, checkoutUrl: session.url, ...pricing }, items);
     return json({ ok: true, orderNumber, checkoutUrl: session.url, pricing: { ...pricing, items: undefined } }, 201);
   } catch (error) {
     if (reserved.length) await releaseReservations(env.DB, reserved, time).catch(() => {});
