@@ -2,6 +2,7 @@
 import { json, now } from "../../_lib/orders.js";
 import { EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { safeOrderJson, verifyStripeSignature } from "../../_lib/retail-order-utils.js";
+import { handleShopStripeEvent } from "../../_lib/shop-stripe.js";
 
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
@@ -47,6 +48,8 @@ export async function onRequestPost({request,env}) {
     if(prior) return json({received:true,duplicate:true});
     const session=event.data?.object;
     if(!session||typeof session.id!=="string"||!String(session.id).startsWith("cs_")) return json({received:true,ignored:true});
+    const shopResult=await handleShopStripeEvent(env,event,session);
+    if(shopResult)return shopResult;
     const orderId=session.metadata?.order_id;
     if(typeof orderId!=="string"||!/^[a-f0-9]{32}$/.test(orderId)) return json({received:true,ignored:true});
     const order=await env.DB.prepare(`SELECT id,order_number AS orderNumber,status,customer_name AS customerName,customer_email AS customerEmail,quantity,variant,size,

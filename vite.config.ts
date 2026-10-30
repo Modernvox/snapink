@@ -32,7 +32,11 @@ export default defineConfig({
         contact: path.resolve(__dirname, "contact.html"),
         partnerPortal: path.resolve(__dirname, "partner-portal.html"),
         wholesale: path.resolve(__dirname, "wholesale.html"),
-        wholesaleStudio: path.resolve(__dirname, "wholesale-studio.html")
+        wholesaleStudio: path.resolve(__dirname, "wholesale-studio.html"),
+        shop: path.resolve(__dirname, "shop.html"),
+        shopLift: path.resolve(__dirname, "shop/lift.html"),
+        shopThreeStar: path.resolve(__dirname, "shop/three-star.html"),
+        shopComplete: path.resolve(__dirname, "shop/complete.html"),
       },
     },
   },

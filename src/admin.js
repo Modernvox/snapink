@@ -1,4 +1,5 @@
 import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds } from "./config/sleeveGeometry";
+import { mountAdminShop } from "./admin-shop.js";
 
 let adminToken = "";
 const $ = (id) => document.getElementById(id);
@@ -20,6 +21,7 @@ async function api(url, options = {}) {
   if (!response.ok) throw new Error(data?.error || `Request failed (${response.status}).`);
   return { response, data };
 }
+const shopAdmin = mountAdminShop(api);
 function setMessage(message, error = false) { $("desk-message").textContent = message; $("desk-message").className = error ? "notice error" : "notice"; }
 async function protectedImage(orderId) {
   const { response } = await api(`/api/admin/file?id=${encodeURIComponent(orderId)}&kind=preview`);
@@ -244,7 +246,7 @@ $("retail-detail-close")?.addEventListener("click", () => $("retail-order-detail
 
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); adminToken = $("admin-token").value;
-  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); await renderRetailOrders(); }
+  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); await renderRetailOrders(); await shopAdmin.load(); }
   catch (e) { $("login-message").textContent = e.message; adminToken = ""; }
 });
 $("refresh").addEventListener("click", renderOrders);
