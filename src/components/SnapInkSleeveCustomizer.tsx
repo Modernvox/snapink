@@ -427,7 +427,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   // Mobile accordion
   const [mobileOpen, setMobileOpen] = useState<"text" | "logo" | "position" | "export">(
-    "text"
+    "export"
   );
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
@@ -1171,7 +1171,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     <div className="space-y-3">
       <div>
         <label className="block text-xs text-neutral-400 mb-1">
-          Upload logo or mark
+          Upload logo or artwork
         </label>
         <input
           key={logoInputVersion}
@@ -1225,7 +1225,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   const sleevePreviewTopPercent = sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2;
-  const toolbarCanFloat = sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 155;
+  const toolbarCanFloat = !logoDataUrl && sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 260;
   const previewToolbar = (
     <div className="snapink-preview-toolbar" data-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
       <div className="snapink-toolbar-primary">
@@ -1233,6 +1233,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           <span>Text</span>
           <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder="ENTER YOUR TEXT" maxLength={25} />
         </label>
+        <div className="snapink-toolbar-logo">
+          {logoControls}
+        </div>
         <label className="snapink-toolbar-select">
           <span>Font</span>
           <select aria-label="Font" value={font} style={{ fontFamily: font }} onChange={(event) => setFont(event.target.value)}>
@@ -1321,7 +1324,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           New design
         </button>
       </div>
-      <div className="snapink-stage-wrap">
+      <div className="snapink-stage-wrap" data-toolbar-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
       {previewToolbar}
       <div
       ref={attachStageRef}
@@ -1596,7 +1599,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="snapink-preview-card p-2.5 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/20">
           {strapPreviewInner}
         </div>
-        <div className="snapink-mobile-controls min-h-0 space-y-4 overflow-y-auto overscroll-contain pb-20">
+      <div className="snapink-mobile-controls min-h-0 space-y-4 pb-4">
 
         {/* Text / Styling panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
@@ -1746,27 +1749,6 @@ const SnapInkSleeveCustomizer = forwardRef<
                   />
                 </div>}
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Logo panel */}
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
-          <button
-            type="button"
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-neutral-100"
-            onClick={() =>
-              setMobileOpen(mobileOpen === "logo" ? "position" : "logo")
-            }
-          >
-            <span>Logo Upload</span>
-            <span className="text-neutral-400">
-              {mobileOpen === "logo" ? "-" : "+"}
-            </span>
-          </button>
-          {mobileOpen === "logo" && (
-            <div className="px-4 pb-4 pt-1">
-              {logoControls}
             </div>
           )}
         </div>
@@ -1930,15 +1912,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         </div>
         </div>
 
-        {/* Sticky-ish mobile CTA */}
-        <div className={`fixed inset-x-0 bottom-2 px-4 lg:hidden ${fixedProductConfiguration ? "hidden" : ""}`}>
-          <button
-            onClick={handleExportPNG}
-            className="w-full rounded-xl bg-si-button hover:bg-si-hover text-neutral-950 font-black px-4 py-3 shadow-lg shadow-si-accent/20"
-          >
-            Download PNG
-          </button>
-        </div>
       </div>
 
       {/* ---------- DESKTOP LAYOUT (compact controls + preview workspace) ---------- */}
@@ -2082,7 +2055,6 @@ const SnapInkSleeveCustomizer = forwardRef<
                 Upload a mark and position it inside the same strap preview.
               </p>
             </div>
-            {logoControls}
           </div>
         </div>
 
