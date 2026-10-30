@@ -71,8 +71,9 @@ function App() {
       <section className="snapink-studio-submission snapink-draft-submission snapink-retail-order">
         {submitted ? <div className="snapink-retail-success" role="status" aria-live="polite">
           <p className="snapink-draft-eyebrow">CUSTOM ORDER</p>
-          <h2 className="snapink-draft-heading">YOUR CUSTOM ORDER HAS BEEN RECEIVED!</h2>
-          <p className="snapink-draft-description">Thanks for designing with SnapInk! We're confirming your sleeve is ready for production. Once approved, we'll email you a secure Stripe payment link. No payment has been collected yet.</p>
+          <h2 className="snapink-draft-heading">Success! Your order has been received.</h2>
+          <p className="snapink-draft-description">We'll be in touch ASAP! Thank you for designing with SnapInk — the swappable snapback strap cover pros.</p>
+          <p className="snapink-draft-description">Your order is pending production review. If approved, we'll email you a secure payment link. No payment has been collected.</p>
           <p className="snapink-retail-total"><strong>Order {submitted.orderNumber}</strong><span>{money(submitted.totalBeforeTaxCents)} before applicable taxes</span></p>
           {!submitted.ownerEmailSent && <p className="snapink-retail-email-note" role="status">Your order was saved, but the SnapInk owner notification could not be sent. Please contact partners@snapbacksleeves.com and include your order number.</p>}
           {!submitted.customerEmailSent && <p className="snapink-retail-email-note" role="status">Your order is saved, but the confirmation email could not be sent. SnapInk will review your order; if you need help, contact support@snapbacksleeves.com and include your order number.</p>}
