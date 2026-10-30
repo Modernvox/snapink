@@ -1299,7 +1299,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
       <div className={`snapink-preview-controls order-2 flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 lg:order-none ${fixedProductConfiguration ? "hidden" : ""}`}>
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
-          <div className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2" data-size-examples-open={sizeExamplesOpen ? "true" : "false"}>
+          <div className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2">
             <span>Choose Your Size</span>
             <select aria-label="Choose Your Size" disabled={fixedProductConfiguration} value={sleeveSize} onChange={(e) => handleSizeChange(Number(e.target.value))} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
               {[0, 1, 2, 3, 4, 5].map((size) => <option key={size} value={size}>{`Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"}`}</option>)}
@@ -1311,10 +1311,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               aria-controls={`snapink-size-examples-${uid}-${instance}`}
               onClick={() => setSizeExamplesOpen((open) => !open)}
             >
-              <span>{sizeExamplesOpen ? "Hide Size Examples" : "View Size Examples"}</span>
-              <svg aria-hidden="true" viewBox="0 0 20 20" className={sizeExamplesOpen ? "is-expanded" : ""}>
-                <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-              </svg>
+              {sizeExamplesOpen ? "− Hide Size Examples" : "+ View Size Examples"}
             </button>
             <div id={`snapink-size-examples-${uid}-${instance}`} className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations" hidden={!sizeExamplesOpen}>
               {[0, 1, 2, 3, 4, 5].map((size) => (
