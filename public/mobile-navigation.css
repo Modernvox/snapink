@@ -1,3 +1,26 @@
+.snapink-launch-announcement {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  position: sticky;
+  top: 0;
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  background: #D8C49A;
+  color: #0B0B0D;
+  font-size: clamp(8px, 1vw, 12px);
+  font-weight: 900;
+  letter-spacing: .045em;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.snapink-desktop-header { top: 34px !important; }
+
 .snapink-mobile-shell {
   display: none;
 }
@@ -47,13 +70,22 @@
 
   .snapink-mobile-shell {
     position: sticky;
-    top: 0;
+    top: 34px;
     z-index: 10000;
     display: block;
     width: 100%;
     color: #f4f2ec;
     font-family: inherit;
   }
+
+  .snapink-launch-announcement {
+    min-height: 32px;
+    padding-inline: 8px;
+    font-size: clamp(8px, 2.7vw, 10px);
+    letter-spacing: .025em;
+  }
+
+  .snapink-desktop-header { top: 32px !important; }
 
   .snapink-mobile-header {
     box-sizing: border-box;

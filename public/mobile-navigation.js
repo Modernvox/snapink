@@ -1,5 +1,23 @@
 (() => {
+  const announcementOnly = document.currentScript?.dataset.announcementOnly === "true";
+  const addLaunchAnnouncement = () => {
+    if (document.querySelector(".snapink-launch-announcement")) return;
+    const path = window.location.pathname.toLowerCase();
+    if (["/admin.html", "/partner-portal.html", "/wholesale-studio.html"].includes(path)) return;
+
+    const announcement = document.createElement("div");
+    announcement.className = "snapink-launch-announcement";
+    announcement.setAttribute("role", "note");
+    announcement.textContent = "🚀 LAUNCH SPECIAL — FREE SHIPPING ON ORDERS $36+";
+
+    const shopHeader = document.querySelector(".shop-header");
+    if (shopHeader) shopHeader.insertBefore(announcement, shopHeader.firstChild);
+    else document.body.insertBefore(announcement, document.body.firstChild);
+  };
+
   const init = () => {
+    addLaunchAnnouncement();
+    if (announcementOnly) return;
     if (document.querySelector(".snapink-mobile-shell")) return;
 
     document.querySelectorAll("body > header, .snap-shell > header").forEach((header) => {
@@ -53,6 +71,8 @@
     document.body.classList.add(`snapink-page--${routeClass || "home"}`);
     if (path.toLowerCase() === "/partner-portal.html") document.body.classList.add("snapink-page--partner-portal");
     document.body.insertBefore(shell, document.body.firstChild);
+    const announcement = document.querySelector(".snapink-launch-announcement");
+    if (announcement && !announcement.closest(".shop-header")) document.body.insertBefore(announcement, shell);
 
     document.querySelectorAll('.snapink-mobile-header__logo, img[alt="SnapInk"], img[alt="SnapInk Logo"]')
       .forEach((logo) => {

@@ -7,3 +7,5 @@
 .shop-gallery-thumbs{grid-template-columns:repeat(2,minmax(0,1fr))}
 .shop-gallery-thumbs img{height:112px}
 @media(max-width:560px){.shop-sleeve-only-note{margin-top:-14px;font-size:12px}.shop-gallery-thumbs img{height:90px}}
+:root{--shop-launch-announcement:#D8C49A}
+.shop-header .snapink-launch-announcement{position:static;min-height:34px;padding:6px 10px;background:var(--shop-launch-announcement);color:#0B0B0D;font-size:clamp(8px,1vw,12px);font-weight:900;letter-spacing:.045em;line-height:1.2;text-align:center;text-wrap:balance}
