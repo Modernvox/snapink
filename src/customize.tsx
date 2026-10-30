@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { calculateRetailPricing, RETAIL_MAX_QUANTITY } from "../functions/_lib/retail-pricing.mjs";
 import SnapInkSleeveCustomizer, { type SnapInkSleeveCustomizerRef, type SleeveDraft } from "./components/SnapInkSleeveCustomizer";
 
-type SubmissionResult = { orderNumber: string; totalBeforeTaxCents: number; customerEmailSent: boolean };
+type SubmissionResult = { orderNumber: string; totalBeforeTaxCents: number; customerEmailSent: boolean; ownerEmailSent: boolean };
 function newSubmissionKey() { return crypto.randomUUID().replace(/-/g, ""); }
 function money(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100); }
 
@@ -59,7 +59,7 @@ function App() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || `We could not save your order (HTTP ${res.status}). Please try again.`);
       if (!data?.order?.orderNumber) throw new Error("The server did not return an order number. Contact SnapInk before resubmitting.");
-      setSubmitted({ orderNumber: data.order.orderNumber, totalBeforeTaxCents: Number(data.order.totalBeforeTaxCents ?? pricing?.totalBeforeTaxCents ?? 0), customerEmailSent: data.order.notifications?.customer === "sent" || data.order.customerEmailStatus === "sent" });
+      setSubmitted({ orderNumber: data.order.orderNumber, totalBeforeTaxCents: Number(data.order.totalBeforeTaxCents ?? pricing?.totalBeforeTaxCents ?? 0), customerEmailSent: data.order.notifications?.customer === "sent" || data.order.customerEmailStatus === "sent", ownerEmailSent: data.order.notifications?.owner === "sent" || data.order.ownerEmailStatus === "sent" });
       idempotencyKeyRef.current = null;
     } catch (e) { setError(e instanceof Error ? e.message : "We could not save your order. Please try again."); }
     finally { submittingRef.current = false; setSending(false); }
@@ -74,6 +74,7 @@ function App() {
           <h2 className="snapink-draft-heading">YOUR CUSTOM ORDER HAS BEEN RECEIVED!</h2>
           <p className="snapink-draft-description">Thanks for designing with SnapInk! We're confirming your sleeve is ready for production. Once approved, we'll email you a secure Stripe payment link. No payment has been collected yet.</p>
           <p className="snapink-retail-total"><strong>Order {submitted.orderNumber}</strong><span>{money(submitted.totalBeforeTaxCents)} before applicable taxes</span></p>
+          {!submitted.ownerEmailSent && <p className="snapink-retail-email-note" role="status">Your order was saved, but the SnapInk owner notification could not be sent. Please contact partners@snapbacksleeves.com and include your order number.</p>}
           {!submitted.customerEmailSent && <p className="snapink-retail-email-note" role="status">Your order is saved, but the confirmation email could not be sent. SnapInk will review your order; if you need help, contact support@snapbacksleeves.com and include your order number.</p>}
         </div> : <>
           <div className="snapink-retail-copy">

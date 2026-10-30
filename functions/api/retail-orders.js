@@ -14,7 +14,7 @@ async function notifyOrder(env, order, draft, address, price) {
   const summary = `Order ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeDesign(draft)}\nQuantity: ${order.quantity}\nUnit price: ${usd(price.unitPriceCents)}\nMerchandise subtotal: ${usd(price.merchandiseSubtotalCents)}\nQuantity discount: ${price.discountCents ? `-${usd(price.discountCents)}` : "$0.00"}\nShipping: ${usd(price.shippingCents)}\nTotal before applicable taxes: ${usd(price.totalBeforeTaxCents)}\n\nName: ${order.customerName}\nEmail: ${order.customerEmail}\nPhone: ${order.customerPhone || "Not provided"}\nShip to: ${address.line1}${address.line2 ? `, ${address.line2}` : ""}, ${address.city}, ${address.region} ${address.postalCode}, ${address.country}`;
   const results = { owner: "failed", customer: "failed" };
   try {
-    await sendSnapInkEmail(env, { to: "partners@snapbacksleeves.com", replyTo: order.customerEmail, subject: `Retail custom order ${order.orderNumber} received`, text: `A new SnapInk retail order is waiting for production review.\n\n${summary}\n\nReview the design and order securely: ${ADMIN_URL}` });
+    await sendSnapInkEmail(env, { to: "mikejstpierre@gmail.com", replyTo: order.customerEmail, subject: `Retail custom order ${order.orderNumber} received`, text: `A new SnapInk retail order is waiting for production review.\n\n${summary}\n\nReview the design and order securely: ${ADMIN_URL}` });
     results.owner = "sent";
   } catch (error) {
     console.error("Retail order owner notification failed", { orderNumber: order.orderNumber, error: error instanceof EmailDeliveryError ? error.message : "Unexpected email error" });
