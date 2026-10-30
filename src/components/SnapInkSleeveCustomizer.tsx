@@ -1243,10 +1243,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const sleevePreviewTopPercent = sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2;
-  const toolbarCanFloat = !logoDataUrl && sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 350;
   const previewToolbar = (
-    <div className="snapink-preview-toolbar" data-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
+    <div className="snapink-preview-toolbar">
       <div className="snapink-toolbar-primary">
         <label className="snapink-toolbar-text">
           <span>Text</span>
@@ -1379,7 +1377,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           New design
         </button>
       </div>
-      <div className="snapink-stage-wrap" data-toolbar-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
+      <div className="snapink-stage-wrap">
       {previewToolbar}
       <div className="snapink-preview-stage-frame">
       <div
