@@ -1,18 +1,21 @@
-name = "snapink-waitlist"
-compatibility_date = "2025-08-29"
+# Cloudflare Pages production configuration for the existing snapink project.
+name = "snapink"
+pages_build_output_dir = "./dist"
+compatibility_date = "2025-08-16"
 
-# Only D1 stays — Pages supports this
-[[d1_databases]]
+[env.production]
+compatibility_date = "2024-11-20"
+
+[[env.production.d1_databases]]
 binding = "DB"
 database_name = "snapink_waitlist"
 database_id = "9263527d-7f81-4277-a171-e20b364f918c"
+migrations_dir = "migrations"
 
-# ❌ REMOVE ALL OF THIS:
-# main = "./functions/api/waitlist.js"
-# [[services]]
-# binding = "SEND_EMAIL"
-# service = "send-email"
-# environment = "production"
+[[env.production.r2_buckets]]
+binding = "PRIVATE_ASSETS"
+bucket_name = "snapink-private-assets"
 
-# Pages automatically maps:
-# /functions/api/order.js → https://snapinkhats.com/api/order
+[env.production.vars]
+# Order intake remains unavailable until admin authentication and Stripe are configured.
+RETAIL_ORDERS_ENABLED = "false"

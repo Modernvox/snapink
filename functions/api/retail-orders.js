@@ -29,6 +29,7 @@ async function notifyOrder(env, order, draft, address, price) {
 }
 
 export async function onRequestPost({ request, env }) {
+  if (env.RETAIL_ORDERS_ENABLED !== "true") return json({ error: "Custom order intake is not enabled yet." }, 503);
   if (!env.DB || !env.PRIVATE_ASSETS) return json({ error: "Custom order intake is temporarily unavailable." }, 503);
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > MAX_JSON_BYTES) return json({ error: "The design upload is too large. Please reduce the artwork file size." }, 413);
