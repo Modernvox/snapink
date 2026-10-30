@@ -1296,7 +1296,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const previewColorControls = (
     <div className="snapink-preview-color-controls" data-preview-only="true" role="group" aria-label="Preview color controls">
       {([
-        { key: "text" as const, label: "Text", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
+        { key: "text" as const, label: "Text Fill", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
         { key: "outline" as const, label: "Outline", value: stroke, onChange: setStroke, locked: false },
         { key: "sleeve" as const, label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor, locked: Boolean(fixedProductConfiguration) },
       ]).filter((color) => color.key !== "sleeve" || !fixedProductConfiguration).map((color) => (
@@ -1316,7 +1316,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       ))}
       {openPreviewColor && (() => {
         const activeColor = openPreviewColor === "text"
-          ? { label: "Text", value: fill, onChange: setFill }
+          ? { label: "Text Fill", value: fill, onChange: setFill }
           : openPreviewColor === "outline"
             ? { label: "Outline", value: stroke, onChange: setStroke }
             : { label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor };
