@@ -32,7 +32,7 @@ test("live and public Shop checkout gates remain independently disabled", () => 
 test("SnapInk Checkout Sessions allow only card and Cash App Pay", () => {
   const form = new URLSearchParams();
   setSnapInkCheckoutPaymentMethods(form);
-  assert.deepEqual([...form.entries()], [["payment_method_types[0]", "card"], ["payment_method_types[1]", "cashapp"]]);
+  assert.deepEqual([...form.entries()], [["allowed_payment_method_types[0]", "card"], ["allowed_payment_method_types[1]", "cashapp"]]);
 });
 
 test("no-tax Checkout Sessions reconcile only with zero tax", () => {
