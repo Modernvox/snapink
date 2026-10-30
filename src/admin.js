@@ -67,6 +67,39 @@ async function renderOrders() {
     setMessage(`${(data.orders || []).length} order${data.orders?.length === 1 ? "" : "s"}.`);
   } catch (error) { setMessage(error.message, true); }
 }
+async function renderDesignDrafts(){
+  const body=$('design-drafts-body');if(!body)return;body.replaceChildren();
+  try{
+    const params=new URLSearchParams();if($('draft-status-filter').value)params.set('status',$('draft-status-filter').value);if($('draft-search').value.trim())params.set('q',$('draft-search').value.trim());
+    const {data}=await api('/api/admin/design-drafts?'+params);const drafts=data.drafts||[];
+    for(const draft of drafts){
+      const row=document.createElement('tr'),previewCell=document.createElement('td'),customerCell=document.createElement('td'),dateCell=document.createElement('td'),sleeveCell=document.createElement('td'),qtyCell=document.createElement('td'),statusCell=document.createElement('td'),actions=document.createElement('td');
+      const image=document.createElement('img');image.className='thumb';image.alt='Preview for '+draft.reference;api('/api/admin/design-draft-file?id='+encodeURIComponent(draft.id)+'&kind=preview').then(async({response})=>{const url=URL.createObjectURL(await response.blob());image.src=url;image.addEventListener('load',()=>setTimeout(()=>URL.revokeObjectURL(url),60000),{once:true})}).catch(()=>{image.alt='Preview unavailable'});previewCell.append(image);
+      customerCell.append(textNode('strong',draft.reference),document.createElement('br'),textNode('span',draft.customerName),document.createElement('br'),textNode('span',draft.customerEmail,'muted'));
+      dateCell.textContent=new Date(draft.createdAt).toLocaleString();sleeveCell.textContent=pretty(draft.variant)+' - Size '+draft.size;qtyCell.textContent=String(draft.quantity);
+      const select=document.createElement('select');select.setAttribute('aria-label','Review status for '+draft.reference);for(const [value,label] of [['pending_review','Pending review'],['reviewed','Reviewed'],['contacted','Contacted']]){const option=document.createElement('option');option.value=value;option.textContent=label;option.selected=value===draft.status;select.append(option)}
+      select.addEventListener('change',async()=>{select.disabled=true;try{await api('/api/admin/design-drafts',{method:'PATCH',body:JSON.stringify({id:draft.id,status:select.value})});$('draft-message').textContent=draft.reference+' status updated.';await renderDesignDrafts()}catch(error){select.value=draft.status;$('draft-message').textContent=error.message;select.disabled=false}});statusCell.append(select);
+      if(draft.notificationStatus==='failed')statusCell.append(textNode('div','Owner email notification failed; review this dashboard.','error'));else if(draft.notificationStatus==='pending')statusCell.append(textNode('div','Owner email notification pending.','muted'));
+      const details=document.createElement('button');details.type='button';details.className='secondary';details.textContent='Details';details.addEventListener('click',()=>showDesignDraftDetails(draft));
+      const contact=document.createElement('a');contact.href='mailto:'+draft.customerEmail+'?subject='+encodeURIComponent('SnapInk design draft '+draft.reference);contact.textContent='Contact customer';contact.style.cssText='display:inline-block;margin-left:8px;color:#d7c59a';
+      actions.append(details,contact);row.append(previewCell,customerCell,dateCell,sleeveCell,qtyCell,statusCell,actions);body.append(row);
+    }
+    $('drafts-empty').classList.toggle('hidden',drafts.length>0);$('draft-message').textContent=drafts.length+' design draft'+(drafts.length===1?'':'s')+'.';
+  }catch(error){$('draft-message').textContent=error.message;$('draft-message').className='notice error'}
+}
+async function showDesignDraftDetails(draft){
+  const root=$('draft-detail-content');root.replaceChildren();$('draft-detail-title').textContent=draft.reference+' - '+draft.customerName;
+  const summary=document.createElement('p');summary.textContent=draft.customerEmail+(draft.customerPhone?' - '+draft.customerPhone:'')+' - '+draft.quantity+' requested - '+pretty(draft.variant)+' size '+draft.size+' - Submitted '+new Date(draft.createdAt).toLocaleString();root.append(summary);
+  const emailState=textNode('p','Owner notification: '+draft.notificationStatus+(draft.notificationError?' - '+draft.notificationError:''),draft.notificationStatus==='failed'?'error':'muted');root.append(emailState);
+  const preview=document.createElement('img');preview.className='detail-preview';preview.alt='Customer design preview';root.append(preview);try{const {response}=await api('/api/admin/design-draft-file?id='+encodeURIComponent(draft.id)+'&kind=preview');preview.src=URL.createObjectURL(await response.blob())}catch{preview.alt='Preview unavailable'}
+  root.append(textNode('p','Review files are retained for design review and have not been approved or validated for manufacturing.','muted'));
+  const downloads=document.createElement('div');downloads.className='row';
+  const fileKinds=[['artwork','Download SVG artwork']];if(draft.sourceArtworkKey)fileKinds.push(['source','Download source artwork']);
+  for(const [kind,label] of fileKinds){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=label;button.addEventListener('click',async()=>{button.disabled=true;try{const {response}=await api('/api/admin/design-draft-file?id='+encodeURIComponent(draft.id)+'&kind='+kind);const url=URL.createObjectURL(await response.blob()),anchor=document.createElement('a');anchor.href=url;anchor.download=draft.reference+'-'+kind;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(error){$('draft-message').textContent=error.message;$('draft-message').className='notice error'}finally{button.disabled=false}});downloads.append(button)}root.append(downloads);
+  let settings={};try{settings=JSON.parse(draft.draftJson||'{}')}catch{}root.append(textNode('h3','Complete customization settings'),Object.assign(document.createElement('pre'),{textContent:JSON.stringify({quantity:draft.quantity,customer:{name:draft.customerName,email:draft.customerEmail,phone:draft.customerPhone},...settings},null,2)}));
+  $('design-draft-detail').showModal();
+}
+$('draft-refresh')?.addEventListener('click',renderDesignDrafts);$('draft-status-filter')?.addEventListener('change',renderDesignDrafts);let draftSearchTimer;$('draft-search')?.addEventListener('input',()=>{clearTimeout(draftSearchTimer);draftSearchTimer=setTimeout(renderDesignDrafts,250)});$('draft-detail-close')?.addEventListener('click',()=>$('design-draft-detail').close());
 const wholesaleStatusLabels={pending_review:"Pending Review",awaiting_artwork_approval:"Awaiting Artwork Approval",approved_awaiting_payment:"Approved / Awaiting Payment Arrangement",scheduled_for_production:"Scheduled for Production",in_production:"In Production",ready_to_ship:"Ready to Ship",shipped:"Shipped",completed:"Completed",cancelled:"Cancelled"};
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(cents||0)/100);
 function textNode(tag,text,className){const node=document.createElement(tag);node.textContent=String(text??"");if(className)node.className=className;return node}
@@ -110,7 +143,7 @@ async function showDetails(order) {
 }
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); adminToken = $("admin-token").value;
-  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); }
+  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); }
   catch (e) { $("login-message").textContent = e.message; adminToken = ""; }
 });
 $("refresh").addEventListener("click", renderOrders);
