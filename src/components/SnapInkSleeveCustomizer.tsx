@@ -2300,7 +2300,11 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
     </div>
     {fitLightboxSize !== null && typeof document !== "undefined" && createPortal(
-      <div ref={fitLightboxDialogRef} className="snapink-fit-lightbox" role="dialog" aria-modal="true" aria-labelledby={`snapink-fit-lightbox-title-${uid}`} onClick={(event) => { if (event.target === event.currentTarget && fitLightboxZoom <= 1) setFitLightboxSize(null); }}>
+      <div ref={fitLightboxDialogRef} className="snapink-fit-lightbox" role="dialog" aria-modal="true" aria-labelledby={`snapink-fit-lightbox-title-${uid}`} onClick={(event) => {
+        const target = event.target;
+        const clickedControl = target instanceof Element && Boolean(target.closest(".snapink-fit-lightbox-image, .snapink-fit-lightbox-arrow, .snapink-fit-lightbox-close, .snapink-fit-lightbox-footer"));
+        if (fitLightboxZoom <= 1 && !clickedControl) setFitLightboxSize(null);
+      }}>
         <div className="snapink-fit-lightbox-header">
           <h2 id={`snapink-fit-lightbox-title-${uid}`}>Size {fitLightboxSize} — {fitLightboxSize} exposed {fitLightboxSize === 1 ? "peg" : "pegs"}</h2>
           <button ref={fitLightboxCloseRef} type="button" className="snapink-fit-lightbox-close" aria-label="Close enlarged size example" onClick={() => setFitLightboxSize(null)}>
