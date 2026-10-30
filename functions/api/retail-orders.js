@@ -95,6 +95,10 @@ export async function onRequestPost({ request, env }) {
   } catch (error) {
     await Promise.allSettled(uploaded.map((key) => env.PRIVATE_ASSETS.delete(key)));
     if (error instanceof RetailOrderValidationError || error instanceof RangeError) return json({ error: error.message }, 400);
+    if (error instanceof Error && /no such table:\s*retail_(orders|order_events)/i.test(error.message)) {
+      console.error("Retail order intake is unavailable because its D1 migration has not been applied.");
+      return json({ error: "Retail custom orders are not enabled yet. Please contact SnapInk while the order system is being configured." }, 503);
+    }
     console.error("Retail order submission failed", { message: error instanceof Error ? error.message.slice(0,180) : "unknown" });
     return json({ error: "We could not save the order request. Please try again." }, 500);
   }
