@@ -96,16 +96,16 @@ function App() {
           onChange={changeDesign}
         />
 
-        <section className="snapink-studio-submission grid gap-5 md:grid-cols-[1fr_1.1fr]">
+        <section className="snapink-studio-submission snapink-draft-submission grid gap-5 md:grid-cols-[1fr_1.1fr]">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-si-accent">Submit your draft</p>
-            <h2 className="mt-3 text-2xl font-black uppercase leading-tight text-white md:text-3xl">Submit your design for review.</h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-300">
+            <p className="snapink-draft-eyebrow text-xs font-black uppercase tracking-widest text-si-accent">Submit your draft</p>
+            <h2 className="snapink-draft-heading mt-3 text-2xl font-black uppercase leading-tight md:text-3xl">Submit your design for review.</h2>
+            <p className="snapink-draft-description mt-3 text-sm leading-6">
               Send your custom sleeve design to SnapInk for review. This is a design review request only; it does not place a paid order or guarantee production.
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={sendDraft}>
+          <form className="snapink-draft-form space-y-4" onSubmit={sendDraft}>
             <input
               type="text"
               placeholder="Your Name"
@@ -113,7 +113,7 @@ function App() {
               autoComplete="name"
               maxLength={120}
               required
-              className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-white outline-none focus:border-si-accent"
+              className="snapink-draft-field"
               value={customerName}
               onChange={(event) => { idempotencyKeyRef.current = null; setCustomerName(event.target.value); setSubmitted(null); }}
             />
@@ -124,7 +124,7 @@ function App() {
               autoComplete="email"
               maxLength={254}
               required
-              className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-white outline-none focus:border-si-accent"
+              className="snapink-draft-field"
               value={customerEmail}
               onChange={(event) => { idempotencyKeyRef.current = null; setCustomerEmail(event.target.value); setSubmitted(null); }}
             />
@@ -135,11 +135,11 @@ function App() {
                 aria-label="Phone number (optional)"
                 autoComplete="tel"
                 maxLength={40}
-                className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-white outline-none focus:border-si-accent"
+                className="snapink-draft-field"
                 value={customerPhone}
                 onChange={(event) => { idempotencyKeyRef.current = null; setCustomerPhone(event.target.value); setSubmitted(null); }}
               />
-              <label className="grid gap-1 text-sm text-neutral-200">
+              <label className="snapink-draft-quantity grid gap-1 text-sm">
                 Quantity
                 <input
                   type="number"
@@ -148,7 +148,7 @@ function App() {
                   max={50}
                   step={1}
                   required
-                  className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-white outline-none focus:border-si-accent"
+                  className="snapink-draft-field"
                   value={quantity}
                   onChange={(event) => { idempotencyKeyRef.current = null; setQuantity(Number(event.target.value)); setSubmitted(null); }}
                 />
@@ -167,7 +167,7 @@ function App() {
               </p>
             )}
             {error && <p className="text-center text-red-300" role="alert">{error}</p>}
-            <p className="text-xs leading-5 text-neutral-400">Submitting a design does not place a paid order or guarantee production. No payment is collected here.</p>
+            <p className="snapink-draft-disclaimer text-xs leading-5">Submitting a design does not place a paid order or guarantee production. No payment is collected here.</p>
           </form>
         </section>
       </div>

@@ -228,8 +228,33 @@
   margin: 20px 16px 0;
   padding: 18px 0 4px;
 }
-.snapink-studio-submission :where(input, button) { min-height: 44px; }
-.snapink-studio-submission input { background: #FFFFFF !important; color: #111111 !important; border-color: #D8D8D8 !important; }
+.snapink-draft-submission :is(.snapink-draft-eyebrow, .snapink-draft-heading) { color: #171717; }
+.snapink-draft-submission .snapink-draft-eyebrow { color: #9B7B35; }
+.snapink-draft-description,
+.snapink-draft-disclaimer { color: #555555; }
+.snapink-draft-form { min-width: 0; }
+.snapink-draft-form .snapink-draft-field {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid #DADADA !important;
+  border-radius: 10px;
+  background: #FFFFFF !important;
+  color: #171717 !important;
+  outline: none;
+  box-shadow: none;
+}
+.snapink-draft-form .snapink-draft-field::placeholder { color: #737373 !important; opacity: 1; }
+.snapink-draft-form .snapink-draft-field:focus {
+  border: 1px solid #D8C08C !important;
+  box-shadow: 0 0 0 2px rgba(216, 192, 140, .25);
+}
+.snapink-draft-quantity { min-width: 0; color: #171717; }
+.snapink-draft-form > button[type="submit"] { min-height: 48px; }
 .snapink-studio-workspace-desktop { display: none; }
 
 @media (min-width: 1024px) {
