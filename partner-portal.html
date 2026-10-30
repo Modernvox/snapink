@@ -4,65 +4,13 @@
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-</head><body><main class="wrap"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100"></a><h1>Partner portal</h1><p>Partner production access is restricted to approved pilot partners. Sign in with the access credential provided by the SnapInk team.</p><div class="box" id="embroidery-production-sheet"><form id="access"><label for="token">Partner access credential</label><input id="token" type="password" autocomplete="current-password" required><button>Verify access</button></form><p id="message" role="status" aria-live="polite"></p><button id="embroidery-download" type="button" hidden>Download Embroidery Production Sheet</button></div><p><a href="/pilot.html">Apply to become a pilot partner</a></p></main><script>
-let approvedPartnerToken = "";
-const accessMessage = document.querySelector("#message");
-const embroideryDownload = document.querySelector("#embroidery-download");
-
-document.querySelector("#access").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const token = document.querySelector("#token").value.trim();
-  accessMessage.textContent = "Verifying�";
-  embroideryDownload.hidden = true;
-  approvedPartnerToken = "";
-
-  try {
-    const response = await fetch("/api/partner-portal", {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      throw new Error(result.error || "Access could not be verified. Contact the SnapInk team if you are an approved partner.");
-    }
-
-    approvedPartnerToken = token;
-    embroideryDownload.hidden = false;
-    accessMessage.textContent = "Access verified. Your approved partner resource is ready.";
-  } catch (error) {
-    accessMessage.textContent = error instanceof Error ? error.message : "Access could not be verified.";
-  }
-});
-
-embroideryDownload.addEventListener("click", async () => {
-  if (!approvedPartnerToken) return;
-  embroideryDownload.disabled = true;
-  accessMessage.textContent = "Preparing your production sheet�";
-
-  try {
-    const response = await fetch("/api/partner-portal/embroidery-sheet", {
-      headers: { Authorization: `Bearer ${approvedPartnerToken}` },
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      throw new Error(result.error || "The production sheet could not be downloaded.");
-    }
-
-    const file = await response.blob();
-    const url = URL.createObjectURL(file);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "SnapInk_Embroidery_Production_Guide_Hat_Launch.pdf";
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    accessMessage.textContent = "Embroidery Production Sheet downloaded.";
-  } catch (error) {
-    accessMessage.textContent = error instanceof Error ? error.message : "The production sheet could not be downloaded.";
-  } finally {
-    embroideryDownload.disabled = false;
-  }
-});
+</head><body><main class="wrap"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100"></a><h1>Partner portal</h1><p>Partner production access is restricted to approved pilot partners. Sign in with the partner access code issued by SnapInk.</p><div class="box" id="access-panel"><form id="access"><label for="access-code">Partner access code</label><input id="access-code" type="password" autocomplete="one-time-code" maxlength="128" required><button id="continue" type="submit">Continue</button></form><p id="message" role="status" aria-live="polite"></p><section id="embroidery-production-sheet" data-partner-dashboard hidden><p id="partner-welcome"></p><p><a href="/wholesale">Open the protected wholesale partner portal</a></p><button id="embroidery-download" type="button">Download Embroidery Production Sheet</button><button id="logout" type="button" class="secondary">Sign out</button></section></div><p><a href="/pilot.html">Apply to become a pilot partner</a></p></main><script>
+const accessForm=document.querySelector("#access"), accessPanel=document.querySelector("#access-panel"), dashboard=document.querySelector("[data-partner-dashboard]"), message=document.querySelector("#message"), downloadButton=document.querySelector("#embroidery-download");
+function showPortal(partner){accessForm.hidden=true;dashboard.hidden=false;document.querySelector("#partner-welcome").textContent="Signed in as "+(partner?.businessName||"approved partner")+". Your partner tools are ready.";message.textContent="Partner access verified."}
+function showLogin(error=""){dashboard.hidden=true;accessForm.hidden=false;if(error)message.textContent=error}
+async function refreshSession(){try{const response=await fetch("/api/partner-portal",{credentials:"same-origin",cache:"no-store"});const data=await response.json().catch(()=>({}));if(response.ok&&data.authenticated)showPortal(data.partner);else showLogin()}catch{showLogin("Partner access is temporarily unavailable. Please try again.")}}
+accessForm.addEventListener("submit",async(event)=>{event.preventDefault();const button=document.querySelector("#continue");button.disabled=true;message.textContent="Verifying access code...";try{const response=await fetch("/api/partner-portal",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",cache:"no-store",body:JSON.stringify({code:document.querySelector("#access-code").value.trim()})});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Access code not recognized or inactive.");document.querySelector("#access-code").value="";showPortal(data.partner)}catch(error){showLogin(error instanceof Error?error.message:"Access code not recognized or inactive.")}finally{button.disabled=false}});
+document.querySelector("#logout").addEventListener("click",async()=>{await fetch("/api/partner-portal",{method:"DELETE",credentials:"same-origin",cache:"no-store"}).catch(()=>{});showLogin("You have signed out.")});
+downloadButton.addEventListener("click",async()=>{downloadButton.disabled=true;message.textContent="Preparing the partner resource...";try{const response=await fetch("/api/partner-portal/embroidery-sheet",{credentials:"same-origin",cache:"no-store"});if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||"The partner resource could not be downloaded.")}const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="SnapInk_Embroidery_Production_Guide_Hat_Launch.pdf";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);message.textContent="Partner resource downloaded."}catch(error){message.textContent=error instanceof Error?error.message:"The partner resource could not be downloaded."}finally{downloadButton.disabled=false}});
+refreshSession();
 </script></body></html>

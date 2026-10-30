@@ -3,11 +3,8 @@ import { createRoot } from "react-dom/client";
 import SnapInkSleeveCustomizer, { type SnapInkSleeveCustomizerRef, type SleeveDraft } from "./components/SnapInkSleeveCustomizer";
 
 type Color = { id: string; manufacturer: string; name: string; hex: string; materialType: string };
-const TOKEN_KEY = "snapink.wholesale.partnerToken";
 const api = async (path: string, init: RequestInit = {}) => {
-  const token = sessionStorage.getItem(TOKEN_KEY) || "";
-  const headers = new Headers(init.headers); headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(path, { ...init, headers, cache: "no-store" });
+  const response = await fetch(path, { ...init, credentials: "same-origin", cache: "no-store" });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
   return data;
@@ -50,7 +47,6 @@ function App() {
   const [primaryColorId, setPrimaryColorId] = useState(""), [secondColorId, setSecondColorId] = useState(""), [error, setError] = useState("Checking partner access…"), [saving, setSaving] = useState(false);
   const [designName, setDesignName] = useState("Custom sleeve design");
   const [restoredId] = useState("");
-  const token = sessionStorage.getItem(TOKEN_KEY) || "";
   const primary = colors.find((color) => color.id === primaryColorId) || null;
   const second = colors.find((color) => color.id === secondColorId) || null;
   const artColorIds = useMemo(() => [...new Set([primary?.id, second?.id].filter(Boolean))] as string[], [primary, second]);
@@ -58,7 +54,6 @@ function App() {
   const colorCount = useMemo(() => new Set([base?.hex.toUpperCase(), ...artColors].filter(Boolean)).size, [base, artColors]);
 
   useEffect(() => {
-    if (!token) { setError("Sign in at the wholesale page with your approved partner credential, then open Studio again."); return; }
     let active = true;
     (async () => {
       const config = await api("/api/wholesale");
@@ -73,7 +68,7 @@ function App() {
         const { design } = await api(`/api/wholesale/designs?id=${encodeURIComponent(designId)}`);
         setDesignName(design.designName || "Custom sleeve design");
         values = { ...JSON.parse(design.draftJson), variant: style, size, ...(selected ? { backgroundColor: selected.hex } : {}) };
-        const sourceResponse = await fetch(`/api/wholesale/design-files?id=${encodeURIComponent(designId)}&kind=source`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+        const sourceResponse = await fetch(`/api/wholesale/design-files?id=${encodeURIComponent(designId)}&kind=source`, { credentials: "same-origin", cache: "no-store" });
         if (!sourceResponse.ok) throw new Error("Could not reopen the saved source artwork.");
         const blob = await sourceResponse.blob();
         if (blob.type.startsWith("image/")) values.logoDataUrl = await dataUrl(blob);
@@ -86,7 +81,7 @@ function App() {
       setInitial(values); setError("");
     })().catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Partner Studio could not load."); });
     return () => { active = false; };
-  }, [token]);
+  }, []);
 
   async function save() {
     if (!draft || !ref.current || !base || saving) return;

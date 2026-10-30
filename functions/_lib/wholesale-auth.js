@@ -1,20 +1,48 @@
-import { digest, json, now } from "./orders.js";
+﻿import { digest, now } from "./orders.js";
+
+const SESSION_COOKIE_NAMES = ["__Host-snapink_partner", "snapink_partner"];
+const COOKIE_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
+
+export function partnerSessionFrom(request) {
+  const expectedName = new URL(request.url).protocol === "https:" ? SESSION_COOKIE_NAMES[0] : SESSION_COOKIE_NAMES[1];
+  const cookies = (request.headers.get("cookie") || "").split(";");
+  for (const raw of cookies) {
+    const separator = raw.indexOf("=");
+    if (separator < 0) continue;
+    const name = raw.slice(0, separator).trim();
+    if (name === expectedName) return raw.slice(separator + 1).trim();
+  }
+  return "";
+}
+
+export function partnerCookie(request, session, maxAge = COOKIE_LIFETIME_SECONDS) {
+  const secure = new URL(request.url).protocol === "https:";
+  const name = secure ? "__Host-snapink_partner" : "snapink_partner";
+  return `${name}=${session}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure ? "; Secure" : ""}`;
+}
 
 export async function wholesalePartnerFor(request, env) {
-  const token = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!env.DB || token.length < 40 || token.length > 256) return null;
-  const tokenHash = await digest(token);
-  const partner = await env.DB.prepare(`SELECT id, pilot_application_id AS pilotApplicationId,
-    business_name AS businessName, contact_name AS contactName, email, phone, access_status AS accessStatus
-    FROM wholesale_partners WHERE token_sha256=?`).bind(tokenHash).first();
-  if (!partner || partner.accessStatus !== "active") return null;
-  await env.DB.prepare("UPDATE wholesale_partners SET last_seen_at=?,updated_at=? WHERE id=? AND access_status='active'")
-    .bind(now(), now(), partner.id).run();
+  const session = partnerSessionFrom(request);
+  if (!env.DB || !session || session.length < 40 || session.length > 256) return null;
+  const sessionHash = await digest(session);
+  const time = now();
+  const partner = await env.DB.prepare(`SELECT p.id, p.pilot_application_id AS pilotApplicationId,
+    p.business_name AS businessName, p.contact_name AS contactName, p.email, p.phone,
+    p.access_status AS accessStatus
+    FROM wholesale_partner_sessions s JOIN wholesale_partners p ON p.id=s.partner_id
+    WHERE s.session_sha256=? AND s.expires_at>? AND p.access_status='active'
+      AND (p.credential_expires_at IS NULL OR p.credential_expires_at>?)`).bind(sessionHash,time,time).first();
+  if (!partner) return null;
+  await env.DB.prepare("UPDATE wholesale_partner_sessions SET last_seen_at=? WHERE session_sha256=?").bind(time,sessionHash).run();
+  await env.DB.prepare("UPDATE wholesale_partners SET last_seen_at=? WHERE id=? AND access_status='active'").bind(time,partner.id).run();
   return partner;
 }
 
 export function partnerUnauthorized() {
-  return json({ error: "Approved wholesale partner access is required. Apply or contact SnapInk to activate your partner credential." }, 401);
+  return new Response(JSON.stringify({ error: "A current SnapInk partner session is required. Sign in at /partner-portal." }), {
+    status: 401,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+  });
 }
 
 export function cleanText(value, max, required = false) {

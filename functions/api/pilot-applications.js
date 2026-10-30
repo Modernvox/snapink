@@ -170,10 +170,13 @@ export async function onRequestPatch({ request, env }) {
     const tokenHash = await digest(token), time = new Date().toISOString();
     if (partner) {
       const oldStatus = partner.accessStatus;
-      await env.DB.prepare("UPDATE wholesale_partners SET token_sha256=?,access_status='active',updated_at=? WHERE id=?")
-        .bind(tokenHash,time,partner.id).run();
-      await env.DB.prepare("INSERT INTO wholesale_partner_events(partner_id,actor_id,event_type,from_status,to_status,created_at) VALUES(?,?,'credential_rotated',?,'active',?)")
-        .bind(partner.id,String(id),oldStatus,time).run();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE wholesale_partners SET token_sha256=?,access_status='active',credential_expires_at=NULL,updated_at=? WHERE id=?")
+          .bind(tokenHash,time,partner.id),
+        env.DB.prepare("DELETE FROM wholesale_partner_sessions WHERE partner_id=?").bind(partner.id),
+        env.DB.prepare("INSERT INTO wholesale_partner_events(partner_id,actor_id,event_type,from_status,to_status,created_at) VALUES(?,?,'credential_rotated',?,'active',?)")
+          .bind(partner.id,String(id),oldStatus,time),
+      ]);
     } else {
       const partnerId = randomId(16);
       await env.DB.batch([
@@ -184,7 +187,7 @@ export async function onRequestPatch({ request, env }) {
       ]);
       partner = { id:partnerId, accessStatus:"active" };
     }
-    return json({ ok:true,id,status:"approved",partner:{id:partner.id,accessStatus:"active"},credentialIssued:true,partnerToken:token });
+    return json({ ok:true,id,status:"approved",partner:{id:partner.id,accessStatus:"active"},credentialIssued:true,accessCode:token,partnerToken:token });
   } catch (error) {
     console.error("Pilot application decision failed:", error instanceof Error ? error.message : "unknown error");
     return json({ error: "Unable to update application." }, 500);

@@ -1,7 +1,5 @@
 import partnerTemplate from "./wholesale-partner-template.html?raw";
-const TOKEN_KEY = "snapink.wholesale.partnerToken";
 const $ = (id) => document.getElementById(id);
-const token = () => sessionStorage.getItem(TOKEN_KEY) || "";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
 const statusNames = { pending_review:"Pending Review", awaiting_artwork_approval:"Awaiting Artwork Approval", approved_awaiting_payment:"Approved / Awaiting Payment Arrangement", scheduled_for_production:"Scheduled for Production", in_production:"In Production", ready_to_ship:"Ready to Ship", shipped:"Shipped", completed:"Completed", cancelled:"Cancelled" };
@@ -10,8 +8,7 @@ let pendingIdempotencyKey = sessionStorage.getItem("snapink.wholesale.pendingReq
 
 async function api(path, options = {}) {
   const headers = new Headers(options.headers || {});
-  headers.set("Authorization", `Bearer ${token()}`);
-  const response = await fetch(path, { ...options, headers, cache: "no-store" });
+  const response = await fetch(path, { ...options, headers, credentials: "same-origin", cache: "no-store" });
   const data = response.headers.get("content-type")?.includes("application/json") ? await response.json() : {};
   if ((response.status === 401 || response.status === 403) && config && $("partner-area")?.childElementCount) clearPartnerSession(true);
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
@@ -21,7 +18,7 @@ function message(id, text, error = false) { const el = $(id); el.textContent = t
 function clearPendingKey(){pendingIdempotencyKey="";sessionStorage.removeItem("snapink.wholesale.pendingRequest");}
 async function loadPrivateImage(image, path) {
   try {
-    const response = await fetch(path, { headers:{ Authorization:`Bearer ${token()}` }, cache:"no-store" });
+    const response = await fetch(path, { credentials:"same-origin", cache:"no-store" });
     if (response.status === 401 || response.status === 403) { clearPartnerSession(true); return; }
     if (!response.ok) return;
     const objectUrl = URL.createObjectURL(await response.blob());
@@ -30,7 +27,7 @@ async function loadPrivateImage(image, path) {
   } catch {}
 }
 function clearPartnerSession(expired = false) {
-  sessionStorage.removeItem(TOKEN_KEY);
+  fetch("/api/partner-portal",{method:"DELETE",credentials:"same-origin",cache:"no-store"}).catch(()=>{});
   clearPendingKey();
   config = null; orders = []; draftLines = []; submitting = false;
   const area = $("partner-area");
@@ -129,14 +126,12 @@ async function loadSavedDesigns(){
       add.addEventListener("click",()=>{if(draftLines.length>=50)return;clearPendingKey();draftLines.push({size:design.sleeveSize,quantity:1,designType:"custom_branding",sleeveStyle:design.sleeveStyle,baseColorId:design.baseColorId,wholesaleDesignId:design.id,artworkColors});renderLines();$("wholesale-form").scrollIntoView({behavior:"smooth",block:"start"});});
       const edit=document.createElement("button");edit.type="button";edit.className="secondary";edit.textContent="Reopen in Studio";edit.disabled=!color;edit.addEventListener("click",()=>{const url=new URL("/wholesale-studio.html",location.origin);url.searchParams.set("variant",design.sleeveStyle);url.searchParams.set("size",design.sleeveSize);url.searchParams.set("color",design.baseColorId);url.searchParams.set("designId",design.id);window.open(url.href,"_blank","noopener")});
       actions.append(add,edit);const img=document.createElement("img");img.className="history-preview";img.alt=`${design.designName} private preview`;
-      fetch(`/api/wholesale/design-preview?id=${encodeURIComponent(design.id)}`,{headers:{Authorization:`Bearer ${token()}`},cache:"no-store"}).then(async response=>{if(response.status===401||response.status===403){clearPartnerSession(true);throw new Error("Partner session expired")}if(!response.ok)throw new Error("Preview unavailable");const objectUrl=URL.createObjectURL(await response.blob());img.src=objectUrl;img.addEventListener("load",()=>setTimeout(()=>URL.revokeObjectURL(objectUrl),60000),{once:true})}).catch(()=>{});
+      fetch(`/api/wholesale/design-preview?id=${encodeURIComponent(design.id)}`,{credentials:"same-origin",cache:"no-store"}).then(async response=>{if(response.status===401||response.status===403){clearPartnerSession(true);throw new Error("Partner session expired")}if(!response.ok)throw new Error("Preview unavailable");const objectUrl=URL.createObjectURL(await response.blob());img.src=objectUrl;img.addEventListener("load",()=>setTimeout(()=>URL.revokeObjectURL(objectUrl),60000),{once:true})}).catch(()=>{});
       card.append(title,info,img,actions);root.append(card);
     }
   }catch(error){root.textContent=error.message;}
 }
-async function enter(tokenValue) {
-  if (!tokenValue) return;
-  sessionStorage.setItem(TOKEN_KEY, tokenValue);
+async function enter() {
   try {
     const authorized = await api("/api/wholesale");
     config = authorized;
@@ -165,14 +160,13 @@ async function enter(tokenValue) {
     $("shipping-address").innerHTML = addressFields("shipping"); $("billing-address").innerHTML = addressFields("billing"); syncBillingFields();
     await loadHistory(); await loadSavedDesigns();
   } catch(error) {
-    sessionStorage.removeItem(TOKEN_KEY);
     const area = $("partner-area"); if (area) { area.replaceChildren(); area.classList.add("hidden"); }
     $("access-panel").classList.remove("hidden"); message("access-message", error.message, true);
   }
 }
 $("access-form").addEventListener("submit", async event => {
-  event.preventDefault(); $("access-submit").disabled = true; message("access-message", "Checking partner access…");
-  await enter($("partner-token").value.trim()); $("access-submit").disabled = false;
+  event.preventDefault();const button=$("access-submit");button.disabled=true;message("access-message","Checking partner access...");
+  try{const response=await fetch("/api/partner-portal",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",cache:"no-store",body:JSON.stringify({code:$("partner-token").value.trim()})});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Access code not recognized or inactive.");$("partner-token").value="";await enter()}catch(error){message("access-message",error instanceof Error?error.message:"Access code not recognized or inactive.",true)}finally{button.disabled=false}
 });
 function initializePartnerApp() {
   draftLines = [{ size:4, quantity:50, designType:"blank", sleeveStyle:"billboard" }]; renderLines();
@@ -186,4 +180,4 @@ $("wholesale-form").addEventListener("submit",async event=>{event.preventDefault
   try{const result=await api("/api/wholesale/orders",{method:"POST",body:fd});pendingIdempotencyKey="";sessionStorage.removeItem("snapink.wholesale.pendingRequest");const order=result.order;const notice=$("confirmation");notice.classList.remove("hidden");notice.innerHTML=`<h2>Request received</h2><p><strong>${escape(order.orderNumber)}</strong> · ${Number(order.totalQuantity)} sleeves · ${usd(Number(order.merchandiseSubtotalCents))} base merchandise subtotal</p>${order.customizationQuoteStatus==="pending_quote"?"<p class=\"info-box\">Pending Quote: custom color and artwork costs are not configured in base sleeve prices. SnapInk will confirm any applicable charges before approval.</p>":""}<p>Your SnapInk wholesale order request has been received. Our team will review your quantities, customization requirements, production timeline, and shipping details before confirming your order. No payment has been collected.</p><p>Status: ${statusNames[order.status]||"Pending Review"}</p>`;notice.scrollIntoView({behavior:"smooth",block:"center"});message("form-message",result.duplicate?"This request was already received; the existing request is shown below.":"Wholesale request submitted.");$("wholesale-form").reset();draftLines=[{size:4,quantity:50,designType:"blank",baseColorId:(config.colors||[])[0]?.id||"",sleeveStyle:"billboard"}];$("billing-same").checked=true;syncBillingFields();$("shipping-address").innerHTML=addressFields("shipping");$("billing-address").innerHTML=addressFields("billing");renderLines();await loadHistory();}catch(error){message("form-message",error.message,true)}finally{submitting=false;updateSummary();}});
 $("history-refresh").addEventListener("click",loadHistory);
 }
-const remembered = token(); if (remembered) enter(remembered);
+enter();
