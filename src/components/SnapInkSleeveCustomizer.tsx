@@ -1902,150 +1902,152 @@ const SnapInkSleeveCustomizer = forwardRef<
         </div>
       </div>
 
-      {/* ---------- DESKTOP LAYOUT (3 columns, preview spans right side) ---------- */}
-      <div className="hidden lg:grid lg:grid-cols-4 gap-4">
-        {/* LEFT COLUMN */}
-        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-          <label className="block text-sm text-neutral-300">Custom text</label>
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="ENTER YOUR TEXT"
-            maxLength={25}
-            className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
-          />
+      {/* ---------- DESKTOP LAYOUT (compact controls + preview workspace) ---------- */}
+      <div className="hidden min-w-0 items-start gap-4 lg:grid lg:grid-cols-[minmax(0,35fr)_minmax(0,65fr)]">
+        {/* LEFT SETTINGS COLUMN */}
+        <div className="min-w-0 space-y-4">
+          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+            <label className="block text-sm text-neutral-300">Custom text</label>
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="ENTER YOUR TEXT"
+              maxLength={25}
+              className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
+            />
 
-          <div className="text-right text-xs mt-1">
-            <span
-              className={`${
-                text.length >= 25 ? "text-red-500" : "text-neutral-400"
-              }`}
-            >
-              {text.length}/25 characters
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-neutral-400">Font</label>
-              <select
-                className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
-                value={font}
-                style={{ fontFamily: font }}
-                onChange={(e) => setFont(e.target.value)}
+            <div className="text-right text-xs mt-1">
+              <span
+                className={`${
+                  text.length >= 25 ? "text-red-500" : "text-neutral-400"
+                }`}
               >
-                {WEB_SAFE_FONTS.map((f) => (
-                  <option
-                    key={f.label}
-                    value={f.stack}
-                    style={{ fontFamily: f.stack }}
-                  >
-                    {f.label}
-                  </option>
-                ))}
-              </select>
+                {text.length}/25 characters
+              </span>
             </div>
 
-            <div>
-              <label className="block text-xs text-neutral-400">Style</label>
-              <select
-                className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
-                disabled={Boolean(forcedStyleMode)}
-                value={styleMode}
-                onChange={(e) =>
-                  setStyleMode(e.target.value as "emboss" | "flat")
-                }
-              >
-                <option value="emboss">Embossed</option>
-                <option value="flat">Printed</option>
-              </select>
-            </div>
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-neutral-400">Font</label>
+                <select
+                  className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
+                  value={font}
+                  style={{ fontFamily: font }}
+                  onChange={(e) => setFont(e.target.value)}
+                >
+                  {WEB_SAFE_FONTS.map((f) => (
+                    <option
+                      key={f.label}
+                      value={f.stack}
+                      style={{ fontFamily: f.stack }}
+                    >
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Range
-              label="Font size"
-              min={60}
-              max={500}
-              value={fontSize}
-              setValue={setFontSize}
-              suffix="px"
-            />
-            <Range
-              label="Font weight"
-              min={100}
-              max={1200}
-              step={50}
-              value={fontWeight}
-              setValue={setFontWeight}
-            />
-            <Range
-              label="Tracking"
-              min={-0.1}
-              max={0.3}
-              step={0.01}
-              value={tracking}
-              setValue={setTracking}
-              suffix="em"
-            />
-            <Range
-              label="Line height"
-              min={0.9}
-              max={1.6}
-              step={0.01}
-              value={lineHeight}
-              setValue={setLineHeight}
-            />
-            <Range
-              label="Arc (bow)"
-              min={-15}
-              max={20}
-              value={arc}
-              setValue={setArc}
-              suffix="%"
-            />
-          </div>
-
-          <div className="space-y-3 mt-2">
-            <div>
-              <label className="block text-xs text-neutral-400 mb-1">
-                Fill color (text)
-              </label>
-              {fixedArtworkColor ? <span className="text-sm text-neutral-200">Selected matte TPU color</span> : <ColorSwatchRow value={fill} onChange={setFill} />}
+              <div>
+                <label className="block text-xs text-neutral-400">Style</label>
+                <select
+                  className="w-full rounded-lg bg-neutral-800/80 border border-neutral-700 px-2 py-2 text-neutral-50"
+                  disabled={Boolean(forcedStyleMode)}
+                  value={styleMode}
+                  onChange={(e) =>
+                    setStyleMode(e.target.value as "emboss" | "flat")
+                  }
+                >
+                  <option value="emboss">Embossed</option>
+                  <option value="flat">Printed</option>
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs text-neutral-400 mb-1">
-                Outline color
-              </label>
-              <ColorSwatchRow value={stroke} onChange={setStroke} />
-            </div>
-
-            {!fixedProductConfiguration && <div>
-              <label className="block text-xs text-neutral-400 mb-1">
-                Sleeve color
-              </label>
-              <ColorSwatchRow
-                value={backgroundColor}
-                onChange={setBackgroundColor}
+            <div className="grid grid-cols-2 gap-3">
+              <Range
+                label="Font size"
+                min={60}
+                max={500}
+                value={fontSize}
+                setValue={setFontSize}
+                suffix="px"
               />
-            </div>}
-          </div>
+              <Range
+                label="Font weight"
+                min={100}
+                max={1200}
+                step={50}
+                value={fontWeight}
+                setValue={setFontWeight}
+              />
+              <Range
+                label="Tracking"
+                min={-0.1}
+                max={0.3}
+                step={0.01}
+                value={tracking}
+                setValue={setTracking}
+                suffix="em"
+              />
+              <Range
+                label="Line height"
+                min={0.9}
+                max={1.6}
+                step={0.01}
+                value={lineHeight}
+                setValue={setLineHeight}
+              />
+              <Range
+                label="Arc (bow)"
+                min={-15}
+                max={20}
+                value={arc}
+                setValue={setArc}
+                suffix="%"
+              />
+            </div>
+
+            <div className="space-y-3 mt-2">
+              <div>
+                <label className="block text-xs text-neutral-400 mb-1">
+                  Fill color (text)
+                </label>
+                {fixedArtworkColor ? <span className="text-sm text-neutral-200">Selected matte TPU color</span> : <ColorSwatchRow value={fill} onChange={setFill} />}
+              </div>
+
+              <div>
+                <label className="block text-xs text-neutral-400 mb-1">
+                  Outline color
+                </label>
+                <ColorSwatchRow value={stroke} onChange={setStroke} />
+              </div>
+
+              {!fixedProductConfiguration && <div>
+                <label className="block text-xs text-neutral-400 mb-1">
+                  Sleeve color
+                </label>
+                <ColorSwatchRow
+                  value={backgroundColor}
+                  onChange={setBackgroundColor}
+                />
+              </div>}
+            </div>
         </div>
 
         {/* LOGO BOX */}
-        <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
-          <div>
-            <h3 className="text-neutral-200 font-semibold">Logo placement</h3>
-            <p className="mt-1 text-xs text-neutral-400">
-              Upload a mark and position it inside the same strap preview.
-            </p>
+          <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">
+            <div>
+              <h3 className="text-neutral-200 font-semibold">Logo placement</h3>
+              <p className="mt-1 text-xs text-neutral-400">
+                Upload a mark and position it inside the same strap preview.
+              </p>
+            </div>
+            {logoControls}
           </div>
-          {logoControls}
         </div>
 
-        {/* RIGHT SIDE (two boxes + preview spanning) */}
-        <div className="col-span-2 space-y-4">
+        {/* PREVIEW AND ACTIONS COLUMN */}
+        <div className="min-w-0 space-y-4">
           {/* The live product render leads the desktop workspace. */}
           <div className="snapink-preview-card p-3 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/25">
             {strapPreviewInner}
