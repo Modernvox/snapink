@@ -1903,7 +1903,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
 
       {/* ---------- DESKTOP LAYOUT (compact controls + preview workspace) ---------- */}
-      <div className="hidden min-w-0 items-start gap-4 lg:grid lg:grid-cols-[minmax(0,35fr)_minmax(0,65fr)]">
+      <div className="snapink-studio-workspace-desktop min-w-0">
         {/* LEFT SETTINGS COLUMN */}
         <div className="min-w-0 space-y-4">
           <div className="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-sm space-y-3">

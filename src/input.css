@@ -185,3 +185,18 @@
     background-size: 24px 24px;
   }
 }
+/* Desktop Studio workspace: keep the editing controls beside the live preview. */
+.snapink-studio-workspace-desktop { display: none; }
+@media (min-width: 1024px) {
+  .snapink-studio-workspace-desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    grid-auto-rows: max-content;
+    align-items: start;
+    gap: 18px;
+  }
+  .snapink-studio-workspace-desktop > * {
+    min-width: 0;
+    align-self: start;
+  }
+}
