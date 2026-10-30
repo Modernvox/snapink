@@ -432,6 +432,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
+  const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
 
   useEffect(() => {
@@ -1298,11 +1299,22 @@ const SnapInkSleeveCustomizer = forwardRef<
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
       <div className={`snapink-preview-controls order-2 flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 lg:order-none ${fixedProductConfiguration ? "hidden" : ""}`}>
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
-          <label className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2">
+          <div className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2" data-size-examples-open={sizeExamplesOpen ? "true" : "false"}>
             <span>Choose Your Size</span>
             <select aria-label="Choose Your Size" disabled={fixedProductConfiguration} value={sleeveSize} onChange={(e) => handleSizeChange(Number(e.target.value))} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
               {[0, 1, 2, 3, 4, 5].map((size) => <option key={size} value={size}>{`Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"}`}</option>)}
             </select>
+            <button
+              type="button"
+              className="snapink-size-examples-toggle"
+              aria-expanded={sizeExamplesOpen}
+              onClick={() => setSizeExamplesOpen((open) => !open)}
+            >
+              <span>{sizeExamplesOpen ? "Hide Size Examples" : "View Size Examples"}</span>
+              <svg aria-hidden="true" viewBox="0 0 20 20" className={sizeExamplesOpen ? "is-expanded" : ""}>
+                <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+              </svg>
+            </button>
             <div className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations">
               {[0, 1, 2, 3, 4, 5].map((size) => (
                 <button key={size} type="button" aria-label={"Choose size " + size + ": " + size + " exposed " + (size === 1 ? "peg" : "pegs")} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 text-left transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900 hover:border-neutral-500")}>
@@ -1312,7 +1324,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               ))}
             </div>
             <span className="mt-2 block text-xs leading-5 text-neutral-500">Select a fit above to update the sleeve preview. Size 0 has no retaining holes and retains its sliding channel.</span>
-          </label>
+          </div>
           <p className="text-xs leading-5 text-neutral-400 sm:col-span-2">
             Your SnapInk size matches the number of pegs left exposed when you wear your hat.
           </p>

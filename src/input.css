@@ -169,6 +169,7 @@
    Keep two roomy columns by default and use three only when each card can stay
    comfortably readable. */
 .snapink-size-control { min-width: 0; width: 100%; container-type: inline-size; }
+.snapink-size-examples-toggle { display: none; }
 .snapink-fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; min-width: 0; }
 .snapink-fit-card { min-width: 0; word-break: normal; overflow-wrap: normal; white-space: normal; }
 .snapink-fit-card-label { word-break: normal; overflow-wrap: normal; white-space: normal; }
@@ -357,6 +358,23 @@
 }
 
 @media (max-width: 1023px) {
+  .snapink-studio-customizer .snapink-size-examples-toggle {
+    display: flex;
+    width: fit-content;
+    min-height: 36px;
+    align-items: center;
+    gap: 7px;
+    margin-top: 2px;
+    padding: 4px 2px;
+    color: #8A7040;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    touch-action: manipulation;
+  }
+  .snapink-studio-customizer .snapink-size-examples-toggle svg { width: 16px; height: 16px; transition: transform .18s ease; }
+  .snapink-studio-customizer .snapink-size-examples-toggle svg.is-expanded { transform: rotate(180deg); }
+  .snapink-studio-customizer .snapink-size-control[data-size-examples-open="false"] .snapink-fit-grid { display: none; }
   .snapink-studio-application { padding: 12px; border-radius: 14px; }
   .snapink-studio-submission { margin: 18px 2px 0; padding-top: 16px; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile {
@@ -428,7 +446,7 @@
     overflow: visible !important;
     box-shadow: none !important;
   }
-  .snapink-studio-customizer .snapink-fit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .snapink-studio-customizer .snapink-fit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .snapink-studio-customizer .snapink-fit-card img { height: 40px; aspect-ratio: auto; }
   .snapink-studio-customizer .snapink-fit-card-label { font-size: 10px; line-height: 1.2; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile > .rounded-2xl > button { padding: 8px 0 !important; }
