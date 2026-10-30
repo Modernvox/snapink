@@ -170,9 +170,81 @@ async function showDetails(order) {
   } catch (e) { const error = document.createElement("p"); error.className = "error"; error.textContent = e.message; root.append(error); }
   $("order-detail").showModal();
 }
+
+const retailMoney = (cents) => usd(Number(cents || 0));
+async function renderRetailOrders() {
+  const body = $("retail-orders-body"); if (!body) return; body.replaceChildren();
+  const query = new URLSearchParams();
+  if ($("retail-status-filter").value) query.set("status", $("retail-status-filter").value);
+  if ($("retail-search").value.trim()) query.set("q", $("retail-search").value.trim());
+  $("retail-message").textContent = "Loading retail orders…";
+  try {
+    const { data } = await api(`/api/admin/retail-orders?${query}`);
+    for (const order of data.orders || []) {
+      const row = document.createElement("tr"), previewCell = document.createElement("td");
+      const image = document.createElement("img"); image.className = "thumb"; image.alt = `Design preview for ${order.orderNumber}`;
+      try { const { response } = await api(`/api/admin/retail-order-file?id=${encodeURIComponent(order.id)}&kind=preview`); image.src = URL.createObjectURL(await response.blob()); } catch { image.alt = "Preview unavailable"; }
+      previewCell.append(image);
+      const customerCell = document.createElement("td"); customerCell.append(textNode("strong", order.orderNumber), document.createElement("br"), textNode("span", order.customerName), document.createElement("br"), textNode("span", order.customerEmail, "muted"));
+      const dateCell = textNode("td", new Date(order.createdAt).toLocaleString());
+      const styleCell = textNode("td", `${pretty(order.variant)} · Size ${order.size}`);
+      const qtyCell = document.createElement("td"); qtyCell.append(textNode("span", `${order.quantity} sleeve${order.quantity === 1 ? "" : "s"}`), document.createElement("br"), textNode("strong", retailMoney(order.totalBeforeTaxCents)), textNode("span", " before tax", "muted"));
+      const statusCell = textNode("td", order.status);
+      const actions = document.createElement("td");
+      const detail = document.createElement("button"); detail.type = "button"; detail.className = "secondary"; detail.textContent = "Review details"; detail.addEventListener("click", () => showRetailDetails(order)); actions.append(detail);
+      if (["PENDING_REVIEW", "CHANGES_REQUESTED", "APPROVED"].includes(order.status)) {
+        const approve = document.createElement("button"); approve.type = "button"; approve.textContent = "Approve for Production"; approve.style.marginTop = "6px";
+        approve.addEventListener("click", async () => { if (!confirm(`Approve ${order.orderNumber} and create its Stripe checkout session?`)) return; approve.disabled = true; $("retail-message").textContent = `Approving ${order.orderNumber}…`; try { const { data: result } = await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action: "approve" }) }); $("retail-message").textContent = result.warning || `${order.orderNumber} approved; secure payment email ${result.emailStatus}.`; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; approve.disabled = false; } }); actions.append(approve);
+        if (order.status !== "APPROVED") for (const [action, label] of [["request_changes", "Request Design Changes"], ["decline", "Decline Order"]]) { const button = document.createElement("button"); button.type = "button"; button.className = "secondary"; button.textContent = label; button.style.marginTop = "6px"; button.addEventListener("click", async () => { const note = prompt(action === "decline" ? "Reason for declining this order:" : "What should the customer change?"); if (!note?.trim()) return; button.disabled = true; try { const { data: result } = await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action, note }) }); $("retail-message").textContent = `${order.orderNumber} updated; customer email ${result.emailStatus}.`; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; button.disabled = false; } }); actions.append(button); }
+      } else if (order.status === "AWAITING_PAYMENT" && order.paymentEmailStatus !== "sent") {
+        const resend = document.createElement("button"); resend.type = "button"; resend.textContent = "Resend Payment Email"; resend.addEventListener("click", async () => { resend.disabled = true; try { await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action: "resend_payment_email" }) }); $("retail-message").textContent = "Payment email sent."; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; resend.disabled = false; } }); actions.append(resend);
+      }
+      if (["PENDING_REVIEW", "CHANGES_REQUESTED", "DECLINED", "APPROVED", "AWAITING_PAYMENT"].includes(order.status) && (order.ownerEmailStatus !== "sent" || order.customerEmailStatus !== "sent")) {
+        const retry = document.createElement("button"); retry.type = "button"; retry.className = "secondary"; retry.textContent = "Retry Order Emails"; retry.style.marginTop = "6px";
+        retry.addEventListener("click", async () => { retry.disabled = true; try { const { data: result } = await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action: "resend_order_emails" }) }); $("retail-message").textContent = `Order emails: owner ${result.notifications.owner}, customer ${result.notifications.customer}.`; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; retry.disabled = false; } }); actions.append(retry);
+      }
+      if (["PAID", "IN_PRODUCTION", "SHIPPED", "COMPLETED"].includes(order.status) && (order.ownerPaymentNoticeStatus !== "sent" || order.paymentConfirmationStatus !== "sent")) {
+        const retry = document.createElement("button"); retry.type = "button"; retry.className = "secondary"; retry.textContent = "Retry Payment Emails"; retry.style.marginTop = "6px";
+        retry.addEventListener("click", async () => { retry.disabled = true; try { const { data: result } = await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action: "resend_payment_notices" }) }); $("retail-message").textContent = `Payment emails: owner ${result.notifications.owner}, customer ${result.notifications.customer}.`; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; retry.disabled = false; } }); actions.append(retry);
+      }
+      const nextStatus = { PAID: "IN_PRODUCTION", IN_PRODUCTION: "SHIPPED", SHIPPED: "COMPLETED" }[order.status];
+      if (nextStatus) { const update = document.createElement("button"); update.type = "button"; update.className = "secondary"; update.style.marginTop = "6px"; update.textContent = `Mark ${nextStatus.replaceAll("_", " ")}`; update.addEventListener("click", async () => { update.disabled = true; try { await api("/api/admin/retail-orders", { method: "PATCH", body: JSON.stringify({ id: order.id, action: "set_fulfillment_status", status: nextStatus }) }); $("retail-message").textContent = `${order.orderNumber}: ${nextStatus}.`; await renderRetailOrders(); } catch (error) { $("retail-message").textContent = error.message; update.disabled = false; } }); actions.append(update); }
+      row.append(previewCell, customerCell, dateCell, styleCell, qtyCell, statusCell, actions); body.append(row);
+    }
+    $("retail-empty").classList.toggle("hidden", (data.orders || []).length > 0);
+    $("retail-message").textContent = `${(data.orders || []).length} retail order${data.orders?.length === 1 ? "" : "s"}.`;
+  } catch (error) { $("retail-message").textContent = error.message; }
+}
+
+async function showRetailDetails(order) {
+  const root = $("retail-detail-content"); root.replaceChildren();
+  $("retail-detail-title").textContent = `${order.orderNumber} · ${order.customerName}`;
+  const details = document.createElement("div"); details.className = "wholesale-detail-grid";
+  const address = order.shippingAddress || {};
+  const price = order.draft?.pricing || {};
+  const sections = [
+    ["Customer", `${order.customerName}\n${order.customerEmail}\n${order.customerPhone || "Phone not provided"}`],
+    ["Shipping address", [address.line1, address.line2, address.city, address.region, address.postalCode, address.country].filter(Boolean).join("\n")],
+    ["Order", `${order.variant} sleeve · Size ${order.size} · Quantity ${order.quantity}\nUnit ${retailMoney(order.unitPriceCents)}\nMerchandise ${retailMoney(order.merchandiseSubtotalCents)}\nDiscount −${retailMoney(order.discountCents)}\nShipping ${retailMoney(order.shippingCents)}\nTotal before tax ${retailMoney(order.totalBeforeTaxCents)}\nStatus ${order.status}`],
+  ];
+  for (const [title, value] of sections) { const section = document.createElement("section"); section.className = "wholesale-card"; section.append(textNode("strong", title), textNode("p", value, "wholesale-address")); details.append(section); }
+  root.append(details);
+  const previewBox = document.createElement("section"); previewBox.className = "wholesale-card"; const preview = document.createElement("img"); preview.className = "detail-preview"; preview.alt = `Submitted design for ${order.orderNumber}`;
+  try { const { response } = await api(`/api/admin/retail-order-file?id=${encodeURIComponent(order.id)}&kind=preview`); preview.src = URL.createObjectURL(await response.blob()); previewBox.append(preview); } catch (error) { previewBox.append(textNode("p", error.message, "muted")); }
+  for (const [kind, label] of [["artwork", "Download final Studio artwork (SVG)"], ["source", "Download uploaded source artwork"]]) { const button = document.createElement("button"); button.type = "button"; button.className = "secondary"; button.textContent = label; button.style.margin = "8px"; button.addEventListener("click", async () => { try { const { response } = await api(`/api/admin/retail-order-file?id=${encodeURIComponent(order.id)}&kind=${kind}`); const url = URL.createObjectURL(await response.blob()), a = document.createElement("a"); a.href = url; a.download = `${order.orderNumber}-${kind}`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 60000); } catch (error) { $("retail-message").textContent = error.message; } }); previewBox.append(button); }
+  root.append(previewBox);
+  const config = document.createElement("pre"); config.textContent = JSON.stringify(order.draft || {}, null, 2); root.append(textNode("h3", "Submitted design configuration"), config);
+  if (order.checkoutUrl) { const link = document.createElement("a"); link.href = order.checkoutUrl; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "Open Stripe Checkout"; root.append(link); }
+  $("retail-order-detail").showModal();
+}
+
+$("retail-refresh")?.addEventListener("click", renderRetailOrders); $("retail-status-filter")?.addEventListener("change", renderRetailOrders);
+let retailSearchTimer; $("retail-search")?.addEventListener("input", () => { clearTimeout(retailSearchTimer); retailSearchTimer = setTimeout(renderRetailOrders, 250); });
+$("retail-detail-close")?.addEventListener("click", () => $("retail-order-detail").close());
+
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); adminToken = $("admin-token").value;
-  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); }
+  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); await renderRetailOrders(); }
   catch (e) { $("login-message").textContent = e.message; adminToken = ""; }
 });
 $("refresh").addEventListener("click", renderOrders);
