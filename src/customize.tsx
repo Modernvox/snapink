@@ -118,7 +118,12 @@ function App() {
                 {sending ? "PLACING ORDER…" : "PLACE MY CUSTOM ORDER"}
               </button>
               {error && <p className="text-center text-red-700" role="alert">{error}</p>}
-              <p className="snapink-draft-disclaimer text-xs leading-5">No payment required yet. We'll confirm your design can be produced and email you a secure payment link.</p>
+              <div className="snapink-draft-disclaimer">
+                <p><strong>No payment required yet.</strong></p>
+                <p>Your custom sleeve design will be reviewed for production approval within 24 hours during normal business hours (7:00 AM–5:00 PM Eastern Time).</p>
+                <p><strong>If approved:</strong> We'll email you a secure payment link.</p>
+                <p><strong>If changes are needed:</strong> We'll contact you with the next steps.</p>
+              </div>
             </form>
           </div>
         </>}
