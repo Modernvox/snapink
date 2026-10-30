@@ -3,6 +3,8 @@ import { decodeDataUrl, validEmail } from "./orders.js";
 const MAX_BODY_BYTES = 24 * 1024 * 1024;
 const MAX_ARTWORK_BYTES = 8 * 1024 * 1024;
 const MAX_PREVIEW_BYTES = 4 * 1024 * 1024;
+// Leaves room for Base64 expansion and message headers under Cloudflare's 5 MiB message cap.
+const MAX_EMAIL_PREVIEW_BYTES = 3.4 * 1024 * 1024;
 const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
 
 export class RetailOrderValidationError extends Error {}
@@ -51,10 +53,13 @@ function safeSvg(bytes) {
 }
 
 export function decodeRetailFiles(files) {
-  let artwork, preview, source;
+  let artwork, preview, emailPreview, source;
   try {
     artwork = decodeDataUrl(files?.artworkSvg, ["image/svg+xml"], MAX_ARTWORK_BYTES);
     preview = decodeDataUrl(files?.previewPng, ["image/png"], MAX_PREVIEW_BYTES);
+    emailPreview = files?.emailPreviewPng
+      ? decodeDataUrl(files.emailPreviewPng, ["image/png"], MAX_EMAIL_PREVIEW_BYTES)
+      : preview.bytes.length <= MAX_EMAIL_PREVIEW_BYTES ? preview : null;
     source = files?.sourceArtwork
       ? decodeDataUrl(files.sourceArtwork, ["image/svg+xml", "image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/avif", "image/tiff"], MAX_SOURCE_BYTES)
       : null;
@@ -63,6 +68,7 @@ export function decodeRetailFiles(files) {
   }
   if (!safeSvg(artwork.bytes)) throw new RetailOrderValidationError("The SVG artwork contains unsupported content.");
   if (preview.bytes.length < 8 || ![137,80,78,71,13,10,26,10].every((byte, i) => preview.bytes[i] === byte)) throw new RetailOrderValidationError("The preview is not a valid PNG image.");
+  if (emailPreview && (emailPreview.bytes.length < 8 || ![137,80,78,71,13,10,26,10].every((byte, i) => emailPreview.bytes[i] === byte))) throw new RetailOrderValidationError("The email design preview is not a valid PNG image.");
   if (source?.mime === "image/svg+xml" && !safeSvg(source.bytes)) throw new RetailOrderValidationError("The uploaded SVG contains unsupported content.");
   if (source?.mime === "image/png" && (source.bytes.length < 8 || ![137,80,78,71,13,10,26,10].every((byte, i) => source.bytes[i] === byte))) throw new RetailOrderValidationError("The uploaded PNG is invalid.");
   if (source?.mime === "image/jpeg" && (source.bytes.length < 3 || source.bytes[0] !== 255 || source.bytes[1] !== 216 || source.bytes[2] !== 255)) throw new RetailOrderValidationError("The uploaded JPEG is invalid.");
@@ -71,7 +77,7 @@ export function decodeRetailFiles(files) {
   if (source?.mime === "image/bmp" && new TextDecoder().decode(source.bytes.slice(0,2)) !== "BM") throw new RetailOrderValidationError("The uploaded BMP is invalid.");
   if (source?.mime === "image/avif" && !["ftypavif", "ftypavis"].includes(new TextDecoder().decode(source.bytes.slice(4,12)))) throw new RetailOrderValidationError("The uploaded AVIF is invalid.");
   if (source?.mime === "image/tiff" && !((source.bytes[0] === 73 && source.bytes[1] === 73 && source.bytes[2] === 42 && source.bytes[3] === 0) || (source.bytes[0] === 77 && source.bytes[1] === 77 && source.bytes[2] === 0 && source.bytes[3] === 42))) throw new RetailOrderValidationError("The uploaded TIFF is invalid.");
-  return { artwork, preview, source };
+  return { artwork, preview, emailPreview, source };
 }
 
 export function sourceArtworkExtension(source) {

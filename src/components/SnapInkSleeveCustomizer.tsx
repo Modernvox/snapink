@@ -116,7 +116,7 @@ export interface SnapInkSleeveCustomizerProps {
 
 export interface SnapInkSleeveCustomizerRef {
   downloadPNG: () => void;
-  getOrderFiles: () => Promise<{ artworkSvg: string; previewPng: string; sourceArtwork: string }>;
+  getOrderFiles: () => Promise<{ artworkSvg: string; previewPng: string; emailPreviewPng: string; sourceArtwork: string }>;
 }
 
 function defaultArtworkYForViewport(defaultPosition?: { posY: number; desktopPosY?: number }) {
@@ -1178,10 +1178,35 @@ const SnapInkSleeveCustomizer = forwardRef<
         reader.onerror = () => reject(new Error("Could not package the design preview."));
         reader.readAsDataURL(previewBlob);
       });
+      // Create a smaller private preview attachment so the order email stays within Cloudflare's message-size limit.
+      const maxEmailPreviewBytes = 3.4 * 1024 * 1024;
+      const emailCanvas = document.createElement("canvas");
+      let emailScale = Math.min(1, 1440 / Math.max(canvas.width, canvas.height));
+      let emailPreviewBlob: Blob | null = null;
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        emailCanvas.width = Math.max(1, Math.round(canvas.width * emailScale));
+        emailCanvas.height = Math.max(1, Math.round(canvas.height * emailScale));
+        const emailContext = emailCanvas.getContext("2d");
+        if (!emailContext) throw new Error("Could not prepare the design email attachment.");
+        emailContext.drawImage(canvas, 0, 0, emailCanvas.width, emailCanvas.height);
+        emailPreviewBlob = await new Promise<Blob>((resolve, reject) => emailCanvas.toBlob(
+          (output) => output ? resolve(output) : reject(new Error("Could not encode the email design preview.")),
+          "image/png"
+        ));
+        if (emailPreviewBlob.size <= maxEmailPreviewBytes) break;
+        emailScale *= 0.8;
+      }
+      if (!emailPreviewBlob || emailPreviewBlob.size > maxEmailPreviewBytes) throw new Error("The design preview is too large to attach to the order email. Please simplify the image and try again.");
+      const emailPreviewPng = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not package the email design preview."));
+        reader.readAsDataURL(emailPreviewBlob);
+      });
       // Text-only orders have no separately uploaded source file. Preserve the
       // exact Studio vector export as their source record; the companion uses
       // the saved text/font settings to generate manufacturing outlines.
-      return { artworkSvg, previewPng, sourceArtwork: sourceArtwork || artworkSvg };
+      return { artworkSvg, previewPng, emailPreviewPng, sourceArtwork: sourceArtwork || artworkSvg };
     } finally { URL.revokeObjectURL(svgUrl); }
   }
 

@@ -10,7 +10,17 @@ export class EmailDeliveryError extends Error {
   }
 }
 
-export async function sendSnapInkEmail(env, { to, subject, text, replyTo }) {
+export function createSnapInkEmailAttachment(filename, bytes, type) {
+  const input = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < input.length; offset += chunkSize) {
+    binary += String.fromCharCode(...input.subarray(offset, offset + chunkSize));
+  }
+  return { filename, content: btoa(binary), type, disposition: "attachment" };
+}
+
+export async function sendSnapInkEmail(env, { to, subject, text, replyTo, attachments = [] }) {
   const accountId = SNAPINK_CLOUDFLARE_ACCOUNT_ID;
   const apiToken = env.CLOUDFLARE_EMAIL_API_TOKEN;
   if (!apiToken) {
@@ -32,6 +42,7 @@ export async function sendSnapInkEmail(env, { to, subject, text, replyTo }) {
         reply_to: replyTo,
         subject,
         text,
+        ...(attachments.length ? { attachments } : {}),
       }),
     });
   } catch {

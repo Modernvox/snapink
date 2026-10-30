@@ -1,12 +1,23 @@
 import { bearer, json, now } from "../../_lib/orders.js";
 import { calculateRetailPricing } from "../../_lib/retail-pricing.mjs";
-import { EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
+import { createSnapInkEmailAttachment, EmailDeliveryError, sendSnapInkEmail } from "../../_lib/snapink-email.js";
 import { safeOrderJson } from "../../_lib/retail-order-utils.js";
 
 const STATUSES = ["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT","PAID","IN_PRODUCTION","SHIPPED","COMPLETED"];
 const SITE = "https://snapbacksleeves.com";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+const orderDraft = (order) => order.draft && typeof order.draft === "object" ? order.draft : safeOrderJson(order.draftJson);
+const orderShipping = (order) => order.shippingAddress && typeof order.shippingAddress === "object" ? order.shippingAddress : safeOrderJson(order.shippingAddressJson);
 const designDescription = (draft) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}`;
+async function designAttachments(env, order) {
+  const draft = orderDraft(order);
+  if (!draft.emailPreviewKey || !env.PRIVATE_ASSETS) return [];
+  const file = await env.PRIVATE_ASSETS.get(draft.emailPreviewKey);
+  if (!file) throw new Error("The saved design email attachment is unavailable.");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (bytes.length > 3.4 * 1024 * 1024) throw new Error("The saved design email attachment is too large to send safely.");
+  return [createSnapInkEmailAttachment(`SnapInk-${order.orderNumber}-design.png`, bytes, "image/png")];
+}
 const rowOrder = (row) => ({
   ...row,
   shippingAddress: safeOrderJson(row.shippingAddressJson),
@@ -52,8 +63,11 @@ async function sendPaymentLinkEmail(env, order, { claim = true } = {}) {
   }
   const pricing = calculateRetailPricing(order.size,order.quantity);
   try {
+    const draft = orderDraft(order);
+    const attachments = await designAttachments(env, order);
+    const attachmentNote = attachments.length ? "A copy of your design is attached as a PNG." : "Your design preview remains saved securely with your order.";
     await sendSnapInkEmail(env,{ to:order.customerEmail,subject:`Your SnapInk order ${order.orderNumber} is approved`,text:
-      `Your SnapInk custom sleeve order has been approved for production.\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(order.draft)}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nComplete payment securely with Stripe: ${order.checkoutUrl}\nStripe Checkout will calculate any applicable sales tax from your shipping address. SnapInk does not receive or store your card details.` });
+      `Your SnapInk custom sleeve order has been approved for production. ${attachmentNote}\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(draft)}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nComplete payment securely with Stripe: ${order.checkoutUrl}\nStripe Checkout will calculate any applicable sales tax from your shipping address. SnapInk does not receive or store your card details.`,attachments });
     await env.DB.prepare("UPDATE retail_orders SET payment_email_status='sent',updated_at=? WHERE id=? AND status='AWAITING_PAYMENT'").bind(now(),order.id).run();
     return { sent:true };
   } catch (error) {
@@ -202,13 +216,13 @@ export async function onRequestPatch({request,env}) {
     }
     if(body.action==="resend_order_emails") {
       if(!["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT"].includes(order.status)) return json({error:"Order notifications cannot be resent for this status."},409);
-      const draft=order.draft, address=order.shippingAddress, price=calculateRetailPricing(order.size,order.quantity);
+      const draft=orderDraft(order), address=orderShipping(order), price=calculateRetailPricing(order.size,order.quantity);
       const results={owner:order.ownerEmailStatus,customer:order.customerEmailStatus};
       for(const key of ["owner","customer"]) {
         if(results[key]==="sent") continue;
-        const to=key==="owner"?"partners@snapbacksleeves.com":order.customerEmail;
+        const to=key==="owner"?"mikejstpierre@gmail.com":order.customerEmail;
         const summary=`Order ${order.orderNumber}\nSleeve: ${order.variant} · Size ${order.size}\nQuantity: ${order.quantity}\nMerchandise subtotal: ${usd(price.merchandiseSubtotalCents)}\nQuantity discount: ${price.discountCents?`-${usd(price.discountCents)}`:"$0.00"}\nShipping: ${usd(price.shippingCents)}\nTotal before applicable taxes: ${usd(price.totalBeforeTaxCents)}`;
-        try { const customerNote=order.status==="DECLINED"?`We are unable to proceed with custom order ${order.orderNumber}.\n\n${order.adminNotes||"Please contact SnapInk if you have questions."}\n\nNo payment was collected.`:order.status==="CHANGES_REQUESTED"?`SnapInk needs a small design update before approving order ${order.orderNumber}.\n\n${order.adminNotes||"Please reply to coordinate the requested change."}\n\nNo payment has been collected.`:"Thanks for your SnapInk order request. We will email your secure payment link after production review. No payment has been collected."; await sendSnapInkEmail(env,{to,replyTo:key==="owner"?order.customerEmail:undefined,subject:`SnapInk order ${order.orderNumber} update`,text:`${key==="owner"?"A retail order is ready for review in the admin dashboard: "+SITE+"/admin.html\n\n":customerNote+"\n\n"}${summary}\n\nCustomer: ${order.customerName}\nShip to: ${address.line1}, ${address.city}, ${address.region} ${address.postalCode}, ${address.country}\nDesign: ${draft.text||"Uploaded artwork"}`});results[key]="sent"; }
+        try { const customerNote=order.status==="DECLINED"?`We are unable to proceed with custom order ${order.orderNumber}.\n\n${order.adminNotes||"Please contact SnapInk if you have questions."}\n\nNo payment was collected.`:order.status==="CHANGES_REQUESTED"?`SnapInk needs a small design update before approving order ${order.orderNumber}.\n\n${order.adminNotes||"Please reply to coordinate the requested change."}\n\nNo payment has been collected.`:"Thanks for your SnapInk order request. We will email your secure payment link after production review. No payment has been collected."; const attachments=await designAttachments(env,order); const attachmentNote=attachments.length?"A copy of the submitted design is attached as a PNG.":"The design preview remains saved securely with the order."; await sendSnapInkEmail(env,{to,replyTo:key==="owner"?order.customerEmail:undefined,subject:`SnapInk order ${order.orderNumber} update`,text:`${key==="owner"?"A retail order is ready for review in the admin dashboard: "+SITE+"/admin.html\n\n":customerNote+"\n\n"}${summary}\n\nCustomer: ${order.customerName}\nShip to: ${address.line1}, ${address.city}, ${address.region} ${address.postalCode}, ${address.country}\nDesign: ${draft.text||"Uploaded artwork"}\n\n${attachmentNote}`,attachments});results[key]="sent"; }
         catch(error){results[key]="failed";console.error("Retail order notification retry failed",{orderNumber:order.orderNumber,type:key,error:error instanceof EmailDeliveryError?error.message:"Unexpected email error"});}
       }
       await env.DB.prepare("UPDATE retail_orders SET owner_email_status=?,customer_email_status=?,updated_at=? WHERE id=?").bind(results.owner,results.customer,now(),order.id).run();
