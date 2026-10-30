@@ -434,18 +434,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
-  const [openPreviewColor, setOpenPreviewColor] = useState<"text" | "outline" | "sleeve" | null>(null);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
-
-  useEffect(() => {
-    if (!openPreviewColor) return;
-    const dismissOnOutsidePointer = (event: PointerEvent) => {
-      if (event.target instanceof Element && event.target.closest(".snapink-preview-color-controls")) return;
-      setOpenPreviewColor(null);
-    };
-    document.addEventListener("pointerdown", dismissOnOutsidePointer);
-    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer);
-  }, [openPreviewColor]);
 
   useEffect(() => {
     const stage = svgRef.current?.closest(".snapink-product-stage") as HTMLDivElement | null;
@@ -716,11 +705,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleeveGrooveFraction = variant === "billboard" ? billboardGrooveFraction : standardGrooveFraction;
   const sleeveColorRgb = backgroundColor.match(/[0-9a-f]{2}/gi)?.map((value) => parseInt(value, 16) / 255) ?? [0, 0, 0];
   const isBlackSleeve = backgroundColor.toLowerCase() === "#000000";
-  // The approved sleeve master is photographed in black. Preserve its texture
-  // by tinting its grayscale lighting, but lift the white material's base so
-  // the black source albedo does not make a selected white sleeve render gray.
-  const whiteSleeveFloor = backgroundColor.toLowerCase() === "#ffffff" ? 0.82 : 0;
-  const sleeveTextureAmplitude = 1 - whiteSleeveFloor;
+  // The approved sleeve master is photographed in black. Treat that image as
+  // a lighting texture over the selected material color so its near-black
+  // pixels cannot muddy saturated colors. Black bypasses the filter and white
+  // retains its established output.
+  const sleeveMaterialFloor = backgroundColor.toLowerCase() === "#ffffff"
+    ? 0.82
+    : backgroundColor.toLowerCase() === "#000000" ? 0 : 0.3;
+  const sleeveTextureAmplitude = 1 - sleeveMaterialFloor;
   const sleeveColorFilterId = `sleeve-color-${uid}`;
   const scaledFontSize = fontSize * (viewH / 450);
   const margin = (safeMargin / 100) * viewH;
@@ -1243,14 +1235,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const mobileColorGroups = (
-    <div className="snapink-mobile-color-groups" role="group" aria-label="Sleeve and artwork colors" data-preview-only="true">
+  const colorGroups = (
+    <div className="snapink-color-groups" role="group" aria-label="Sleeve and artwork colors" data-preview-only="true">
       {([
         { key: "text" as const, label: "Text Fill Color", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
         { key: "outline" as const, label: "Outline Color", value: stroke, onChange: setStroke, locked: false },
         { key: "sleeve" as const, label: "Sleeve Color", value: backgroundColor, onChange: setBackgroundColor, locked: Boolean(fixedProductConfiguration) },
       ]).map((color) => (
-        <fieldset className="snapink-mobile-color-group" key={color.key} disabled={color.locked}>
+        <fieldset className="snapink-color-group" key={color.key} disabled={color.locked}>
           <legend>{color.label}</legend>
           <ColorSwatchRow value={color.value} onChange={color.onChange} />
         </fieldset>
@@ -1289,7 +1281,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           </select>
         </label>
       </div>
-      {instance === "mobile" && mobileColorGroups}
+      {colorGroups}
       <div className="snapink-toolbar-secondary">
         <span className="snapink-toolbar-count" aria-live="polite">{text.length}/25</span>
         <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
@@ -1311,45 +1303,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         </>}
         <label className="snapink-toolbar-guides"><input type="checkbox" checked={showGuides} onChange={(event) => setShowGuides(event.target.checked)} /> Show safe area</label>
       </div>}
-    </div>
-  );
-
-  const previewColorControls = (
-    <div className="snapink-preview-color-controls" data-preview-only="true" role="group" aria-label="Preview color controls">
-      {([
-        { key: "text" as const, label: "Text Fill", value: fill, onChange: setFill, locked: Boolean(fixedArtworkColor) },
-        { key: "outline" as const, label: "Outline", value: stroke, onChange: setStroke, locked: false },
-        { key: "sleeve" as const, label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor, locked: Boolean(fixedProductConfiguration) },
-      ]).filter((color) => color.key !== "sleeve" || !fixedProductConfiguration).map((color) => (
-        <div className="snapink-preview-color-item" key={color.key}>
-          <button
-            type="button"
-            className="snapink-preview-color-trigger"
-            aria-label={`${color.label} color${color.locked ? " (fixed)" : ""}`}
-            aria-expanded={!color.locked && openPreviewColor === color.key}
-            disabled={color.locked}
-            onClick={() => setOpenPreviewColor((open) => open === color.key ? null : color.key)}
-          >
-            <span aria-hidden="true" className="snapink-preview-color-dot" style={{ backgroundColor: color.value }} />
-            <span>{color.label}</span>
-          </button>
-        </div>
-      ))}
-      {openPreviewColor && (() => {
-        const activeColor = openPreviewColor === "text"
-          ? { label: "Text Fill", value: fill, onChange: setFill }
-          : openPreviewColor === "outline"
-            ? { label: "Outline", value: stroke, onChange: setStroke }
-            : { label: "Sleeve", value: backgroundColor, onChange: setBackgroundColor };
-        return (
-          <div className="snapink-preview-color-palette" role="group" aria-label={`${activeColor.label} color options`}>
-            <ColorSwatchRow
-              value={activeColor.value}
-              onChange={(nextColor) => { activeColor.onChange(nextColor); setOpenPreviewColor(null); }}
-            />
-          </div>
-        );
-      })()}
     </div>
   );
 
@@ -1406,7 +1359,6 @@ const SnapInkSleeveCustomizer = forwardRef<
       <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
         PREVIEW ONLY
       </span>
-      {instance === "desktop" && previewColorControls}
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
         src={HAT_PREVIEW[sleeveSize].src}
@@ -1509,9 +1461,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           {!isBlackSleeve && <filter id={sleeveColorFilterId} colorInterpolationFilters="sRGB">
             <feColorMatrix type="matrix" values={`0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0 0 0 1 0`} />
             <feComponentTransfer>
-              <feFuncR type="gamma" amplitude={sleeveColorRgb[0] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[0] * whiteSleeveFloor} />
-              <feFuncG type="gamma" amplitude={sleeveColorRgb[1] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[1] * whiteSleeveFloor} />
-              <feFuncB type="gamma" amplitude={sleeveColorRgb[2] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[2] * whiteSleeveFloor} />
+              <feFuncR type="gamma" amplitude={sleeveColorRgb[0] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[0] * sleeveMaterialFloor} />
+              <feFuncG type="gamma" amplitude={sleeveColorRgb[1] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[1] * sleeveMaterialFloor} />
+              <feFuncB type="gamma" amplitude={sleeveColorRgb[2] * sleeveTextureAmplitude} exponent="0.42" offset={sleeveColorRgb[2] * sleeveMaterialFloor} />
             </feComponentTransfer>
           </filter>}
         </defs>
