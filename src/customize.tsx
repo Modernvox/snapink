@@ -47,7 +47,7 @@ function App() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] py-8 sm:py-10">
+    <div className="mx-auto w-full max-w-[1440px] py-0">
       <div className="snapink-studio-application">
         <SnapInkSleeveCustomizer
           ref={customizerRef}

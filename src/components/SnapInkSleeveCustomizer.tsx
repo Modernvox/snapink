@@ -429,6 +429,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [mobileOpen, setMobileOpen] = useState<"text" | "logo" | "position" | "export">(
     "text"
   );
+  const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
@@ -1219,34 +1220,73 @@ const SnapInkSleeveCustomizer = forwardRef<
         <p className="col-span-2 text-xs leading-5 text-neutral-400">
           Artwork is centered between this sleeve’s flap groove and far-right edge, then centered vertically on the branding surface.
         </p>
-        <button type="button" onClick={centerCurrentArtwork} className="rounded-lg border border-neutral-700 bg-neutral-800/70 px-3 py-2 text-xs text-neutral-100 hover:border-si-accent/60">
-          Center artwork on branding area
-        </button>
-        <button type="button" onClick={resetCurrentArtworkPosition} className="rounded-lg border border-neutral-700 bg-neutral-800/70 px-3 py-2 text-xs text-neutral-100 hover:border-si-accent/60">
-          Reset position
-        </button>
-        <Range
-          label="Logo size"
-          min={0}
-          max={100}
-          step={1}
-          value={logoScale}
-          setValue={setLogoScale}
-          suffix="%"
-        />
-        <p className="text-xs leading-5 text-neutral-500">
-          Your artwork stays within the sleeve as you resize it.
-        </p>
-        <Range
-          label="Logo opacity"
-          min={10}
-          max={100}
-          step={5}
-          value={logoOpacity}
-          setValue={setLogoOpacity}
-          suffix="%"
-        />
       </div>
+    </div>
+  );
+
+  const sleevePreviewTopPercent = sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2;
+  const toolbarCanFloat = sleevePreviewTopPercent * (currentStageClientWidth / STUDIO_STAGE_WIDTH_HEIGHT_RATIO) / 100 >= 155;
+  const previewToolbar = (
+    <div className="snapink-preview-toolbar" data-overlay={toolbarCanFloat && !toolbarAdvancedOpen}>
+      <div className="snapink-toolbar-primary">
+        <label className="snapink-toolbar-text">
+          <span>Text</span>
+          <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder="ENTER YOUR TEXT" maxLength={25} />
+        </label>
+        <label className="snapink-toolbar-select">
+          <span>Font</span>
+          <select aria-label="Font" value={font} style={{ fontFamily: font }} onChange={(event) => setFont(event.target.value)}>
+            {WEB_SAFE_FONTS.map((f) => <option key={f.label} value={f.stack} style={{ fontFamily: f.stack }}>{f.label}</option>)}
+          </select>
+        </label>
+        <label className="snapink-toolbar-select">
+          <span>Style</span>
+          <select aria-label="Text style" disabled={Boolean(forcedStyleMode)} value={styleMode} onChange={(event) => setStyleMode(event.target.value as "emboss" | "flat")}>
+            <option value="emboss">Embossed</option>
+            <option value="flat">Printed</option>
+          </select>
+        </label>
+        <label className="snapink-toolbar-select">
+          <span>Sleeve</span>
+          <select aria-label="Sleeve Style" disabled={fixedProductConfiguration} value={variant} onChange={(event) => handleVariantChange(event.target.value as SleeveVariant)}>
+            <option value="standard">Standard</option>
+            <option value="billboard">Billboard</option>
+          </select>
+        </label>
+      </div>
+      <div className="snapink-toolbar-secondary">
+        <label className="snapink-toolbar-color">
+          <span>Text fill</span>
+          {fixedArtworkColor ? <span className="snapink-color-chip" style={{ backgroundColor: fill }} aria-label="Fixed artwork color" /> : <input aria-label="Text fill color" type="color" value={fill} onChange={(event) => setFill(event.target.value)} />}
+        </label>
+        {!fixedProductConfiguration && <label className="snapink-toolbar-color">
+          <span>Sleeve</span>
+          <input aria-label="Sleeve color" type="color" value={backgroundColor} onChange={(event) => setBackgroundColor(event.target.value)} />
+        </label>}
+        <label className="snapink-toolbar-color">
+          <span>Outline</span>
+          <input aria-label="Outline color" type="color" value={stroke} onChange={(event) => setStroke(event.target.value)} />
+        </label>
+        <span className="snapink-toolbar-count" aria-live="polite">{text.length}/25</span>
+        <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
+          {toolbarAdvancedOpen ? "Close advanced" : "Advanced controls"}
+        </button>
+      </div>
+      {toolbarAdvancedOpen && <div className="snapink-toolbar-advanced">
+        <Range label="Font size" min={60} max={500} value={fontSize} setValue={setFontSize} suffix="px" />
+        <Range label="Font weight" min={100} max={1200} step={50} value={fontWeight} setValue={setFontWeight} />
+        <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
+        <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
+        <Range label="Arc" min={-15} max={20} value={arc} setValue={setArc} suffix="%" />
+        <Range label="Horizontal position" min={artworkMinXCanvasPercent} max={artworkMaxXCanvasPercent} step={0.5} value={posX} setValue={setPosX} suffix="%" />
+        <Range label="Vertical position" min={20} max={80} step={0.5} value={posY} setValue={setPosY} suffix="%" />
+        <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
+        {logoDataUrl && <>
+          <Range label="Logo size" min={0} max={100} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
+          <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
+        </>}
+        <label className="snapink-toolbar-guides"><input type="checkbox" checked={showGuides} onChange={(event) => setShowGuides(event.target.checked)} /> Show safe area</label>
+      </div>}
     </div>
   );
 
@@ -1255,13 +1295,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
       <div className={`snapink-preview-controls order-2 flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 lg:order-none ${fixedProductConfiguration ? "hidden" : ""}`}>
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
-          <label className="flex min-w-0 flex-col gap-1 text-xs text-neutral-300">
-            <span>Sleeve Style</span>
-            <select aria-label="Sleeve Style" disabled={fixedProductConfiguration} value={variant} onChange={(e) => handleVariantChange(e.target.value as SleeveVariant)} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
-              <option value="standard">Standard</option>
-              <option value="billboard">Billboard</option>
-            </select>
-          </label>
           <label className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2">
             <span>Choose Your Size</span>
             <select aria-label="Choose Your Size" disabled={fixedProductConfiguration} value={sleeveSize} onChange={(e) => handleSizeChange(Number(e.target.value))} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
@@ -1288,6 +1321,8 @@ const SnapInkSleeveCustomizer = forwardRef<
           New design
         </button>
       </div>
+      <div className="snapink-stage-wrap">
+      {previewToolbar}
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
@@ -1541,6 +1576,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </g>
       </svg>
       </div>
+      </div>
     </div>
   );
 
@@ -1560,6 +1596,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="snapink-preview-card p-2.5 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/20">
           {strapPreviewInner}
         </div>
+        <div className="snapink-mobile-controls min-h-0 space-y-4 overflow-y-auto overscroll-contain pb-20">
 
         {/* Text / Styling panel */}
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 overflow-hidden">
@@ -1890,6 +1927,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               <a ref={dlRef} className="hidden" />
             </div>
           )}
+        </div>
         </div>
 
         {/* Sticky-ish mobile CTA */}

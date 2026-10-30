@@ -185,88 +185,219 @@
     background-size: 24px 24px;
   }
 }
-/* One continuous SnapInk Studio application surface. */
+/* SnapInk Studio: one white editor with a viewport-locked desktop workspace. */
 .snapink-studio-application {
   color: #111111;
   background: #FFFFFF;
   border: 1px solid #E5E5E5;
   border-radius: 18px;
-  padding: clamp(14px, 2vw, 28px);
+  padding: 16px clamp(14px, 2vw, 26px);
 }
 .snapink-studio-customizer {
+  width: 100% !important;
   max-width: none !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding: 0 !important;
+  min-width: 0;
 }
 .snapink-studio-submission {
   border-top: 1px solid #E5E5E5;
-  margin: 24px 16px 0;
-  padding: 20px 0 4px;
+  margin: 20px 16px 0;
+  padding: 18px 0 4px;
 }
 .snapink-studio-submission :where(input, button) { min-height: 44px; }
 .snapink-studio-submission input { background: #FFFFFF !important; color: #111111 !important; border-color: #D8D8D8 !important; }
 .snapink-studio-workspace-desktop { display: none; }
+
 @media (min-width: 1024px) {
+  .snapink-studio-application { padding: 14px 20px; }
   .snapink-studio-workspace-desktop {
     display: grid;
-    grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
-    grid-auto-rows: max-content;
-    align-items: start;
-    gap: 0;
+    width: 100%;
+    height: clamp(480px, calc(100svh - 235px), 900px);
+    min-width: 0;
+    min-height: 0;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    align-items: stretch;
+    overflow: hidden;
   }
   .snapink-studio-workspace-desktop > * {
     min-width: 0;
-    align-self: start;
+    min-height: 0;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child {
     border-right: 1px solid #E5E5E5;
-    padding-right: clamp(16px, 2vw, 28px);
+    padding: 0 clamp(14px, 1.8vw, 24px) 14px 0;
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child {
-    padding-left: clamp(16px, 2vw, 28px);
+    padding: 0 0 14px clamp(14px, 1.8vw, 24px);
   }
-  .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4 {
-    margin-top: 0 !important;
-    padding: 0 !important;
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4,
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .p-4 {
+    margin: 0 !important;
+    padding: 12px 0 !important;
     background: transparent !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
-  .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4 + .p-4 {
-    margin-top: 18px !important;
-    padding-top: 18px !important;
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4 + .p-4,
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .p-4 {
     border-top: 1px solid #E5E5E5 !important;
   }
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4:first-child { display: none; }
   .snapink-studio-customizer .snapink-studio-workspace-desktop .snapink-preview-card {
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0 0 10px !important;
     background: transparent !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
-  .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .p-4 {
-    margin-top: 18px !important;
-    padding: 18px 0 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-top: 1px solid #E5E5E5 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+  .snapink-studio-customizer .snapink-preview-content { gap: 8px; }
+  .snapink-studio-customizer .snapink-stage-wrap { position: relative; min-width: 0; display: flex; flex-direction: column; }
+  .snapink-studio-customizer .snapink-preview-toolbar {
+    z-index: 12;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid #E8D8B0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .97);
+    color: #111111;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
   }
+  .snapink-studio-customizer .snapink-preview-toolbar[data-overlay="true"] {
+    position: absolute;
+    top: 34px;
+    left: 10px;
+    right: 10px;
+  }
+  .snapink-studio-customizer .snapink-toolbar-primary {
+    display: grid;
+    grid-template-columns: minmax(130px, 1.8fr) repeat(3, minmax(86px, 1fr));
+    gap: 6px;
+    align-items: end;
+  }
+  .snapink-studio-customizer .snapink-toolbar-primary > label,
+  .snapink-studio-customizer .snapink-toolbar-color { display: grid; min-width: 0; gap: 3px; }
+  .snapink-studio-customizer .snapink-toolbar-primary label > span,
+  .snapink-studio-customizer .snapink-toolbar-color > span {
+    color: #4B4B4B;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .snapink-studio-customizer .snapink-preview-toolbar :is(input:not([type="range"]):not([type="checkbox"]), select) {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    padding: 5px 7px;
+    border: 1px solid #D8D8D8;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #111111;
+    font-size: 12px;
+  }
+  .snapink-studio-customizer .snapink-toolbar-primary input { font-weight: 700; }
+  .snapink-studio-customizer .snapink-toolbar-secondary { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .snapink-studio-customizer .snapink-toolbar-color { display: flex; align-items: center; gap: 5px; }
+  .snapink-studio-customizer .snapink-preview-toolbar input[type="color"],
+  .snapink-studio-customizer .snapink-color-chip { width: 30px !important; height: 28px; min-height: 28px !important; padding: 2px !important; border: 1px solid #CFCFCF; border-radius: 6px; cursor: pointer; }
+  .snapink-studio-customizer .snapink-toolbar-count { margin-left: auto; color: #555555; font-size: 10px; }
+  .snapink-studio-customizer .snapink-toolbar-advanced-toggle { min-height: 30px; padding: 4px 9px; border: 1px solid #D8C08C; border-radius: 7px; background: #D8C08C; color: #111111; font-size: 11px; font-weight: 800; white-space: nowrap; }
+  .snapink-studio-customizer .snapink-toolbar-advanced { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E5E5; }
+  .snapink-studio-customizer .snapink-toolbar-advanced :is(label, span) { color: #4B4B4B; }
+  .snapink-studio-customizer .snapink-toolbar-guides { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .snapink-studio-customizer .snapink-toolbar-guides input { accent-color: #D8C08C; }
+  .snapink-studio-customizer .snapink-preview-controls { gap: 6px; padding: 0 !important; }
+  .snapink-studio-customizer .snapink-preview-controls > .grid { gap: 6px; }
+  .snapink-studio-customizer .snapink-size-control > select,
+  .snapink-studio-customizer .snapink-size-control > .mt-2,
+  .snapink-studio-customizer .snapink-preview-controls > p { display: none; }
+  .snapink-studio-customizer .snapink-size-control { grid-column: 1 / -1; }
+  .snapink-studio-customizer .snapink-fit-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .snapink-studio-customizer .snapink-fit-card { padding: 3px; }
+  .snapink-studio-customizer .snapink-fit-card img {
+    height: 38px;
+    aspect-ratio: auto;
+    object-fit: contain;
+  }
+  .snapink-studio-customizer .snapink-fit-card-label {
+    padding: 3px 1px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .snapink-studio-customizer .snapink-product-stage {
+    width: min(100%, max(420px, calc((100svh - 390px) * 1.538))) !important;
+    max-width: 100%;
+    aspect-ratio: 1000 / 650 !important;
+    margin-inline: auto;
+  }
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .snapink-preview-card + .p-4 > .grid.min-w-0,
+  .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .snapink-preview-card + .p-4 > .grid.grid-cols-2 { display: none; }
 }
+
 @media (max-width: 1023px) {
   .snapink-studio-application { padding: 12px; border-radius: 14px; }
-  .snapink-studio-submission { margin: 20px 2px 0; padding-top: 18px; }
-  .snapink-studio-customizer .snapink-studio-workspace-mobile { padding-bottom: 5rem; }
+  .snapink-studio-submission { margin: 18px 2px 0; padding-top: 16px; }
+  .snapink-studio-customizer .snapink-studio-workspace-mobile {
+    display: grid;
+    height: clamp(440px, calc(100svh - 215px), 860px);
+    min-height: 0;
+    grid-template-rows: minmax(260px, 44svh) minmax(0, 1fr);
+    gap: 8px;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  .snapink-studio-customizer .snapink-preview-content { gap: 8px; }
+  .snapink-studio-customizer .snapink-stage-wrap { position: relative; min-width: 0; display: flex; flex-direction: column; order: 1; }
+  .snapink-studio-customizer .snapink-stage-wrap > .snapink-product-stage { order: 1; }
+  .snapink-studio-customizer .snapink-stage-wrap > .snapink-preview-toolbar { order: 2; position: static !important; margin-top: 8px; padding: 8px; border: 1px solid #E8D8B0; border-radius: 12px; background: #FFFFFF; color: #111111; box-shadow: none; }
+  .snapink-studio-customizer .snapink-toolbar-primary { display: flex; width: 100%; min-width: 0; overflow-x: auto; gap: 7px; padding-bottom: 4px; }
+  .snapink-studio-customizer .snapink-toolbar-primary > label { flex: 0 0 118px; }
+  .snapink-studio-customizer .snapink-toolbar-primary > .snapink-toolbar-text { flex-basis: 170px; }
+  .snapink-studio-customizer .snapink-toolbar-primary > label,
+  .snapink-studio-customizer .snapink-toolbar-color { display: grid; min-width: 0; gap: 3px; }
+  .snapink-studio-customizer .snapink-toolbar-primary label > span,
+  .snapink-studio-customizer .snapink-toolbar-color > span { color: #4B4B4B; font-size: 10px; font-weight: 700; }
+  .snapink-studio-customizer .snapink-preview-toolbar :is(input:not([type="range"]):not([type="checkbox"]), select) { width: 100%; min-width: 0; min-height: 34px; padding: 5px 7px; border: 1px solid #D8D8D8; border-radius: 7px; background: #FFFFFF; color: #111111; font-size: 12px; }
+  .snapink-studio-customizer .snapink-toolbar-secondary { flex-wrap: wrap; }
+  .snapink-studio-customizer .snapink-toolbar-color { display: flex; align-items: center; gap: 5px; }
+  .snapink-studio-customizer .snapink-preview-toolbar input[type="color"],
+  .snapink-studio-customizer .snapink-color-chip { width: 32px !important; height: 32px; min-height: 32px !important; padding: 2px !important; border: 1px solid #CFCFCF; border-radius: 6px; }
+  .snapink-studio-customizer .snapink-toolbar-count { margin-left: auto; color: #555555; font-size: 11px; }
+  .snapink-studio-customizer .snapink-toolbar-advanced-toggle { min-height: 38px; padding: 6px 10px; border: 1px solid #D8C08C; border-radius: 7px; background: #D8C08C; color: #111111; font-size: 12px; font-weight: 800; white-space: nowrap; }
+  .snapink-studio-customizer .snapink-toolbar-advanced { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E5E5; }
+  .snapink-studio-customizer .snapink-toolbar-advanced :is(label, span) { color: #4B4B4B; }
+  .snapink-studio-customizer .snapink-toolbar-guides { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .snapink-studio-customizer .snapink-toolbar-guides input { accent-color: #D8C08C; }
+  .snapink-studio-customizer .snapink-mobile-controls > .rounded-2xl:first-child { display: none; }
+  .snapink-studio-customizer .snapink-mobile-controls > .rounded-2xl:nth-child(3) > div > .grid.min-w-0,
+  .snapink-studio-customizer .snapink-mobile-controls > .rounded-2xl:nth-child(3) > div > .grid.grid-cols-2 { display: none; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile > .snapink-preview-card {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0 0 12px !important;
     background: transparent !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+  }
+  .snapink-studio-customizer .snapink-mobile-controls {
+    min-width: 0;
+    min-height: 0;
+    padding: 0 4px 5rem 0;
   }
   .snapink-studio-customizer .snapink-studio-workspace-mobile > .rounded-2xl {
     margin-top: 0 !important;
@@ -278,7 +409,8 @@
     overflow: visible !important;
     box-shadow: none !important;
   }
-  .snapink-studio-customizer .snapink-studio-workspace-mobile > .rounded-2xl > button {
-    padding: 8px 0 !important;
-  }
+  .snapink-studio-customizer .snapink-fit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .snapink-studio-customizer .snapink-fit-card img { height: 40px; aspect-ratio: auto; }
+  .snapink-studio-customizer .snapink-fit-card-label { font-size: 10px; line-height: 1.2; }
+  .snapink-studio-customizer .snapink-studio-workspace-mobile > .rounded-2xl > button { padding: 8px 0 !important; }
 }
