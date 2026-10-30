@@ -187,9 +187,9 @@
 }
 /* One continuous SnapInk Studio application surface. */
 .snapink-studio-application {
-  color: #F4F4F5;
-  background: #242424;
-  border: 1px solid #414146;
+  color: #111111;
+  background: #FFFFFF;
+  border: 1px solid #E5E5E5;
   border-radius: 18px;
   padding: clamp(14px, 2vw, 28px);
 }
@@ -199,12 +199,12 @@
   padding-right: 0 !important;
 }
 .snapink-studio-submission {
-  border-top: 1px solid #414146;
+  border-top: 1px solid #E5E5E5;
   margin: 24px 16px 0;
   padding: 20px 0 4px;
 }
 .snapink-studio-submission :where(input, button) { min-height: 44px; }
-.snapink-studio-submission input { background: #1B1B1E !important; }
+.snapink-studio-submission input { background: #FFFFFF !important; color: #111111 !important; border-color: #D8D8D8 !important; }
 .snapink-studio-workspace-desktop { display: none; }
 @media (min-width: 1024px) {
   .snapink-studio-workspace-desktop {
@@ -219,7 +219,7 @@
     align-self: start;
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child {
-    border-right: 1px solid #414146;
+    border-right: 1px solid #E5E5E5;
     padding-right: clamp(16px, 2vw, 28px);
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child {
@@ -236,7 +236,7 @@
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child > .p-4 + .p-4 {
     margin-top: 18px !important;
     padding-top: 18px !important;
-    border-top: 1px solid #414146 !important;
+    border-top: 1px solid #E5E5E5 !important;
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop .snapink-preview-card {
     margin: 0 !important;
@@ -251,7 +251,7 @@
     padding: 18px 0 0 !important;
     background: transparent !important;
     border: 0 !important;
-    border-top: 1px solid #414146 !important;
+    border-top: 1px solid #E5E5E5 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
@@ -273,7 +273,7 @@
     padding: 12px 0 0 !important;
     background: transparent !important;
     border: 0 !important;
-    border-top: 1px solid #414146 !important;
+    border-top: 1px solid #E5E5E5 !important;
     border-radius: 0 !important;
     overflow: visible !important;
     box-shadow: none !important;

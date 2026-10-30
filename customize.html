@@ -246,6 +246,13 @@
     .snap-brief p { margin: 7px 0 0; color: rgba(255, 255, 255, .92); line-height: 1.45; }
 
     .snap-tool-frame { padding: 0; }
+    body.snapink-studio-content {
+      --si-gold: #D8C08C;
+      --si-gold-hover: #E4D0A1;
+      color-scheme: light;
+      background: #000000 !important;
+      color: #FFFFFF;
+    }
     @media (min-width: 1024px) {
       .snap-container.snap-tool-frame { width: min(1440px, calc(100% - 32px)); }
     }
@@ -262,28 +269,51 @@
       .studio-editor-band { padding-block: 12px 20px; }
     }
     .site-band--light.studio-editor-band {
-      background: #FFFFFF !important;
+      background: #000000 !important;
       border-color: transparent !important;
+      color: #FFFFFF !important;
     }
     .snap-tool-frame #customizer-root {
       --si-bg: #FFFFFF;
-      --si-panel: #242424;
-      --si-line: #414146;
-      --si-muted: #C4C4CC;
+      --si-panel: #FFFFFF;
+      --si-line: #E5E5E5;
+      --si-muted: #4B4B4B;
+      --si-gold: #D8C08C;
+      --si-gold-hover: #E4D0A1;
+      color: #111111;
+      background: #FFFFFF;
+      border-radius: 16px;
       border: 0;
-      border-radius: 0;
-      background: transparent;
       box-shadow: none;
-      overflow: visible;
+      overflow: hidden;
     }
-    #customizer-root .snapink-preview-card,
+    #customizer-root .snapink-studio-customizer {
+      color: #111111 !important;
+    }
+    #customizer-root .snapink-studio-customizer [class*="bg-neutral-800"],
+    #customizer-root .snapink-studio-customizer [class~="bg-neutral-900"],
     #customizer-root [class*="bg-neutral-900/"],
     #customizer-root [class*="bg-neutral-950/"] {
-      background-color: #242424 !important;
+      background-color: #FFFFFF !important;
+    }
+    #customizer-root .snapink-studio-customizer :is([class*="border-neutral-700"], [class*="border-neutral-800"]) {
+      border-color: #E5E5E5 !important;
+    }
+    #customizer-root .snapink-studio-customizer :is(.text-white, .text-neutral-50, .text-neutral-100, .text-neutral-200, .text-neutral-300, .text-neutral-400, .text-neutral-500, .text-neutral-950) {
+      color: #111111 !important;
+    }
+    #customizer-root .snapink-studio-customizer :is(input:not([type="range"]):not([type="checkbox"]), select, textarea) {
+      color: #111111 !important;
+      background-color: #FFFFFF !important;
+      border-color: #D8D8D8 !important;
+    }
+    #customizer-root .snapink-studio-customizer :is(button, [role="button"]).bg-si-button,
+    #customizer-root .snapink-studio-customizer button[class*="bg-si-button"] {
+      color: #111111 !important;
     }
     #customizer-root .text-neutral-500,
     #customizer-root .text-neutral-420 {
-      color: #C4C4CC !important;
+      color: #4B4B4B !important;
     }
 
     @media (max-width: 820px) {
