@@ -231,7 +231,7 @@
 .snapink-draft-submission :is(.snapink-draft-eyebrow, .snapink-draft-heading) { color: #171717; }
 .snapink-draft-submission .snapink-draft-eyebrow { color: #9B7B35; }
 .snapink-draft-description,
-.snapink-draft-disclaimer { color: #555555; }
+.snapink-draft-disclaimer { color: #000000; }
 .snapink-draft-form { min-width: 0; }
 .snapink-draft-form .snapink-draft-field {
   box-sizing: border-box;
