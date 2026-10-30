@@ -1555,7 +1555,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       style={{ maxWidth: width }}
     >
       {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
-      <div className="lg:hidden space-y-4 pb-20">
+      <div className="snapink-studio-workspace-mobile lg:hidden space-y-4 pb-20">
         {/* Preview at top */}
         <div className="snapink-preview-card p-2.5 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/20">
           {strapPreviewInner}
@@ -1683,7 +1683,8 @@ const SnapInkSleeveCustomizer = forwardRef<
                 />
               </div>
 
-              <div className="space-y-3 mt-2">
+              <div className="space-y-3 mt-2 border-t border-neutral-700 pt-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">Colors</h3>
                 <div>
                   <label className="block text-xs text-neutral-400 mb-1">
                     Fill color (text)
@@ -2007,7 +2008,8 @@ const SnapInkSleeveCustomizer = forwardRef<
               />
             </div>
 
-            <div className="space-y-3 mt-2">
+            <div className="space-y-3 mt-2 border-t border-neutral-700 pt-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">Colors</h3>
               <div>
                 <label className="block text-xs text-neutral-400 mb-1">
                   Fill color (text)
