@@ -198,22 +198,18 @@ def composite(reference: dict, args) -> dict:
                                 (0, 0), 0.45)
 
     master_linear = srgb_to_linear(master.astype(np.float32) / 255.0)
-    if settings.get("artColor") == "original":
-        source_bgr_linear = srgb_to_linear(artwork_rgba[:, :, :3].astype(np.float32) / 255.0)
-        source_opacity = artwork_rgba[:, :, 3].astype(np.float32) / 255.0
-        mapped_premultiplied = cv2.warpPerspective(
-            source_bgr_linear * source_opacity[..., None], source_to_plate, (width, height),
-            flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
-        mapped_opacity = cv2.warpPerspective(source_opacity, source_to_plate, (width, height),
-                                             flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
-                                             borderValue=0.0)
-        mapped_color = mapped_premultiplied / np.maximum(mapped_opacity[..., None], 1e-6)
-    else:
-        chosen = str(settings.get("artColor", "#ffffff"))
-        if len(chosen) != 7 or not chosen.startswith("#"):
-            raise RuntimeError("Unsupported On-Hat artwork color.")
-        rgb = [int(chosen[index:index + 2], 16) / 255.0 for index in (1, 3, 5)]
-        mapped_color = np.broadcast_to(srgb_to_linear(np.asarray(rgb, np.float32))[::-1], master_linear.shape)
+    # Color is baked into the sanitized upload by Photo Studio. Preserve those
+    # pixels through the projective mapping for every selected color so dark
+    # outline/stroke details are not flattened into the fill color.
+    source_bgr_linear = srgb_to_linear(artwork_rgba[:, :, :3].astype(np.float32) / 255.0)
+    source_opacity = artwork_rgba[:, :, 3].astype(np.float32) / 255.0
+    mapped_premultiplied = cv2.warpPerspective(
+        source_bgr_linear * source_opacity[..., None], source_to_plate, (width, height),
+        flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
+    mapped_opacity = cv2.warpPerspective(source_opacity, source_to_plate, (width, height),
+                                         flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
+                                         borderValue=0.0)
+    mapped_color = mapped_premultiplied / np.maximum(mapped_opacity[..., None], 1e-6)
 
     candidate = master_linear * (1.0 - coverage[..., None]) + mapped_color * coverage[..., None]
     edge_light = np.clip(mapped_delta, 0.0, 0.10) * edge_band[..., None] * 0.20

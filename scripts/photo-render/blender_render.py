@@ -237,7 +237,7 @@ def resolve_vector_data(args):
     return vector_path
 
 
-def raised_artwork(sleeve, image_path, vector_path, box, solid_color):
+def raised_artwork(sleeve, image_path, vector_path, box):
     """Build one exact, closed mesh from source-alpha vector contours and a constrained triangulation."""
     x0, x1, y0, y1 = box
     image = bpy.data.images.load(str(image_path), check_existing=False)
@@ -352,7 +352,11 @@ def raised_artwork(sleeve, image_path, vector_path, box, solid_color):
     bpy.context.collection.objects.link(obj)
     obj.parent = sleeve
     obj.matrix_parent_inverse = sleeve.matrix_world.inverted()
-    obj.data.materials.append(artwork_material(image, raised=True, solid_color=solid_color))
+    # The Photo Studio normalizes the selected tint into the uploaded RGBA
+    # raster. Sample that raster on the raised surface so intentional dark/light
+    # details (such as script outlines) survive instead of becoming one flat
+    # solid-color blob. The vector alpha silhouette still defines the exact mesh.
+    obj.data.materials.append(artwork_material(image, raised=True))
     return obj, {"reliefHeightMm": PRODUCTION_ARTWORK_RELIEF_MM, "placedWidthMm": placed_width * 1000, "placedHeightMm": placed_height * 1000, "meshVertices": len(mesh.vertices), "meshFaces": len(mesh.polygons), "topFaces": len(top_face_indices), "componentCount": vectors["componentCount"], "holeCount": vectors["holeCount"], "boundaryEdges": boundary_edges, "nonmanifoldEdges": nonmanifold_edges, "nonmanifoldVertices": nonmanifold_vertices, "signedVolumeMm3": signed_volume * 1e9, "sourceSha256": vectors["sourceSha256"], "contourThreshold": vectors["alphaThreshold"], "contourSimplifyTolerancePx": vectors["simplifyTolerancePx"]}
 
 
@@ -480,11 +484,7 @@ def run():
     is_raised=settings.get("relief", "raised") == "raised"
     if is_raised:
         vector_path = resolve_vector_data(args)
-        art_color = settings.get("artColor", "#ffffff")
-        art_rgb = None if art_color == "original" else tuple(
-            srgb_channel_to_linear(int(art_color[i:i+2], 16)) for i in (1, 3, 5)
-        )
-        artwork,artwork_info=raised_artwork(sleeve,args.artwork,vector_path,artwork_box,art_rgb)
+        artwork,artwork_info=raised_artwork(sleeve,args.artwork,vector_path,artwork_box)
     else:
         artwork,artwork_info=flat_artwork(sleeve,args.artwork,artwork_box)
 

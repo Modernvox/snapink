@@ -115,11 +115,7 @@ def main():
            (center_y_mm - height_mm / 2) * MM, (center_y_mm + height_mm / 2) * MM)
     vector_path = pipeline.resolve_vector_data(SimpleNamespace(
         vector_data=args.vector_data, output=args.passes_dir / "scene.jpg", artwork=args.artwork))
-    art_color = settings.get("artColor", "#ffffff")
-    solid_color = None if art_color == "original" else tuple(
-        pipeline.srgb_channel_to_linear(int(art_color[index:index + 2], 16))
-        for index in (1, 3, 5))
-    artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box, solid_color)
+    artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box)
     bsdf = artwork.data.materials[0].node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Roughness"].default_value = reference["artworkMaterial"]["roughness"]
     coat = bsdf.inputs.get("Coat Weight")

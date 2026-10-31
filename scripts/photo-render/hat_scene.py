@@ -693,8 +693,7 @@ def main():
                float(args.artwork_center_y_mm) * MM + art_h / 2)
     vector_args = SimpleNamespace(vector_data=None, output=output_dir / "scene-job.jpg", artwork=artwork)
     vector_path = sleeve_pipeline.resolve_vector_data(vector_args)
-    rgb = tuple(sleeve_pipeline.srgb_channel_to_linear(int(args.artwork_color[i:i+2], 16)) for i in (1, 3, 5))
-    artwork_obj, art_info = sleeve_pipeline.raised_artwork(sleeve, artwork, vector_path, art_box, rgb)
+    artwork_obj, art_info = sleeve_pipeline.raised_artwork(sleeve, artwork, vector_path, art_box)
 
     # Exact imported CAD mesh stays rigid. Only transform it rigidly from its
     # source coordinates onto the rear strap; no scaling or geometry edit.

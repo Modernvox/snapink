@@ -334,7 +334,62 @@ function syncPhotoQualityControls(){const fast=photoSettings.renderMode==="fast"
 function syncPhotoSceneControls(){const fixed=photoSettings.scene==="on-hat-rear";$("photo-material").disabled=fixed;$("photo-template").disabled=fixed;$("photo-relief").disabled=fixed;$("photo-resolution").disabled=fixed;$("photo-scene-note").textContent=fixed?"On-Hat Rear View uses locked master snapink.rear-snapback.master.v1 (1536 × 1024). Hat, sleeve, lighting, and framing stay fixed; CAD-derived artwork placement excludes the flap and groove. Artwork remains raised at 0.8 mm.":"Sleeve Only uses the selected CAD mesh, sleeve materials, and photography template.";syncPhotoQualityControls()}
 function validatePhotoConfig(updateMessage=true){const held=photoSettings.variant==="billboard"&&photoSettings.size<3;$("photo-generate").disabled=held;if(updateMessage)photoMessage.textContent=held?"Billboard sizes 0–2 are on CAD validation hold and cannot be rendered.":photoSettings.scene==="on-hat-rear"?"Fast uses Eevee; Premium uses Cycles with OptiX when available. On-Hat output remains the locked 1536 × 1024 master composition.":photoSettings.renderMode==="fast"?"Fast mode uses Blender Eevee at 1600 × 1600. Premium uses Cycles and reports CPU fallback.":"Premium uses Blender Cycles with OptiX when available; CPU fallback and render time are reported per result.";return !held}
 async function photoApi(url,options={}){const headers={Authorization:"Bearer "+adminToken,...(options.headers||{})};if(options.body&&!(options.body instanceof FormData))headers["Content-Type"]="application/json";const response=await fetch(url,{...options,headers,cache:"no-store"});const data=response.headers.get("content-type")?.includes("application/json")?await response.json():null;if(!response.ok)throw new Error(data?.error||"Photo request failed ("+response.status+").");return{response,data}}
-function decodeArtwork(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Artwork could not be decoded."))};img.onload=()=>{URL.revokeObjectURL(url);if(img.naturalWidth>8192||img.naturalHeight>8192||img.naturalWidth*img.naturalHeight>40000000){reject(Error("Artwork image dimensions are too large (maximum 40 megapixels)."));return}try{const src=document.createElement("canvas");src.width=img.naturalWidth;src.height=img.naturalHeight;const ctx=src.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);const imageData=ctx.getImageData(0,0,src.width,src.height),d=imageData.data;let hasTransparency=false;for(let a=3;a<d.length;a+=4){if(d[a]<255){hasTransparency=true;break}}let x0=src.width,y0=src.height,x1=-1,y1=-1;for(let y=0;y<src.height;y++)for(let x=0;x<src.width;x++){const i=(y*src.width+x)*4;if(!hasTransparency&&photoSettings.background==="remove-white"&&d[i+3]>0&&d[i]>220&&d[i+1]>220&&d[i+2]>220)d[i+3]=0;if(d[i+3]>8){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}}if(x1<x0)throw Error("No visible artwork pixels were found.");const w=x1-x0+1,h=y1-y0+1,crop=document.createElement("canvas");crop.width=w;crop.height=h;const out=crop.getContext("2d");out.putImageData(ctx.getImageData(x0,y0,w,h),0,0);if(photoSettings.artColor!=="original"){const pixels=out.getImageData(0,0,w,h);for(let i=0;i<pixels.data.length;i+=4){if(pixels.data[i+3]===0)continue;const a=pixels.data[i+3];pixels.data[i]=parseInt(photoSettings.artColor.slice(1,3),16);pixels.data[i+1]=parseInt(photoSettings.artColor.slice(3,5),16);pixels.data[i+2]=parseInt(photoSettings.artColor.slice(5,7),16);pixels.data[i+3]=a}out.putImageData(pixels,0,0)}crop.toBlob(blob=>blob?resolve({blob,width:w,height:h}):reject(Error("Could not prepare transparent artwork.")),"image/png") }catch(e){reject(e)}};img.src=url})}
+function applyPhotoArtworkColor(pixels,color){
+  if(color==="original")return;
+  const data=pixels.data;
+  let foreground=0,grayscale=0,dark=0,light=0;
+  for(let i=0;i<data.length;i+=4){
+    if(data[i+3]<128)continue;
+    foreground++;
+    const r=data[i],g=data[i+1],b=data[i+2],luminance=Math.round(.2126*r+.7152*g+.0722*b);
+    if(Math.max(r,g,b)-Math.min(r,g,b)<=24)grayscale++;
+    if(luminance<=48)dark++;
+    if(luminance>=207)light++;
+  }
+  const preserveMonochromeDetail=foreground>0&&grayscale/foreground>=.95&&dark/foreground>=.05&&light/foreground>=.05;
+  const tint=[1,3,5].map(offset=>parseInt(color.slice(offset,offset+2),16));
+  for(let i=0;i<data.length;i+=4){
+    if(data[i+3]===0)continue;
+    const luminance=Math.round(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2]);
+    const tone=preserveMonochromeDetail?luminance/255:1;
+    data[i]=Math.round(tint[0]*tone);
+    data[i+1]=Math.round(tint[1]*tone);
+    data[i+2]=Math.round(tint[2]*tone);
+  }
+}
+
+function decodeArtwork(file){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Artwork could not be decoded."))};
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      if(img.naturalWidth>8192||img.naturalHeight>8192||img.naturalWidth*img.naturalHeight>40000000){reject(Error("Artwork image dimensions are too large (maximum 40 megapixels)."));return}
+      try{
+        const src=document.createElement("canvas");src.width=img.naturalWidth;src.height=img.naturalHeight;
+        const ctx=src.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
+        const imageData=ctx.getImageData(0,0,src.width,src.height),d=imageData.data;let hasTransparency=false;
+        for(let a=3;a<d.length;a+=4){if(d[a]<255){hasTransparency=true;break}}
+        let x0=src.width,y0=src.height,x1=-1,y1=-1;
+        for(let y=0;y<src.height;y++)for(let x=0;x<src.width;x++){
+          const i=(y*src.width+x)*4;
+          if(!hasTransparency&&photoSettings.background==="remove-white"&&d[i+3]>0&&d[i]>220&&d[i+1]>220&&d[i+2]>220)d[i+3]=0;
+          if(d[i+3]>8){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
+        }
+        if(x1<x0)throw Error("No visible artwork pixels were found.");
+        const w=x1-x0+1,h=y1-y0+1,crop=document.createElement("canvas");crop.width=w;crop.height=h;
+        const out=crop.getContext("2d");out.putImageData(ctx.getImageData(x0,y0,w,h),0,0);
+        if(photoSettings.artColor!=="original"){
+          const pixels=out.getImageData(0,0,w,h);
+          applyPhotoArtworkColor(pixels,photoSettings.artColor);
+          out.putImageData(pixels,0,0);
+        }
+        crop.toBlob(blob=>blob?resolve({blob,width:w,height:h}):reject(Error("Could not prepare transparent artwork.")),"image/png");
+      }catch(e){reject(e)}
+    };
+    img.src=url;
+  });
+}
 async function makePlacement(texture){const variant=photoSettings.variant,size=photoSettings.size,geo=geometryFor(variant,size),face=brandingRegionFor(variant,size),bounds=surfaceBounds(variant,size),cx=face.centerXmm,cy=(bounds.minY+bounds.maxY)/2,aspect=texture.width/texture.height;const maxHeight=maximumContainedLogoHeightMm(variant,size,cx,cy,aspect,1);if(maxHeight<=0)throw Error("Artwork cannot fit within the CAD branding face with 1 mm clearance.");const h=maxHeight,w=h*aspect;return{geometryLengthMm:geo.overallMaxXmm-geo.overallMinXmm,geometryCenterXmm:(geo.overallMinXmm+geo.overallMaxXmm)/2,artworkCenterXmm:cx,artworkCenterYmm:cy,artworkAspectRatio:aspect,artworkWidthMm:w,artworkHeightMm:h}}
 // Incremental gallery reconciliation: polling updates existing nodes in place,
 // preserving focus, scroll position, and already-loaded private thumbnail URLs.
