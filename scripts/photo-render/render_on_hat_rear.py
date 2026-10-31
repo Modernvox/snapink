@@ -12,8 +12,6 @@ import time
 from pathlib import Path
 from types import SimpleNamespace
 
-from PIL import Image
-
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
@@ -64,9 +62,6 @@ def main():
         raise RuntimeError("Locked master calibration manifest is missing or unsupported.")
     if file_hash(ROOT / reference["masterImage"]) != reference["masterImageSha256"]:
         raise RuntimeError("Locked On-Hat master image hash changed; refusing to render.")
-    with Image.open(ROOT / reference["masterImage"]) as master:
-        if list(master.size) != reference["masterCanvasPx"] or master.size != (1536, 1024):
-            raise RuntimeError("Locked On-Hat master dimensions changed; expected 1536 x 1024.")
     if bpy.app.version < (4, 5, 0) or bpy.app.version >= (5, 0, 0):
         raise RuntimeError("On-Hat Rear View requires Blender 4.5 LTS.")
     job = json.loads(args.job.read_text(encoding="utf-8-sig"))
