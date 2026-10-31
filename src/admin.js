@@ -1,3 +1,4 @@
+import "./admin-dashboard.css";
 import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds } from "./config/sleeveGeometry";
 import { mountAdminShop } from "./admin-shop.js";
 
@@ -244,9 +245,67 @@ $("retail-refresh")?.addEventListener("click", renderRetailOrders); $("retail-st
 let retailSearchTimer; $("retail-search")?.addEventListener("input", () => { clearTimeout(retailSearchTimer); retailSearchTimer = setTimeout(renderRetailOrders, 250); });
 $("retail-detail-close")?.addEventListener("click", () => $("retail-order-detail").close());
 
+function setupAdminLayout(){
+  const desk=$("desk"),loginBrand=document.querySelector(".brand"),allChildren=[...desk.childNodes];
+  const shell=document.createElement("div");shell.className="admin-shell";
+  const sidebar=document.createElement("aside");sidebar.className="admin-sidebar";
+  const sidebarBrand=loginBrand.cloneNode(true);sidebarBrand.className="admin-sidebar-brand";sidebarBrand.querySelector("span").textContent="Private Order Desk";sidebar.append(sidebarBrand);
+  const menuButton=document.createElement("button");menuButton.type="button";menuButton.className="admin-sidebar-toggle secondary";menuButton.setAttribute("aria-expanded","false");menuButton.setAttribute("aria-controls","admin-navigation");menuButton.textContent="Menu";
+  const navigation=document.createElement("nav");navigation.id="admin-navigation";navigation.className="admin-navigation";navigation.setAttribute("aria-label","Order Desk navigation");sidebar.append(menuButton,navigation);
+  const sidebarFooter=document.createElement("div");sidebarFooter.className="admin-sidebar-footer";const logout=$("logout");logout.classList.add("admin-logout");sidebarFooter.append(logout);sidebar.append(sidebarFooter);
+  const main=document.createElement("div");main.className="admin-main";
+  const pageHeader=document.createElement("header");pageHeader.className="admin-page-header";
+  const title=desk.querySelector("h1"),subtitle=desk.querySelector(":scope > .sub"),globalMessage=$("desk-message");title.textContent="Order Desk";pageHeader.append(title);if(subtitle)pageHeader.append(subtitle);if(globalMessage)pageHeader.append(globalMessage);
+  const content=document.createElement("div");content.className="admin-content";
+  for(const node of allChildren){if(node===title||node===subtitle||node===globalMessage)continue;content.append(node)}
+  const overview=document.createElement("section");overview.id="admin-overview";overview.className="admin-overview";overview.setAttribute("aria-labelledby","overview-title");overview.append(textNode("h2","Overview","admin-overview-title"),textNode("p","Current counts from private Order Desk records.","admin-overview-copy"));
+  const metrics=document.createElement("div");metrics.className="admin-metrics";overview.append(metrics);content.prepend(overview);main.append(pageHeader,content);shell.append(sidebar,main);desk.replaceChildren(shell);
+
+  const panel=(selector)=>$(selector)?.closest(".panel")||$(selector);
+  const pages={overview,products:$("shop-products-panel"),shopOrders:$("shop-orders-panel"),designReviews:panel("#design-drafts-body"),retailOrders:panel("#retail-orders-body"),productionOrders:panel("#search"),wholesale:$("wholesale-management"),pilot:$("pilot-review"),partnerAccess:$("partner-access-panel"),photo:$("photo-studio"),pairing:$("pair-panel")};
+  for(const [key,node] of Object.entries(pages))if(key!=="overview"&&node)node.classList.add("hidden");
+
+  const sections=[["Workspace",[["overview","Overview"],["products","Products & Inventory"],["shopOrders","Shop Orders"]]],["Orders & Reviews",[["designReviews","Design Reviews"],["retailOrders","Retail Custom Orders"],["productionOrders","Production Orders"]]],["Partners",[["pilot","Pilot Partners"],["partnerAccess","Partner Access"],["wholesale","Wholesale Orders"]]],["Tools",[["photo","Photo Studio"],["pairing","Pair Windows PC"]]]],navItems=new Map();
+  for(const [group,items] of sections){const groupNode=document.createElement("div");groupNode.className="admin-nav-group";groupNode.append(textNode("p",group,"admin-nav-heading"));for(const [key,label]of items){const button=document.createElement("button");button.type="button";button.className="admin-nav-item";button.textContent=label;button.addEventListener("click",()=>{void openPage(key)});groupNode.append(button);navItems.set(key,button)}navigation.append(groupNode)}
+  menuButton.addEventListener("click",()=>{const open=sidebar.classList.toggle("is-open");menuButton.setAttribute("aria-expanded",String(open))});
+
+  function makeMetric(label,caption,key){const button=document.createElement("button");button.type="button";button.className="admin-metric-card";button.append(textNode("span",label,"admin-metric-label"),textNode("strong","—","admin-metric-value"),textNode("span",caption,"admin-metric-caption"));button.addEventListener("click",()=>{void openPage(key)});metrics.append(button);return button}
+  const specs=[["Orders awaiting attention","New, in review, or ready","productionOrders"],["Pending design reviews","Awaiting owner review","designReviews"],["Retail custom orders","Current retail order records","retailOrders"],["Active products","Enabled Shop designs","products"],["Low-stock products","Tracked size variants at 5 units or fewer","products"]],cards=specs.map(([label,caption,key])=>makeMetric(label,caption,key));
+  async function loadOverview(){
+    const routes=["/api/admin/orders","/api/admin/design-drafts","/api/admin/retail-orders","/api/admin/shop-products"],results=await Promise.allSettled(routes.map((route)=>api(route)));
+    const set=(index,result,formatter)=>{const value=cards[index].querySelector(".admin-metric-value");if(result.status!=="fulfilled"){value.textContent="Unavailable";cards[index].querySelector(".admin-metric-caption").textContent="Data could not be loaded";return}const formatted=formatter(result.value.data);value.textContent=String(formatted.value);cards[index].querySelector(".admin-metric-caption").textContent=formatted.caption};
+    set(0,results[0],(data)=>({value:(data.orders||[]).filter((order)=>["new","in_review","ready"].includes(order.status)).length,caption:"New, in review, or ready"}));
+    set(1,results[1],(data)=>({value:(data.drafts||[]).filter((draft)=>draft.status==="pending_review").length,caption:"Awaiting owner review"}));
+    set(2,results[2],(data)=>({value:(data.orders||[]).length>=250?"250+":(data.orders||[]).length,caption:(data.orders||[]).length>=250?"250 most recent records":"Current retail order records"}));
+    set(3,results[3],(data)=>({value:(data.products||[]).filter((product)=>product.active).length,caption:"Enabled Shop designs"}));
+    set(4,results[3],(data)=>{const low=new Set();let tracked=0;for(const product of data.products||[])for(const variant of product.variants||[])for(const item of variant.inventory||[]){tracked++;if(Number(item.availableQuantity)-Number(item.reservedQuantity||0)<=5)low.add(product.productId)}return{value:tracked?low.size:"—",caption:tracked?"Products with tracked sizes at 5 units or fewer":"No inventory quantities are tracked"}});
+  }
+  async function openPage(key){
+    for(const [pageKey,node]of Object.entries(pages))if(pageKey!=="overview"&&node)node.classList.add("hidden");
+    overview.classList.toggle("hidden",key!=="overview");
+    if(key!=="photo")stopPhotoPolling();
+    if(key==="overview"){overview.classList.remove("hidden");await loadOverview()}
+    else if(key==="products")await shopAdmin.showProducts();
+    else if(key==="shopOrders")await shopAdmin.showOrders();
+    else if(key==="designReviews"){pages.designReviews.classList.remove("hidden");await renderDesignDrafts()}
+    else if(key==="retailOrders"){pages.retailOrders.classList.remove("hidden");await renderRetailOrders()}
+    else if(key==="productionOrders"){pages.productionOrders.classList.remove("hidden");await renderOrders()}
+    else if(key==="wholesale"){pages.wholesale.classList.remove("hidden");await renderWholesaleOrders()}
+    else if(key==="pilot"){pages.pilot.classList.remove("hidden");await renderPilotApplications()}
+    else if(key==="partnerAccess"){pages.partnerAccess.classList.remove("hidden");await renderPartnerAccess()}
+    else if(key==="photo"){pages.photo.classList.remove("hidden");await refreshPhotoGallery();startPhotoPolling()}
+    else if(key==="pairing"){pages.pairing.classList.remove("hidden");await renderDevices()}
+    for(const [item,button]of navItems){const active=item===key;button.classList.toggle("is-active",active);if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current")}
+    sidebar.classList.remove("is-open");menuButton.setAttribute("aria-expanded","false");
+  }
+  return{openPage,loadOverview};
+}
+
+const adminLayout=setupAdminLayout();
+
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault(); adminToken = $("admin-token").value;
-  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); await renderOrders(); await renderDesignDrafts(); await renderRetailOrders(); await shopAdmin.load(); }
+  try { await api("/api/admin/orders"); $("login").classList.add("hidden"); $("desk").classList.remove("hidden"); document.querySelector(".wrap > .brand").hidden=true; await adminLayout.openPage("overview"); }
   catch (e) { $("login-message").textContent = e.message; adminToken = ""; }
 });
 $("refresh").addEventListener("click", renderOrders);
@@ -254,7 +313,7 @@ $("status-filter").addEventListener("change", renderOrders);
 let searchTimer; $("search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderOrders, 250); });
 $("detail-close").addEventListener("click", () => $("order-detail").close());
 $("pair-toggle").addEventListener("click", async () => { $("pair-panel").classList.toggle("hidden"); if (!$("pair-panel").classList.contains("hidden")) await renderDevices(); });
-$("logout").addEventListener("click", () => { adminToken = ""; $("admin-token").value = ""; $("desk").classList.add("hidden"); $("login").classList.remove("hidden"); $("photo-studio").classList.add("hidden"); setMessage(""); });
+$("logout").addEventListener("click", () => { adminToken = ""; $("admin-token").value = ""; $("desk").classList.add("hidden"); $("login").classList.remove("hidden"); document.querySelector(".wrap > .brand").hidden=false; $("photo-studio").classList.add("hidden"); stopPhotoPolling(); setMessage(""); });
 async function renderDevices() { const root=$("devices-list"); root.replaceChildren(); try { const {data}=await api("/api/admin/pair-device"); for(const device of data.devices||[]) { const box=document.createElement("div"); box.className="panel"; const label=document.createElement("span"); label.textContent=`${device.name} | ${device.active ? "paired" : "revoked"} | last seen ${device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : "never"}`; box.append(label); if(device.active) { const revoke=document.createElement("button"); revoke.className="danger"; revoke.textContent="Revoke"; revoke.addEventListener("click",async()=>{try{await api("/api/admin/pair-device",{method:"DELETE",body:JSON.stringify({id:device.id})});await renderDevices();}catch(e){setMessage(e.message,true);}});box.append(revoke);} root.append(box); } } catch(e) { setMessage(e.message,true); } }
 $("pair-close").addEventListener("click", () => $("pair-panel").classList.add("hidden"));
 $("pair-form").addEventListener("submit", async (event) => { event.preventDefault(); try { const { data } = await api("/api/admin/pair-device", { method: "POST", body: JSON.stringify({ name: $("device-name").value }) }); $("pair-output").textContent = `One-time device token:\n${data.token}\n\nUse this with the Windows companion setup. Copy it now; it cannot be retrieved again.`; $("pair-output").classList.remove("hidden"); await renderDevices(); } catch (e) { $("pair-output").textContent = e.message; $("pair-output").classList.remove("hidden"); } });

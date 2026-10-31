@@ -16,19 +16,19 @@ function showProductPreview(dialog,imageUrl,alt,name){
 
 export function mountAdminShop(api){
   const desk=document.querySelector("#desk");if(!desk)return{load:async()=>{}};
-  const controls=el("div",{className:"tools"});
+  const controls=el("div",{className:"tools admin-shop-toggle-tools"});
   const productsToggle=el("button",{type:"button",className:"secondary"},"Shop products & inventory");
   const ordersToggle=el("button",{type:"button",className:"secondary"},"Shop orders");controls.append(productsToggle,ordersToggle);
   desk.querySelector("h1")?.insertAdjacentElement("afterend",controls);
-  const productsPanel=el("section",{className:"panel hidden"}),ordersPanel=el("section",{className:"panel hidden"});
+  const productsPanel=el("section",{className:"panel hidden"}),ordersPanel=el("section",{className:"panel hidden"});productsPanel.id="shop-products-panel";ordersPanel.id="shop-orders-panel";
   productsPanel.append(el("h2",{},"Shop products, prices & inventory"),el("p",{className:"muted"},"Manage the shared size-based price schedule, active designs, variants, availability, and optional stock counts. Blank stock fields mean inventory is not tracked."));
   const productsRoot=el("div",{className:"admin-shop-products"}),productsMessage=el("p",{className:"notice",role:"status"});productsPanel.append(productsRoot,productsMessage);
   const previewDialog=el("dialog",{className:"admin-product-preview"}),previewFigure=el("figure",{}),previewCaption=el("figcaption",{}),previewClose=el("button",{type:"button",className:"secondary"},"Close preview");previewFigure.append(previewCaption);previewDialog.append(previewClose,previewFigure);productsPanel.append(previewDialog);
   previewClose.addEventListener("click",()=>previewDialog.close());previewDialog.addEventListener("click",(event)=>{if(event.target===previewDialog)previewDialog.close()});
   ordersPanel.append(el("h2",{},"Exclusive Shop orders"),el("p",{className:"muted"},"Payments become PAID only after the signed Stripe webhook confirms the amount, tax, currency, and session."));
   const orderTools=el("div",{className:"tools"}),search=el("input",{type:"search",placeholder:"Search Shop order, customer, email"}),refresh=el("button",{type:"button",className:"secondary"},"Refresh Shop orders");orderTools.append(search,refresh);const ordersMessage=el("p",{className:"notice",role:"status"}),tableWrap=el("div",{className:"table-wrap"}),table=el("table",{className:"orders"}),thead=el("thead"),headRow=el("tr");for(const label of ["Order / customer","Items","Payment / total","Shipping details","Fulfillment","Actions"])headRow.append(el("th",{},label));thead.append(headRow);const tbody=el("tbody");table.append(thead,tbody);tableWrap.append(table);ordersPanel.append(orderTools,ordersMessage,tableWrap);desk.append(productsPanel,ordersPanel);
-  productsToggle.addEventListener("click",async()=>{productsPanel.classList.toggle("hidden");ordersPanel.classList.add("hidden");if(!productsPanel.classList.contains("hidden"))await renderProducts()});
-  ordersToggle.addEventListener("click",async()=>{ordersPanel.classList.toggle("hidden");productsPanel.classList.add("hidden");if(!ordersPanel.classList.contains("hidden"))await renderOrders()});
+  productsToggle.addEventListener("click",async()=>{productsPanel.classList.remove("hidden");ordersPanel.classList.add("hidden");await renderProducts()});
+  ordersToggle.addEventListener("click",async()=>{ordersPanel.classList.remove("hidden");productsPanel.classList.add("hidden");await renderOrders()});
 
   async function renderProducts(){
     productsRoot.replaceChildren();productsMessage.textContent="Loading product catalog...";productsMessage.className="notice";
@@ -100,20 +100,20 @@ export function mountAdminShop(api){
   }
 
   async function renderOrders(){
-    tbody.replaceChildren();ordersMessage.textContent="Loading Shop ordersâ€¦";
+    tbody.replaceChildren();ordersMessage.textContent="Loading Shop orders…";
     try{
       const query=new URLSearchParams();if(search.value.trim())query.set("q",search.value.trim());const {data}=await api(`/api/admin/shop-orders?${query}`);ordersMessage.textContent=data.orders?.length?"":"No Shop orders yet.";
       for(const order of data.orders||[]){
-        const tr=el("tr"),buyer=el("td"),buyerName=el("strong",{},`${order.orderNumber} Â· ${order.customerName}`),buyerEmail=el("p",{},order.customerEmail);buyer.append(buyerName,buyerEmail);tr.append(buyer);
-        const items=el("td");for(const item of order.items||[])items.append(el("div",{},`${item.quantity} Ã— ${item.name} / ${item.variantName} / Size ${item.size} Â· ${money(item.lineSubtotalCents)}`));tr.append(items);
-        const total=el("td"),status=el("span",{className:"pill"},order.status),breakdown=el("p",{},`Subtotal ${money(order.merchandiseSubtotalCents)} Â· Discount âˆ’${money(order.discountCents)} Â· Shipping ${money(order.shippingCents)} Â· Tax ${money(order.taxCents)} Â· Paid ${money(order.totalPaidCents)}`);total.append(status,breakdown);tr.append(total);
+        const tr=el("tr"),buyer=el("td"),buyerName=el("strong",{},`${order.orderNumber} · ${order.customerName}`),buyerEmail=el("p",{},order.customerEmail);buyer.append(buyerName,buyerEmail);tr.append(buyer);
+        const items=el("td");for(const item of order.items||[])items.append(el("div",{},`${item.quantity} × ${item.name} / ${item.variantName} / Size ${item.size} · ${money(item.lineSubtotalCents)}`));tr.append(items);
+        const total=el("td"),status=el("span",{className:"pill"},order.status),breakdown=el("p",{},`Subtotal ${money(order.merchandiseSubtotalCents)} · Discount −${money(order.discountCents)} · Shipping ${money(order.shippingCents)} · Tax ${money(order.taxCents)} · Paid ${money(order.totalPaidCents)}`);total.append(status,breakdown);tr.append(total);
         const address=order.shippingAddress||{},ship=el("td",{},`${order.customerPhone||""}\n${address.line1||""} ${address.line2||""}\n${address.city||""}, ${address.region||""} ${address.postalCode||""} ${address.country||""}\n${order.carrier||""} ${order.trackingNumber||""}`);ship.style.whiteSpace="pre-wrap";tr.append(ship);
-        const fulfillment=el("td");const next=({PAID:"IN_PRODUCTION",IN_PRODUCTION:"SHIPPED",SHIPPED:"COMPLETED"})[order.status];fulfillment.textContent=next||"â€”";if(order.status==="IN_PRODUCTION"){const carrier=el("input",{type:"text",placeholder:"Carrier",maxLength:"80",value:order.carrier||""}),tracking=el("input",{type:"text",placeholder:"Tracking number",maxLength:"120",value:order.trackingNumber||""});fulfillment.append(carrier,tracking);fulfillment.dataset.carrier="";fulfillment.append(el("span",{},"Carrier and tracking required to mark shipped."));fulfillment._carrier=carrier;fulfillment._tracking=tracking}tr.append(fulfillment);
-        const actions=el("td");if(next){const button=el("button",{type:"button"},`Mark ${next.replaceAll("_"," ")}`);button.addEventListener("click",async()=>{button.disabled=true;ordersMessage.textContent=`Updating ${order.orderNumber}â€¦`;try{const carrier=fulfillment._carrier?.value||"",trackingNumber=fulfillment._tracking?.value||"";const {data:result}=await api("/api/admin/shop-orders",{method:"PATCH",body:JSON.stringify({id:order.id,action:"set_fulfillment",status:next,carrier,trackingNumber})});ordersMessage.textContent=`${result.orderNumber}: ${result.status}; customer email ${result.emailStatus}.`;await renderOrders()}catch(error){ordersMessage.textContent=error.message;ordersMessage.className="notice error";button.disabled=false}});actions.append(button)}
+        const fulfillment=el("td");const next=({PAID:"IN_PRODUCTION",IN_PRODUCTION:"SHIPPED",SHIPPED:"COMPLETED"})[order.status];fulfillment.textContent=next||"—";if(order.status==="IN_PRODUCTION"){const carrier=el("input",{type:"text",placeholder:"Carrier",maxLength:"80",value:order.carrier||""}),tracking=el("input",{type:"text",placeholder:"Tracking number",maxLength:"120",value:order.trackingNumber||""});fulfillment.append(carrier,tracking);fulfillment.dataset.carrier="";fulfillment.append(el("span",{},"Carrier and tracking required to mark shipped."));fulfillment._carrier=carrier;fulfillment._tracking=tracking}tr.append(fulfillment);
+        const actions=el("td");if(next){const button=el("button",{type:"button"},`Mark ${next.replaceAll("_"," ")}`);button.addEventListener("click",async()=>{button.disabled=true;ordersMessage.textContent=`Updating ${order.orderNumber}…`;try{const carrier=fulfillment._carrier?.value||"",trackingNumber=fulfillment._tracking?.value||"";const {data:result}=await api("/api/admin/shop-orders",{method:"PATCH",body:JSON.stringify({id:order.id,action:"set_fulfillment",status:next,carrier,trackingNumber})});ordersMessage.textContent=`${result.orderNumber}: ${result.status}; customer email ${result.emailStatus}.`;await renderOrders()}catch(error){ordersMessage.textContent=error.message;ordersMessage.className="notice error";button.disabled=false}});actions.append(button)}
         tr.append(actions);tbody.append(tr);
       }
     }catch(error){ordersMessage.textContent=error.message;ordersMessage.className="notice error"}
   }
   refresh.addEventListener("click",renderOrders);let timer;search.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(renderOrders,250)});
-  return{load:async()=>{if(!productsPanel.classList.contains("hidden"))await renderProducts();if(!ordersPanel.classList.contains("hidden"))await renderOrders()}};
+  return{load:async()=>{},showProducts:async()=>{productsToggle.click()},showOrders:async()=>{ordersToggle.click()}};
 }
