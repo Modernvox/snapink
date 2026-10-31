@@ -1,10 +1,42 @@
 import { digest, json, now, randomId } from "./orders.js";
 import assetCatalog from "../../scripts/photo-render/cad-assets.json" assert { type: "json" };
-import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds } from "../../src/config/sleeveGeometry.ts";
+import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds, SLEEVE_GEOMETRY, GEOMETRY_VERSION, POSITIONING_VERSION, BRANDING_GROOVE_WIDTH_MM, BRANDING_EDGE_CLEARANCE_MM } from "../../src/config/sleeveGeometry.ts";
 
 export const PHOTO_PRESETS = new Set(["cinematic", "marketplace", "studio"]);
 export const PHOTO_SCENES = new Set(["sleeve", "on-hat-rear"]);
 const IMAGE_TYPES = new Map([["image/png", ".png"], ["image/jpeg", ".jpg"], ["image/webp", ".webp"]]);
+
+function withCadBrandingReference(settings) {
+  const geometry = geometryFor(settings.variant, settings.size);
+  const branding = brandingRegionFor(settings.variant, settings.size);
+  const bounds = surfaceBounds(settings.variant, settings.size);
+  const family = SLEEVE_GEOMETRY[settings.variant];
+  const { billboardBowMm = 0, bowReferenceLengthMm = null } = family;
+  return {
+    ...settings,
+    cadBrandingReference: {
+      geometryVersion: GEOMETRY_VERSION,
+      positioningVersion: POSITIONING_VERSION,
+      variant: settings.variant,
+      size: settings.size,
+      geometryLengthMm: geometry.overallMaxXmm - geometry.overallMinXmm,
+      geometryCenterXmm: (geometry.overallMaxXmm + geometry.overallMinXmm) / 2,
+      overallMinXmm: geometry.overallMinXmm,
+      overallMaxXmm: geometry.overallMaxXmm,
+      grooveXmm: branding.grooveXmm,
+      grooveWidthMm: BRANDING_GROOVE_WIDTH_MM,
+      rightEdgeXmm: branding.rightEdgeXmm,
+      edgeClearanceMm: BRANDING_EDGE_CLEARANCE_MM,
+      surfaceProfile: { bodyWidthMm: family.bodyWidthMm, billboardBowMm, bowReferenceLengthMm },
+      surfaceBounds: { minYmm: bounds.minY, maxYmm: bounds.maxY },
+    },
+  };
+}
+
+const BATCH_SETTING_KEYS = ["scene", "variant", "size", "template", "renderMode", "resolution", "material", "artColor", "relief", "background"];
+function sameBatchSettings(batchSettings, jobSettings) {
+  return BATCH_SETTING_KEYS.every((key) => batchSettings[key] === jobSettings[key]);
+}
 
 export function validatePhotoSettings(value, { placementRequired = true } = {}) {
   if (!value || typeof value !== "object") return "Photo settings are required.";
@@ -68,10 +100,12 @@ export async function createPhotoBatch({ request, env }) {
     const body = await request.json().catch(() => ({}));
     if (body.action !== "createBatch" || !Number.isInteger(body.designCount) || body.designCount < 1 || body.designCount > 100) return json({ error: "Invalid batch request." }, 400);
     const id = randomId(16), time = now();
-    const error = validatePhotoSettings(body.settings, { placementRequired: false });
+    let settings = body.settings;
+    const error = validatePhotoSettings(settings, { placementRequired: false });
     if (error) return json({ error }, 400);
-    const asset = assetCatalog.configurations.find((entry) => entry.variant === body.settings.variant && entry.size === body.settings.size);
-    await env.DB.prepare("INSERT INTO photo_render_batches(id,design_count,settings_json,asset_validation_status,render_mode,created_at) VALUES(?,?,?,?,?,?)").bind(id, body.designCount, JSON.stringify(body.settings), asset.validationStatus, body.settings.renderMode, time).run();
+    settings = withCadBrandingReference(settings);
+    const asset = assetCatalog.configurations.find((entry) => entry.variant === settings.variant && entry.size === settings.size);
+    await env.DB.prepare("INSERT INTO photo_render_batches(id,design_count,settings_json,asset_validation_status,render_mode,created_at) VALUES(?,?,?,?,?,?)").bind(id, body.designCount, JSON.stringify(settings), asset.validationStatus, settings.renderMode, time).run();
     return json({ ok: true, batchId: id, designCount: body.designCount }, 201);
   }
 
@@ -82,9 +116,12 @@ export async function createPhotoBatch({ request, env }) {
   try { settings = JSON.parse(String(form.get("settings") || "")); } catch { return json({ error: "Invalid photo settings." }, 400); }
   const error = validatePhotoSettings(settings);
   if (error) return json({ error }, 400);
+  settings = withCadBrandingReference(settings);
   if (!(file instanceof File) || !IMAGE_TYPES.has(file.type) || file.size < 1 || file.size > 12 * 1024 * 1024) return json({ error: "Artwork must be PNG, JPEG, or WebP and no larger than 12 MB." }, 400);
   const batch = await env.DB.prepare("SELECT id,design_count,settings_json FROM photo_render_batches WHERE id=?").bind(batchId).first();
   if (!batch) return json({ error: "Photo batch not found." }, 404);
+  let batchSettings;try { batchSettings = JSON.parse(batch.settings_json); } catch { return json({ error: "Photo batch settings are invalid." }, 409); }
+  if (!sameBatchSettings(batchSettings, settings)) return json({ error: "Uploaded artwork settings do not match the locked batch selections." }, 409);
   const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM photo_render_jobs WHERE batch_id=?").bind(batchId).first();
   if (count.count >= batch.design_count) return json({ error: "This batch already contains the declared number of designs." }, 409);
   if (!(original instanceof File) || original.size < 1 || original.size > 12 * 1024 * 1024 || ![...IMAGE_TYPES.keys(),"image/svg+xml"].includes(original.type)) return json({ error: "Original artwork must be PNG, JPEG, WebP, or SVG and no larger than 12 MB." }, 400);

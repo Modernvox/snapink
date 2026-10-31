@@ -1,28 +1,58 @@
-﻿{
-  "schemaVersion": 1,
+{
+  "schemaVersion": 2,
+  "masterImageId": "snapink.rear-snapback.master.v1",
+  "calibrationVersion": "rear-snapback-billboard-size-4-v1",
   "sceneId": "on-hat-rear",
   "status": "owner-approved-reference-locked",
-  "masterImage": "public/images/blank_sleeve_on_snapback.png",
+  "masterImage": "public/images/website_images/blank_sleeve_on_snapback.png",
   "masterImageSha256": "225f963838a487afdadab2bbf9d93ecca143796cb6fd0faceca942d6cc6b69dc",
+  "masterCanvasPx": [1536, 1024],
   "approvedProof": "photo-studio-preview/on-hat-rear-proof-2026-10-27/on-hat-rear-lift-proof.png",
   "approvedProofSha256": "2645d849b08784f44d2b6703d5ba0d1e85dc5ced39eecfdc61c0c704c7f777e5",
   "referenceCad": {
     "variant": "billboard",
     "size": 4,
     "sha256": "3d1897a839d774478c18b4b8276cb6480b52bf54f647fb885128c41e2e6bb611",
+    "assetRelativePath": "SnapInk_Production/APPROVED/Billboard/Size_4/SnapInk_Billboard_Size_4_TPU_APPROVED.stl",
+    "geometryVersion": "blank-flap-candidate-v1",
+    "positioningVersion": "cad-flap-valley-to-right-edge-v1",
+    "overallMinXmm": -12.725,
+    "overallMaxXmm": 106.28,
     "lengthMm": 119.005,
-    "centerXmm": 46.7775
+    "centerXmm": 46.7775,
+    "grooveXmm": -3.2,
+    "grooveWidthMm": 0.8,
+    "brandingRightEdgeXmm": 106.28,
+    "bodyWidthMm": 24.31,
+    "billboardBowMm": 1.5,
+    "bowReferenceLengthMm": 88.9,
+    "rightEdgeXmm": 106.28,
+    "surfaceProfile": { "bodyWidthMm": 24.31, "billboardBowMm": 1.5, "bowReferenceLengthMm": 88.9 },
+    "reliefMm": 0.8,
+    "edgeClearanceMm": 1.0
   },
-  "masterSleeveQuadPx": [[309, 625], [1126, 640], [1126, 861], [310, 854]],
-  "masterCanvasPx": [1536, 1024],
+  "sleevePolygonPx": [[309, 625], [1126, 640], [1126, 861], [310, 854]],
+  "grooveReference": {
+    "type": "measured centerline in the approved master image",
+    "centerlinePx": [[393, 626], [388, 854]],
+    "cadXmm": -3.2,
+    "cadWidthMm": 0.8,
+    "measurementSource": "Full-resolution pixel inspection of the locked master; line fitted through the visible vertical groove and extended to the measured sleeve top/bottom edges."
+  },
+  "mainBodyQuadPx": [[393, 626], [1126, 640], [1126, 861], [388, 854]],
+  "printableMainBodyPolygonPx": [[403.283, 635.286], [1120.013, 647.786], [1119.976, 852.941], [398.752, 844.895]],
+  "calibrationMethod": {
+    "artworkPositioning": "Map the CAD printable-face coordinates (groove right edge plus 1 mm clearance through the right edge minus 1 mm, with 1 mm surface clearance) through a perspective transform calibrated from the measured groove and sleeve boundary.",
+    "outsideMask": "Only the transformed artwork and its 5 px contact-shadow/antialias allowance, clipped to printableMainBodyPolygonPx, may change.",
+    "source": "src/config/sleeveGeometry.ts and the hash-pinned Billboard Size 4 CAD mesh above."
+  },
   "passResolutionPx": [2600, 780],
-  "reliefMm": 0.8,
-  "artworkMaterial": {"roughness": 0.58, "coatWeight": 0.01},
-  "camera": {"type": "ORTHO", "orthoScaleM": 0.13},
+  "artworkMaterial": { "roughness": 0.58, "coatWeight": 0.01 },
+  "camera": { "type": "ORTHO", "orthoScaleM": 0.13 },
   "lighting": {
-    "key": {"relativePositionM": [-0.027, -0.020, 0.055], "power": 20, "sizeM": 0.065, "color": [1.0, 0.93, 0.84]},
-    "fill": {"relativePositionM": [0.026, -0.008, 0.045], "power": 9, "sizeM": 0.06, "color": [0.78, 0.86, 1.0]},
-    "grazing": {"relativePositionM": [-0.042, 0.012, 0.028], "power": 3, "sizeM": 0.03, "color": [1.0, 1.0, 1.0]}
+    "key": { "relativePositionM": [-0.027, -0.020, 0.055], "power": 20, "sizeM": 0.065, "color": [1.0, 0.93, 0.84] },
+    "fill": { "relativePositionM": [0.026, -0.008, 0.045], "power": 9, "sizeM": 0.06, "color": [0.78, 0.86, 1.0] },
+    "grazing": { "relativePositionM": [-0.042, 0.012, 0.028], "power": 3, "sizeM": 0.03, "color": [1.0, 1.0, 1.0] }
   },
-  "backgroundPolicy": "fixed master image is read-only; no replacement, generated fill, or crop"
+  "backgroundPolicy": "Fixed master image is read-only; no replacement, generated fill, or crop."
 }

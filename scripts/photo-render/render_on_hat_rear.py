@@ -12,6 +12,8 @@ import time
 from pathlib import Path
 from types import SimpleNamespace
 
+from PIL import Image
+
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
@@ -58,8 +60,13 @@ def main():
     import blender_render as pipeline
 
     reference = json.loads(REFERENCE.read_text(encoding="utf-8-sig"))
+    if reference.get("schemaVersion") != 2 or not reference.get("masterImageId") or not reference.get("calibrationVersion"):
+        raise RuntimeError("Locked master calibration manifest is missing or unsupported.")
     if file_hash(ROOT / reference["masterImage"]) != reference["masterImageSha256"]:
         raise RuntimeError("Locked On-Hat master image hash changed; refusing to render.")
+    with Image.open(ROOT / reference["masterImage"]) as master:
+        if list(master.size) != reference["masterCanvasPx"] or master.size != (1536, 1024):
+            raise RuntimeError("Locked On-Hat master dimensions changed; expected 1536 x 1024.")
     if bpy.app.version < (4, 5, 0) or bpy.app.version >= (5, 0, 0):
         raise RuntimeError("On-Hat Rear View requires Blender 4.5 LTS.")
     job = json.loads(args.job.read_text(encoding="utf-8-sig"))
@@ -67,6 +74,10 @@ def main():
     if settings.get("scene") != "on-hat-rear" or settings.get("relief") != "raised":
         raise RuntimeError("On-Hat Rear View requires the raised fixed-reference scene.")
     catalog = json.loads(args.asset_catalog.read_text(encoding="utf-8-sig"))
+    master_cad = reference["referenceCad"]
+    master_cad_path = args.cad_root / Path(master_cad["assetRelativePath"])
+    if not master_cad_path.is_file() or file_hash(master_cad_path) != master_cad["sha256"]:
+        raise RuntimeError("Locked-master CAD calibration asset is missing or its pinned hash changed.")
     variant, size = settings["variant"], int(settings["size"])
     asset = next((item for item in catalog["configurations"]
                   if item["variant"] == variant and int(item["size"]) == size), None)
@@ -75,6 +86,14 @@ def main():
     cad = args.cad_root / Path(asset["assetRelativePath"])
     if not cad.is_file() or file_hash(cad) != asset["sha256"]:
         raise RuntimeError("Read-only CAD asset hash does not match the pinned catalog.")
+    cad_reference = settings.get("cadBrandingReference")
+    if (not cad_reference or cad_reference.get("variant") != variant
+            or int(cad_reference.get("size", -1)) != size
+            or cad_reference.get("geometryVersion") != "blank-flap-candidate-v1"
+            or cad_reference.get("positioningVersion") != "cad-flap-valley-to-right-edge-v1"):
+        raise RuntimeError("Queued artwork placement does not match the server-derived CAD geometry version.")
+    if cad_reference.get("overallMinXmm") is None or cad_reference.get("overallMaxXmm") is None:
+        raise RuntimeError("Queued artwork placement is missing CAD-derived sleeve bounds.")
     if file_hash(args.artwork) != job.get("sourceSha256", file_hash(args.artwork)):
         raise RuntimeError("Downloaded artwork hash does not match the private job record.")
     if args.passes_dir.exists():
@@ -219,15 +238,19 @@ def main():
     metadata = {
         "ok": True,
         "scene": "on-hat-rear",
+        "masterImageId": reference["masterImageId"],
         "referenceManifest": str(REFERENCE),
         "masterImage": reference["masterImage"],
         "masterImageSha256": reference["masterImageSha256"],
-        "masterSleeveQuadPx": reference["masterSleeveQuadPx"],
+        "calibrationVersion": reference["calibrationVersion"],
+        "masterSleeveQuadPx": reference["sleevePolygonPx"],
         "masterCanvasPx": reference["masterCanvasPx"],
         "masterCadLengthMm": reference["referenceCad"]["lengthMm"],
         "masterCadCenterXmm": reference["referenceCad"]["centerXmm"],
+        "catalogCadSha256": asset["sha256"],
         "cadRelativePath": asset["assetRelativePath"],
         "cadSha256": asset["sha256"],
+        "cadBrandingReference": cad_reference,
         "cadValidationStatus": asset["validationStatus"],
         "artworkPath": str(args.artwork),
         "artworkSha256": file_hash(args.artwork),

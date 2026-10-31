@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 
 async function loadFunction(entry) {
   const result = await build({ entryPoints: [fileURLToPath(new URL(entry, import.meta.url))], bundle: true, write: false, platform: "node", format: "esm" });
@@ -13,6 +14,7 @@ const fileModule = await loadFunction("../functions/api/photo-render/file.js");
 const nextModule = await loadFunction("../functions/api/photo-render/next.js");
 const adminFileModule = await loadFunction("../functions/api/admin/photo-file.js");
 const resultModule = await loadFunction("../functions/api/photo-render/result.js");
+const catalog = JSON.parse(readFileSync(new URL("../scripts/photo-render/cad-assets.json", import.meta.url), "utf8").replace(/^\uFEFF/, ""));
 const token = "local-photo-device-token-0123456789-0123456789";
 const adminToken = "local-photo-admin-token-0123456789-0123456789";
 const jobs = new Map(), batches = new Map(), objects = new Map(), devices = new Map();
@@ -26,7 +28,7 @@ class Db {
         if (sql.includes("INSERT INTO photo_render_batches")) { const [id, design_count, settings_json, asset_validation_status, render_mode, created_at] = args; batches.set(id, { id, design_count, settings_json, asset_validation_status, render_mode, created_at }); }
         else if (sql.includes("INSERT INTO photo_render_jobs")) { const [id,batch_id,source_key,original_key,source_sha256,original_name,settings_json,asset_validation_status,render_mode,created_at,updated_at] = args; jobs.set(id, { id,batch_id,status:"queued",source_key,original_key,source_sha256,original_name,settings_json,asset_validation_status,render_mode,attempt:1,progress_pct:0,stage:"queued",created_at,updated_at }); }
         else if (sql.includes("UPDATE photo_render_jobs SET status='rendering'")) { const [worker_device,lease_expires,updated_at,id] = args; const job=jobs.get(id);if(job){Object.assign(job,{status:"rendering",worker_device,lease_expires,updated_at});} }
-        else if (sql.includes("UPDATE photo_render_jobs SET status='completed'")) { const [output_key,output_sha256,output_bytes,render_engine,render_duration_ms,peak_gpu_memory_mb,gpu_warning,updated_at,id,worker_device] = args; const job=jobs.get(id);if(job?.worker_device===worker_device)Object.assign(job,{status:"completed",stage:"complete",progress_pct:100,output_key,output_sha256,output_bytes,render_engine,render_duration_ms,peak_gpu_memory_mb,gpu_warning,updated_at}); }
+        else if (sql.includes("UPDATE photo_render_jobs SET status='completed'")) { const [output_key,output_sha256,output_bytes,render_engine,render_duration_ms,peak_gpu_memory_mb,gpu_warning,settings_json,updated_at,id,worker_device] = args; const job=jobs.get(id);if(job?.worker_device===worker_device)Object.assign(job,{status:"completed",stage:"complete",progress_pct:100,output_key,output_sha256,output_bytes,render_engine,render_duration_ms,peak_gpu_memory_mb,gpu_warning,settings_json,updated_at}); }
         else if (sql.includes("DELETE FROM photo_render_jobs")) jobs.delete(args[0]);
         else if (sql.includes("UPDATE photo_render_jobs SET status='queued'")) { const job=jobs.get(args[1]);if(job)Object.assign(job,{status:"queued",error:null,attempt:job.attempt+1,worker_device:null,lease_expires:null,updated_at:args[0]}); }
         return { meta: { changes: 1 } };
@@ -36,7 +38,7 @@ class Db {
         if (sql.includes("FROM photo_render_batches WHERE id")) return batches.get(args[0]) || null;
         if (sql.includes("COUNT(*) AS count")) return { count: [...jobs.values()].filter((job) => job.batch_id === args[0]).length };
         if (sql.includes("SELECT id,status FROM photo_render_jobs WHERE source_sha256")) return [...jobs.values()].find((job) => job.source_sha256 === args[0] && job.settings_json === args[1] && ["queued","rendering","completed"].includes(job.status)) || null;
-        if (sql.includes("FROM photo_render_jobs WHERE id=? AND status='rendering'")) { const job=jobs.get(args[0]);return job?.worker_device===args[1]?{...job,render_mode:job.render_mode,settings_json:job.settings_json}:null; }
+        if (sql.includes("FROM photo_render_jobs WHERE id=? AND status='rendering'")) { const job=jobs.get(args[0]);return job?.worker_device===args[1]?{...job,render_mode:job.render_mode,settings_json:job.settings_json,source_sha256:job.source_sha256}:null; }
         if (sql.includes("WHERE status='queued' OR (status='rendering'")) { const job=[...jobs.values()].find((value) => value.status === "queued" || (value.status === "rendering" && value.lease_expires < args[0]));return job?{...job,batchId:job.batch_id,sourceKey:job.source_key,sourceSha256:job.source_sha256,originalName:job.original_name,settingsJson:job.settings_json,assetValidationStatus:job.asset_validation_status}:null; }
         if (sql.includes("FROM photo_render_jobs WHERE id=? AND status='completed'")) return jobs.get(args[0]) || null;
         if (sql.includes("SELECT output_key,original_key")) return jobs.get(args[0]) || null;
@@ -79,5 +81,21 @@ test("On-Hat Rear View settings persist in a private queued job without affectin
   const onHatSettings={...settings,scene:"on-hat-rear",relief:"raised",artColor:"#111111"};
   const batchResponse=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:onHatSettings}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(batchResponse.status,201);const {batchId}=await batchResponse.json();
   const form=new FormData();form.set("batchId",batchId);form.set("settings",JSON.stringify(onHatSettings));form.set("file",new File([new Uint8Array([137,80,78,71,13,10,26,10])],"TEST-ONLY-font.svg-normalized.png",{type:"image/png"}));form.set("original",new File(["<svg xmlns=\"http://www.w3.org/2000/svg\"><text font-family=\"Georgia\">TEST ONLY</text></svg>"],"TEST-ONLY-Georgia.svg",{type:"image/svg+xml"}));
-  const queued=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",form),env});assert.equal(queued.status,202);const {job}=await queued.json();assert.equal(jobs.get(job.id).settings_json,JSON.stringify(onHatSettings));
+  const queued=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",form),env});assert.equal(queued.status,202);const {job}=await queued.json();assert.deepEqual(JSON.parse(jobs.get(job.id).settings_json).cadBrandingReference.positioningVersion,"cad-flap-valley-to-right-edge-v1");
+});
+
+test("locked master output requires integrity metadata and stores a native PNG privately",async()=>{
+  const onHatSettings={...settings,scene:"on-hat-rear",relief:"raised"};
+  const batch=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:onHatSettings}),adminToken,{"Content-Type":"application/json"}),env});
+  const {batchId}=await batch.json(),artwork=new Uint8Array([137,80,78,71,13,10,26,10,1,2,3,4]);
+  const form=new FormData();form.set("batchId",batchId);form.set("settings",JSON.stringify(onHatSettings));form.set("file",new File([artwork],"logo.png-normalized.png",{type:"image/png"}));form.set("original",new File(["source"],"logo.png",{type:"image/png"}));
+  const queued=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",form),env});assert.equal(queued.status,202);const {job}=await queued.json();
+  Object.assign(jobs.get(job.id),{status:"rendering",worker_device:"device-1"});
+  const png=new Uint8Array(1200);png.set([137,80,78,71,13,10,26,10]);png.set(new TextEncoder().encode("IHDR"),12);new DataView(png.buffer).setUint32(16,1536);new DataView(png.buffer).setUint32(20,1024);png.set(new TextEncoder().encode("IEND"),png.length-8);
+  const renderHeaders={"Content-Type":"image/png","X-SnapInk-Render-Mode":"fast","X-SnapInk-Render-Engine":"BLENDER_EEVEE_NEXT","X-SnapInk-Render-Duration-Ms":"12345","X-SnapInk-Peak-Gpu-Memory-Mb":"unknown"};
+  const missingProof=await resultModule.onRequestPost({request:req(`/api/photo-render/result?id=${job.id}`,"POST",png,token,renderHeaders),env});assert.equal(missingProof.status,400);
+  const cad=catalog.configurations.find((entry)=>entry.variant===onHatSettings.variant&&entry.size===onHatSettings.size);
+  const proof={masterImageId:"snapink.rear-snapback.master.v1",masterImageSha256:"225f963838a487afdadab2bbf9d93ecca143796cb6fd0faceca942d6cc6b69dc",calibrationVersion:"rear-snapback-billboard-size-4-v1",artworkSha256:jobs.get(job.id).source_sha256,cadSha256:cad.sha256,outsideMaskUnchanged:true,width:1536,height:1024,outputFormat:"image/png",artworkReliefMm:0.8};
+  const accepted=await resultModule.onRequestPost({request:req(`/api/photo-render/result?id=${job.id}`,"POST",png,token,{...renderHeaders,"X-SnapInk-Output-Metadata":JSON.stringify(proof)}),env});assert.equal(accepted.status,201);assert.equal(jobs.get(job.id).output_key.endsWith(".png"),true);assert.equal(JSON.parse(jobs.get(job.id).settings_json).generationMetadata.masterImageId,proof.masterImageId);
+  const file=await adminFileModule.onRequestGet({request:req(`/api/admin/photo-file?id=${job.id}`,"GET",undefined,adminToken),env});assert.equal(file.status,200);assert.equal(file.headers.get("content-type"),"image/png");
 });

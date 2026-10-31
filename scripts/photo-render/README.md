@@ -3,8 +3,11 @@
 Photo jobs use their own D1 tables and `/api/photo-render/*` routes. They do
 not enter the order or manufacturing queues. The paired Windows worker claims
 one photo job, verifies the artwork digest and local STL SHA-256, invokes
-Blender, then uploads a JPEG to private R2 storage. Gallery access requires the
-owner token. Worker access requires an already paired device token.
+Blender, then uploads a JPEG to private R2 storage for ordinary scenes. The
+locked On-Hat Rear View instead composites a native-size PNG onto its immutable
+master and carries pixel-integrity metadata with the private output. Gallery
+access requires the owner token. Worker access requires an already paired
+device token.
 
 ## Renderer requirements
 
@@ -62,8 +65,37 @@ The HTTP queue is independent from rendering implementation:
 1. `GET /api/photo-render/next` claims a job for a paired device.
 2. `GET /api/photo-render/file?id=...` returns only that worker's private input.
 3. `POST /api/photo-render/status` records progress or a retryable failure.
-4. `POST /api/photo-render/result?id=...` stores a JPEG privately and marks it
-   complete.
+4. `POST /api/photo-render/result?id=...` stores ordinary scene JPEGs, or the
+   verified locked-master 1536 × 1024 PNG, privately and marks it complete.
+
+## Locked On-Hat Rear View master
+
+The canonical, read-only photograph is
+`public/images/website_images/blank_sleeve_on_snapback.png`, identified as
+`snapink.rear-snapback.master.v1`. Its versioned calibration manifest is
+`on-hat-rear-reference.json`; the master SHA-256 and 1536 × 1024 canvas are
+checked before rendering and compositing. The manifest also pins the CAD
+calibration mesh and records the measured sleeve, groove, and main-body
+polygons. The printable region is derived from `sleeveGeometry.ts`: it starts
+to the right of the groove/flap exclusion, maintains the 1 mm edge clearance,
+and keeps the approved 0.8 mm raised relief.
+
+The companion uses the existing upload, job queue, and paired-worker flow. For
+this scene Blender renders the validated relief and lighting passes; the
+Python compositor maps the geometry into the master photo. It rejects changed
+master/CAD hashes, invalid calibration metadata, or art crossing the printable
+face. Only the rendered-art silhouette and its clipped contact-shadow/edge
+allowance may change. Before upload it reopens the PNG and verifies that all
+pixels outside the allowed mask equal the master. The private D1 job records
+the master, artwork, CAD, calibration, output dimensions, and integrity result.
+No manufacturing files are written. The admin gallery and ZIP export retain
+the `.png` extension for this scene. Ordinary Photo Studio scenes keep their
+existing JPEG behavior.
+
+The checked-in script wordmark is not the approved script artwork. Use the
+existing source asset only if the approved script logo is supplied; do not
+substitute a font or fabricate lettering. Blender 4.5 and its Python runtime
+must be available on the paired Windows companion to generate a real 3D mockup.
 
 A future container worker can implement the same contract without changing
 Photo Studio. The current Windows worker uses local Blender in background
