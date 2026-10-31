@@ -1,6 +1,14 @@
 import {bearer,json,now} from "../../_lib/orders.js";
 import {readShopProducts} from "../../_lib/shop.js";
 
+function isPublicProductImagePath(value){
+  if(typeof value!=="string"||value!==value.trim()||value.length<1||value.length>500||/[\u0000-\u001f\\]/.test(value))return false;
+  let decoded;try{decoded=decodeURIComponent(value)}catch{return false}
+  if(!decoded.startsWith("/images/product_images/"))return false;
+  const parts=decoded.split("/");if(parts.some((part)=>part==="."||part===".."))return false;
+  return /\.(png|jpe?g|webp|avif)$/i.test(decoded);
+}
+
 export async function onRequestGet({request,env}){
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN))return json({error:"Unauthorized"},401);
   if(!env.DB)return json({error:"Shop catalog storage is unavailable."},503);
@@ -15,8 +23,14 @@ export async function onRequestPatch({request,env}){
   if(typeof body.productId!=="string")return json({error:"Choose a valid product."},400);
   try{
     const product=await env.DB.prepare("SELECT product_id FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    if(body.imageUrl!==undefined&&!isPublicProductImagePath(body.imageUrl))return json({error:"Choose an image under /images/product_images/ with a supported image extension."},400);
+    if(body.imageAlt!==undefined&&(typeof body.imageAlt!=="string"||!body.imageAlt.trim()||body.imageAlt.length>300))return json({error:"Enter descriptive image alt text up to 300 characters."},400);
     const time=now();
     if(body.active!==undefined){if(typeof body.active!=="boolean")return json({error:"Product activation must be true or false."},400);await env.DB.prepare("UPDATE shop_products SET active=?,updated_at=? WHERE product_id=?").bind(body.active?1:0,time,body.productId).run()}
+    if(body.imageUrl!==undefined||body.imageAlt!==undefined){
+      const current=await env.DB.prepare("SELECT image_url AS imageUrl,image_alt AS imageAlt FROM shop_products WHERE product_id=?").bind(body.productId).first();
+      await env.DB.prepare("UPDATE shop_products SET image_url=?,image_alt=?,updated_at=? WHERE product_id=?").bind(body.imageUrl??current.imageUrl,body.imageAlt?.trim()??current.imageAlt,time,body.productId).run();
+    }
     if(body.prices!==undefined){
       if(!Array.isArray(body.prices)||body.prices.length!==6||body.prices.some((value)=>!Number.isSafeInteger(value)||value<1||value>100000))return json({error:"Enter six valid USD prices in cents."},400);
       // The approved size-based schedule is shared by all exclusive designs.
