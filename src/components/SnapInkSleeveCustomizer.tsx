@@ -296,10 +296,10 @@ const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
 const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
   SleeveVariant,
-  { rightEdgeInset: number; heightReduction: number; verticalShift: number }
+  { rightEdgeInset: number; alignRightToHatEdge: boolean; heightReduction: number; verticalShift: number }
 > = {
-  billboard: { rightEdgeInset: 3, heightReduction: 0, verticalShift: -3 },
-  standard: { rightEdgeInset: 100, heightReduction: 20, verticalShift: 0 },
+  billboard: { rightEdgeInset: 3, alignRightToHatEdge: false, heightReduction: 0, verticalShift: -3 },
+  standard: { rightEdgeInset: 0, alignRightToHatEdge: true, heightReduction: 20, verticalShift: 0 },
 };
 
 /**
@@ -1020,7 +1020,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     : null;
   const desktopBoundaryAdjustment = !isMobilePreview && ghostHat
     ? DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX[variant]
-    : { rightEdgeInset: 0, heightReduction: 0, verticalShift: 0 };
+    : { rightEdgeInset: 0, alignRightToHatEdge: false, heightReduction: 0, verticalShift: 0 };
   // Keep the Round 1 CSS-pixel adjustment unchanged. Round 2 additions use
   // native stage-reference pixels directly, before the existing camera zoom.
   const previousDesktopAdjustmentScale = desktopSleeveCalibration
@@ -1044,7 +1044,13 @@ const SnapInkSleeveCustomizer = forwardRef<
       - desktopBoundaryAdjustment.heightReduction
     : 0;
   const desktopSleeveWidthBeforeEdgeAdjustmentPx = baseSleeveWidthPx + desktopCalibratedWidthAdjustmentPx;
-  const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx - desktopBoundaryAdjustment.rightEdgeInset;
+  const desktopSleeveLeftPx = stageComposition.grooveX
+    - desktopSleeveWidthBeforeEdgeAdjustmentPx * sleeveGrooveFraction;
+  const desktopHatEdgeAlignmentCorrectionPx = desktopBoundaryAdjustment.alignRightToHatEdge
+    ? stageComposition.strapRight - (desktopSleeveLeftPx + desktopSleeveWidthBeforeEdgeAdjustmentPx)
+    : 0;
+  const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx
+    - desktopBoundaryAdjustment.rightEdgeInset + desktopHatEdgeAlignmentCorrectionPx;
   const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
     ? sleeveSize <= 3
       ? (() => {
