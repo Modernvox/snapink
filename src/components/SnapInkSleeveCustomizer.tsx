@@ -14,6 +14,7 @@ import {
   GEOMETRY_VERSION,
   POSITIONING_VERSION,
   PRODUCTION_BRANDING_INSET_MM,
+  STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX,
   SLEEVE_GEOMETRY,
   STUDIO_HAT_CAMERA_ZOOM_CONFIG,
   STUDIO_SLEEVE_PREVIEW_SCALE,
@@ -356,7 +357,8 @@ function drawStudioComposition(
   sleeveGrooveFraction: number,
   sleeveRotationDeg: number,
   sleeveCenterXPercent: number,
-  sleeveBottomYPercent: number
+  sleeveBottomYPercent: number,
+  preserveDesktopGrooveAnchor: boolean
 ) {
   if (!ghostHat) {
     context.drawImage(sleeve, 0, 0, canvas.width, canvas.height);
@@ -378,7 +380,7 @@ function drawStudioComposition(
   context.rotate(sleeveRotationDeg * Math.PI / 180);
   context.drawImage(
     sleeve,
-    -sleeveWidth / 2,
+    preserveDesktopGrooveAnchor ? -sleeveWidth * sleeveGrooveFraction : -sleeveWidth / 2,
     -sleeveHeight / 2,
     sleeveWidth,
     sleeveHeight
@@ -926,15 +928,24 @@ const SnapInkSleeveCustomizer = forwardRef<
     loadedHatSize?.width,
     loadedHatSize?.height
   );
+  const cameraZoom = studioHatZoomForSize(sleeveSize, variant, isMobilePreview);
+  const desktopSleeveCalibration = !isMobilePreview && ghostHat
+    ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[sleeveSize]
+    : { widthIncrease: 0, heightDecrease: 0 };
+  // Convert requested visible CSS-pixel adjustments into the native 1000 px
+  // stage coordinates, accounting for the unchanged size-based camera zoom.
+  const desktopAdjustmentScale = (STUDIO_STAGE_COORDINATE_WIDTH / Math.max(1, currentStageClientWidth)) / cameraZoom;
   // Calibrate the sleeve's physical width from the photographed strap's
   // thickness, then derive its longitudinal span from the actual CAD bounds.
   // The old mapping reused a photographed rectangle's width and only applied
   // the size ratio, which made the CAD sleeve too short and distorted its
   // length-to-width proportions. CAD X runs from the flap through the right
   // edge; the template groove remains the physical attachment datum.
-  const sleevePreviewHeightPercent = (stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE / stageCoordinateHeight) * 100;
-  const sleevePreviewHeightPx = stageCoordinateHeight * sleevePreviewHeightPercent / 100;
-  const sleevePreviewWidthPx = sleevePreviewHeightPx * (viewW / viewH);
+  const baseSleeveHeightPx = stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE;
+  const baseSleeveWidthPx = baseSleeveHeightPx * (viewW / viewH);
+  const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx - desktopSleeveCalibration.heightDecrease * desktopAdjustmentScale);
+  const sleevePreviewHeightPercent = (sleevePreviewHeightPx / stageCoordinateHeight) * 100;
+  const sleevePreviewWidthPx = baseSleeveWidthPx + desktopSleeveCalibration.widthIncrease * desktopAdjustmentScale;
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const sleevePreviewCenterYPercent = ghostHat ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 : 50;
   const sleevePreviewBottomYPercent = sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2;
@@ -946,7 +957,6 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePreviewGrooveXPercent = sleevePreviewCenterXPercent
     + sleevePreviewWidthPercent * (sleeveGrooveFraction - 0.5);
   const sleevePreviewRightPercent = sleevePreviewCenterXPercent + sleevePreviewWidthPercent / 2;
-  const cameraZoom = studioHatZoomForSize(sleeveSize, variant, isMobilePreview);
   const cameraOriginXPercent = (stageComposition.grooveX / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
   const maximumWidthMm = bounds.maxY - bounds.minY;
@@ -1093,7 +1103,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         sleeveGrooveFraction,
         stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
-        sleevePreviewBottomYPercent
+        sleevePreviewBottomYPercent,
+        !isMobilePreview
       );
       const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("PNG encoding failed.")),
@@ -1205,7 +1216,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         sleeveGrooveFraction,
         stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
-        sleevePreviewBottomYPercent
+        sleevePreviewBottomYPercent,
+        !isMobilePreview
       );
       const previewBlob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("Could not encode the design preview.")),
