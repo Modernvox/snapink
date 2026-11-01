@@ -202,6 +202,36 @@ export function brandingCenterCanvasPercentFor(variant: SleeveVariant, size: num
     / (geometry.overallMaxXmm - geometry.overallMinXmm)) * 100;
 }
 
+/** CAD artwork limits after excluding the groove and edge insets, in Studio canvas %. */
+export function usableBrandingCanvasRangePercentFor(variant: SleeveVariant, size: number): { start: number; end: number } {
+  const geometry = geometryFor(variant, size);
+  const branding = brandingRegionFor(variant, size);
+  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
+  const usableMaxX = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const canvasLength = geometry.overallMaxXmm - geometry.overallMinXmm;
+  return {
+    start: ((usableMinX - geometry.overallMinXmm) / canvasLength) * 100,
+    end: ((usableMaxX - geometry.overallMinXmm) / canvasLength) * 100,
+  };
+}
+
+/** Center of the CAD branding face after excluding the groove and edge insets. */
+export function usableBrandingCenterCanvasPercentFor(variant: SleeveVariant, size: number): number {
+  const range = usableBrandingCanvasRangePercentFor(variant, size);
+  return (range.start + range.end) / 2;
+}
+
+export function usableBrandingAlignmentCanvasPercentFor(
+  variant: SleeveVariant,
+  size: number,
+  alignment: "start" | "center" | "end"
+): number {
+  const range = usableBrandingCanvasRangePercentFor(variant, size);
+  if (alignment === "start") return range.start;
+  if (alignment === "end") return range.end;
+  return (range.start + range.end) / 2;
+}
+
 export const SLEEVE_GEOMETRY: Record<SleeveVariant, GeometryFamily> = {
   standard: {
     label: "Standard",

@@ -33,6 +33,9 @@ import {
   sleeveGrooveFractionFor,
   surfaceBounds,
   studioArtworkPositionFor,
+  usableBrandingAlignmentCanvasPercentFor,
+  usableBrandingCanvasRangePercentFor,
+  usableBrandingCenterCanvasPercentFor,
   type SleeveVariant,
 } from "../config/sleeveGeometry";
 import {
@@ -135,6 +138,9 @@ export interface SnapInkSleeveCustomizerRef {
 }
 
 function defaultArtworkYForViewport(defaultPosition?: { posY: number; desktopPosY?: number }) {
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+    return 50;
+  }
   if (
     defaultPosition?.desktopPosY !== undefined &&
     typeof window !== "undefined" &&
@@ -143,6 +149,18 @@ function defaultArtworkYForViewport(defaultPosition?: { posY: number; desktopPos
     return defaultPosition.desktopPosY;
   }
   return defaultPosition?.posY ?? OFFICIAL_STUDIO_DEFAULTS.posY;
+}
+
+function defaultArtworkXForViewport(
+  defaultPosition: Pick<SleeveDraft, "posX"> | undefined,
+  variant: SleeveVariant,
+  size: number,
+  mobile: boolean,
+  alignment: "start" | "center" | "end" = "center"
+) {
+  return mobile
+    ? usableBrandingAlignmentCanvasPercentFor(variant, size, alignment)
+    : defaultPosition?.posX ?? brandingCenterCanvasPercentFor(variant, size);
 }
 
 // ---------- Fonts ----------
@@ -437,11 +455,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [arc, setArc] = useState(initial.arc ?? OFFICIAL_STUDIO_DEFAULTS.arc);
   const initialVariant = initial.variant ?? OFFICIAL_STUDIO_DEFAULTS.variant;
   const initialSize = initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size;
-  const [posX, setPosX] = useState(initial.posX ?? defaultArtworkPosition?.posX ?? brandingCenterCanvasPercentFor(initialVariant, initialSize));
+  const initialAlign = initial.align ?? OFFICIAL_STUDIO_DEFAULTS.align;
+  const [posX, setPosX] = useState(initial.posX ?? defaultArtworkXForViewport(defaultArtworkPosition, initialVariant, initialSize, isMobilePreview, initialAlign));
   const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport(defaultArtworkPosition));
-  const [align, setAlign] = useState<"start" | "center" | "end">(
-    initial.align ?? OFFICIAL_STUDIO_DEFAULTS.align
-  );
+  const [align, setAlign] = useState<"start" | "center" | "end">(initialAlign);
   const [showGuides, setShowGuides] = useState(false);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? OFFICIAL_STUDIO_DEFAULTS.safeMargin);
   const [backgroundColor, setBackgroundColor] = useState(
@@ -646,7 +663,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     setStrokeWidth(OFFICIAL_STUDIO_DEFAULTS.strokeWidth);
     setStyleMode(OFFICIAL_STUDIO_DEFAULTS.styleMode);
     setArc(OFFICIAL_STUDIO_DEFAULTS.arc);
-    setPosX(defaultArtworkPosition?.posX ?? brandingCenterCanvasPercentFor(OFFICIAL_STUDIO_DEFAULTS.variant, OFFICIAL_STUDIO_DEFAULTS.size));
+    setPosX(defaultArtworkXForViewport(defaultArtworkPosition, OFFICIAL_STUDIO_DEFAULTS.variant, OFFICIAL_STUDIO_DEFAULTS.size, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
     setPosY(defaultArtworkYForViewport(defaultArtworkPosition));
     setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
     setSafeMargin(OFFICIAL_STUDIO_DEFAULTS.safeMargin);
@@ -764,7 +781,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     return () => { active = false; };
   }, [logoDataUrl]);
 
-  const draftCanvasX = text.trim() ? posX : brandingCenterCanvasPercentFor(variant, sleeveSize);
+  const draftCanvasX = text.trim() ? posX : (isMobilePreview
+    ? usableBrandingCenterCanvasPercentFor(variant, sleeveSize)
+    : brandingCenterCanvasPercentFor(variant, sleeveSize));
   const draftCanvasY = text.trim() ? posY : 50;
   const productionDraftPosition = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, draftCanvasY);
 
@@ -1047,19 +1066,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoCenterCanvasY = viewH / 2;
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
   const logoImageY = logoCenterCanvasY - visibleLogoHeightSvg / 2 - logoVisibleBounds.y * logoImageHeightSvg;
-  const artworkCenterCanvasPercent = brandingCenterCanvasPercentFor(variant, sleeveSize);
-  const artworkMinXCanvasPercent = (cadXToCanvasX(
-    variant,
-    sleeveSize,
-    brandingRegion.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM,
-    viewW
-  ) / viewW) * 100;
-  const artworkMaxXCanvasPercent = (cadXToCanvasX(
-    variant,
-    sleeveSize,
-    brandingRegion.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM,
-    viewW
-  ) / viewW) * 100;
+  const artworkCenterCanvasPercent = isMobilePreview
+    ? usableBrandingCenterCanvasPercentFor(variant, sleeveSize)
+    : brandingCenterCanvasPercentFor(variant, sleeveSize);
+  const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
+  const artworkMinXCanvasPercent = usableArtworkRange.start;
+  const artworkMaxXCanvasPercent = usableArtworkRange.end;
 
   function centerCurrentArtwork() {
     setAlign("center");
@@ -1070,7 +1082,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   function resetCurrentArtworkPosition() {
     if (defaultArtworkPosition) {
       setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
-      setPosX(defaultArtworkPosition.posX);
+      setPosX(defaultArtworkXForViewport(defaultArtworkPosition, variant, sleeveSize, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
       setPosY(defaultArtworkYForViewport(defaultArtworkPosition));
       return;
     }
@@ -1080,20 +1092,39 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function handleVariantChange(nextVariant: SleeveVariant) {
-    const wasCentered = align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
+    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, sleeveSize, align)) < 0.01;
+    const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setVariant(nextVariant);
-    if (wasCentered) setPosX(brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
+    if (isMobilePreview && wasAtAlignmentAnchor) {
+      setPosX(usableBrandingAlignmentCanvasPercentFor(nextVariant, sleeveSize, align));
+    } else if (wasDesktopCentered) {
+      setPosX(brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
+    }
   }
 
   function handleSizeChange(nextSize: number) {
-    const wasCentered = align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
+    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, sleeveSize, align)) < 0.01;
+    const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setSleeveSize(nextSize);
-    if (wasCentered) setPosX(brandingCenterCanvasPercentFor(variant, nextSize));
+    if (isMobilePreview && wasAtAlignmentAnchor) {
+      setPosX(usableBrandingAlignmentCanvasPercentFor(variant, nextSize, align));
+    } else if (wasDesktopCentered) {
+      setPosX(brandingCenterCanvasPercentFor(variant, nextSize));
+    }
   }
 
   function handleAlignmentChange(nextAlign: "start" | "center" | "end") {
     setAlign(nextAlign);
-    if (nextAlign === "center") setPosX(artworkCenterCanvasPercent);
+    if (isMobilePreview) {
+      if (nextAlign === "start") setPosX(artworkMinXCanvasPercent);
+      else if (nextAlign === "end") setPosX(artworkMaxXCanvasPercent);
+      else {
+        setPosX(artworkCenterCanvasPercent);
+        setPosY(50);
+      }
+    } else if (nextAlign === "center") {
+      setPosX(artworkCenterCanvasPercent);
+    }
   }
 
   const arcPath = useMemo(() => {
