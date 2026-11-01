@@ -540,6 +540,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     "export"
   );
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
+  const [desktopCustomizationCollapsed, setDesktopCustomizationCollapsed] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
   const [previewBackground, setPreviewBackground] = useState<"studio" | "city">("studio");
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
@@ -2230,20 +2231,42 @@ const SnapInkSleeveCustomizer = forwardRef<
       </svg>
       </div>
       </div>
-      {instance === "desktop" && <div className="snapink-desktop-controls-overlay" data-preview-only="true" style={{
+      {instance === "desktop" && <div className={`snapink-desktop-controls-overlay${desktopCustomizationCollapsed ? " is-collapsed" : ""}`} data-preview-only="true" style={{
         position: "absolute",
         zIndex: 30,
-        left: "4%",
-        right: "4%",
+        left: desktopCustomizationCollapsed ? "50%" : "4%",
+        right: desktopCustomizationCollapsed ? "auto" : "4%",
         bottom: "3%",
+        width: desktopCustomizationCollapsed ? "max-content" : undefined,
+        transform: desktopCustomizationCollapsed ? "translateX(-50%)" : "none",
         boxSizing: "border-box",
-        border: "1px solid rgba(232, 216, 176, .95)",
+        border: desktopCustomizationCollapsed ? "1px solid #D8BF86" : "1px solid rgba(232, 216, 176, .95)",
         borderRadius: 16,
-        background: "rgba(250, 249, 246, .94)",
-        boxShadow: "0 12px 32px rgba(0, 0, 0, .28)",
-        backdropFilter: "blur(10px)",
+        background: desktopCustomizationCollapsed ? "rgba(23, 23, 23, .96)" : "rgba(250, 249, 246, .94)",
+        boxShadow: desktopCustomizationCollapsed ? "0 6px 18px rgba(0, 0, 0, .3)" : "0 12px 32px rgba(0, 0, 0, .28)",
+        backdropFilter: desktopCustomizationCollapsed ? "none" : "blur(10px)",
+        transition: "left 220ms ease, right 220ms ease, transform 220ms ease, background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease",
       }}>
-        {previewToolbar(instance)}
+        <div
+          id={`snapink-desktop-controls-content-${uid}`}
+          className="snapink-desktop-controls-content"
+          aria-hidden={desktopCustomizationCollapsed}
+          inert={desktopCustomizationCollapsed}
+        >
+          {previewToolbar(instance)}
+        </div>
+        <button
+          type="button"
+          className="snapink-desktop-controls-toggle"
+          aria-expanded={!desktopCustomizationCollapsed}
+          aria-controls={`snapink-desktop-controls-content-${uid}`}
+          onClick={() => setDesktopCustomizationCollapsed((collapsed) => !collapsed)}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true" className={desktopCustomizationCollapsed ? "" : "is-open"}>
+            <path d="m3 6 5 5 5-5" />
+          </svg>
+          <span>{desktopCustomizationCollapsed ? "Customize" : "Hide Controls"}</span>
+        </button>
       </div>}
       {instance === "mobile" && <div className="snapink-mobile-entry-overlay" data-preview-only="true" style={{
         position: "absolute",

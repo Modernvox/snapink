@@ -350,6 +350,12 @@
 .snapink-retail-address-heading { margin: 5px 0 -3px; }
 .snapink-retail-success { max-width: 850px; padding: 8px 0; }
 .snapink-retail-success .snapink-retail-total { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+@media (prefers-reduced-motion: reduce) {
+  .snapink-studio-customizer .snapink-desktop-controls-overlay,
+  .snapink-studio-customizer .snapink-desktop-controls-content,
+  .snapink-studio-customizer .snapink-desktop-controls-toggle,
+  .snapink-studio-customizer .snapink-desktop-controls-toggle svg { transition: none !important; }
+}
 @media (max-width: 767px) {
   .snapink-retail-order { gap: 16px; }
   .snapink-retail-layout { grid-template-columns: minmax(0,1fr); gap: 16px; }
@@ -449,6 +455,74 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    transition: left 220ms ease, right 220ms ease, transform 220ms ease, background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-content {
+    display: grid;
+    grid-template-rows: 1fr;
+    min-width: 0;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows 220ms ease, opacity 180ms ease, visibility 0s linear;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-content > .snapink-preview-toolbar {
+    min-height: 0;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-overlay.is-collapsed {
+    gap: 0;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-overlay.is-collapsed .snapink-desktop-controls-content {
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: grid-template-rows 220ms ease, opacity 180ms ease, visibility 0s linear 220ms;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-toggle {
+    display: inline-flex;
+    min-height: 38px;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid #B58A42;
+    border-radius: 999px;
+    background: #171717;
+    color: #D8BF86;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-toggle:hover {
+    background: #D8BF86;
+    color: #171717;
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .18);
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-toggle:focus-visible {
+    outline: 2px solid #D8BF86;
+    outline-offset: 3px;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-toggle svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 220ms ease;
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-toggle svg.is-open {
+    transform: rotate(180deg);
   }
   .snapink-studio-customizer .snapink-desktop-controls-overlay > .snapink-preview-toolbar {
     position: static;
