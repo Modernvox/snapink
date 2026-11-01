@@ -223,6 +223,13 @@
   .snapink-fit-lightbox-footer { align-items: flex-end; font-size: 11px; }
 }
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
+.snapink-preview-config-row { position: relative; z-index: 25; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.snapink-size-buttons { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 5px; }
+.snapink-size-buttons-label { margin-right: 4px; color: #303030; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.snapink-size-button { display: inline-grid; width: 36px; min-height: 36px; place-items: center; border: 1px solid #D8BF86; border-radius: 8px; background: #FFFFFF; color: #242424; font-size: 13px; font-weight: 800; cursor: pointer; }
+.snapink-size-button:hover { background: #FBF8F0; }
+.snapink-size-button.is-selected { border-color: #B58A42; background: #D8BF86; color: #171717; box-shadow: inset 0 0 0 1px #B58A42; }
+.snapink-size-button:disabled { cursor: not-allowed; opacity: .55; }
 .snapink-hat-picker { position: relative; z-index: 30; align-self: flex-start; min-width: 0; margin: 0 auto 10px 0; }
 .snapink-hat-picker-trigger { display: inline-flex; min-height: 42px; max-width: 100%; align-items: center; gap: 9px; padding: 7px 12px; border: 1px solid #D8BF86; border-radius: 9px; background: #FFFFFF; color: #171717; box-shadow: 0 2px 7px rgb(0 0 0 / 8%); cursor: pointer; }
 .snapink-hat-picker-trigger:focus-visible, .snapink-hat-picker-option:focus-visible { outline: 2px solid #C9A45C; outline-offset: 2px; }

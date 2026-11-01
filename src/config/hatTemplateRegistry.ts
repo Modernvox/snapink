@@ -35,6 +35,9 @@ export interface HatSleevePlacement {
   };
   /** Vertical sleeve groove reference; the flap extends to the left. */
   grooveLinePx: readonly [top: HatTemplatePoint, bottom: HatTemplatePoint];
+  /** Female strap centerline and transverse thickness in source pixels. */
+  strapCenterlinePx: readonly [top: HatTemplatePoint, bottom: HatTemplatePoint];
+  strapThicknessPx: number;
   /** Overall overlay bounds include the narrow flap extension. */
   sleeveBoundsPx: { left: number; top: number; right: number; bottom: number };
   positionPx: { x: number; y: number };
@@ -64,7 +67,7 @@ export interface HatTemplate extends HatTemplateImageProfile {
   mobile: HatTemplateImageProfile;
 }
 
-type RawSleevePlacement = Omit<HatSleevePlacement, "positionPx" | "uniformScale" | "rotationDeg">;
+type RawSleevePlacement = Omit<HatSleevePlacement, "positionPx" | "uniformScale" | "rotationDeg" | "strapCenterlinePx" | "strapThicknessPx">;
 type RawHatTemplate = Omit<HatTemplate, "presentation" | "sleevePlacement" | "mobile"> & {
   sleevePlacement: RawSleevePlacement;
   mobile: Omit<HatTemplateImageProfile, "presentation" | "sleevePlacement">;
@@ -84,8 +87,16 @@ const MOBILE_HAT_SLEEVE_CALIBRATION: RawSleevePlacement = {
 
 function calibratePlacement(raw: RawSleevePlacement, dimensions: { width: number; height: number }): HatSleevePlacement {
   const bounds = raw.sleeveBoundsPx;
+  const { topLeft, topRight, bottomRight, bottomLeft } = raw.femaleStrapQuadPx;
+  const strapCenterlinePx = [
+    [(topLeft[0] + topRight[0]) / 2, (topLeft[1] + topRight[1]) / 2] as const,
+    [(bottomLeft[0] + bottomRight[0]) / 2, (bottomLeft[1] + bottomRight[1]) / 2] as const,
+  ] as const;
+  const distance = (a: HatTemplatePoint, b: HatTemplatePoint) => Math.hypot(b[0] - a[0], b[1] - a[1]);
   return {
     ...raw,
+    strapCenterlinePx,
+    strapThicknessPx: (distance(topLeft, bottomLeft) + distance(topRight, bottomRight)) / 2,
     positionPx: {
       x: (bounds.left + bounds.right) / 2,
       y: (bounds.top + bounds.bottom) / 2,

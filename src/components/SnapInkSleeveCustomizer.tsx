@@ -296,6 +296,7 @@ function hatComposition(
   const map = ([x, y]: readonly [number, number]) => [left + x * scaleX, top + y * scaleY] as const;
   const placement = template.sleevePlacement;
   const [grooveTop, grooveBottom] = placement.grooveLinePx.map(map);
+  const [strapCenterTop, strapCenterBottom] = placement.strapCenterlinePx.map(map);
   const [strapTopLeft, strapTopRight, strapBottomRight, strapBottomLeft] = [
     placement.femaleStrapQuadPx.topLeft,
     placement.femaleStrapQuadPx.topRight,
@@ -317,9 +318,11 @@ function hatComposition(
   const strapTop = (strapTopLeft[1] + strapTopRight[1]) / 2;
   const strapBottom = (strapBottomLeft[1] + strapBottomRight[1]) / 2;
   const strapRight = (strapTopRight[0] + strapBottomRight[0]) / 2;
+  const strapCenterY = (strapCenterTop[1] + strapCenterBottom[1]) / 2;
+  const strapThicknessPx = placement.strapThicknessPx * scaleY;
   return {
     template, fitScale, drawnWidth, drawnHeight, left, top,
-    strapTop, strapBottom, strapRight, grooveX, grooveY, sleeveBounds,
+    strapTop, strapBottom, strapRight, strapCenterY, strapThicknessPx, grooveX, grooveY, sleeveBounds,
     rotationDeg: placement.rotationDeg,
     grooveScaleX: scaleX,
     grooveScaleY: scaleY,
@@ -918,15 +921,19 @@ const SnapInkSleeveCustomizer = forwardRef<
     loadedHatSize?.width,
     loadedHatSize?.height
   );
-  // Registry bounds position the sleeve's visible flap and main body. CAD
-  // length remains authoritative for each size; the camera zoom never changes
-  // the sleeve's relative scale against the photographed hat.
-  const sleevePreviewWidthPx = (stageComposition.sleeveBounds.right - stageComposition.sleeveBounds.left) * sleeveScaleRatio;
+  // Calibrate the sleeve's physical width from the photographed strap's
+  // thickness, then derive its longitudinal span from the actual CAD bounds.
+  // The old mapping reused a photographed rectangle's width and only applied
+  // the size ratio, which made the CAD sleeve too short and distorted its
+  // length-to-width proportions. CAD X runs from the flap through the right
+  // edge; the template groove remains the physical attachment datum.
+  const sleevePreviewHeightPercent = (stageComposition.strapThicknessPx / stageCoordinateHeight) * 100;
+  const sleevePreviewHeightPx = stageCoordinateHeight * sleevePreviewHeightPercent / 100;
+  const sleevePreviewWidthPx = sleevePreviewHeightPx * (viewW / viewH);
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
-  const sleevePreviewHeightPercent = ((stageComposition.sleeveBounds.bottom - stageComposition.sleeveBounds.top) / stageCoordinateHeight) * 100;
-  const sleevePreviewBottomYPercent = ghostHat ? (stageComposition.sleeveBounds.bottom / stageCoordinateHeight) * 100 : 50 + sleevePreviewHeightPercent / 2;
+  const sleevePreviewCenterYPercent = ghostHat ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 : 50;
+  const sleevePreviewBottomYPercent = sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2;
   const sleeveSvgHeight = previewViewH;
-  const sleevePreviewCenterYPercent = sleevePreviewBottomYPercent - sleevePreviewHeightPercent / 2;
   const sleevePreviewCenterXPercent = ghostHat
     ? ((stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)) / STUDIO_STAGE_COORDINATE_WIDTH) * 100
     : 50;
@@ -1527,9 +1534,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2">
           <div className="snapink-size-control flex min-w-0 flex-col gap-1 text-xs text-neutral-300 sm:col-span-2">
             <span>Choose Your Size</span>
-            <select aria-label="Choose Your Size" disabled={fixedProductConfiguration} value={sleeveSize} onChange={(e) => handleSizeChange(Number(e.target.value))} className="min-h-10 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white">
-              {[0, 1, 2, 3, 4, 5].map((size) => <option key={size} value={size}>{`Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"}`}</option>)}
-            </select>
             <button
               type="button"
               className="snapink-size-examples-toggle"
@@ -1567,7 +1571,17 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div className="snapink-stage-wrap">
       {previewToolbar(instance)}
-      {hatColorSelector(instance)}
+      <div className="snapink-preview-config-row" aria-label="Preview options">
+        <div className="snapink-size-buttons" role="group" aria-label="Sleeve Size">
+          <span className="snapink-size-buttons-label">Sleeve Size</span>
+          {[0, 1, 2, 3, 4, 5].map((size) => (
+            <button key={size} type="button" disabled={fixedProductConfiguration} aria-label={`Size ${size}: ${size} exposed ${size === 1 ? "peg" : "pegs"}`} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className={`snapink-size-button ${sleeveSize === size ? "is-selected" : ""}`}>
+              {size}
+            </button>
+          ))}
+        </div>
+        {hatColorSelector(instance)}
+      </div>
       <div className="snapink-preview-stage-frame">
       <div
       ref={attachStageRef}
@@ -1849,10 +1863,10 @@ const SnapInkSleeveCustomizer = forwardRef<
       className={`
         w-full
         px-2 sm:px-3 lg:px-4
-        lg:max-w-[1400px] lg:mx-auto
+        lg:mx-auto
         ${className}
       `}
-      style={{ maxWidth: width }}
+      style={{ width: "100%", maxWidth: width > 1400 ? width : "none" }}
     >
       {/* ---------- MOBILE LAYOUT (accordion + preview on top) ---------- */}
       <div className="snapink-studio-workspace-mobile lg:hidden space-y-4 pb-20">
