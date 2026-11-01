@@ -8,6 +8,7 @@
     "predev": "npm run build:css",
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node scripts/cache-bust-public-css.cjs",
     "preview": "vite preview",
     "dev:css": "npx @tailwindcss/cli -i ./src/input.css -o ./public/style.css --watch",
     "build:css": "npx @tailwindcss/cli -i ./src/input.css -o ./public/style.css --minify",
