@@ -26,6 +26,11 @@ import {
   studioArtworkPositionFor,
   type SleeveVariant,
 } from "../config/sleeveGeometry";
+import {
+  HAT_TEMPLATE_REGISTRY,
+  getHatTemplate,
+  type HatTemplateId,
+} from "../config/hatTemplateRegistry";
 
 async function inspectTransparency(file: Blob): Promise<boolean> {
   // Some browser SVG decoders do not support createImageBitmap for SVG files.
@@ -224,6 +229,19 @@ const COLOR_SWATCHES = [
   { label: "Neon Green", value: "#39FF14" },
 ];
 
+const HAT_COLOR_SWATCHES: Readonly<Record<HatTemplateId, string>> = {
+  "hat-black": "#191919",
+  "hat-white": "#F5F5F2",
+  "hat-red": "#D31527",
+  "hat-blue": "#1759A8",
+  "hat-green": "#237943",
+  "hat-yellow": "#E5C51A",
+  "hat-neon-yellow": "#DFFF00",
+  "hat-orange": "#F07816",
+  "hat-pink": "#E987AA",
+  "hat-purple": "#7541A5",
+};
+
 // Photo previews use the approved product photos. These crop bounds remove
 // transparent canvas only; the source files themselves stay untouched. The
 // face polygons follow the visible branding panels in those images.
@@ -244,86 +262,66 @@ const SLEEVE_PHOTO = {
   },
 } as const;
 
-// Approved size-specific photographs. Values are the PNG's real dimensions;
-// the strap bounds are measured in each source photo and used only for preview
-// placement. The CAD coordinate system remains independent of these values.
-const HAT_PREVIEW = [
-  // Standard sleeve bounds are measured per source photo. The right edge
-  // reaches the strap boundary; exposed male pegs are preserved as cutouts.
-  { src: "/images/website_images/0_pegs.png", width: 914, height: 609, strap: { left: 96, right: 812, top: 342, bottom: 521 }, standardSleeveRight: 812 },
-  { src: "/images/website_images/1_pegs.png", width: 318, height: 247, strap: { left: 42, right: 285, top: 165, bottom: 237 }, standardSleeveRight: 285 },
-  { src: "/images/website_images/2_pegs.png", width: 963, height: 642, strap: { left: 112, right: 878, top: 412, bottom: 594 }, standardSleeveRight: 878 },
-  { src: "/images/website_images/3_pegs.png", width: 963, height: 642, strap: { left: 95, right: 880, top: 402, bottom: 582 }, standardSleeveRight: 880 },
-  { src: "/images/website_images/4_pegs.png", width: 963, height: 642, strap: { left: 93, right: 881, top: 418, bottom: 594 }, standardSleeveRight: 881 },
-  { src: "/images/website_images/5_pegs.png", width: 963, height: 642, strap: { left: 80, right: 911, top: 434, bottom: 603 }, standardSleeveRight: 911 },
-] as const;
 const STUDIO_STAGE_WIDTH_HEIGHT_RATIO = 1000 / 650;
-// Sleeve preview calibration extras are defined as CSS pixels at the approved
-// 1440px desktop layout, where the stage renders 585px wide. Convert them to
-// stage-relative height so the same completed composition scales on mobile.
-const STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX = 585;
-type SleevePreviewCalibration = {
-  horizontalScale: number;
-  horizontalOffsetHatSourcePx: number;
-  verticalScale: number;
-  verticalOffsetHatSourcePx: number;
-  verticalExtraPreviewPx: number;
-  verticalOffsetPreviewPx?: number;
-  verticalBottomExtraPreviewPx?: number;
-};
-// Independent per-photo, per-style preview calibration. Horizontal anchors
-// use each photo's measured opening/strap bounds; vertical bounds are measured
-// separately from that photo's strap. Preview-only values never enter CAD.
-const SLEEVE_PREVIEW_CALIBRATION: Record<SleeveVariant, readonly SleevePreviewCalibration[]> = {
-  standard: [
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 0 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 10 },
-  ],
-  billboard: [
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 30, verticalOffsetPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 25 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20, verticalBottomExtraPreviewPx: 10 },
-    { horizontalScale: 1, horizontalOffsetHatSourcePx: 0, verticalScale: 1, verticalOffsetHatSourcePx: 0, verticalExtraPreviewPx: 20, verticalBottomExtraPreviewPx: 10 },
-  ],
-};
-const LONGEST_SLEEVE_LENGTH_MM =
-  SLEEVE_GEOMETRY.standard.sizes[5].overallMaxXmm -
-  SLEEVE_GEOMETRY.standard.sizes[5].overallMinXmm;
+
+/**
+ * Camera framing is derived from the approved CAD lengths. A shorter sleeve
+ * receives a closer camera view; size 5 uses the widest framing. The hat and
+ * sleeve are transformed together around the registry's closure anchor.
+ */
+export function studioHatZoomForSize(size: number, variant: SleeveVariant): number {
+  const current = geometryFor(variant, size);
+  const reference = geometryFor(variant, 5);
+  const currentLength = current.overallMaxXmm - current.overallMinXmm;
+  const referenceLength = reference.overallMaxXmm - reference.overallMinXmm;
+  return referenceLength / currentLength;
+}
 
 function hatComposition(
-  size: number,
-  variant: SleeveVariant,
+  template: (typeof HAT_TEMPLATE_REGISTRY)[number],
   canvasWidth: number,
   canvasHeight: number,
-  naturalWidth = HAT_PREVIEW[size].width,
-  naturalHeight = HAT_PREVIEW[size].height
+  naturalWidth = template.imageDimensions.width,
+  naturalHeight = template.imageDimensions.height
 ) {
-  const hat = HAT_PREVIEW[size];
   const fitScale = Math.min(canvasWidth / naturalWidth, canvasHeight / naturalHeight);
   const drawnWidth = naturalWidth * fitScale;
   const drawnHeight = naturalHeight * fitScale;
   const left = (canvasWidth - drawnWidth) / 2;
   const top = (canvasHeight - drawnHeight) / 2;
-  const sourceScaleX = naturalWidth / hat.width;
-  const sourceScaleY = naturalHeight / hat.height;
-  const calibration = SLEEVE_PREVIEW_CALIBRATION[variant][size];
-  const strapTop = top + hat.strap.top * sourceScaleY * fitScale;
-  const strapBottom = top + hat.strap.bottom * sourceScaleY * fitScale;
-  const horizontalOffset = calibration.horizontalOffsetHatSourcePx * sourceScaleX * fitScale;
-  const verticalOffset = calibration.verticalOffsetHatSourcePx * sourceScaleY * fitScale;
-  const sleeveTop = strapTop + verticalOffset;
-  const sleeveBottom = sleeveTop + (strapBottom - strapTop) * calibration.verticalScale;
-  const strapWidth = (hat.strap.right - hat.strap.left) * sourceScaleX * fitScale;
-  const strapLeft = left + hat.strap.left * sourceScaleX * fitScale;
-  const sleeveAnchorX = strapLeft + horizontalOffset;
-  const standardSleeveWidth = (hat.standardSleeveRight - hat.strap.left) * sourceScaleX * fitScale;
-  return { hat, fitScale, drawnWidth, drawnHeight, left, top, strapTop, strapBottom, sleeveTop, sleeveBottom, strapWidth, strapLeft, sleeveAnchorX, standardSleeveWidth, calibration };
+  const scaleX = (naturalWidth / template.imageDimensions.width) * fitScale;
+  const scaleY = (naturalHeight / template.imageDimensions.height) * fitScale;
+  const map = ([x, y]: readonly [number, number]) => [left + x * scaleX, top + y * scaleY] as const;
+  const placement = template.sleevePlacement;
+  const [grooveTop, grooveBottom] = placement.grooveLinePx.map(map);
+  const [strapTopLeft, strapTopRight, strapBottomRight, strapBottomLeft] = [
+    placement.femaleStrapQuadPx.topLeft,
+    placement.femaleStrapQuadPx.topRight,
+    placement.femaleStrapQuadPx.bottomRight,
+    placement.femaleStrapQuadPx.bottomLeft,
+  ].map(map);
+  const sleeveBounds = {
+    left: left + placement.sleeveBoundsPx.left * scaleX,
+    top: top + placement.sleeveBoundsPx.top * scaleY,
+    right: left + placement.sleeveBoundsPx.right * scaleX,
+    bottom: top + placement.sleeveBoundsPx.bottom * scaleY,
+  };
+  // Keep the registry's normalized sleeve scale authoritative for the image
+  // calibration instead of deriving a second height adjustment in Studio.
+  const calibratedSleeveHeight = placement.uniformScale * template.imageDimensions.height * fitScale;
+  sleeveBounds.bottom = sleeveBounds.top + calibratedSleeveHeight;
+  const grooveX = (grooveTop[0] + grooveBottom[0]) / 2;
+  const grooveY = (grooveTop[1] + grooveBottom[1]) / 2;
+  const strapTop = (strapTopLeft[1] + strapTopRight[1]) / 2;
+  const strapBottom = (strapBottomLeft[1] + strapBottomRight[1]) / 2;
+  const strapRight = (strapTopRight[0] + strapBottomRight[0]) / 2;
+  return {
+    template, fitScale, drawnWidth, drawnHeight, left, top,
+    strapTop, strapBottom, strapRight, grooveX, grooveY, sleeveBounds,
+    rotationDeg: placement.rotationDeg,
+    grooveScaleX: scaleX,
+    grooveScaleY: scaleY,
+  };
 }
 
 function clamp(n: number, min: number, max: number) {
@@ -346,8 +344,10 @@ function drawStudioComposition(
   ghostHat: HTMLImageElement | null,
   sleeveWidthPercent: number,
   sleeveHeightPercent: number,
-  size: number,
-  variant: SleeveVariant,
+  template: (typeof HAT_TEMPLATE_REGISTRY)[number],
+  cameraZoom: number,
+  sleeveGrooveFraction: number,
+  sleeveRotationDeg: number,
   sleeveCenterXPercent: number,
   sleeveBottomYPercent: number
 ) {
@@ -356,17 +356,28 @@ function drawStudioComposition(
     return;
   }
 
-  const composition = hatComposition(size, variant, canvas.width, canvas.height, ghostHat.naturalWidth, ghostHat.naturalHeight);
+  const composition = hatComposition(template, canvas.width, canvas.height, ghostHat.naturalWidth, ghostHat.naturalHeight);
+  context.save();
+  context.translate(composition.grooveX, composition.grooveY);
+  context.scale(cameraZoom, cameraZoom);
+  context.translate(-composition.grooveX, -composition.grooveY);
   context.drawImage(ghostHat, composition.left, composition.top, composition.drawnWidth, composition.drawnHeight);
   const sleeveWidth = canvas.width * sleeveWidthPercent / 100;
   const sleeveHeight = canvas.height * sleeveHeightPercent / 100;
+  const sleeveCenterX = canvas.width * sleeveCenterXPercent / 100;
+  const sleeveCenterY = canvas.height * sleeveBottomYPercent / 100 - sleeveHeight / 2;
+  context.save();
+  context.translate(sleeveCenterX + sleeveWidth * (sleeveGrooveFraction - 0.5), sleeveCenterY);
+  context.rotate(sleeveRotationDeg * Math.PI / 180);
   context.drawImage(
     sleeve,
-    canvas.width * sleeveCenterXPercent / 100 - sleeveWidth / 2,
-    canvas.height * sleeveBottomYPercent / 100 - sleeveHeight,
+    -sleeveWidth / 2,
+    -sleeveHeight / 2,
     sleeveWidth,
     sleeveHeight
   );
+  context.restore();
+  context.restore();
 }
 
 // ---------- Component ----------
@@ -445,6 +456,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
+  const [hatTemplateId, setHatTemplateId] = useState<HatTemplateId>("hat-black");
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
   const [fitLightboxSize, setFitLightboxSize] = useState<number | null>(null);
@@ -857,63 +869,36 @@ const SnapInkSleeveCustomizer = forwardRef<
   const largestGeometry = SLEEVE_GEOMETRY[variant].sizes[5];
   const largestOverallLengthMm = largestGeometry.overallMaxXmm - largestGeometry.overallMinXmm;
   const sleeveScaleRatio = overallLengthMm / largestOverallLengthMm;
-  const currentHat = HAT_PREVIEW[sleeveSize];
-  const loadedHatSize = hatNaturalSize.src === currentHat.src ? hatNaturalSize : null;
+  const currentHatTemplate = getHatTemplate(hatTemplateId);
+  const loadedHatSize = hatNaturalSize.src === currentHatTemplate.imagePath ? hatNaturalSize : null;
   const currentStageClientWidth = (svgRef.current?.closest(".snapink-product-stage") as HTMLDivElement | null)?.clientWidth
     || (typeof window !== "undefined" && window.innerWidth <= 640 ? Math.max(1, window.innerWidth - 92) : stageClientWidth);
   const stageComposition = hatComposition(
-    sleeveSize,
-    variant,
+    currentHatTemplate,
     1000,
     650,
     loadedHatSize?.width,
     loadedHatSize?.height
   );
-  // Each style anchors its own actual groove to the opening's left edge.
-  // Standard's right edge reaches the photo's strap boundary; exposed pegs
-  // remain visible through cutouts in the overlay. Both images scale evenly.
-  const sleevePreviewWidthPx = variant === "billboard" && ghostHat
-    ? (stageComposition.strapWidth / (1 - billboardGrooveFraction)) * stageComposition.calibration.horizontalScale
-    : variant === "standard" && ghostHat
-      ? (stageComposition.standardSleeveWidth / (1 - standardGrooveFraction)) * stageComposition.calibration.horizontalScale
-      : stageComposition.strapWidth * sleeveScaleRatio;
+  // Registry bounds position the sleeve's visible flap and main body. CAD
+  // length remains authoritative for each size; the camera zoom never changes
+  // the sleeve's relative scale against the photographed hat.
+  const sleevePreviewWidthPx = (stageComposition.sleeveBounds.right - stageComposition.sleeveBounds.left) * sleeveScaleRatio;
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / 1000) * 100;
-  const sleevePreviewBaseHeightPercent = sleevePreviewWidthPercent
-    * (previewViewH / viewW)
-    * STUDIO_STAGE_WIDTH_HEIGHT_RATIO;
-  const sleevePreviewBaseBottomYPercent = ghostHat
-    ? (stageComposition.sleeveBottom / 650) * 100
-    : 50;
-  const sleeveExtraHeightPercent = ghostHat
-    ? (stageComposition.calibration.verticalExtraPreviewPx
-      / (STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX / STUDIO_STAGE_WIDTH_HEIGHT_RATIO)) * 100
-    : 0;
-  const sleeveOffsetPreviewPercent = ghostHat
-    ? ((stageComposition.calibration.verticalOffsetPreviewPx ?? 0)
-      / (STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX / STUDIO_STAGE_WIDTH_HEIGHT_RATIO)) * 100
-    : 0;
-  const sleeveBottomExtraHeightPercent = ghostHat
-    ? ((stageComposition.calibration.verticalBottomExtraPreviewPx ?? 0)
-      / (STUDIO_PREVIEW_REFERENCE_STAGE_WIDTH_PX / STUDIO_STAGE_WIDTH_HEIGHT_RATIO)) * 100
-    : 0;
-  const sleevePreviewBottomYPercent = sleevePreviewBaseBottomYPercent
-    + sleeveOffsetPreviewPercent
-    + sleeveBottomExtraHeightPercent;
-  const sleevePreviewHeightPercent = ghostHat
-    ? ((stageComposition.strapBottom - stageComposition.strapTop) / 650) * 100
-      * stageComposition.calibration.verticalScale
-      + sleeveExtraHeightPercent
-      + sleeveBottomExtraHeightPercent
-    : sleevePreviewBaseHeightPercent;
+  const sleevePreviewHeightPercent = ((stageComposition.sleeveBounds.bottom - stageComposition.sleeveBounds.top) / 650) * 100;
+  const sleevePreviewBottomYPercent = ghostHat ? (stageComposition.sleeveBounds.bottom / 650) * 100 : 50 + sleevePreviewHeightPercent / 2;
   const sleeveSvgHeight = previewViewH;
   const sleevePreviewCenterYPercent = sleevePreviewBottomYPercent - sleevePreviewHeightPercent / 2;
   const sleevePreviewCenterXPercent = ghostHat
-    ? ((stageComposition.sleeveAnchorX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)) / 1000) * 100
+    ? ((stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)) / 1000) * 100
     : 50;
   const sleevePreviewLeftPercent = sleevePreviewCenterXPercent - sleevePreviewWidthPercent / 2;
   const sleevePreviewGrooveXPercent = sleevePreviewCenterXPercent
     + sleevePreviewWidthPercent * (sleeveGrooveFraction - 0.5);
   const sleevePreviewRightPercent = sleevePreviewCenterXPercent + sleevePreviewWidthPercent / 2;
+  const cameraZoom = studioHatZoomForSize(sleeveSize, variant);
+  const cameraOriginXPercent = (stageComposition.grooveX / 1000) * 100;
+  const cameraOriginYPercent = (stageComposition.grooveY / 650) * 100;
   const maximumWidthMm = bounds.maxY - bounds.minY;
   // Artwork is always centered on the CAD branding wall, never on the total sleeve.
   const logoCenterXmm = brandingRegion.centerXmm;
@@ -1034,7 +1019,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     try {
       const sleeveImage = await loadStudioImage(url);
       const ghostImage = ghostHat
-        ? await loadStudioImage(HAT_PREVIEW[sleeveSize].src)
+        ? await loadStudioImage(currentHatTemplate.imagePath)
         : null;
       const scale = exportScale;
       const canvas = document.createElement("canvas");
@@ -1053,8 +1038,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         ghostImage,
         sleevePreviewWidthPercent,
         sleevePreviewHeightPercent,
-        sleeveSize,
-        variant,
+        currentHatTemplate,
+        cameraZoom,
+        sleeveGrooveFraction,
+        stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
         sleevePreviewBottomYPercent
       );
@@ -1142,7 +1129,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     try {
       const sleeveImage = await loadStudioImage(svgUrl);
       const ghostImage = ghostHat
-        ? await loadStudioImage(await resolveDataUrl(HAT_PREVIEW[sleeveSize].src))
+        ? await loadStudioImage(await resolveDataUrl(currentHatTemplate.imagePath))
         : null;
       // A 1.25× stage preview includes the hat and corrected overlay placement
       // while remaining below the existing private preview upload size limit.
@@ -1163,8 +1150,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         ghostImage,
         sleevePreviewWidthPercent,
         sleevePreviewHeightPercent,
-        sleeveSize,
-        variant,
+        currentHatTemplate,
+        cameraZoom,
+        sleeveGrooveFraction,
+        stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
         sleevePreviewBottomYPercent
       );
@@ -1214,6 +1203,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     exportScale, sleeveScaleRatio, viewW, viewH, previewViewH, surfaceClipId,
     sleevePreviewWidthPercent, sleevePreviewCenterYPercent, sleevePreviewBottomYPercent,
     sleevePreviewHeightPercent, sleevePreviewCenterXPercent, sleeveSize, ghostHat,
+    currentHatTemplate, cameraZoom, sleeveGrooveFraction, stageComposition.rotationDeg,
     logoNeedsRemoval, logoDataUrl, logoSourceFile, text,
   ]);
 
@@ -1401,6 +1391,27 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const hatColorSelector = (
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[#D8BF86]/30 bg-white px-3 py-2 text-neutral-900" role="group" aria-label="Hat color">
+      <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em]">Hat color</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        {HAT_TEMPLATE_REGISTRY.map((template) => (
+          <button
+            key={template.id}
+            type="button"
+            aria-label={template.displayName}
+            aria-pressed={hatTemplateId === template.id}
+            title={template.displayName}
+            onClick={() => setHatTemplateId(template.id)}
+            className={`h-6 w-6 shrink-0 rounded-full border-2 transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A45C] ${hatTemplateId === template.id ? "border-[#C9A45C] ring-2 ring-[#C9A45C]/30" : "border-neutral-300 hover:border-neutral-500"}`}
+            style={{ backgroundColor: HAT_COLOR_SWATCHES[template.id] }}
+          />
+        ))}
+      </div>
+      <span className="sr-only" aria-live="polite">{currentHatTemplate.displayName} selected</span>
+    </div>
+  );
+
   const previewToolbar = (instance: "mobile" | "desktop") => (
     <div className="snapink-preview-toolbar">
       <div className="snapink-toolbar-primary">
@@ -1504,6 +1515,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div className="snapink-stage-wrap">
       {previewToolbar(instance)}
+      {hatColorSelector}
       <div className="snapink-preview-stage-frame">
       <div
       ref={attachStageRef}
@@ -1515,20 +1527,27 @@ const SnapInkSleeveCustomizer = forwardRef<
       <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
         PREVIEW ONLY
       </span>
+      <div
+        className="absolute inset-0 transition-transform duration-300 motion-reduce:transition-none"
+        style={{
+          transform: `scale(${ghostHat && !fixedProductConfiguration ? cameraZoom : 1})`,
+          transformOrigin: `${cameraOriginXPercent}% ${cameraOriginYPercent}%`,
+        }}
+      >
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
-        src={HAT_PREVIEW[sleeveSize].src}
+        src={currentHatTemplate.imagePath}
         alt=""
         draggable={false}
         className="absolute inset-0 h-full w-full object-contain"
-        style={{ pointerEvents: "none" }}
+        style={{ pointerEvents: "none", zIndex: currentHatTemplate.sleevePlacement.layerOrder.hat }}
         onLoad={(event) => setHatNaturalSize({
-          src: HAT_PREVIEW[sleeveSize].src,
+          src: currentHatTemplate.imagePath,
           width: event.currentTarget.naturalWidth,
           height: event.currentTarget.naturalHeight,
         })}
         data-testid="studio-hat-preview"
-        data-hat-size={sleeveSize}
+        data-hat-template={currentHatTemplate.id}
       />}
       <svg
         ref={svgRef}
@@ -1541,37 +1560,44 @@ const SnapInkSleeveCustomizer = forwardRef<
         data-positioning-version={POSITIONING_VERSION}
         data-sleeve-variant={variant}
         data-sleeve-size={sleeveSize}
-        data-hat-preview-src={HAT_PREVIEW[sleeveSize].src}
+        data-hat-preview-src={currentHatTemplate.imagePath}
         data-stage-sleeve-top-percent={sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2}
         data-stage-sleeve-height-percent={sleevePreviewHeightPercent}
         data-stage-sleeve-bottom-percent={sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2}
-        data-stage-sleeve-offset-px={stageComposition.calibration.verticalOffsetHatSourcePx}
-        data-stage-sleeve-preview-offset-px={stageComposition.calibration.verticalOffsetPreviewPx ?? 0}
+        data-stage-sleeve-offset-px={0}
+        data-stage-sleeve-preview-offset-px={0}
         data-stage-css-width-px={currentStageClientWidth}
         data-stage-sleeve-bottom-cover-source-px={0}
-        data-stage-sleeve-bottom-extra-px={stageComposition.calibration.verticalBottomExtraPreviewPx ?? 0}
-        data-stage-sleeve-vertical-scale={stageComposition.calibration.verticalScale}
-        data-stage-sleeve-extra-height-preview-px={stageComposition.calibration.verticalExtraPreviewPx}
+        data-stage-sleeve-bottom-extra-px={0}
+        data-stage-sleeve-vertical-scale={1}
+        data-stage-sleeve-extra-height-preview-px={0}
         data-stage-hat-strap-top-percent={(stageComposition.strapTop / 650) * 100}
         data-stage-hat-strap-bottom-percent={(stageComposition.strapBottom / 650) * 100}
         data-stage-sleeve-left-percent={sleevePreviewLeftPercent}
         data-stage-billboard-groove-x-percent={variant === "billboard" && ghostHat ? sleevePreviewGrooveXPercent : undefined}
         data-stage-standard-groove-x-percent={variant === "standard" && ghostHat ? sleevePreviewGrooveXPercent : undefined}
-        data-stage-hat-opening-left-percent={ghostHat ? (stageComposition.sleeveAnchorX / 1000) * 100 : undefined}
+        data-stage-hat-opening-left-percent={ghostHat ? cameraOriginXPercent : undefined}
         data-stage-sleeve-right-percent={sleevePreviewRightPercent}
-        data-stage-hat-opening-right-percent={ghostHat ? ((stageComposition.sleeveAnchorX + (variant === "standard" ? stageComposition.standardSleeveWidth : stageComposition.strapWidth) * stageComposition.calibration.horizontalScale) / 1000) * 100 : undefined}
+        data-stage-hat-opening-right-percent={ghostHat ? (stageComposition.strapRight / 1000) * 100 : undefined}
+        data-stage-camera-zoom={cameraZoom}
+        data-hat-template-id={currentHatTemplate.id}
+        data-hat-template-rotation={stageComposition.rotationDeg}
+        data-hat-template-artwork-layer={currentHatTemplate.sleevePlacement.layerOrder.artwork}
         data-branding-center-x-mm={brandingRegion.centerXmm}
         data-branding-center-y-mm={logoCenterYmm}
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
         className="snapink-sleeve-render absolute left-1/2 top-1/2 block h-auto -translate-x-1/2 -translate-y-1/2 rounded-sm"
-        // The 12 style/size profiles independently align the visible sleeve
-        // bounds to each photographed strap without changing CAD coordinates.
+        // Sleeve placement comes directly from the selected template registry;
+        // CAD dimensions determine size while the camera frames the composition.
         style={{
           width: `${sleevePreviewWidthPercent}%`,
           height: `${sleevePreviewHeightPercent}%`,
           left: `${sleevePreviewCenterXPercent}%`,
           top: `${sleevePreviewCenterYPercent}%`,
+          zIndex: currentHatTemplate.sleevePlacement.layerOrder.sleeve,
+          transform: `rotate(${stageComposition.rotationDeg}deg)`,
+          transformOrigin: `${sleeveGrooveFraction * 100}% 50%`,
         }}
       >
         <defs>
@@ -1757,6 +1783,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </g>
         </g>
       </svg>
+      </div>
       </div>
       </div>
       </div>

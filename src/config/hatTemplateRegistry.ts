@@ -1,12 +1,13 @@
 /**
- * Approved photo templates for future SnapInk Studio hat-color switching.
+ * Approved photo templates used by SnapInk Studio hat-color switching.
  *
  * All calibration points use each source image's natural pixel coordinates.
  * The images are front views with the hat worn backward. `femaleStrapQuadPx`
  * marks the seven-hole strap; the sleeve's groove aligns to its left boundary,
  * the small flap may extend left over the cap fabric, and the sleeve right edge
  * stops before the exposed male pegs. The registry does not alter or crop any
- * source photo and is not wired into the current Studio preview yet.
+ * source photo. Studio uses these source-pixel measurements for preview
+ * placement, camera anchoring, scale, rotation, and image layer order.
  */
 
 export type HatTemplateId =
