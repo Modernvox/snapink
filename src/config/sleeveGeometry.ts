@@ -55,6 +55,15 @@ export const STUDIO_SLEEVE_PREVIEW_SCALE = 1.25;
 
 /** Shared desktop-only vertical shift in native 1000px preview coordinates. */
 export const STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX = -5;
+/** Incremental desktop-only offsets applied on top of the shared shift. */
+export const STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX = {
+  0: 3,
+  1: 3,
+  2: 0,
+  3: 3,
+  4: 0,
+  5: 3,
+} as const;
 
 /** Prior desktop CSS-pixel calibration plus Round 2 additions in 1000-stage px. */
 export const STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX = {

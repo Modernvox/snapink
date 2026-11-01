@@ -16,6 +16,7 @@ import {
   PRODUCTION_BRANDING_INSET_MM,
   STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX,
   STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX,
+  STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX,
   SLEEVE_GEOMETRY,
   STUDIO_HAT_CAMERA_ZOOM_CONFIG,
   STUDIO_SLEEVE_PREVIEW_SCALE,
@@ -959,7 +960,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePreviewWidthPx = baseSleeveWidthPx + desktopWidthAdjustmentPx;
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const desktopSleeveVerticalOffsetPercent = !isMobilePreview && ghostHat
-    ? (STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX / stageCoordinateHeight) * 100
+    ? ((STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX
+      + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[sleeveSize]) / stageCoordinateHeight) * 100
     : 0;
   const sleevePreviewCenterYPercent = ghostHat
     ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 + desktopSleeveVerticalOffsetPercent
