@@ -410,7 +410,8 @@
     right: 4%;
     bottom: 3%;
     left: 4%;
-    width: 92%;
+    width: auto;
+    box-sizing: border-box;
     max-height: min(44%, 420px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -535,7 +536,12 @@
     max-width: 100%;
     margin-inline: auto;
   }
-  .snapink-studio-customizer .snapink-preview-stage-frame > .snapink-product-stage { width: 100%; margin: 0; }
+  .snapink-studio-customizer .snapink-preview-stage-frame > .snapink-product-stage {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    margin: 0;
+  }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .snapink-preview-card + .p-4 > .grid.min-w-0,
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :last-child > .snapink-preview-card + .p-4 > .grid.grid-cols-2 { display: none; }
 }
