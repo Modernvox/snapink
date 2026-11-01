@@ -499,6 +499,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
+  const previewSleeveSize = isMobilePreview ? sleeveSize : 0;
+  const [sizeConfirmation, setSizeConfirmation] = useState<number | null>(null);
+  const sizeConfirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSizeConfirmationRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (sizeConfirmationTimerRef.current) clearTimeout(sizeConfirmationTimerRef.current);
+  }, []);
   const [hatTemplateId, setHatTemplateId] = useState<HatTemplateId>("hat-black");
   const [hatColorPickerOpen, setHatColorPickerOpen] = useState(false);
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
@@ -804,6 +811,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     : brandingCenterCanvasPercentFor(variant, sleeveSize));
   const draftCanvasY = text.trim() ? posY : 50;
   const productionDraftPosition = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, draftCanvasY);
+  const productionBrandingRegion = brandingRegionFor(variant, sleeveSize);
 
   // Push changes upward
   useEffect(() => {
@@ -837,7 +845,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       logoOpacity,
       productionGeometryVersion: GEOMETRY_VERSION,
       positioningVersion: POSITIONING_VERSION,
-      brandingCenterXmm: brandingRegion.centerXmm,
+      brandingCenterXmm: productionBrandingRegion.centerXmm,
       artworkCenterXmm: productionDraftPosition.centerXmm,
       hasCustomArtwork: Boolean(text.trim() || logoDataUrl),
     });
@@ -867,12 +875,27 @@ const SnapInkSleeveCustomizer = forwardRef<
     onChange,
     productionDraftPosition.logoX,
     productionDraftPosition.logoY,
+    productionBrandingRegion.centerXmm,
   ]);
+
+  useEffect(() => {
+    const pendingSize = pendingSizeConfirmationRef.current;
+    if (isMobilePreview || pendingSize === null || pendingSize !== sleeveSize) return;
+    pendingSizeConfirmationRef.current = null;
+    setSizeConfirmation(pendingSize);
+    if (sizeConfirmationTimerRef.current) clearTimeout(sizeConfirmationTimerRef.current);
+    sizeConfirmationTimerRef.current = setTimeout(() => {
+      setSizeConfirmation(null);
+      sizeConfirmationTimerRef.current = null;
+    }, 2000);
+  }, [sleeveSize, isMobilePreview]);
 
   const viewW = 1600;
   const activeGeometry = geometryFor(variant, sleeveSize);
   const bounds = surfaceBounds(variant, sleeveSize);
   const brandingRegion = brandingRegionFor(variant, sleeveSize);
+  const previewBounds = surfaceBounds(variant, previewSleeveSize);
+  const previewSleeveViewH = viewW * ((previewBounds.maxY - previewBounds.minY) / (previewBounds.maxX - previewBounds.minX));
   const viewH = viewW * ((bounds.maxY - bounds.minY) / (bounds.maxX - bounds.minX));
   const sleevePhoto = SLEEVE_PHOTO[variant];
   const photoScale = viewW / sleevePhoto.crop.width;
@@ -916,14 +939,23 @@ const SnapInkSleeveCustomizer = forwardRef<
   // module. The source product photo is split at its visible groove and each
   // side is mapped to the corresponding CAD interval so the groove stays put
   // while the flap and body take their true size-specific lengths.
-  const photoGrooveCanvasX = artworkTranslateX
-    + cadXToCanvasX(variant, sleeveSize, brandingRegion.grooveXmm, viewW) * artworkScaleX;
+  const previewBrandingRegion = brandingRegionFor(variant, previewSleeveSize);
+  const previewArtworkStart = cadXToCanvasX(
+    variant,
+    previewSleeveSize,
+    previewBrandingRegion.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2,
+    viewW
+  );
+  const previewArtworkEnd = cadXToCanvasX(variant, previewSleeveSize, previewBrandingRegion.rightEdgeXmm, viewW);
+  const photoGrooveCanvasX = photoFaceLeft
+    + ((cadXToCanvasX(variant, previewSleeveSize, previewBrandingRegion.grooveXmm, viewW) - previewArtworkStart)
+      / (previewArtworkEnd - previewArtworkStart)) * (photoFaceRight - photoFaceLeft);
   const photoGrooveSourceX = clamp(
     sleevePhoto.crop.x + (photoGrooveCanvasX / viewW) * sleevePhoto.crop.width,
     sleevePhoto.crop.x + 1,
     sleevePhoto.crop.x + sleevePhoto.crop.width - 1
   );
-  const cadGrooveCanvasX = sleeveGrooveFractionFor(variant, sleeveSize) * viewW;
+  const cadGrooveCanvasX = sleeveGrooveFractionFor(variant, previewSleeveSize) * viewW;
   const sleeveGrooveFraction = cadGrooveCanvasX / viewW;
   const sleeveColorRgb = backgroundColor.match(/[0-9a-f]{2}/gi)?.map((value) => parseInt(value, 16) / 255) ?? [0, 0, 0];
   const isBlackSleeve = backgroundColor.toLowerCase() === "#000000";
@@ -971,15 +1003,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     loadedHatSize?.width,
     loadedHatSize?.height
   );
-  const cameraZoom = studioHatZoomForSize(sleeveSize, variant, isMobilePreview);
-  // Fit the largest desktop size-based framing inside the native photograph.
-  // Dividing every desktop preset by the same maximum retains their relative
-  // zoom ratios while preventing the overflow-hidden stage from cropping the
-  // hat, mannequin, or sleeve. Mobile keeps its established camera presets.
+  const cameraZoom = studioHatZoomForSize(previewSleeveSize, variant, isMobilePreview);
+  // Keep the desktop photographic preview framed at Size 0. Mobile retains
+  // its existing size-dependent camera presets.
   const desktopZoomFitScale = 1 / Math.max(...STUDIO_HAT_CAMERA_ZOOM_CONFIG.desktop[variant]);
   const renderedCameraZoom = isMobilePreview ? cameraZoom : cameraZoom * desktopZoomFitScale;
   const desktopSleeveCalibration = !isMobilePreview && ghostHat
-    ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[sleeveSize]
+    ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[previewSleeveSize]
     : null;
   // Keep the Round 1 CSS-pixel adjustment unchanged. Round 2 additions use
   // native stage-reference pixels directly, before the existing camera zoom.
@@ -993,7 +1023,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // length-to-width proportions. CAD X runs from the flap through the right
   // edge; the template groove remains the physical attachment datum.
   const baseSleeveHeightPx = stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE;
-  const baseSleeveWidthPx = baseSleeveHeightPx * (viewW / viewH);
+  const baseSleeveWidthPx = baseSleeveHeightPx * (viewW / previewSleeveViewH);
   const desktopWidthAdjustmentPx = desktopSleeveCalibration
     ? desktopSleeveCalibration.widthIncrease * previousDesktopAdjustmentScale
       + desktopSleeveCalibration.round2.widthIncreaseStagePx
@@ -1039,7 +1069,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     : photoFacePath;
   const desktopSleeveVerticalOffsetPercent = !isMobilePreview && ghostHat
     ? ((STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX
-      + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[sleeveSize]) / stageCoordinateHeight) * 100
+      + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[previewSleeveSize]) / stageCoordinateHeight) * 100
     : 0;
   // Expand upward while holding the sleeve's bottom edge in place.
   const mobileTopExpansionCenterOffsetPercent = mobileTopExpansionPx
@@ -1141,13 +1171,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function handleSizeChange(nextSize: number) {
+    if (nextSize === sleeveSize) return;
     const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, sleeveSize, align)) < 0.01;
-    const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setSleeveSize(nextSize);
     if (isMobilePreview && wasAtAlignmentAnchor) {
       setPosX(usableBrandingAlignmentCanvasPercentFor(variant, nextSize, align));
-    } else if (wasDesktopCentered) {
-      setPosX(brandingCenterCanvasPercentFor(variant, nextSize));
+    } else if (!isMobilePreview) {
+      // Keep desktop artwork stationary while the photographic sleeve stays at Size 0.
+      pendingSizeConfirmationRef.current = nextSize;
     }
   }
 
@@ -1774,6 +1805,12 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
           ))}
         </div>
+        {instance === "desktop" && !isMobilePreview && sizeConfirmation !== null && (
+          <div key={sizeConfirmation} className="snapink-size-confirmation" role="status" aria-live="polite">
+            <span className="snapink-size-confirmation-icon" aria-hidden="true">✓</span>
+            <span><strong>Size {sizeConfirmation} selected &amp; saved</strong><small>Your sleeve size has been updated.</small></span>
+          </div>
+        )}
         {instance === "desktop"
           ? <aside className="snapink-studio-intro-toolbar" aria-label="About SnapInk Studio">{studioIntroCopy}</aside>
           : <details className="snapink-studio-intro-mobile">
@@ -1784,14 +1821,19 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div className="snapink-preview-stage-frame" style={{ position: "relative" }}>
       <div
       ref={instance === "mobile" ? attachMobileStageRef : attachStageRef}
-      className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
+      className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && previewSleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
       style={{ aspectRatio: stageAspectRatio, backgroundColor: "#303030", borderColor: "#505050", position: "relative", isolation: "isolate" }}
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
-      <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
-        PREVIEW ONLY
-      </span>
+      <div className="pointer-events-none absolute right-3 top-3 z-20 flex max-w-[min(88%,320px)] flex-col items-end gap-1 text-right">
+        <span className="rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
+          PREVIEW ONLY
+        </span>
+        <span className="rounded bg-black/65 px-2 py-1 text-[10px] leading-tight text-white/90 shadow-sm backdrop-blur-[2px]">
+          Actual colors and matte finish may vary.
+        </span>
+      </div>
       <div
         className="absolute inset-0 transition-transform duration-300 motion-reduce:transition-none"
         style={{
@@ -1826,6 +1868,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         data-positioning-version={POSITIONING_VERSION}
         data-sleeve-variant={variant}
         data-sleeve-size={sleeveSize}
+        data-preview-sleeve-size={previewSleeveSize}
         data-hat-preview-src={currentHatProfile.imagePath}
         data-stage-sleeve-top-percent={sleevePreviewCenterYPercent - sleevePreviewHeightPercent / 2}
         data-stage-sleeve-height-percent={sleevePreviewHeightPercent}

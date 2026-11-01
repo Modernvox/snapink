@@ -224,6 +224,12 @@
 }
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
 .snapink-preview-config-row { position: relative; z-index: 25; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.snapink-size-confirmation { position: absolute; z-index: 30; top: calc(100% + 3px); left: clamp(110px, 18vw, 220px); display: flex; align-items: center; gap: 9px; min-width: 230px; padding: 10px 13px; border: 1px solid rgb(216 191 134 / 42%); border-radius: 12px; background: rgb(25 25 25 / 94%); color: #F8F5ED; box-shadow: 0 8px 24px rgb(0 0 0 / 20%); animation: snapink-size-confirmation 2s ease-in-out both; pointer-events: none; }
+.snapink-size-confirmation-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; border-radius: 50%; background: #D8BF86; color: #171717; font-size: 16px; font-weight: 900; }
+.snapink-size-confirmation strong, .snapink-size-confirmation small { display: block; }
+.snapink-size-confirmation strong { font-size: 12px; line-height: 1.3; }
+.snapink-size-confirmation small { margin-top: 2px; color: #C9C5BC; font-size: 10px; line-height: 1.3; }
+@keyframes snapink-size-confirmation { 0% { opacity: 0; transform: translateY(-4px); } 12%, 78% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-2px); } }
 .snapink-size-buttons { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 5px; }
 .snapink-studio-intro-toolbar { display: none; }
 .snapink-studio-intro-mobile { flex: 1 0 100%; order: 3; min-width: 0; color: #555; font-size: 11px; line-height: 1.45; }
@@ -347,6 +353,7 @@
 .snapink-studio-workspace-desktop { display: none; }
 
 @media (min-width: 1024px) {
+  .snapink-size-confirmation { display: flex; }
   .snapink-studio-application { padding: 14px 20px; }
   .snapink-studio-workspace-desktop {
     display: block;
