@@ -15,6 +15,7 @@ import {
   POSITIONING_VERSION,
   PRODUCTION_BRANDING_INSET_MM,
   SLEEVE_GEOMETRY,
+  STUDIO_HAT_CAMERA_ZOOM_CONFIG,
   brandingRegionFor,
   brandingCenterCanvasPercentFor,
   brandingSurfacePath,
@@ -263,9 +264,7 @@ const SLEEVE_PHOTO = {
   },
 } as const;
 
-const STUDIO_STAGE_WIDTH_HEIGHT_RATIO = 1000 / 650;
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
-const MOBILE_WIDEST_CAMERA_ZOOM = 0.92;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
 
 /**
@@ -274,19 +273,10 @@ const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
  * sleeve are transformed together around the registry's closure anchor.
  */
 export function studioHatZoomForSize(size: number, variant: SleeveVariant, mobile = false): number {
-  const current = geometryFor(variant, size);
-  const reference = geometryFor(variant, 5);
-  const smallest = geometryFor(variant, 0);
-  const currentLength = current.overallMaxXmm - current.overallMinXmm;
-  const referenceLength = reference.overallMaxXmm - reference.overallMinXmm;
-  const cadZoom = referenceLength / currentLength;
-  if (!mobile) return cadZoom;
-  // The 9:16 reference is already a closure close-up. Keep size 0 at its
-  // native framing and ease larger sizes out by up to 8% to protect the crop.
-  const smallestLength = smallest.overallMaxXmm - smallest.overallMinXmm;
-  const closestCadZoom = referenceLength / smallestLength;
-  const sizeProgress = (cadZoom - 1) / (closestCadZoom - 1);
-  return MOBILE_WIDEST_CAMERA_ZOOM + (1 - MOBILE_WIDEST_CAMERA_ZOOM) * sizeProgress;
+  if (!Number.isInteger(size) || size < 0 || size > 5) throw new RangeError(`Unsupported SnapInk sleeve size: ${size}`);
+  return mobile
+    ? STUDIO_HAT_CAMERA_ZOOM_CONFIG.mobile[variant][size]
+    : STUDIO_HAT_CAMERA_ZOOM_CONFIG.desktop[variant][size];
 }
 
 function hatComposition(
@@ -472,6 +462,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [ghostHat, setGhostHat] = useState(true);
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const [hatTemplateId, setHatTemplateId] = useState<HatTemplateId>("hat-black");
+  const [hatColorPickerOpen, setHatColorPickerOpen] = useState(false);
   const [sizeExamplesOpen, setSizeExamplesOpen] = useState(false);
   const [hatNaturalSize, setHatNaturalSize] = useState({ src: "", width: 0, height: 0 });
   const [fitLightboxSize, setFitLightboxSize] = useState<number | null>(null);
@@ -492,6 +483,23 @@ const SnapInkSleeveCustomizer = forwardRef<
     startDistance: number;
     pinching: boolean;
   }>({ pointers: new Map(), startX: 0, startY: 0, startZoom: 1, startPan: { x: 0, y: 0 }, startDistance: 0, pinching: false });
+
+  useEffect(() => {
+    if (!hatColorPickerOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest(".snapink-hat-picker")) return;
+      setHatColorPickerOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setHatColorPickerOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [hatColorPickerOpen]);
 
   const navigateFitLightbox = useCallback((direction: -1 | 1) => {
     setFitLightboxSize((current) => current === null ? current : (current + direction + 6) % 6);
@@ -895,7 +903,11 @@ const SnapInkSleeveCustomizer = forwardRef<
   const currentHatTemplate = getHatTemplate(hatTemplateId);
   const currentHatProfile = isMobilePreview ? currentHatTemplate.mobile : currentHatTemplate;
   const loadedHatSize = hatNaturalSize.src === currentHatProfile.imagePath ? hatNaturalSize : null;
-  const stageAspectRatio = isMobilePreview ? MOBILE_STAGE_WIDTH_HEIGHT_RATIO : STUDIO_STAGE_WIDTH_HEIGHT_RATIO;
+  // Match the active source photograph's natural ratio. This fills the widened
+  // desktop frame without cropping or distorting hat pixels.
+  const stageAspectRatio = isMobilePreview
+    ? MOBILE_STAGE_WIDTH_HEIGHT_RATIO
+    : currentHatProfile.imageDimensions.width / currentHatProfile.imageDimensions.height;
   const stageCoordinateHeight = STUDIO_STAGE_COORDINATE_WIDTH / stageAspectRatio;
   const currentStageClientWidth = (svgRef.current?.closest(".snapink-product-stage") as HTMLDivElement | null)?.clientWidth
     || (typeof window !== "undefined" && window.innerWidth <= 640 ? Math.max(1, window.innerWidth - 92) : stageClientWidth);
@@ -1418,23 +1430,36 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const hatColorSelector = (
-    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[#D8BF86]/30 bg-white px-3 py-2 text-neutral-900" role="group" aria-label="Hat color">
-      <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em]">Hat color</span>
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+  const hatColorSelector = (instance: "mobile" | "desktop") => (
+    <div className="snapink-hat-picker">
+      <button
+        type="button"
+        className="snapink-hat-picker-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={hatColorPickerOpen}
+        aria-controls={`snapink-hat-colors-${uid}-${instance}`}
+        onClick={() => setHatColorPickerOpen((open) => !open)}
+      >
+        <span className="snapink-hat-picker-trigger-swatch" style={{ backgroundColor: HAT_COLOR_SWATCHES[hatTemplateId] }} />
+        <span className="snapink-hat-picker-trigger-label">Hat Color</span>
+        <span className="snapink-hat-picker-trigger-value">{currentHatTemplate.displayName.replace(" Trucker Hat", "")}</span>
+        <span className={`snapink-hat-picker-chevron ${hatColorPickerOpen ? "is-open" : ""}`} aria-hidden="true">⌄</span>
+      </button>
+      {hatColorPickerOpen && <div id={`snapink-hat-colors-${uid}-${instance}`} className="snapink-hat-picker-menu" role="group" aria-label="Choose a hat color">
         {HAT_TEMPLATE_REGISTRY.map((template) => (
           <button
             key={template.id}
             type="button"
-            aria-label={template.displayName}
             aria-pressed={hatTemplateId === template.id}
-            title={template.displayName}
-            onClick={() => setHatTemplateId(template.id)}
-            className={`h-6 w-6 shrink-0 rounded-full border-2 transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A45C] ${hatTemplateId === template.id ? "border-[#C9A45C] ring-2 ring-[#C9A45C]/30" : "border-neutral-300 hover:border-neutral-500"}`}
-            style={{ backgroundColor: HAT_COLOR_SWATCHES[template.id] }}
-          />
+            onClick={() => { setHatTemplateId(template.id); setHatColorPickerOpen(false); }}
+            className={`snapink-hat-picker-option ${hatTemplateId === template.id ? "is-selected" : ""}`}
+          >
+            <span className="snapink-hat-picker-option-swatch" style={{ backgroundColor: HAT_COLOR_SWATCHES[template.id] }} />
+            <span>{template.displayName.replace(" Trucker Hat", "")}</span>
+            {hatTemplateId === template.id && <span className="snapink-hat-picker-check" aria-hidden="true">✓</span>}
+          </button>
         ))}
-      </div>
+      </div>}
       <span className="sr-only" aria-live="polite">{currentHatTemplate.displayName} selected</span>
     </div>
   );
@@ -1542,12 +1567,12 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div className="snapink-stage-wrap">
       {previewToolbar(instance)}
-      {hatColorSelector}
+      {hatColorSelector(instance)}
       <div className="snapink-preview-stage-frame">
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
-      style={{ aspectRatio: isMobilePreview ? "9 / 16" : "1000 / 650", backgroundColor: "#303030", borderColor: "#505050" }}
+      style={{ aspectRatio: stageAspectRatio, backgroundColor: "#303030", borderColor: "#505050" }}
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />

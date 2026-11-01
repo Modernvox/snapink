@@ -223,6 +223,20 @@
   .snapink-fit-lightbox-footer { align-items: flex-end; font-size: 11px; }
 }
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
+.snapink-hat-picker { position: relative; z-index: 30; align-self: flex-start; min-width: 0; margin: 0 auto 10px 0; }
+.snapink-hat-picker-trigger { display: inline-flex; min-height: 42px; max-width: 100%; align-items: center; gap: 9px; padding: 7px 12px; border: 1px solid #D8BF86; border-radius: 9px; background: #FFFFFF; color: #171717; box-shadow: 0 2px 7px rgb(0 0 0 / 8%); cursor: pointer; }
+.snapink-hat-picker-trigger:focus-visible, .snapink-hat-picker-option:focus-visible { outline: 2px solid #C9A45C; outline-offset: 2px; }
+.snapink-hat-picker-trigger-swatch, .snapink-hat-picker-option-swatch { display: inline-block; width: 20px; height: 20px; flex: 0 0 20px; border: 1px solid #858585; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%); }
+.snapink-hat-picker-trigger-label { color: #4B4B4B; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.snapink-hat-picker-trigger-value { font-size: 13px; font-weight: 700; }
+.snapink-hat-picker-chevron { margin-left: 3px; font-size: 18px; line-height: 1; transition: transform .16s ease; }
+.snapink-hat-picker-chevron.is-open { transform: rotate(180deg); }
+.snapink-hat-picker-menu { position: absolute; top: calc(100% + 7px); left: 0; z-index: 80; display: grid; width: min(340px, calc(100vw - 44px)); grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 8px; border: 1px solid #D8BF86; border-radius: 12px; background: #FFFFFF; color: #171717; box-shadow: 0 12px 30px rgb(0 0 0 / 24%); }
+.snapink-hat-picker-option { display: flex; min-width: 0; min-height: 42px; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid transparent; border-radius: 7px; background: #FFFFFF; color: #20242B; font-size: 12px; text-align: left; cursor: pointer; }
+.snapink-hat-picker-option:hover { background: #F5F6F8; }
+.snapink-hat-picker-option.is-selected { border-color: #D8BF86; background: #FBF8F0; font-weight: 700; }
+.snapink-hat-picker-option-swatch { width: 22px; height: 22px; flex-basis: 22px; }
+.snapink-hat-picker-check { margin-left: auto; color: #92703A; font-weight: 900; }
 .snapink-color-groups { min-width: 0; }
 .snapink-color-group { min-width: 0; margin: 0; padding: 0; border: 0; }
 .snapink-color-group legend { display: block; width: 100%; margin: 0 0 6px; padding: 0; color: #303030; font-size: 11px; font-weight: 800; line-height: 1.3; }
@@ -373,14 +387,14 @@
   }
   .snapink-studio-customizer .snapink-preview-content { gap: 8px; }
   .snapink-studio-customizer .snapink-stage-wrap {
-    --studio-preview-width: min(100%, max(320px, calc((100svh - 500px) * 1.538)));
     position: sticky;
     top: 0;
     z-index: 10;
     min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     background: #FFFFFF;
   }
   .snapink-studio-customizer .snapink-preview-toolbar {
@@ -482,7 +496,7 @@
     line-height: 1.2;
   }
   .snapink-studio-customizer .snapink-preview-stage-frame {
-    width: var(--studio-preview-width) !important;
+    width: 100% !important;
     max-width: 100%;
     margin-inline: auto;
   }

@@ -179,6 +179,36 @@ export function geometryFor(variant: SleeveVariant, size: number): SleeveGeometr
   return geometry;
 }
 
+/**
+ * Studio camera framing presets, derived from the approved CAD overall sleeve
+ * lengths. Size 5 is the native (1×) framing; shorter physical sleeves zoom in
+ * by the inverse length ratio. Mobile references are already closure close-ups,
+ * so their size range is compressed to this configurable 8% zoom-out span.
+ * These values affect only the shared hat-and-sleeve camera transform.
+ */
+const overallSleeveLengthMm = (geometry: SleeveGeometry) => geometry.overallMaxXmm - geometry.overallMinXmm;
+const desktopCameraZoom = (variant: SleeveVariant) => {
+  const referenceLength = overallSleeveLengthMm(geometryFor(variant, 5));
+  return SLEEVE_GEOMETRY[variant].sizes.map((geometry) => referenceLength / overallSleeveLengthMm(geometry));
+};
+const mobileCameraZoom = (variant: SleeveVariant) => {
+  const desktop = desktopCameraZoom(variant);
+  const closest = Math.max(...desktop);
+  const widestZoom = 0.92;
+  return desktop.map((zoom) => widestZoom + (1 - widestZoom) * ((zoom - 1) / (closest - 1)));
+};
+
+export const STUDIO_HAT_CAMERA_ZOOM_CONFIG = {
+  desktop: {
+    standard: desktopCameraZoom("standard"),
+    billboard: desktopCameraZoom("billboard"),
+  },
+  mobile: {
+    standard: mobileCameraZoom("standard"),
+    billboard: mobileCameraZoom("billboard"),
+  },
+} as const;
+
 export interface SurfaceBounds {
   minX: number;
   maxX: number;
