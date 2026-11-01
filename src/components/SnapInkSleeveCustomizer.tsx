@@ -1441,19 +1441,25 @@ const SnapInkSleeveCustomizer = forwardRef<
     setLogoInputVersion((version) => version + 1);
   }
 
-  const logoControls = (
-    <div className="space-y-3">
+  const logoControls = (instance: "mobile" | "desktop") => (
+    <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
       <div>
-        <label className="block text-xs text-neutral-400 mb-1">
-          Upload logo or artwork
-        </label>
-        <input
-          key={logoInputVersion}
-          type="file"
-          accept="image/*"
-          onChange={handleLogoUpload}
-          className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-sm text-neutral-200 file:mr-3 file:rounded-lg file:border-0 file:bg-si-button file:px-3 file:py-1.5 file:font-semibold file:text-neutral-950"
-        />
+        {instance === "mobile" ? <label className="snapink-mobile-upload-picker">
+          <span className="snapink-mobile-control-label">Upload Artwork</span>
+          <span className="snapink-mobile-choose-image">Choose Image</span>
+          {logoName && <span className="snapink-mobile-upload-name" title={logoName}>{logoName}</span>}
+          <input key={logoInputVersion} type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
+        </label> : <>
+          <label className="block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
+          <input
+            key={logoInputVersion}
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+            className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-sm text-neutral-200 file:mr-3 file:rounded-lg file:border-0 file:bg-si-button file:px-3 file:py-1.5 file:font-semibold file:text-neutral-950"
+          />
+        </>}
+        {instance === "mobile" && logoName && <button type="button" onClick={clearLogo} className="snapink-mobile-remove-artwork">Remove artwork</button>}
         {logoRemovalMessage && (
           <div className="mt-2 space-y-2" aria-live="polite" aria-busy={logoRemovalBusy}>
             <p className={`text-xs leading-relaxed ${logoNeedsRemoval ? "text-amber-200" : "text-neutral-400"}`}>
@@ -1476,7 +1482,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             )}
           </div>
         )}
-        {logoName && (
+        {logoName && instance === "desktop" && (
           <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
             <span className="truncate">{logoName}</span>
             <button
@@ -1547,15 +1553,15 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const textInputControl = (
+  const textInputControl = (instance: "mobile" | "desktop") => (
     <label className="snapink-toolbar-text">
       <span>Text</span>
-      <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder="ENTER YOUR TEXT" maxLength={25} />
+      <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={25} />
     </label>
   );
-  const logoUploadControl = (
+  const logoUploadControl = (instance: "mobile" | "desktop") => (
     <div className="snapink-toolbar-logo">
-      {logoControls}
+      {logoControls(instance)}
     </div>
   );
 
@@ -1572,8 +1578,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       boxShadow: "none",
     } : undefined}>
       <div className="snapink-toolbar-primary">
-        {instance === "desktop" && textInputControl}
-        {instance === "desktop" && logoUploadControl}
+        {instance === "desktop" && textInputControl(instance)}
+        {instance === "desktop" && logoUploadControl(instance)}
         <label className="snapink-toolbar-select">
           <span>Font</span>
           <select aria-label="Font" value={font} style={{ fontFamily: font }} onChange={(event) => setFont(event.target.value)}>
@@ -1603,7 +1609,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </button>
       </div>
       {toolbarAdvancedOpen && <div className="snapink-toolbar-advanced">
-        <Range label="Font size" min={60} max={500} value={fontSize} setValue={setFontSize} suffix="px" />
+        {instance === "desktop" && <Range label="Font size" min={60} max={500} value={fontSize} setValue={setFontSize} suffix="px" />}
         <Range label="Font weight" min={100} max={1200} step={50} value={fontWeight} setValue={setFontWeight} />
         <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
         <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
@@ -1976,16 +1982,22 @@ const SnapInkSleeveCustomizer = forwardRef<
       {instance === "mobile" && <div className="snapink-mobile-entry-overlay" data-preview-only="true" style={{
         position: "absolute",
         zIndex: 30,
-        left: "4%",
-        right: "4%",
-        bottom: 18,
+        left: "6%",
+        right: "6%",
+        bottom: 16,
         boxSizing: "border-box",
         pointerEvents: "none",
       }}>
         <div className="snapink-mobile-entry-panel" style={{ pointerEvents: "auto" }}>
-          <div className="snapink-toolbar-primary snapink-mobile-entry-primary">
-            {textInputControl}
-            {logoUploadControl}
+          <div className="snapink-mobile-entry-primary">
+            <div className="snapink-mobile-text-size">
+              <span className="snapink-mobile-control-label">Text Size</span>
+              <button type="button" aria-label="Decrease text size" disabled={fontSize <= 60} onClick={() => setFontSize((size) => Math.max(60, size - 1))}>−</button>
+              <span className="snapink-mobile-text-size-value" aria-live="polite">{fontSize}px</span>
+              <button type="button" aria-label="Increase text size" disabled={fontSize >= 500} onClick={() => setFontSize((size) => Math.min(500, size + 1))}>+</button>
+            </div>
+            {textInputControl("mobile")}
+            {logoUploadControl("mobile")}
           </div>
         </div>
       </div>}
@@ -2071,14 +2083,6 @@ const SnapInkSleeveCustomizer = forwardRef<
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Range
-                  label="Font size"
-                  min={60}
-                  max={500}
-                  value={fontSize}
-                  setValue={setFontSize}
-                  suffix="px"
-                />
                 <Range
                   label="Font weight"
                   min={100}
