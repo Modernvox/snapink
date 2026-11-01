@@ -454,6 +454,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [logoVisibleBounds, setLogoVisibleBounds] = useState({ x: 0, y: 0, width: 1, height: 1 });
   const [logoName, setLogoName] = useState(initial.logoName ?? "");
   const [logoInputVersion, setLogoInputVersion] = useState(0);
+  const mobileLogoInputRef = useRef<HTMLInputElement | null>(null);
   const [logoNeedsRemoval, setLogoNeedsRemoval] = useState(false);
   const [logoHasProcessedRemoval, setLogoHasProcessedRemoval] = useState(false);
   const [logoRemovalBusy, setLogoRemovalBusy] = useState(false);
@@ -1451,12 +1452,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoControls = (instance: "mobile" | "desktop") => (
     <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
       <div>
-        {instance === "mobile" ? <label className="snapink-mobile-upload-picker">
+        {instance === "mobile" ? <div className="snapink-mobile-upload-picker">
           <span className="snapink-mobile-control-label">Upload Artwork</span>
-          <span className="snapink-mobile-choose-image">Choose Image</span>
-          {logoName && <span className="snapink-mobile-upload-name" title={logoName}>{logoName}</span>}
-          <input key={logoInputVersion} type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
-        </label> : <>
+          <div className="snapink-mobile-upload-row">
+            <button type="button" className="snapink-mobile-choose-image" onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
+            {logoName && <span className="snapink-mobile-upload-name" title={logoName}>{logoName}</span>}
+          </div>
+          <input ref={mobileLogoInputRef} key={logoInputVersion} className="snapink-mobile-file-input" type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
+        </div> : <>
           <label className="block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
           <input
             key={logoInputVersion}
@@ -1998,10 +2001,11 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="snapink-mobile-entry-panel" style={{ pointerEvents: "auto" }}>
           <div className="snapink-mobile-entry-primary">
             <div className="snapink-mobile-text-size">
-              <span className="snapink-mobile-control-label">Text Size</span>
-              <button type="button" aria-label="Decrease text size" disabled={fontSize <= 60} onClick={() => setFontSize((size) => Math.max(60, size - 1))}>−</button>
-              <span className="snapink-mobile-text-size-value" aria-live="polite">{fontSize}px</span>
-              <button type="button" aria-label="Increase text size" disabled={fontSize >= 500} onClick={() => setFontSize((size) => Math.min(500, size + 1))}>+</button>
+              <label className="snapink-mobile-text-size-heading" htmlFor={`mobile-text-size-${uid}`}>
+                <span className="snapink-mobile-control-label">Text Size</span>
+                <output className="snapink-mobile-text-size-value" aria-live="polite">{fontSize}px</output>
+              </label>
+              <input id={`mobile-text-size-${uid}`} type="range" min={60} max={500} step={1} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} aria-label="Text Size" />
             </div>
             {textInputControl("mobile")}
             {logoUploadControl("mobile")}
