@@ -83,6 +83,7 @@ export async function onRequestPost({request,env}) {
     const totalCents=Number(session.amount_total);
     const stripeAddress=session.shipping_details?.address;
     const originalAddress=safeOrderJson(order.shippingAddressJson);
+    const expectedCountry=originalAddress.country||"US";
     const paidAddress=stripeAddress?{
       line1:typeof stripeAddress.line1==="string"?stripeAddress.line1:originalAddress.line1,
       line2:typeof stripeAddress.line2==="string"?stripeAddress.line2:null,
@@ -92,7 +93,7 @@ export async function onRequestPost({request,env}) {
       country:typeof stripeAddress.country==="string"?stripeAddress.country:originalAddress.country,
     }:null;
     if(session.currency!=="usd"||session.payment_status!=="paid"||!tax
-      ||!paidAddress?.line1||!paidAddress.city||!paidAddress.postalCode||paidAddress.country!==originalAddress.country
+      ||!paidAddress?.line1||!paidAddress.city||!paidAddress.postalCode||paidAddress.country!==expectedCountry
       ||Number(session.amount_subtotal)!==pricing.discountedMerchandiseCents||shippingCents!==pricing.shippingCents
       ||totalCents!==pricing.totalBeforeTaxCents+taxCents) {
       console.error("Stripe payment did not match retail order totals",{orderNumber:order.orderNumber,eventId:event.id});
