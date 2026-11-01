@@ -50,6 +50,9 @@ export const CAD_BODY_HEIGHT_MM = 3.26;
 export const MINIMUM_CHANNEL_MM = 66.675;
 export const SUPPORT_STYLE = "separate full-width PLA support, 0.200 mm cavity-side clearance";
 
+/** Visual-only sleeve scale in Studio's photographic composite. */
+export const STUDIO_SLEEVE_PREVIEW_SCALE = 1.25;
+
 /** Pixel landmarks measured from the owner-approved blank Size 4 on-hat master. */
 export const APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE = {
   imagePath: "/images/website_images/blank_sleeve_on_snapback.png",

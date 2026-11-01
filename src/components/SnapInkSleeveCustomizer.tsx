@@ -16,6 +16,7 @@ import {
   PRODUCTION_BRANDING_INSET_MM,
   SLEEVE_GEOMETRY,
   STUDIO_HAT_CAMERA_ZOOM_CONFIG,
+  STUDIO_SLEEVE_PREVIEW_SCALE,
   brandingRegionFor,
   brandingCenterCanvasPercentFor,
   brandingSurfacePath,
@@ -931,7 +932,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // the size ratio, which made the CAD sleeve too short and distorted its
   // length-to-width proportions. CAD X runs from the flap through the right
   // edge; the template groove remains the physical attachment datum.
-  const sleevePreviewHeightPercent = (stageComposition.strapThicknessPx / stageCoordinateHeight) * 100;
+  const sleevePreviewHeightPercent = (stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE / stageCoordinateHeight) * 100;
   const sleevePreviewHeightPx = stageCoordinateHeight * sleevePreviewHeightPercent / 100;
   const sleevePreviewWidthPx = sleevePreviewHeightPx * (viewW / viewH);
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
