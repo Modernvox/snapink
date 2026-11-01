@@ -73,6 +73,9 @@ type RawHatTemplate = Omit<HatTemplate, "presentation" | "sleevePlacement" | "mo
 };
 
 const MOBILE_REFERENCE_DIMENSIONS = { width: 1080, height: 1920 } as const;
+// Shared desktop photograph geometry: right edge of the rear hat opening,
+// measured on the black master and reused by its geometry-locked color variants.
+export const DESKTOP_REAR_OPENING_RIGHT_EDGE_PX = 923;
 const DESKTOP_HAT_SLEEVE_CALIBRATION: RawSleevePlacement = {
   coordinateSpace: "natural-image-pixels",
   femaleStrapQuadPx: {

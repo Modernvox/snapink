@@ -39,6 +39,7 @@ import {
   type SleeveVariant,
 } from "../config/sleeveGeometry";
 import {
+  DESKTOP_REAR_OPENING_RIGHT_EDGE_PX,
   HAT_TEMPLATE_REGISTRY,
   getHatTemplate,
   type HatTemplateImageProfile,
@@ -369,11 +370,14 @@ function hatComposition(
   const strapTop = (strapTopLeft[1] + strapTopRight[1]) / 2;
   const strapBottom = (strapBottomLeft[1] + strapBottomRight[1]) / 2;
   const strapRight = (strapTopRight[0] + strapBottomRight[0]) / 2;
+  const rearOpeningRight = template.imageDimensions.width === 1447
+    ? left + DESKTOP_REAR_OPENING_RIGHT_EDGE_PX * scaleX
+    : strapRight;
   const strapCenterY = (strapCenterTop[1] + strapCenterBottom[1]) / 2;
   const strapThicknessPx = placement.strapThicknessPx * scaleY;
   return {
     template, fitScale, drawnWidth, drawnHeight, left, top,
-    strapTop, strapBottom, strapRight, strapCenterY, strapThicknessPx, grooveX, grooveY, sleeveBounds,
+    strapTop, strapBottom, strapRight, rearOpeningRight, strapCenterY, strapThicknessPx, grooveX, grooveY, sleeveBounds,
     rotationDeg: placement.rotationDeg,
     grooveScaleX: scaleX,
     grooveScaleY: scaleY,
@@ -1091,7 +1095,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   const desktopSleeveLeftPx = stageComposition.grooveX
     - desktopSleeveWidthBeforeEdgeAdjustmentPx * sleeveGrooveFraction;
   const desktopHatEdgeAlignmentCorrectionPx = desktopBoundaryAdjustment.alignRightToHatEdge
-    ? stageComposition.strapRight - (desktopSleeveLeftPx + desktopSleeveWidthBeforeEdgeAdjustmentPx)
+    ? (variant === "standard" ? stageComposition.rearOpeningRight : stageComposition.strapRight)
+      - (desktopSleeveLeftPx + desktopSleeveWidthBeforeEdgeAdjustmentPx)
     : 0;
   const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx
     - desktopBoundaryAdjustment.rightEdgeInset + desktopHatEdgeAlignmentCorrectionPx;
@@ -2003,7 +2008,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         data-stage-standard-groove-x-percent={variant === "standard" && ghostHat ? sleevePreviewGrooveXPercent : undefined}
         data-stage-hat-opening-left-percent={ghostHat ? cameraOriginXPercent : undefined}
         data-stage-sleeve-right-percent={sleevePreviewRightPercent}
-        data-stage-hat-opening-right-percent={ghostHat ? (stageComposition.strapRight / STUDIO_STAGE_COORDINATE_WIDTH) * 100 : undefined}
+        data-stage-hat-opening-right-percent={ghostHat ? (stageComposition.rearOpeningRight / STUDIO_STAGE_COORDINATE_WIDTH) * 100 : undefined}
         data-stage-camera-zoom={cameraZoom}
         data-hat-template-id={currentHatTemplate.id}
         data-hat-template-rotation={stageComposition.rotationDeg}
