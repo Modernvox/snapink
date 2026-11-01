@@ -1810,12 +1810,6 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
           ))}
         </div>
-        {instance === "desktop" && !isMobilePreview && sizeConfirmation !== null && (
-          <div key={sizeConfirmation} className="snapink-size-confirmation" role="status" aria-live="polite">
-            <span className="snapink-size-confirmation-icon" aria-hidden="true">✓</span>
-            <span><strong>Size {sizeConfirmation} selected &amp; saved</strong><small>Your sleeve size has been updated.</small></span>
-          </div>
-        )}
         {instance === "desktop"
           ? <aside className="snapink-studio-intro-toolbar" aria-label="About SnapInk Studio">{studioIntroCopy}</aside>
           : <details className="snapink-studio-intro-mobile">
@@ -1831,11 +1825,17 @@ const SnapInkSleeveCustomizer = forwardRef<
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
-      <div className="pointer-events-none absolute right-3 top-3 z-20 flex max-w-[min(88%,320px)] flex-col items-end gap-1 text-right">
-        <span className="rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
+      {instance === "desktop" && !isMobilePreview && sizeConfirmation !== null && (
+        <div key={sizeConfirmation} className="snapink-size-confirmation" role="status" aria-live="polite">
+          <span className="snapink-size-confirmation-icon" aria-hidden="true">✓</span>
+          <span><strong>Size {sizeConfirmation} selected &amp; saved</strong><small>Your sleeve size has been updated.</small></span>
+        </div>
+      )}
+      <div className="snapink-preview-notices pointer-events-none absolute right-3 top-3 z-20 flex max-w-[min(88%,320px)] flex-col items-end gap-1 text-right">
+        <span className="snapink-preview-only-badge rounded-md border border-[#D8BF86]/35 bg-black/75 px-2 py-1 text-[10px] font-bold leading-none tracking-[0.08em] text-[#D8BF86] shadow-sm backdrop-blur-[2px]">
           PREVIEW ONLY
         </span>
-        <span className="rounded bg-black/65 px-2 py-1 text-[10px] leading-tight text-white/90 shadow-sm backdrop-blur-[2px]">
+        <span className="snapink-color-disclaimer rounded bg-black/65 px-2 py-1 text-[10px] leading-tight text-white/90 shadow-sm backdrop-blur-[2px]">
           Actual colors and matte finish may vary.
         </span>
       </div>
