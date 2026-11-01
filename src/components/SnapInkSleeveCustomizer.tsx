@@ -1106,10 +1106,20 @@ const SnapInkSleeveCustomizer = forwardRef<
     - desktopBoundaryAdjustment.rightEdgeInset + desktopHatEdgeAlignmentCorrectionPx;
   const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
     ? variant === "standard"
-      // Keep the groove and left edge fixed while terminating the mobile
-      // Standard sleeve at the photographed rear-opening boundary.
-      ? stageComposition.strapRight
-        - (stageComposition.grooveX + baseSleeveWidthPx * (1 - sleeveGrooveFraction))
+      // Match the mobile Billboard preview's CAD-derived Size 5 endpoint so
+      // both styles share the same right edge from their fixed groove datum.
+      ? (() => {
+        const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[0];
+        const referenceGeometry = SLEEVE_GEOMETRY.billboard.sizes[referenceSize];
+        const referenceBounds = surfaceBounds("billboard", referenceSize);
+        const referenceLengthMm = referenceGeometry.overallMaxXmm - referenceGeometry.overallMinXmm;
+        const referenceWidthPx = baseSleeveHeightPx
+          * (referenceLengthMm / (referenceBounds.maxY - referenceBounds.minY));
+        const billboardRightFromGroovePx = referenceWidthPx
+          * (1 - sleeveGrooveFractionFor("billboard", referenceSize));
+        const standardRightFromGroovePx = baseSleeveWidthPx * (1 - sleeveGrooveFraction);
+        return billboardRightFromGroovePx - standardRightFromGroovePx;
+      })()
       : renderGeometrySize <= 3
       ? (() => {
         const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[renderGeometrySize as 0 | 1 | 2 | 3];
