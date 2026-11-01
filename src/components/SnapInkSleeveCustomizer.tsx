@@ -934,6 +934,12 @@ const SnapInkSleeveCustomizer = forwardRef<
     loadedHatSize?.height
   );
   const cameraZoom = studioHatZoomForSize(sleeveSize, variant, isMobilePreview);
+  // Fit the largest desktop size-based framing inside the native photograph.
+  // Dividing every desktop preset by the same maximum retains their relative
+  // zoom ratios while preventing the overflow-hidden stage from cropping the
+  // hat, mannequin, or sleeve. Mobile keeps its established camera presets.
+  const desktopZoomFitScale = 1 / Math.max(...STUDIO_HAT_CAMERA_ZOOM_CONFIG.desktop[variant]);
+  const renderedCameraZoom = isMobilePreview ? cameraZoom : cameraZoom * desktopZoomFitScale;
   const desktopSleeveCalibration = !isMobilePreview && ghostHat
     ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[sleeveSize]
     : null;
@@ -1708,7 +1714,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div
         className="absolute inset-0 transition-transform duration-300 motion-reduce:transition-none"
         style={{
-          transform: `scale(${ghostHat && !fixedProductConfiguration ? cameraZoom : 1})`,
+          transform: `scale(${ghostHat && !fixedProductConfiguration ? renderedCameraZoom : 1})`,
           transformOrigin: `${cameraOriginXPercent}% ${cameraOriginYPercent}%`,
         }}
       >

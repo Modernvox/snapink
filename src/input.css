@@ -399,8 +399,7 @@
   .snapink-studio-customizer .snapink-studio-intro-toolbar { display: block; min-width: 0; color: #5C5C5C; font-size: 11px; line-height: 1.4; }
   .snapink-studio-customizer .snapink-studio-intro-mobile { display: none; }
   .snapink-studio-customizer .snapink-stage-wrap {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 10;
     min-width: 0;
     width: 100%;
@@ -408,6 +407,14 @@
     flex-direction: column;
     align-items: stretch;
     background: #FFFFFF;
+  }
+  .snapink-studio-customizer .snapink-preview-stage-frame {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
   .snapink-studio-customizer .snapink-desktop-controls-overlay {
     position: absolute;
