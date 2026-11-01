@@ -2108,13 +2108,13 @@ const SnapInkSleeveCustomizer = forwardRef<
           <filter id="emboss" x="-25%" y="-25%" width="150%" height="150%">
             <feOffset
               in="SourceAlpha"
-              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.22}
-              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.5}
+              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.25}
+              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.62}
               result="embossShadowOffset"
             />
             <feGaussianBlur
               in="embossShadowOffset"
-              stdDeviation={Math.max(0.35, STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.055)}
+              stdDeviation={Math.max(0.35, STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.06)}
               result="embossShadowBlur"
             />
             <feComposite in="embossShadowBlur" in2="SourceAlpha" operator="out" result="embossContactEdge" />
@@ -2122,8 +2122,8 @@ const SnapInkSleeveCustomizer = forwardRef<
             <feComposite in="embossContactColor" in2="embossContactEdge" operator="in" result="embossContactShadow" />
             <feOffset
               in="SourceAlpha"
-              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.22}
-              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.5}
+              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.25}
+              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.62}
               result="embossLightOffset"
             />
             <feComposite in="SourceAlpha" in2="embossLightOffset" operator="out" result="embossTopEdge" />
