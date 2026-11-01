@@ -1,5 +1,5 @@
 /**
- * Approved photo templates used by SnapInk Studio hat-color switching.
+ * Approved desktop and mobile photo templates used by SnapInk Studio.
  *
  * All calibration points use each source image's natural pixel coordinates.
  * The images are front views with the hat worn backward. `femaleStrapQuadPx`
@@ -24,10 +24,27 @@ export type HatTemplateId =
 
 export type HatTemplatePoint = readonly [x: number, y: number];
 
-export interface HatTemplate {
-  id: HatTemplateId;
-  displayName: string;
-  hatColor: string;
+export interface HatSleevePlacement {
+  coordinateSpace: "natural-image-pixels";
+  /** Female strap face, measured from the source image. */
+  femaleStrapQuadPx: {
+    topLeft: HatTemplatePoint;
+    topRight: HatTemplatePoint;
+    bottomRight: HatTemplatePoint;
+    bottomLeft: HatTemplatePoint;
+  };
+  /** Vertical sleeve groove reference; the flap extends to the left. */
+  grooveLinePx: readonly [top: HatTemplatePoint, bottom: HatTemplatePoint];
+  /** Overall overlay bounds include the narrow flap extension. */
+  sleeveBoundsPx: { left: number; top: number; right: number; bottom: number };
+  positionPx: { x: number; y: number };
+  /** Uniform scale as a fraction of the source image's natural height. */
+  uniformScale: number;
+  rotationDeg: number;
+  layerOrder: { hat: number; sleeve: number; artwork: number };
+}
+
+export interface HatTemplateImageProfile {
   imagePath: string;
   imageDimensions: { width: number; height: number };
   imageSha256: string;
@@ -36,31 +53,55 @@ export interface HatTemplate {
     objectFit: "contain";
     crop: "none";
   };
-  sleevePlacement: {
-    coordinateSpace: "natural-image-pixels";
-    /** Female strap face, measured from the source image. */
-    femaleStrapQuadPx: {
-      topLeft: HatTemplatePoint;
-      topRight: HatTemplatePoint;
-      bottomRight: HatTemplatePoint;
-      bottomLeft: HatTemplatePoint;
-    };
-    /** Vertical sleeve groove reference; the flap extends to the left. */
-    grooveLinePx: readonly [top: HatTemplatePoint, bottom: HatTemplatePoint];
-    /** Overall overlay bounds include the narrow flap extension. */
-    sleeveBoundsPx: { left: number; top: number; right: number; bottom: number };
-    positionPx: { x: number; y: number };
-    /** Uniform scale as a fraction of the source image's natural height. */
-    uniformScale: number;
-    rotationDeg: number;
-    layerOrder: { hat: number; sleeve: number; artwork: number };
+  sleevePlacement: HatSleevePlacement;
+}
+
+export interface HatTemplate extends HatTemplateImageProfile {
+  id: HatTemplateId;
+  displayName: string;
+  hatColor: string;
+  /** Shared 9:16 master composition with its own mobile-only pixel calibration. */
+  mobile: HatTemplateImageProfile;
+}
+
+type RawSleevePlacement = Omit<HatSleevePlacement, "positionPx" | "uniformScale" | "rotationDeg">;
+type RawHatTemplate = Omit<HatTemplate, "presentation" | "sleevePlacement" | "mobile"> & {
+  sleevePlacement: RawSleevePlacement;
+  mobile: Omit<HatTemplateImageProfile, "presentation" | "sleevePlacement">;
+};
+
+const MOBILE_REFERENCE_DIMENSIONS = { width: 1080, height: 1920 } as const;
+const MOBILE_HAT_SLEEVE_CALIBRATION: RawSleevePlacement = {
+  coordinateSpace: "natural-image-pixels",
+  femaleStrapQuadPx: {
+    topLeft: [250, 649], topRight: [694, 649],
+    bottomRight: [697, 774], bottomLeft: [250, 774],
+  },
+  grooveLinePx: [[250, 649], [250, 774]],
+  sleeveBoundsPx: { left: 218, top: 649, right: 697, bottom: 775 },
+  layerOrder: { hat: 0, sleeve: 10, artwork: 20 },
+};
+
+function calibratePlacement(raw: RawSleevePlacement, dimensions: { width: number; height: number }): HatSleevePlacement {
+  const bounds = raw.sleeveBoundsPx;
+  return {
+    ...raw,
+    positionPx: {
+      x: (bounds.left + bounds.right) / 2,
+      y: (bounds.top + bounds.bottom) / 2,
+    },
+    uniformScale: (bounds.bottom - bounds.top) / dimensions.height,
+    rotationDeg: Math.atan2(
+      raw.femaleStrapQuadPx.topRight[1] - raw.femaleStrapQuadPx.topLeft[1],
+      raw.femaleStrapQuadPx.topRight[0] - raw.femaleStrapQuadPx.topLeft[0],
+    ) * (180 / Math.PI),
   };
 }
 
-function template(input: Omit<HatTemplate, "presentation" | "sleevePlacement"> & {
-  sleevePlacement: Omit<HatTemplate["sleevePlacement"], "positionPx" | "uniformScale" | "rotationDeg">;
-}): HatTemplate {
-  const bounds = input.sleevePlacement.sleeveBoundsPx;
+function imageProfile(
+  input: { imagePath: string; imageDimensions: { width: number; height: number }; imageSha256: string },
+  placement: RawSleevePlacement,
+): HatTemplateImageProfile {
   const { width, height } = input.imageDimensions;
   return {
     ...input,
@@ -69,18 +110,17 @@ function template(input: Omit<HatTemplate, "presentation" | "sleevePlacement"> &
       objectFit: "contain",
       crop: "none",
     },
-    sleevePlacement: {
-      ...input.sleevePlacement,
-      positionPx: {
-        x: (bounds.left + bounds.right) / 2,
-        y: (bounds.top + bounds.bottom) / 2,
-      },
-      uniformScale: (bounds.bottom - bounds.top) / height,
-      rotationDeg: Math.atan2(
-        input.sleevePlacement.femaleStrapQuadPx.topRight[1] - input.sleevePlacement.femaleStrapQuadPx.topLeft[1],
-        input.sleevePlacement.femaleStrapQuadPx.topRight[0] - input.sleevePlacement.femaleStrapQuadPx.topLeft[0],
-      ) * (180 / Math.PI),
-    },
+    sleevePlacement: calibratePlacement(placement, input.imageDimensions),
+  };
+}
+
+function template(input: RawHatTemplate): HatTemplate {
+  return {
+    id: input.id,
+    displayName: input.displayName,
+    hatColor: input.hatColor,
+    ...imageProfile(input, input.sleevePlacement),
+    mobile: imageProfile(input.mobile, MOBILE_HAT_SLEEVE_CALIBRATION),
   };
 }
 
@@ -92,6 +132,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-black.png",
     imageDimensions: { width: 1447, height: 1087 },
     imageSha256: "5bd59417af98a5f8a22f56728e245bcedb848ad3946b270931bee2607a2f39b7",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-black-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "962a084512ae33be8721f6540ca8398f2263d154812a16d31679a7cd6b7e80a4",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -110,6 +155,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-white.png",
     imageDimensions: { width: 1446, height: 1087 },
     imageSha256: "90059e5abdf3e26f6b7f201b3cb958981764872a546a8e57c860e07739c9343e",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-white-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "874f6f48023c9d751099614a996d4df4de720c34767eebbb03d0d55637210ab5",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -128,6 +178,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-red.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "eeefd58241b7fef77b6949fd0ce274f27262fb33210d948406e06527f6960859",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-red-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "94503ae9939cc5c17442bec57ae3b0fb43a8b588c865f8f1dca6e972f5bfc133",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -146,6 +201,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-blue.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "1ba9764d486bff190b9433229d5c825505771b6bd3503f1b9afe2bd6af6f6b64",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-blue-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "f97d90eb3b5b819f5b9f659cc2fba99bd3e9551956b4cb2d6eb9f667069240e1",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -164,6 +224,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-green.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "26de821952b265d9ef0aedfa7bf1b51c51507b375fd21409fdf9b39148dddf10",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-green-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "f183d84d029f5a52a21a9bbf38bfc85c6e31cbea22c70bb8a9709b77f5fb86b3",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -182,6 +247,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-yellow.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "e5efdc703ac9d751a16d190163bcf472d46d23c14a78885134e04f6bc5f43c2c",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-yellow-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "f65c05828fe378e8a51959db36a0ca6e186d244d73f0797cf928e80d3b0ff639",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -200,6 +270,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-neon-yellow.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "1cae14c48e667e45730ca3a7592a7b9ad70600002a53a9adcd3f332f7c2430be",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-neon-yellow-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "2a4c5608828873677dec5b0b0736d6da3622c143747ad229f0c6e1c296b7c141",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -218,6 +293,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-orange.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "5b60987f814a01f50fba91f726458f434c9875f28db8113558696277a5a19aff",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-orange-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "e4d0cba329cf8f485c70f6a4cffb89507097ea9c38c326f4d282c98d44426e8a",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -236,6 +316,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-pink.png",
     imageDimensions: { width: 1446, height: 1088 },
     imageSha256: "67e60a8903a96947782ccc2c52c0578781e6abbb3541b179781d3a01a0140ac0",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-pink-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "321561617f4b665afc2ccb1c1cff9fe5acbb9f57514f18aa779cdd67ead1c571",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
@@ -254,6 +339,11 @@ export const HAT_TEMPLATE_REGISTRY: readonly HatTemplate[] = [
     imagePath: "/images/hat_templates/hat-purple.png",
     imageDimensions: { width: 1445, height: 1088 },
     imageSha256: "d66cefab9462720182716d13f017578e96612e678031cc0eaafd58fcfadbf850",
+    mobile: {
+      imagePath: "/images/hat_templates/hat-purple-mobile.png",
+      imageDimensions: MOBILE_REFERENCE_DIMENSIONS,
+      imageSha256: "aa1ea450325c6b4cdd49699e99a9adc2270799f88701964a17f0e8b59be3ba57",
+    },
     sleevePlacement: {
       coordinateSpace: "natural-image-pixels",
       femaleStrapQuadPx: {
