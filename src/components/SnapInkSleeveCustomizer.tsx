@@ -19,6 +19,7 @@ import {
   STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX,
   STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION,
   STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX,
+  STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_ADDITIONAL_STAGE_PX,
   SLEEVE_GEOMETRY,
   STUDIO_HAT_CAMERA_ZOOM_CONFIG,
   STUDIO_SLEEVE_PREVIEW_SCALE,
@@ -976,7 +977,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       : STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.additionalStagePx[sleeveSize as 4 | 5]
     : 0;
   const mobileTopExpansionPx = isMobilePreview && ghostHat
-    ? STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX
+    ? STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX + STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_ADDITIONAL_STAGE_PX
     : 0;
   const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx + desktopHeightAdjustmentPx + mobileTopExpansionPx);
   const sleevePreviewHeightPercent = (sleevePreviewHeightPx / stageCoordinateHeight) * 100;

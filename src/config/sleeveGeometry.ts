@@ -86,6 +86,8 @@ export const STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION = {
 } as const;
 /** Expand the mobile sleeve at its top edge while holding its bottom fixed. */
 export const STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX = 3;
+/** Incremental mobile-only top-edge adjustment for the next calibration round. */
+export const STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_ADDITIONAL_STAGE_PX = 2;
 
 /** Pixel landmarks measured from the owner-approved blank Size 4 on-hat master. */
 export const APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE = {
