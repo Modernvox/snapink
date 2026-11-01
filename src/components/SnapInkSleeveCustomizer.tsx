@@ -49,6 +49,7 @@ const CITY_LIFESTYLE_BACKGROUND_PATHS = {
   desktop: "/images/product_images/desktop_lifesttyle_city.png",
   mobile: "/images/product_images/nobile_lifestyle_city.png",
 } as const;
+const SLEEVE_CHARACTER_LIMITS = [8, 8, 10, 10, 12, 14] as const;
 
 function hatForegroundImagePath(templateId: HatTemplateId, mobile: boolean) {
   const color = templateId.replace(/^hat-/, "");
@@ -502,7 +503,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const initialVariant = initial.variant ?? OFFICIAL_STUDIO_DEFAULTS.variant;
   const initialSize = initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size;
   const initialAlign = initial.align ?? OFFICIAL_STUDIO_DEFAULTS.align;
-  const [posX, setPosX] = useState(initial.posX ?? defaultArtworkXForViewport(defaultArtworkPosition, initialVariant, initialSize, isMobilePreview, initialAlign));
+  const [posX, setPosX] = useState(initial.posX ?? defaultArtworkXForViewport(defaultArtworkPosition, initialVariant, isMobilePreview ? 0 : initialSize, isMobilePreview, initialAlign));
   const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport(defaultArtworkPosition));
   const [align, setAlign] = useState<"start" | "center" | "end">(initialAlign);
   const [showGuides, setShowGuides] = useState(false);
@@ -538,7 +539,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [ghostHat, setGhostHat] = useState(true);
   const [previewBackground, setPreviewBackground] = useState<"studio" | "city">("studio");
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
-  const previewSleeveSize = isMobilePreview ? sleeveSize : 0;
+  const characterLimit = SLEEVE_CHARACTER_LIMITS[sleeveSize as 0 | 1 | 2 | 3 | 4 | 5];
+  // The photographic preview is always rendered with Size 0 geometry.
+  // `sleeveSize` remains the customer's actual production selection.
+  const previewSleeveSize = 0;
   const [sizeConfirmation, setSizeConfirmation] = useState<number | null>(null);
   const sizeConfirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSizeConfirmationRef = useRef<number | null>(null);
@@ -930,9 +934,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   }, [sleeveSize, isMobilePreview]);
 
   const viewW = 1600;
-  const activeGeometry = geometryFor(variant, sleeveSize);
-  const bounds = surfaceBounds(variant, sleeveSize);
-  const brandingRegion = brandingRegionFor(variant, sleeveSize);
+  const renderGeometrySize = isMobilePreview ? previewSleeveSize : sleeveSize;
+  const activeGeometry = geometryFor(variant, renderGeometrySize);
+  const bounds = surfaceBounds(variant, renderGeometrySize);
+  const brandingRegion = brandingRegionFor(variant, renderGeometrySize);
   const previewBounds = surfaceBounds(variant, previewSleeveSize);
   const previewSleeveViewH = viewW * ((previewBounds.maxY - previewBounds.minY) / (previewBounds.maxX - previewBounds.minX));
   const viewH = viewW * ((bounds.maxY - bounds.minY) / (bounds.maxX - bounds.minX));
@@ -955,13 +960,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   const photoFaceBottom = (photoFacePoints[2][1] + photoFacePoints[3][1]) / 2;
   const cadArtworkStart = cadXToCanvasX(
     variant,
-    sleeveSize,
+    renderGeometrySize,
     brandingRegion.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2,
     viewW
   );
   const cadArtworkEnd = cadXToCanvasX(
     variant,
-    sleeveSize,
+    renderGeometrySize,
     brandingRegion.rightEdgeXmm,
     viewW
   );
@@ -1013,12 +1018,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   const pathId = `text-arc-path-${uid}`;
   const surfaceClipId = `printable-surface-${uid}`;
   const surfacePath = useMemo(
-    () => brandingSurfacePath(variant, sleeveSize, viewW, viewH),
-    [variant, sleeveSize, viewH]
+    () => brandingSurfacePath(variant, renderGeometrySize, viewW, viewH),
+    [variant, renderGeometrySize, viewH]
   );
   const grooveCutoutPath = useMemo(
-    () => nonPrintableGroovePath(variant, sleeveSize, viewW, viewH),
-    [variant, sleeveSize, viewH]
+    () => nonPrintableGroovePath(variant, renderGeometrySize, viewW, viewH),
+    [variant, renderGeometrySize, viewH]
   );
   const overallLengthMm = activeGeometry.overallMaxXmm - activeGeometry.overallMinXmm;
   const largestGeometry = SLEEVE_GEOMETRY[variant].sizes[5];
@@ -1091,9 +1096,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx
     - desktopBoundaryAdjustment.rightEdgeInset + desktopHatEdgeAlignmentCorrectionPx;
   const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
-    ? sleeveSize <= 3
+    ? renderGeometrySize <= 3
       ? (() => {
-        const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[sleeveSize as 0 | 1 | 2 | 3];
+        const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[renderGeometrySize as 0 | 1 | 2 | 3];
         const referenceGeometry = SLEEVE_GEOMETRY[variant].sizes[referenceSize];
         const referenceLengthMm = referenceGeometry.overallMaxXmm - referenceGeometry.overallMinXmm;
         const referenceBounds = surfaceBounds(variant, referenceSize);
@@ -1106,7 +1111,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         // at their original positions in the mobile stage.
         return referenceRightFromGroovePx - currentRightFromGroovePx;
       })()
-      : STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.additionalStagePx[sleeveSize as 4 | 5]
+      : STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.additionalStagePx[renderGeometrySize as 4 | 5]
     : 0;
   const mobileTopExpansionPx = isMobilePreview && ghostHat
     ? STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX + STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_ADDITIONAL_STAGE_PX
@@ -1158,7 +1163,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoCenterYmm = (bounds.minY + bounds.maxY) / 2;
   const logoMaxHeightMm = maximumContainedLogoHeightMm(
     variant,
-    sleeveSize,
+    renderGeometrySize,
     logoCenterXmm,
     logoCenterYmm,
     logoAspectRatio
@@ -1169,14 +1174,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
   const logoImageHeightSvg = visibleLogoHeightSvg / logoVisibleBounds.height;
   const logoImageWidthSvg = logoImageHeightSvg * logoAspectRatio * logoVisibleBounds.width / logoVisibleBounds.height;
-  const logoCenterCanvasX = cadXToCanvasX(variant, sleeveSize, logoCenterXmm, viewW);
+  const logoCenterCanvasX = cadXToCanvasX(variant, renderGeometrySize, logoCenterXmm, viewW);
   const logoCenterCanvasY = viewH / 2;
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
   const logoImageY = logoCenterCanvasY - visibleLogoHeightSvg / 2 - logoVisibleBounds.y * logoImageHeightSvg;
   const artworkCenterCanvasPercent = isMobilePreview
-    ? usableBrandingCenterCanvasPercentFor(variant, sleeveSize)
-    : brandingCenterCanvasPercentFor(variant, sleeveSize);
-  const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
+    ? usableBrandingCenterCanvasPercentFor(variant, renderGeometrySize)
+    : brandingCenterCanvasPercentFor(variant, renderGeometrySize);
+  const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, renderGeometrySize);
   const artworkMinXCanvasPercent = usableArtworkRange.start;
   const artworkMaxXCanvasPercent = usableArtworkRange.end;
   const mobilePhotoTextOffset = (() => {
@@ -1209,7 +1214,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   function resetCurrentArtworkPosition() {
     if (defaultArtworkPosition) {
       setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
-      setPosX(defaultArtworkXForViewport(defaultArtworkPosition, variant, sleeveSize, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
+      setPosX(defaultArtworkXForViewport(defaultArtworkPosition, variant, isMobilePreview ? previewSleeveSize : sleeveSize, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
       setPosY(defaultArtworkYForViewport(defaultArtworkPosition));
       return;
     }
@@ -1219,11 +1224,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function handleVariantChange(nextVariant: SleeveVariant) {
-    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, sleeveSize, align)) < 0.01;
+    const positionSize = renderGeometrySize;
+    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, positionSize, align)) < 0.01;
     const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setVariant(nextVariant);
     if (isMobilePreview && wasAtAlignmentAnchor) {
-      setPosX(usableBrandingAlignmentCanvasPercentFor(nextVariant, sleeveSize, align));
+      setPosX(usableBrandingAlignmentCanvasPercentFor(nextVariant, renderGeometrySize, align));
     } else if (wasDesktopCentered) {
       setPosX(brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
     }
@@ -1231,11 +1237,8 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   function handleSizeChange(nextSize: number) {
     if (nextSize === sleeveSize) return;
-    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, sleeveSize, align)) < 0.01;
     setSleeveSize(nextSize);
-    if (isMobilePreview && wasAtAlignmentAnchor) {
-      setPosX(usableBrandingAlignmentCanvasPercentFor(variant, nextSize, align));
-    } else if (!isMobilePreview) {
+    if (!isMobilePreview) {
       // Keep desktop artwork stationary while the photographic sleeve stays at Size 0.
       pendingSizeConfirmationRef.current = nextSize;
     }
@@ -1775,7 +1778,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const textInputControl = (instance: "mobile" | "desktop") => (
     <label className="snapink-toolbar-text">
       <span style={instance === "mobile" ? mobileOverlayWhiteTextStyle : undefined}>Text</span>
-      <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={25} />
+      <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={characterLimit} />
     </label>
   );
   const logoUploadControl = (instance: "mobile" | "desktop") => (
@@ -1822,7 +1825,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       {colorGroups}
       <div className="snapink-toolbar-secondary">
-        <span className="snapink-toolbar-count" aria-live="polite">{text.length}/25</span>
+        <span className="snapink-toolbar-count" aria-live="polite">{text.length}/{characterLimit}</span>
         <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
           {toolbarAdvancedOpen ? "Close advanced" : "Advanced controls"}
         </button>
@@ -2552,17 +2555,17 @@ const SnapInkSleeveCustomizer = forwardRef<
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="ENTER YOUR TEXT"
-              maxLength={25}
+              maxLength={characterLimit}
               className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
             />
 
             <div className="text-right text-xs mt-1">
               <span
                 className={`${
-                  text.length >= 25 ? "text-red-500" : "text-neutral-400"
+                  text.length >= characterLimit ? "text-red-500" : "text-neutral-400"
                 }`}
               >
-                {text.length}/25 characters
+                {text.length}/{characterLimit} characters
               </span>
             </div>
 
