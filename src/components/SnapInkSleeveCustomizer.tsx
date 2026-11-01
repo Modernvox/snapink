@@ -292,6 +292,7 @@ const SLEEVE_PHOTO = {
 
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
+const MOBILE_PHOTO_TEXT_NUDGE_PX = 6;
 
 /**
  * Camera framing is derived from the approved CAD lengths. A shorter sleeve
@@ -422,7 +423,9 @@ const SnapInkSleeveCustomizer = forwardRef<
 ) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const mobileStageRef = useRef<HTMLDivElement | null>(null);
   const dlRef = useRef<HTMLAnchorElement | null>(null);
+  const [mobileStageWidth, setMobileStageWidth] = useState(0);
   const [stageClientWidth, setStageClientWidth] = useState(() =>
     typeof window !== "undefined" && window.innerWidth <= 640
       ? Math.max(1, window.innerWidth - 92)
@@ -434,6 +437,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const attachStageRef = useCallback((stage: HTMLDivElement | null) => {
     stageRef.current = stage;
     if (stage) setStageClientWidth(stage.clientWidth || 1000);
+  }, []);
+  const attachMobileStageRef = useCallback((stage: HTMLDivElement | null) => {
+    mobileStageRef.current = stage;
+    if (stage) setMobileStageWidth(stage.clientWidth);
   }, []);
   const uid = useId();
   const ghostId = `ghost-${uid.replace(/:/g, "")}`;
@@ -647,6 +654,16 @@ const SnapInkSleeveCustomizer = forwardRef<
       observer.disconnect();
       window.removeEventListener("resize", updateWidth);
     };
+  }, []);
+
+  useEffect(() => {
+    const stage = mobileStageRef.current;
+    if (!stage) return;
+    const updateWidth = () => setMobileStageWidth(stage.clientWidth);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(stage);
+    return () => observer.disconnect();
   }, []);
 
   function startNewDesign() {
@@ -1072,6 +1089,26 @@ const SnapInkSleeveCustomizer = forwardRef<
   const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
   const artworkMinXCanvasPercent = usableArtworkRange.start;
   const artworkMaxXCanvasPercent = usableArtworkRange.end;
+  const mobilePhotoTextOffset = (() => {
+    if (!isMobilePreview || !ghostHat || fixedProductConfiguration || mobileStageWidth <= 0) {
+      return { x: 0, y: 0 };
+    }
+    const sleeveCssWidth = mobileStageWidth * sleevePreviewWidthPercent / 100;
+    const sleeveCssHeight = (mobileStageWidth / stageAspectRatio) * sleevePreviewHeightPercent / 100;
+    const cameraScale = sleeveCssWidth > 0 && sleeveCssHeight > 0 ? cameraZoom : 0;
+    const textScaleX = (sleeveCssWidth / sleeveRenderViewW) * artworkScaleX * cameraScale;
+    const textScaleY = (sleeveCssHeight / sleeveSvgHeight) * artworkScaleY * cameraScale;
+    if (textScaleX <= 0 || textScaleY <= 0) return { x: 0, y: 0 };
+    const rotation = stageComposition.rotationDeg * Math.PI / 180;
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+    const offsetX = MOBILE_PHOTO_TEXT_NUDGE_PX;
+    const offsetY = MOBILE_PHOTO_TEXT_NUDGE_PX;
+    return {
+      x: (cos * offsetX + sin * offsetY) / textScaleX,
+      y: (-sin * offsetX + cos * offsetY) / textScaleY,
+    };
+  })();
 
   function centerCurrentArtwork() {
     setAlign("center");
@@ -1268,6 +1305,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     // never contain the presentation photo. Only the separate PNG preview has
     // the product image composited beneath the artwork.
     const artworkSvgNode = previewSvg.cloneNode(true) as SVGSVGElement;
+    artworkSvgNode.querySelectorAll('[data-mobile-photographic-text-offset="true"]').forEach((node) => {
+      node.removeAttribute("transform");
+    });
     artworkSvgNode.querySelectorAll('[data-product-image="true"]').forEach((node) => node.remove());
     const artworkOverlay = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-overlay="true"]');
     const artworkClip = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-clip="true"]');
@@ -1742,7 +1782,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       </div>
       <div className="snapink-preview-stage-frame" style={{ position: "relative" }}>
       <div
-      ref={attachStageRef}
+      ref={instance === "mobile" ? attachMobileStageRef : attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
       style={{ aspectRatio: stageAspectRatio, backgroundColor: "#303030", borderColor: "#505050", position: "relative", isolation: "isolate" }}
     >
@@ -1947,6 +1987,12 @@ const SnapInkSleeveCustomizer = forwardRef<
               styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
             }
           >
+            <g
+              transform={isMobilePreview && ghostHat && !fixedProductConfiguration
+                ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
+                : undefined}
+              data-mobile-photographic-text-offset={isMobilePreview && ghostHat && !fixedProductConfiguration ? "true" : undefined}
+            >
             <text
               fontFamily={font}
               fontSize={scaledFontSize}
@@ -2004,6 +2050,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                     });
                   })()}
             </text>
+            </g>
           </g>
         )}
         </g>
