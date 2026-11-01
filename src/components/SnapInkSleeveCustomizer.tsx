@@ -313,6 +313,8 @@ const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
 const MOBILE_BILLBOARD_TEXT_DEFAULT_X_PERCENT = 67;
 const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
+// Visual preview only; matches the approved raised artwork reference height.
+const STUDIO_EMBOSSED_PREVIEW_RELIEF_MM = 0.8;
 // Natural-image pixel bounds for the download-only upper hat through nose crop.
 const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
   desktop: { top: 0, bottom: 700 },
@@ -2103,31 +2105,34 @@ const SnapInkSleeveCustomizer = forwardRef<
         }}
       >
         <defs>
-          <filter id="emboss" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur
+          <filter id="emboss" x="-25%" y="-25%" width="150%" height="150%">
+            <feOffset
               in="SourceAlpha"
-              stdDeviation="1.25"
-              result="alpha"
+              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.22}
+              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.5}
+              result="embossShadowOffset"
             />
-            <feSpecularLighting
-              in="alpha"
-              surfaceScale="3"
-              specularConstant="1.1"
-              specularExponent="35"
-              lightingColor="#ffffff"
-              result="spec"
-            >
-              <fePointLight x="-200" y="-300" z="400" />
-            </feSpecularLighting>
-            <feComposite
-              in="spec"
-              in2="SourceAlpha"
-              operator="in"
-              result="litSpec"
+            <feGaussianBlur
+              in="embossShadowOffset"
+              stdDeviation={Math.max(0.35, STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.055)}
+              result="embossShadowBlur"
             />
+            <feComposite in="embossShadowBlur" in2="SourceAlpha" operator="out" result="embossContactEdge" />
+            <feFlood floodColor="#080706" floodOpacity="0.62" result="embossContactColor" />
+            <feComposite in="embossContactColor" in2="embossContactEdge" operator="in" result="embossContactShadow" />
+            <feOffset
+              in="SourceAlpha"
+              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.22}
+              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.5}
+              result="embossLightOffset"
+            />
+            <feComposite in="SourceAlpha" in2="embossLightOffset" operator="out" result="embossTopEdge" />
+            <feFlood floodColor="#ffffff" floodOpacity="0.24" result="embossHighlightColor" />
+            <feComposite in="embossHighlightColor" in2="embossTopEdge" operator="in" result="embossHighlight" />
             <feMerge>
-              <feMergeNode in="litSpec" />
+              <feMergeNode in="embossContactShadow" />
               <feMergeNode in="SourceGraphic" />
+              <feMergeNode in="embossHighlight" />
             </feMerge>
           </filter>
 
@@ -2192,6 +2197,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               width={logoImageWidthSvg}
               height={logoImageHeightSvg}
               preserveAspectRatio="xMidYMid meet"
+              filter={styleMode === "emboss" ? "url(#emboss)" : undefined}
               opacity={logoOpacity / 100}
               data-testid="studio-logo-artwork"
               data-branding-center-x-mm={brandingRegion.centerXmm}
