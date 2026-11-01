@@ -267,7 +267,7 @@
     background-size: 24px 24px;
   }
 }
-/* SnapInk Studio: one white editor with a viewport-locked desktop workspace. */
+/* SnapInk Studio: one white editor in the document's natural page flow. */
 .snapink-studio-application {
   color: #111111;
   background: #FFFFFF;
@@ -349,23 +349,11 @@
 @media (min-width: 1024px) {
   .snapink-studio-application { padding: 14px 20px; }
   .snapink-studio-workspace-desktop {
-    display: grid;
+    display: block;
     width: 100%;
-    height: clamp(480px, calc(100svh - 235px), 900px);
     min-width: 0;
     min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: stretch;
-    overflow: hidden;
-  }
-  .snapink-studio-workspace-desktop > * {
-    min-width: 0;
-    min-height: 0;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    overflow-x: clip;
   }
   .snapink-studio-customizer .snapink-studio-workspace-desktop > :first-child {
     border-right: 1px solid #E5E5E5;
@@ -429,9 +417,6 @@
     left: 4%;
     width: auto;
     box-sizing: border-box;
-    max-height: min(44%, 420px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
     border: 1px solid rgba(232, 216, 176, .95);
     border-radius: 16px;
     background: rgba(250, 249, 246, .94);

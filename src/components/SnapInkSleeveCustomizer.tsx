@@ -1909,6 +1909,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </g>
       </svg>
       </div>
+      </div>
       {instance === "desktop" && <div className="snapink-desktop-controls-overlay" data-preview-only="true" style={{
         position: "absolute",
         zIndex: 30,
@@ -1916,9 +1917,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         right: "4%",
         bottom: "3%",
         boxSizing: "border-box",
-        maxHeight: "min(44%, 420px)",
-        overflowY: "auto",
-        overscrollBehavior: "contain",
         border: "1px solid rgba(232, 216, 176, .95)",
         borderRadius: 16,
         background: "rgba(250, 249, 246, .94)",
@@ -1927,7 +1925,6 @@ const SnapInkSleeveCustomizer = forwardRef<
       }}>
         {previewToolbar(instance)}
       </div>}
-      </div>
       </div>
       </div>
     </div>
