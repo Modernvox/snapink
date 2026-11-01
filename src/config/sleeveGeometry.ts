@@ -53,14 +53,14 @@ export const SUPPORT_STYLE = "separate full-width PLA support, 0.200 mm cavity-s
 /** Visual-only sleeve scale in Studio's photographic composite. */
 export const STUDIO_SLEEVE_PREVIEW_SCALE = 1.25;
 
-/** Desktop-only photographic preview calibration, in displayed CSS pixels. */
+/** Prior desktop CSS-pixel calibration plus Round 2 additions in 1000-stage px. */
 export const STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX = {
-  0: { widthIncrease: 200, heightDecrease: 20 },
-  1: { widthIncrease: 125, heightDecrease: 10 },
-  2: { widthIncrease: 100, heightDecrease: 5 },
-  3: { widthIncrease: 50, heightDecrease: 0 },
-  4: { widthIncrease: 15, heightDecrease: 0 },
-  5: { widthIncrease: 12, heightDecrease: 0 },
+  0: { widthIncrease: 200, heightDecrease: 20, round2: { widthIncreaseStagePx: 20, heightIncreaseStagePx: 30 } },
+  1: { widthIncrease: 125, heightDecrease: 10, round2: { widthIncreaseStagePx: 20, heightIncreaseStagePx: 20 } },
+  2: { widthIncrease: 100, heightDecrease: 5, round2: { widthIncreaseStagePx: 0, heightIncreaseStagePx: 20 } },
+  3: { widthIncrease: 50, heightDecrease: 0, round2: { widthIncreaseStagePx: 5, heightIncreaseStagePx: 10 } },
+  4: { widthIncrease: 15, heightDecrease: 0, round2: { widthIncreaseStagePx: 15, heightIncreaseStagePx: 16 } },
+  5: { widthIncrease: 12, heightDecrease: 0, round2: { widthIncreaseStagePx: 8, heightIncreaseStagePx: 10 } },
 } as const;
 
 /** Pixel landmarks measured from the owner-approved blank Size 4 on-hat master. */

@@ -931,10 +931,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   const cameraZoom = studioHatZoomForSize(sleeveSize, variant, isMobilePreview);
   const desktopSleeveCalibration = !isMobilePreview && ghostHat
     ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[sleeveSize]
-    : { widthIncrease: 0, heightDecrease: 0 };
-  // Convert requested visible CSS-pixel adjustments into the native 1000 px
-  // stage coordinates, accounting for the unchanged size-based camera zoom.
-  const desktopAdjustmentScale = (STUDIO_STAGE_COORDINATE_WIDTH / Math.max(1, currentStageClientWidth)) / cameraZoom;
+    : null;
+  // Keep the Round 1 CSS-pixel adjustment unchanged. Round 2 additions use
+  // native stage-reference pixels directly, before the existing camera zoom.
+  const previousDesktopAdjustmentScale = desktopSleeveCalibration
+    ? (STUDIO_STAGE_COORDINATE_WIDTH / Math.max(1, currentStageClientWidth)) / cameraZoom
+    : 0;
   // Calibrate the sleeve's physical width from the photographed strap's
   // thickness, then derive its longitudinal span from the actual CAD bounds.
   // The old mapping reused a photographed rectangle's width and only applied
@@ -943,9 +945,17 @@ const SnapInkSleeveCustomizer = forwardRef<
   // edge; the template groove remains the physical attachment datum.
   const baseSleeveHeightPx = stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE;
   const baseSleeveWidthPx = baseSleeveHeightPx * (viewW / viewH);
-  const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx - desktopSleeveCalibration.heightDecrease * desktopAdjustmentScale);
+  const desktopWidthAdjustmentPx = desktopSleeveCalibration
+    ? desktopSleeveCalibration.widthIncrease * previousDesktopAdjustmentScale
+      + desktopSleeveCalibration.round2.widthIncreaseStagePx
+    : 0;
+  const desktopHeightAdjustmentPx = desktopSleeveCalibration
+    ? -desktopSleeveCalibration.heightDecrease * previousDesktopAdjustmentScale
+      + desktopSleeveCalibration.round2.heightIncreaseStagePx
+    : 0;
+  const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx + desktopHeightAdjustmentPx);
   const sleevePreviewHeightPercent = (sleevePreviewHeightPx / stageCoordinateHeight) * 100;
-  const sleevePreviewWidthPx = baseSleeveWidthPx + desktopSleeveCalibration.widthIncrease * desktopAdjustmentScale;
+  const sleevePreviewWidthPx = baseSleeveWidthPx + desktopWidthAdjustmentPx;
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const sleevePreviewCenterYPercent = ghostHat ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 : 50;
   const sleevePreviewBottomYPercent = sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2;
