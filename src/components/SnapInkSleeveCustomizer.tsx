@@ -170,6 +170,7 @@ function defaultArtworkXForViewport(
   mobile: boolean,
   alignment: "start" | "center" | "end" = "center"
 ) {
+  if (mobile && variant === "billboard") return MOBILE_BILLBOARD_TEXT_DEFAULT_X_PERCENT;
   return mobile
     ? usableBrandingAlignmentCanvasPercentFor(variant, size, alignment)
     : defaultPosition?.posX ?? brandingCenterCanvasPercentFor(variant, size);
@@ -309,6 +310,7 @@ const SLEEVE_PHOTO = {
 
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
+const MOBILE_BILLBOARD_TEXT_DEFAULT_X_PERCENT = 67;
 const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
 const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
@@ -508,6 +510,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const initialSize = initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size;
   const initialAlign = initial.align ?? OFFICIAL_STUDIO_DEFAULTS.align;
   const [posX, setPosX] = useState(initial.posX ?? defaultArtworkXForViewport(defaultArtworkPosition, initialVariant, isMobilePreview ? 0 : initialSize, isMobilePreview, initialAlign));
+  const variantPosXRef = useRef<Partial<Record<SleeveVariant, number>> | null>(null);
+  if (variantPosXRef.current === null) {
+    variantPosXRef.current = initial.posX === undefined ? {} : { [initialVariant]: initial.posX };
+  }
   const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport(defaultArtworkPosition));
   const [align, setAlign] = useState<"start" | "center" | "end">(initialAlign);
   const [showGuides, setShowGuides] = useState(false);
@@ -1248,13 +1254,20 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function handleVariantChange(nextVariant: SleeveVariant) {
-    const positionSize = renderGeometrySize;
-    const wasAtAlignmentAnchor = Math.abs(posX - usableBrandingAlignmentCanvasPercentFor(variant, positionSize, align)) < 0.01;
+    if (nextVariant === variant) return;
+    if (isMobilePreview) {
+      const positions = variantPosXRef.current!;
+      positions[variant] = posX;
+      const nextPosition = positions[nextVariant]
+        ?? defaultArtworkXForViewport(defaultArtworkPosition, nextVariant, previewSleeveSize, true, align);
+      positions[nextVariant] = nextPosition;
+      setVariant(nextVariant);
+      setPosX(nextPosition);
+      return;
+    }
     const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setVariant(nextVariant);
-    if (isMobilePreview && wasAtAlignmentAnchor) {
-      setPosX(usableBrandingAlignmentCanvasPercentFor(nextVariant, renderGeometrySize, align));
-    } else if (wasDesktopCentered) {
+    if (wasDesktopCentered) {
       setPosX(brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
     }
   }
