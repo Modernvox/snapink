@@ -1499,7 +1499,17 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   const previewToolbar = (instance: "mobile" | "desktop") => (
-    <div className="snapink-preview-toolbar">
+    <div className="snapink-preview-toolbar" style={instance === "desktop" ? {
+      position: "static",
+      width: "100%",
+      minWidth: 0,
+      margin: 0,
+      padding: "14px clamp(12px, 1.5vw, 20px)",
+      border: 0,
+      borderRadius: "inherit",
+      background: "transparent",
+      boxShadow: "none",
+    } : undefined}>
       <div className="snapink-toolbar-primary">
         <label className="snapink-toolbar-text">
           <span>Text</span>
@@ -1613,7 +1623,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
-      style={{ aspectRatio: stageAspectRatio, backgroundColor: "#303030", borderColor: "#505050" }}
+      style={{ aspectRatio: stageAspectRatio, backgroundColor: "#303030", borderColor: "#505050", position: "relative", isolation: "isolate" }}
     >
       <div aria-hidden="true" className="snapink-stage-light absolute inset-0" />
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
@@ -1879,7 +1889,22 @@ const SnapInkSleeveCustomizer = forwardRef<
         </g>
       </svg>
       </div>
-      {instance === "desktop" && <div className="snapink-desktop-controls-overlay" data-preview-only="true">
+      {instance === "desktop" && <div className="snapink-desktop-controls-overlay" data-preview-only="true" style={{
+        position: "absolute",
+        zIndex: 30,
+        left: "4%",
+        right: "4%",
+        bottom: "3%",
+        boxSizing: "border-box",
+        maxHeight: "min(44%, 420px)",
+        overflowY: "auto",
+        overscrollBehavior: "contain",
+        border: "1px solid rgba(232, 216, 176, .95)",
+        borderRadius: 16,
+        background: "rgba(250, 249, 246, .94)",
+        boxShadow: "0 12px 32px rgba(0, 0, 0, .28)",
+        backdropFilter: "blur(10px)",
+      }}>
         {previewToolbar(instance)}
       </div>}
       </div>
