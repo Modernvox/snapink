@@ -770,4 +770,9 @@
   .snapink-studio-customizer .snapink-fit-card img { height: 40px; aspect-ratio: auto; }
   .snapink-studio-customizer .snapink-fit-card-label { font-size: 10px; line-height: 1.2; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile > .rounded-2xl > button { padding: 8px 0 !important; }
+  .snapink-studio-customizer .snapink-mobile-entry-panel :is(.snapink-mobile-control-label, .snapink-mobile-text-size-value, .snapink-toolbar-text > span) {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+  }
 }
