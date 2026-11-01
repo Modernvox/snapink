@@ -315,7 +315,7 @@ const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
   SleeveVariant,
   { rightEdgeInset: number; alignRightToHatEdge: boolean; heightReduction: number; verticalShift: number }
 > = {
-  billboard: { rightEdgeInset: 6, alignRightToHatEdge: false, heightReduction: 0, verticalShift: -2 },
+  billboard: { rightEdgeInset: 0, alignRightToHatEdge: true, heightReduction: 0, verticalShift: -2 },
   standard: { rightEdgeInset: 0, alignRightToHatEdge: true, heightReduction: 20, verticalShift: 0 },
 };
 
@@ -1096,7 +1096,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const desktopSleeveLeftPx = stageComposition.grooveX
     - desktopSleeveWidthBeforeEdgeAdjustmentPx * sleeveGrooveFraction;
   const desktopHatEdgeAlignmentCorrectionPx = desktopBoundaryAdjustment.alignRightToHatEdge
-    ? (variant === "standard" ? stageComposition.rearOpeningRight : stageComposition.strapRight)
+    ? stageComposition.rearOpeningRight
       - (desktopSleeveLeftPx + desktopSleeveWidthBeforeEdgeAdjustmentPx)
     : 0;
   const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx
