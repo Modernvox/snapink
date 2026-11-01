@@ -1572,6 +1572,12 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const studioIntroCopy = (
+    <p>
+      Choose Standard or Billboard style, select your exposed-peg configuration, customize text and colors, upload a logo, and preview your sleeve on a hat. Export a design preview when ready. Sizes 0–5 match exposed pegs; sleeves fit standard plastic 7-peg snapback closures. <a href="/fit-guide.html">Will It Fit? View the Fit Guide.</a> Production access is available through reviewed pilot-partner applications.
+    </p>
+  );
+
   // Shared preview inner block (used on mobile + desktop)
   const strapPreviewInner = (instance: "mobile" | "desktop") => (
     <div className="snapink-preview-content flex min-w-0 flex-col gap-3">
@@ -1617,6 +1623,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div className="snapink-stage-wrap">
       {instance === "mobile" && previewToolbar(instance)}
       <div className="snapink-preview-config-row" aria-label="Preview options">
+        {hatColorSelector(instance)}
         <div className="snapink-size-buttons" role="group" aria-label="Sleeve Size">
           <span className="snapink-size-buttons-label">Sleeve Size</span>
           {[0, 1, 2, 3, 4, 5].map((size) => (
@@ -1625,7 +1632,12 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
           ))}
         </div>
-        {hatColorSelector(instance)}
+        {instance === "desktop"
+          ? <aside className="snapink-studio-intro-toolbar" aria-label="About SnapInk Studio">{studioIntroCopy}</aside>
+          : <details className="snapink-studio-intro-mobile">
+              <summary>About SnapInk Studio</summary>
+              {studioIntroCopy}
+            </details>}
       </div>
       <div className="snapink-preview-stage-frame">
       <div

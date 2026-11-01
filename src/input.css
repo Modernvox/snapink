@@ -225,6 +225,11 @@
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
 .snapink-preview-config-row { position: relative; z-index: 25; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
 .snapink-size-buttons { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 5px; }
+.snapink-studio-intro-toolbar { display: none; }
+.snapink-studio-intro-mobile { flex: 1 0 100%; order: 3; min-width: 0; color: #555; font-size: 11px; line-height: 1.45; }
+.snapink-studio-intro-mobile summary { width: fit-content; color: #6F5528; font-weight: 700; cursor: pointer; }
+.snapink-studio-intro-mobile p { margin-top: 5px; }
+.snapink-studio-intro-mobile a, .snapink-studio-intro-toolbar a { color: #755A2C; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .snapink-size-buttons-label { margin-right: 4px; color: #303030; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .snapink-size-button { display: inline-grid; width: 36px; min-height: 36px; place-items: center; border: 1px solid #D8BF86; border-radius: 8px; background: #FFFFFF; color: #242424; font-size: 13px; font-weight: 800; cursor: pointer; }
 .snapink-size-button:hover { background: #FBF8F0; }
@@ -393,6 +398,18 @@
     box-shadow: none !important;
   }
   .snapink-studio-customizer .snapink-preview-content { gap: 8px; }
+  .snapink-studio-customizer .snapink-preview-config-row {
+    display: grid;
+    grid-template-columns: max-content max-content minmax(220px, 1fr);
+    justify-content: initial;
+    align-items: center;
+    gap: clamp(12px, 1.5vw, 24px);
+    margin-bottom: 10px;
+  }
+  .snapink-studio-customizer .snapink-preview-config-row .snapink-hat-picker { margin: 0; align-self: center; }
+  .snapink-studio-customizer .snapink-preview-config-row .snapink-size-buttons { flex-wrap: nowrap; }
+  .snapink-studio-customizer .snapink-studio-intro-toolbar { display: block; min-width: 0; color: #5C5C5C; font-size: 11px; line-height: 1.4; }
+  .snapink-studio-customizer .snapink-studio-intro-mobile { display: none; }
   .snapink-studio-customizer .snapink-stage-wrap {
     position: sticky;
     top: 0;
