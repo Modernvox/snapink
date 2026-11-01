@@ -253,7 +253,7 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
 // Desktop photo previews use a 1000-unit-wide stage reference before camera
 // zoom. Keep the default uploaded logo slightly lower on that stage without
 // changing the CAD artwork coordinates or the mobile preview.
-const DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX = 10;
+const DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX = { standard: 10, billboard: 20 } as const;
 
 // ---------- Color Swatches ----------
 const COLOR_SWATCHES = [
@@ -2104,7 +2104,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         {logoDataUrl && !logoNeedsRemoval && (
           <g
             transform={!isMobilePreview && ghostHat
-              ? `translate(0 ${DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX})`
+              ? `translate(0 ${DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX[variant]})`
               : undefined}
             data-desktop-photo-logo-default-offset="true"
           >
