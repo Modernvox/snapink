@@ -1506,6 +1506,18 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const textInputControl = (
+    <label className="snapink-toolbar-text">
+      <span>Text</span>
+      <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder="ENTER YOUR TEXT" maxLength={25} />
+    </label>
+  );
+  const logoUploadControl = (
+    <div className="snapink-toolbar-logo">
+      {logoControls}
+    </div>
+  );
+
   const previewToolbar = (instance: "mobile" | "desktop") => (
     <div className="snapink-preview-toolbar" style={instance === "desktop" ? {
       position: "static",
@@ -1519,13 +1531,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       boxShadow: "none",
     } : undefined}>
       <div className="snapink-toolbar-primary">
-        <label className="snapink-toolbar-text">
-          <span>Text</span>
-          <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder="ENTER YOUR TEXT" maxLength={25} />
-        </label>
-        <div className="snapink-toolbar-logo">
-          {logoControls}
-        </div>
+        {instance === "desktop" && textInputControl}
+        {instance === "desktop" && logoUploadControl}
         <label className="snapink-toolbar-select">
           <span>Font</span>
           <select aria-label="Font" value={font} style={{ fontFamily: font }} onChange={(event) => setFont(event.target.value)}>
@@ -1639,7 +1646,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {studioIntroCopy}
             </details>}
       </div>
-      <div className="snapink-preview-stage-frame">
+      <div className="snapink-preview-stage-frame" style={{ position: "relative" }}>
       <div
       ref={attachStageRef}
       className={`snapink-product-stage order-1 relative w-full overflow-hidden rounded-2xl border lg:order-none ${ghostHat && sleeveSize !== 0 && !fixedProductConfiguration ? "" : "snapink-product-stage--sleeve-only"}`}
@@ -1925,6 +1932,22 @@ const SnapInkSleeveCustomizer = forwardRef<
       }}>
         {previewToolbar(instance)}
       </div>}
+      {instance === "mobile" && <div className="snapink-mobile-entry-overlay" data-preview-only="true" style={{
+        position: "absolute",
+        zIndex: 30,
+        left: "4%",
+        right: "4%",
+        bottom: 18,
+        boxSizing: "border-box",
+        pointerEvents: "none",
+      }}>
+        <div className="snapink-mobile-entry-panel" style={{ pointerEvents: "auto" }}>
+          <div className="snapink-toolbar-primary snapink-mobile-entry-primary">
+            {textInputControl}
+            {logoUploadControl}
+          </div>
+        </div>
+      </div>}
       </div>
       </div>
     </div>
@@ -1965,27 +1988,6 @@ const SnapInkSleeveCustomizer = forwardRef<
           </button>
           {mobileOpen === "text" && (
             <div className="px-4 pb-4 pt-1 space-y-3">
-              <label className="block text-sm text-neutral-300">
-                Custom text
-              </label>
-              <input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="ENTER YOUR TEXT"
-                maxLength={25}
-                className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-neutral-50"
-              />
-
-              <div className="text-right text-xs mt-1">
-                <span
-                  className={`${
-                    text.length >= 25 ? "text-red-500" : "text-neutral-400"
-                  }`}
-                >
-                  {text.length}/25 characters
-                </span>
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-neutral-400">

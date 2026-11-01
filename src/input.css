@@ -551,6 +551,30 @@
 @media (max-width: 1023px) {
   .snapink-studio-application { padding: 12px; border-radius: 14px; }
   .snapink-studio-submission { margin: 18px 2px 0; padding-top: 16px; }
+  .snapink-mobile-entry-panel {
+    padding: 10px 12px;
+    border: 1px solid rgba(232, 216, 176, .95);
+    border-radius: 14px;
+    background: rgba(250, 249, 246, .95);
+    color: #171717;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .snapink-studio-customizer .snapink-mobile-entry-primary { gap: 8px; }
+  .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-text input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid #D8D8D8;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #111111;
+    font-size: 16px;
+  }
+  .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-logo { margin: 0; padding: 0; border: 0; }
   .snapink-studio-customizer .snapink-studio-workspace-mobile {
     display: flex;
     min-width: 0;
