@@ -313,6 +313,11 @@ const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
 const MOBILE_BILLBOARD_TEXT_DEFAULT_X_PERCENT = 67;
 const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
+// Natural-image pixel bounds for the download-only upper hat through nose crop.
+const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
+  desktop: { top: 0, bottom: 700 },
+  mobile: { top: 24, bottom: 1100 },
+} as const;
 const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
   SleeveVariant,
   { rightEdgeInset: number; alignRightToHatEdge: boolean; heightReduction: number; verticalShift: number }
@@ -425,7 +430,8 @@ function drawStudioComposition(
   sleeveCenterXPercent: number,
   sleeveBottomYPercent: number,
   preserveDesktopGrooveAnchor: boolean,
-  lifestyleBackground: HTMLImageElement | null = null
+  lifestyleBackground: HTMLImageElement | null = null,
+  stageVerticalOffset = 0
 ) {
   if (!ghostHat) {
     context.drawImage(sleeve, 0, 0, canvas.width, canvas.height);
@@ -434,6 +440,7 @@ function drawStudioComposition(
 
   const composition = hatComposition(template, canvas.width, canvas.height, ghostHat.naturalWidth, ghostHat.naturalHeight);
   context.save();
+  context.translate(0, stageVerticalOffset);
   context.translate(composition.grooveX, composition.grooveY);
   context.scale(cameraZoom, cameraZoom);
   context.translate(-composition.grooveX, -composition.grooveY);
@@ -1360,6 +1367,28 @@ const SnapInkSleeveCustomizer = forwardRef<
         : Math.round(previewViewH * sleeveScaleRatio * scale);
       const context = canvas.getContext("2d");
       if (!context) throw new Error("PNG export canvas is unavailable.");
+      const exportCrop = isMobilePreview
+        ? STUDIO_PNG_EXPORT_CROP_NATURAL_PX.mobile
+        : STUDIO_PNG_EXPORT_CROP_NATURAL_PX.desktop;
+      let stageVerticalOffset = 0;
+      let framedHeight = canvas.height;
+      if (ghostImage) {
+        const composition = hatComposition(
+          currentHatProfile,
+          canvas.width,
+          canvas.height,
+          ghostImage.naturalWidth,
+          ghostImage.naturalHeight
+        );
+        const sourceYToStageY = (sourceY: number) => composition.top
+          + (sourceY / ghostImage.naturalHeight) * composition.drawnHeight;
+        const cameraY = (stageY: number) => composition.grooveY
+          + (stageY - composition.grooveY) * cameraZoom;
+        const frameTop = cameraY(sourceYToStageY(exportCrop.top));
+        const frameBottom = cameraY(sourceYToStageY(exportCrop.bottom));
+        stageVerticalOffset = -frameTop;
+        framedHeight = Math.max(1, Math.ceil(frameBottom - frameTop));
+      }
       drawStudioComposition(
         context,
         canvas,
@@ -1374,9 +1403,20 @@ const SnapInkSleeveCustomizer = forwardRef<
         sleevePreviewCenterXPercent,
         sleevePreviewBottomYPercent,
         !isMobilePreview,
-        lifestyleImage
+        lifestyleImage,
+        stageVerticalOffset
       );
-      const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+      let outputCanvas = canvas;
+      if (ghostImage) {
+        const framedCanvas = document.createElement("canvas");
+        framedCanvas.width = canvas.width;
+        framedCanvas.height = framedHeight;
+        const framedContext = framedCanvas.getContext("2d");
+        if (!framedContext) throw new Error("PNG framing canvas is unavailable.");
+        framedContext.drawImage(canvas, 0, 0, canvas.width, framedHeight, 0, 0, canvas.width, framedHeight);
+        outputCanvas = framedCanvas;
+      }
+      const png = await new Promise<Blob>((resolve, reject) => outputCanvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("PNG encoding failed.")),
         "image/png"
       ));
