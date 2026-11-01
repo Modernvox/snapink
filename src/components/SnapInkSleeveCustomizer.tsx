@@ -1453,7 +1453,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
       <div>
         {instance === "mobile" ? <div className="snapink-mobile-upload-picker">
-          <span className="snapink-mobile-control-label">Upload Artwork</span>
+          <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Upload Artwork</span>
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
             {logoName && <span className="snapink-mobile-upload-name" title={logoName}>{logoName}</span>}
@@ -1563,9 +1563,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const mobileOverlayWhiteTextStyle = {
+    color: "#FFFFFF",
+    WebkitTextFillColor: "#FFFFFF",
+    opacity: 1,
+  } as const;
   const textInputControl = (instance: "mobile" | "desktop") => (
     <label className="snapink-toolbar-text">
-      <span>Text</span>
+      <span style={instance === "mobile" ? mobileOverlayWhiteTextStyle : undefined}>Text</span>
       <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={25} />
     </label>
   );
@@ -2002,8 +2007,8 @@ const SnapInkSleeveCustomizer = forwardRef<
           <div className="snapink-mobile-entry-primary">
             <div className="snapink-mobile-text-size">
               <label className="snapink-mobile-text-size-heading" htmlFor={`mobile-text-size-${uid}`}>
-                <span className="snapink-mobile-control-label">Text Size</span>
-                <output className="snapink-mobile-text-size-value" aria-live="polite">{fontSize}px</output>
+                <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Text Size</span>
+                <output className="snapink-mobile-text-size-value" style={mobileOverlayWhiteTextStyle} aria-live="polite">{fontSize}px</output>
               </label>
               <input id={`mobile-text-size-${uid}`} type="range" min={60} max={500} step={1} value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} aria-label="Text Size" />
             </div>
