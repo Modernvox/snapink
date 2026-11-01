@@ -292,7 +292,8 @@ const SLEEVE_PHOTO = {
 
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
-const MOBILE_PHOTO_TEXT_NUDGE_PX = 6;
+const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
+const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 10;
 
 /**
  * Camera framing is derived from the approved CAD lengths. A shorter sleeve
@@ -1102,8 +1103,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const rotation = stageComposition.rotationDeg * Math.PI / 180;
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
-    const offsetX = MOBILE_PHOTO_TEXT_NUDGE_PX;
-    const offsetY = MOBILE_PHOTO_TEXT_NUDGE_PX;
+    const offsetX = MOBILE_PHOTO_TEXT_NUDGE_X_PX;
+    const offsetY = MOBILE_PHOTO_TEXT_NUDGE_Y_PX;
     return {
       x: (cos * offsetX + sin * offsetY) / textScaleX,
       y: (-sin * offsetX + cos * offsetY) / textScaleY,
