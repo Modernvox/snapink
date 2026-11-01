@@ -239,6 +239,11 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   logoOpacity: 100,
 };
 
+// Desktop photo previews use a 1000-unit-wide stage reference before camera
+// zoom. Keep the default uploaded logo slightly lower on that stage without
+// changing the CAD artwork coordinates or the mobile preview.
+const DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX = 10;
+
 // ---------- Color Swatches ----------
 const COLOR_SWATCHES = [
   { label: "Black", value: "#000000" },
@@ -1357,6 +1362,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     // never contain the presentation photo. Only the separate PNG preview has
     // the product image composited beneath the artwork.
     const artworkSvgNode = previewSvg.cloneNode(true) as SVGSVGElement;
+    artworkSvgNode.querySelectorAll('[data-desktop-photo-logo-default-offset="true"]').forEach((node) => {
+      node.removeAttribute("transform");
+    });
     artworkSvgNode.querySelectorAll('[data-mobile-photographic-text-offset="true"]').forEach((node) => {
       node.removeAttribute("transform");
     });
@@ -2011,22 +2019,29 @@ const SnapInkSleeveCustomizer = forwardRef<
         <g transform={photoArtworkTransform} data-artwork-overlay="true">
           <defs><path id={pathId} d={arcPath} /></defs>
         {logoDataUrl && !logoNeedsRemoval && (
-          <image
-            href={logoDataUrl}
-            x={logoImageX}
-            y={logoImageY}
-            width={logoImageWidthSvg}
-            height={logoImageHeightSvg}
-            preserveAspectRatio="xMidYMid meet"
-            opacity={logoOpacity / 100}
-            data-testid="studio-logo-artwork"
-            data-branding-center-x-mm={brandingRegion.centerXmm}
-            data-branding-groove-valley-x-mm={brandingRegion.grooveXmm}
-            data-branding-right-edge-x-mm={brandingRegion.rightEdgeXmm}
-            data-visible-center-canvas-x={logoCenterCanvasX}
-            data-visible-bounds-x={logoVisibleBounds.x}
-            data-visible-bounds-width={logoVisibleBounds.width}
-          />
+          <g
+            transform={!isMobilePreview && ghostHat
+              ? `translate(0 ${DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX})`
+              : undefined}
+            data-desktop-photo-logo-default-offset="true"
+          >
+            <image
+              href={logoDataUrl}
+              x={logoImageX}
+              y={logoImageY}
+              width={logoImageWidthSvg}
+              height={logoImageHeightSvg}
+              preserveAspectRatio="xMidYMid meet"
+              opacity={logoOpacity / 100}
+              data-testid="studio-logo-artwork"
+              data-branding-center-x-mm={brandingRegion.centerXmm}
+              data-branding-groove-valley-x-mm={brandingRegion.grooveXmm}
+              data-branding-right-edge-x-mm={brandingRegion.rightEdgeXmm}
+              data-visible-center-canvas-x={logoCenterCanvasX}
+              data-visible-bounds-x={logoVisibleBounds.x}
+              data-visible-bounds-width={logoVisibleBounds.width}
+            />
+          </g>
         )}
 
         {showGuides && (
