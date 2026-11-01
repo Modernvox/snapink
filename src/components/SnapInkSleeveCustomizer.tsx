@@ -293,7 +293,7 @@ const SLEEVE_PHOTO = {
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
 const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
-const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 10;
+const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
 
 /**
  * Camera framing is derived from the approved CAD lengths. A shorter sleeve
