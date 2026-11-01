@@ -569,16 +569,20 @@
   }
   .snapink-studio-customizer .snapink-mobile-control-label {
     color: #FFFFFF !important;
-    font-size: 11px;
-    font-weight: 750;
-    line-height: 1.15;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
   }
   .snapink-studio-customizer .snapink-mobile-text-size {
+    box-sizing: border-box;
     display: flex;
     width: 78%;
     flex-direction: column;
     gap: 4px;
     margin: 0 auto;
+    padding: 5px 8px 3px;
+    border-radius: 8px;
+    background: rgba(10, 10, 10, .62);
   }
   .snapink-studio-customizer .snapink-mobile-text-size-heading {
     display: flex;
@@ -605,12 +609,16 @@
   }
   .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-text > span { color: #FFFFFF !important; }
   .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-text {
+    box-sizing: border-box;
     display: flex;
     width: 78%;
     flex-direction: column;
     align-items: stretch;
     gap: 7px;
     margin: 0 auto;
+    padding: 6px 8px 8px;
+    border-radius: 8px;
+    background: rgba(10, 10, 10, .62);
   }
   .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-text input {
     box-sizing: border-box;
@@ -625,12 +633,16 @@
     font-size: 16px;
   }
   .snapink-studio-customizer .snapink-mobile-entry-panel .snapink-toolbar-logo {
+    box-sizing: border-box;
     width: 85%;
     margin: 0 auto;
-    padding: 0;
+    padding: 5px 8px 7px;
     border: 0;
+    border-radius: 8px;
+    background: rgba(10, 10, 10, .62);
   }
   .snapink-studio-customizer .snapink-mobile-upload-picker {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -661,8 +673,9 @@
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
-    color: #555;
+    color: #FFFFFF;
     font-size: 11px;
+    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
