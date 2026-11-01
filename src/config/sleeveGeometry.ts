@@ -50,6 +50,18 @@ export const CAD_BODY_HEIGHT_MM = 3.26;
 export const MINIMUM_CHANNEL_MM = 66.675;
 export const SUPPORT_STYLE = "separate full-width PLA support, 0.200 mm cavity-side clearance";
 
+/** Pixel landmarks measured from the owner-approved blank Size 4 on-hat master. */
+export const APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE = {
+  imagePath: "/images/website_images/blank_sleeve_on_snapback.png",
+  sha256: "225f963838a487afdadab2bbf9d93ecca143796cb6fd0faceca942d6cc6b69dc",
+  variant: "billboard" as const,
+  size: 4,
+  cadLengthMm: 119.005,
+  cadGrooveXmm: -3.2,
+  sleeveBoundsPx: { left: 309, right: 1126 },
+  grooveCenterlinePx: [[393, 626], [388, 854]] as const,
+} as const;
+
 function sizes(): readonly SleeveGeometry[] {
   return FUNCTIONAL_LENGTHS.map((functionalLengthMm, size) => ({
     size,
@@ -177,6 +189,30 @@ export function geometryFor(variant: SleeveVariant, size: number): SleeveGeometr
     throw new Error(`Size ${size} channel is below the validated ${MINIMUM_CHANNEL_MM} mm minimum.`);
   }
   return geometry;
+}
+
+/** CAD groove coordinate as a fraction of each sleeve's actual X bounds. */
+export function sleeveGrooveFractionFor(variant: SleeveVariant, size: number): number {
+  const geometry = geometryFor(variant, size);
+  const grooveXmm = brandingRegionFor(variant, size).grooveXmm;
+  const fraction = (grooveXmm - geometry.overallMinXmm)
+    / (geometry.overallMaxXmm - geometry.overallMinXmm);
+
+  if (variant === APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE.variant
+      && size === APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE.size) {
+    const reference = APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE;
+    const cadLengthMm = geometry.overallMaxXmm - geometry.overallMinXmm;
+    const measuredGrooveX = (reference.grooveCenterlinePx[0][0] + reference.grooveCenterlinePx[1][0]) / 2;
+    const measuredFraction = (measuredGrooveX - reference.sleeveBoundsPx.left)
+      / (reference.sleeveBoundsPx.right - reference.sleeveBoundsPx.left);
+    if (Math.abs(cadLengthMm - reference.cadLengthMm) > 0.001
+        || Math.abs(grooveXmm - reference.cadGrooveXmm) > 0.001
+        || Math.abs(fraction - measuredFraction) > 0.025) {
+      throw new Error("The CAD groove datum no longer matches the approved blank sleeve photo reference.");
+    }
+  }
+
+  return fraction;
 }
 
 /**

@@ -23,6 +23,7 @@ import {
   geometryFor,
   maximumContainedLogoHeightMm,
   nonPrintableGroovePath,
+  sleeveGrooveFractionFor,
   surfaceBounds,
   studioArtworkPositionFor,
   type SleeveVariant,
@@ -830,9 +831,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePhoto = SLEEVE_PHOTO[variant];
   const photoScale = viewW / sleevePhoto.crop.width;
   const previewViewH = sleevePhoto.crop.height * photoScale;
+  const photoImageScaleY = viewH / previewViewH;
   const photoPoint = (point: readonly [number, number]) => [
     (point[0] - sleevePhoto.crop.x) * photoScale,
-    (point[1] - sleevePhoto.crop.y) * photoScale,
+    (point[1] - sleevePhoto.crop.y) * photoScale * photoImageScaleY,
   ] as const;
   const photoFacePoints = sleevePhoto.face.map(photoPoint);
   const photoFacePath = `M ${photoFacePoints.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`;
@@ -863,18 +865,20 @@ const SnapInkSleeveCustomizer = forwardRef<
   const artworkScaleY = (photoFaceBottom - photoFaceTop) / viewH;
   const artworkTranslateY = photoFaceTop;
   const photoArtworkTransform = `matrix(${artworkScaleX} 0 0 ${artworkScaleY} ${artworkTranslateX} ${artworkTranslateY})`;
-  // The Billboard product photo includes the flap extension to the left of
-  // its CAD branding groove. Map the CAD groove through the same calibrated
-  // photo transform used for artwork so the mockup can anchor that groove to
-  // the hat opening without changing the sleeve's scale or proportions.
-  const billboardGrooveCanvasX = artworkTranslateX
+  // Use the CAD groove as the sole attachment datum. The approved Size 4
+  // blank-sleeve master is checked against this CAD fraction in the geometry
+  // module. The source product photo is split at its visible groove and each
+  // side is mapped to the corresponding CAD interval so the groove stays put
+  // while the flap and body take their true size-specific lengths.
+  const photoGrooveCanvasX = artworkTranslateX
     + cadXToCanvasX(variant, sleeveSize, brandingRegion.grooveXmm, viewW) * artworkScaleX;
-  const billboardGrooveFraction = variant === "billboard" ? billboardGrooveCanvasX / viewW : 0;
-  // The Standard master has its own physical groove at the left edge of its
-  // photographed branding face. Convert that source-image position into the
-  // cropped sleeve canvas so it can be anchored to each hat opening.
-  const standardGrooveFraction = variant === "standard" ? photoFaceLeft / viewW : 0;
-  const sleeveGrooveFraction = variant === "billboard" ? billboardGrooveFraction : standardGrooveFraction;
+  const photoGrooveSourceX = clamp(
+    sleevePhoto.crop.x + (photoGrooveCanvasX / viewW) * sleevePhoto.crop.width,
+    sleevePhoto.crop.x + 1,
+    sleevePhoto.crop.x + sleevePhoto.crop.width - 1
+  );
+  const cadGrooveCanvasX = sleeveGrooveFractionFor(variant, sleeveSize) * viewW;
+  const sleeveGrooveFraction = cadGrooveCanvasX / viewW;
   const sleeveColorRgb = backgroundColor.match(/[0-9a-f]{2}/gi)?.map((value) => parseInt(value, 16) / 255) ?? [0, 0, 0];
   const isBlackSleeve = backgroundColor.toLowerCase() === "#000000";
   // The approved sleeve master is photographed in black. Treat that image as
@@ -933,7 +937,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const sleevePreviewCenterYPercent = ghostHat ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 : 50;
   const sleevePreviewBottomYPercent = sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2;
-  const sleeveSvgHeight = previewViewH;
+  const sleeveSvgHeight = viewH;
   const sleevePreviewCenterXPercent = ghostHat
     ? ((stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)) / STUDIO_STAGE_COORDINATE_WIDTH) * 100
     : 50;
@@ -1722,21 +1726,22 @@ const SnapInkSleeveCustomizer = forwardRef<
           x="0"
           y="0"
           width={viewW}
-          height={previewViewH}
-          viewBox={`${sleevePhoto.crop.x} ${sleevePhoto.crop.y} ${sleevePhoto.crop.width} ${sleevePhoto.crop.height}`}
-          preserveAspectRatio="none"
+          height={sleeveSvgHeight}
           aria-hidden="true"
         >
-          <image
-            href={sleevePhoto.src}
-            x="0"
-            y="0"
-            width={sleevePhoto.sourceWidth}
-            height={sleevePhoto.sourceHeight}
-            preserveAspectRatio="none"
-            filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined}
-            data-testid="studio-blank-sleeve-photo"
-          />
+          <svg x="0" y="0" width={cadGrooveCanvasX} height={sleeveSvgHeight}
+            viewBox={`${sleevePhoto.crop.x} ${sleevePhoto.crop.y} ${photoGrooveSourceX - sleevePhoto.crop.x} ${sleevePhoto.crop.height}`}
+            preserveAspectRatio="none">
+            <image href={sleevePhoto.src} x="0" y="0" width={sleevePhoto.sourceWidth} height={sleevePhoto.sourceHeight}
+              preserveAspectRatio="none" filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined}
+              data-testid="studio-blank-sleeve-photo" />
+          </svg>
+          <svg x={cadGrooveCanvasX} y="0" width={viewW - cadGrooveCanvasX} height={sleeveSvgHeight}
+            viewBox={`${photoGrooveSourceX} ${sleevePhoto.crop.y} ${sleevePhoto.crop.x + sleevePhoto.crop.width - photoGrooveSourceX} ${sleevePhoto.crop.height}`}
+            preserveAspectRatio="none">
+            <image href={sleevePhoto.src} x="0" y="0" width={sleevePhoto.sourceWidth} height={sleevePhoto.sourceHeight}
+              preserveAspectRatio="none" filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined} />
+          </svg>
         </svg>
 
         <g clipPath={`url(#${surfaceClipId}-printable-photo)`} data-artwork-clip="true">
