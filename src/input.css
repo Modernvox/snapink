@@ -404,6 +404,34 @@
     align-items: stretch;
     background: #FFFFFF;
   }
+  .snapink-studio-customizer .snapink-desktop-controls-overlay {
+    position: absolute;
+    z-index: 30;
+    right: 4%;
+    bottom: 3%;
+    left: 4%;
+    width: 92%;
+    max-height: min(44%, 420px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgba(232, 216, 176, .95);
+    border-radius: 16px;
+    background: rgba(250, 249, 246, .94);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .snapink-studio-customizer .snapink-desktop-controls-overlay > .snapink-preview-toolbar {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 14px clamp(12px, 1.5vw, 20px);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+  }
   .snapink-studio-customizer .snapink-preview-toolbar {
     z-index: 12;
     min-width: 0;

@@ -1597,7 +1597,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </button>
       </div>
       <div className="snapink-stage-wrap">
-      {previewToolbar(instance)}
+      {instance === "mobile" && previewToolbar(instance)}
       <div className="snapink-preview-config-row" aria-label="Preview options">
         <div className="snapink-size-buttons" role="group" aria-label="Sleeve Size">
           <span className="snapink-size-buttons-label">Sleeve Size</span>
@@ -1879,6 +1879,9 @@ const SnapInkSleeveCustomizer = forwardRef<
         </g>
       </svg>
       </div>
+      {instance === "desktop" && <div className="snapink-desktop-controls-overlay" data-preview-only="true">
+        {previewToolbar(instance)}
+      </div>}
       </div>
       </div>
       </div>
