@@ -939,7 +939,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   }, [sleeveSize, isMobilePreview]);
 
   const viewW = 1600;
-  const renderGeometrySize = isMobilePreview ? previewSleeveSize : sleeveSize;
+  // All photographic preview artwork and sleeve coordinates use the fixed
+  // Size 0 visual reference. Production draft calculations above continue to
+  // use the customer's actual `sleeveSize` selection.
+  const renderGeometrySize = previewSleeveSize;
   const activeGeometry = geometryFor(variant, renderGeometrySize);
   const bounds = surfaceBounds(variant, renderGeometrySize);
   const brandingRegion = brandingRegionFor(variant, renderGeometrySize);
