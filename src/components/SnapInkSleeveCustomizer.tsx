@@ -294,6 +294,13 @@ const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
 const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
+const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
+  SleeveVariant,
+  { rightEdgeInset: number; heightReduction: number; verticalShift: number }
+> = {
+  billboard: { rightEdgeInset: 3, heightReduction: 0, verticalShift: -3 },
+  standard: { rightEdgeInset: 100, heightReduction: 20, verticalShift: 0 },
+};
 
 /**
  * Camera framing is derived from the approved CAD lengths. A shorter sleeve
@@ -1011,6 +1018,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const desktopSleeveCalibration = !isMobilePreview && ghostHat
     ? STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX[previewSleeveSize]
     : null;
+  const desktopBoundaryAdjustment = !isMobilePreview && ghostHat
+    ? DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX[variant]
+    : { rightEdgeInset: 0, heightReduction: 0, verticalShift: 0 };
   // Keep the Round 1 CSS-pixel adjustment unchanged. Round 2 additions use
   // native stage-reference pixels directly, before the existing camera zoom.
   const previousDesktopAdjustmentScale = desktopSleeveCalibration
@@ -1024,14 +1034,17 @@ const SnapInkSleeveCustomizer = forwardRef<
   // edge; the template groove remains the physical attachment datum.
   const baseSleeveHeightPx = stageComposition.strapThicknessPx * STUDIO_SLEEVE_PREVIEW_SCALE;
   const baseSleeveWidthPx = baseSleeveHeightPx * (viewW / previewSleeveViewH);
-  const desktopWidthAdjustmentPx = desktopSleeveCalibration
+  const desktopCalibratedWidthAdjustmentPx = desktopSleeveCalibration
     ? desktopSleeveCalibration.widthIncrease * previousDesktopAdjustmentScale
       + desktopSleeveCalibration.round2.widthIncreaseStagePx
     : 0;
   const desktopHeightAdjustmentPx = desktopSleeveCalibration
     ? -desktopSleeveCalibration.heightDecrease * previousDesktopAdjustmentScale
       + desktopSleeveCalibration.round2.heightIncreaseStagePx
+      - desktopBoundaryAdjustment.heightReduction
     : 0;
+  const desktopSleeveWidthBeforeEdgeAdjustmentPx = baseSleeveWidthPx + desktopCalibratedWidthAdjustmentPx;
+  const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx - desktopBoundaryAdjustment.rightEdgeInset;
   const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
     ? sleeveSize <= 3
       ? (() => {
@@ -1069,7 +1082,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     : photoFacePath;
   const desktopSleeveVerticalOffsetPercent = !isMobilePreview && ghostHat
     ? ((STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX
-      + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[previewSleeveSize]) / stageCoordinateHeight) * 100
+      + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[previewSleeveSize]
+      + desktopBoundaryAdjustment.verticalShift) / stageCoordinateHeight) * 100
     : 0;
   // Expand upward while holding the sleeve's bottom edge in place.
   const mobileTopExpansionCenterOffsetPercent = mobileTopExpansionPx
@@ -1084,7 +1098,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePreviewCenterXPercent = ghostHat
     ? (((isMobilePreview
       ? stageComposition.grooveX - baseSleeveWidthPx * sleeveGrooveFraction + sleevePreviewWidthPx / 2
-      : stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)))
+      : stageComposition.grooveX - desktopSleeveWidthBeforeEdgeAdjustmentPx * sleeveGrooveFraction + sleevePreviewWidthPx / 2))
       / STUDIO_STAGE_COORDINATE_WIDTH) * 100
     : 50;
   const sleevePreviewLeftPercent = sleevePreviewCenterXPercent - sleevePreviewWidthPercent / 2;
