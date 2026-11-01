@@ -224,6 +224,12 @@
 }
 .snapink-preview-stage-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; margin-inline: auto; }
 .snapink-preview-config-row { position: relative; z-index: 25; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.snapink-preview-background-toggle { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 2px; padding: 3px; border: 1px solid #D8BF86; border-radius: 10px; background: #171717; box-shadow: 0 2px 7px rgb(0 0 0 / 10%); }
+.snapink-preview-background-toggle button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: #F5F2EA; font: inherit; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.snapink-preview-background-toggle button svg { width: 14px; height: 14px; flex: 0 0 14px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+.snapink-preview-background-toggle button.is-selected { border-color: #B58A42; background: #D8BF86; color: #171717; box-shadow: inset 0 0 0 1px rgb(181 138 66 / 36%); }
+.snapink-preview-background-toggle button:focus-visible { outline: 2px solid #D8BF86; outline-offset: 2px; }
+.snapink-preview-background-toggle button:disabled { cursor: not-allowed; opacity: .48; }
 .snapink-size-confirmation { position: absolute; z-index: 30; top: 14px; left: 14px; display: none; width: max-content; max-width: min(340px, calc(100% - 28px)); align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid rgb(216 191 134 / 58%); border-radius: 13px; background: rgb(18 18 18 / 96%); color: #F8F5ED; box-shadow: 0 10px 28px rgb(0 0 0 / 26%); animation: snapink-size-confirmation 2s ease-in-out both; pointer-events: none; }
 .snapink-size-confirmation-icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid rgb(216 191 134 / 65%); border-radius: 50%; background: #D8BF86; color: #171717; font-size: 19px; font-weight: 900; }
 .snapink-size-confirmation strong, .snapink-size-confirmation small { display: block; }
@@ -401,7 +407,7 @@
   .snapink-studio-customizer .snapink-preview-content { gap: 8px; }
   .snapink-studio-customizer .snapink-preview-config-row {
     display: grid;
-    grid-template-columns: max-content max-content minmax(220px, 1fr);
+    grid-template-columns: max-content max-content max-content minmax(220px, 1fr);
     justify-content: initial;
     align-items: center;
     gap: clamp(12px, 1.5vw, 24px);

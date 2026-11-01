@@ -45,6 +45,16 @@ import {
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
 
+const CITY_LIFESTYLE_BACKGROUND_PATHS = {
+  desktop: "/images/product_images/desktop_lifesttyle_city.png",
+  mobile: "/images/product_images/nobile_lifestyle_city.png",
+} as const;
+
+function hatForegroundImagePath(templateId: HatTemplateId, mobile: boolean) {
+  const color = templateId.replace(/^hat-/, "");
+  return `/images/hat_templates/experimental/hat-${color}-${mobile ? "mobile" : "desktop"}-transparent.png`;
+}
+
 async function inspectTransparency(file: Blob): Promise<boolean> {
   // Some browser SVG decoders do not support createImageBitmap for SVG files.
   // Inspect clean local vector structure first so a transparent SVG never gets
@@ -382,6 +392,18 @@ function loadStudioImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function drawImageContained(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  width: number,
+  height: number
+) {
+  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+  const drawnWidth = image.naturalWidth * scale;
+  const drawnHeight = image.naturalHeight * scale;
+  context.drawImage(image, (width - drawnWidth) / 2, (height - drawnHeight) / 2, drawnWidth, drawnHeight);
+}
+
 function drawStudioComposition(
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -395,7 +417,8 @@ function drawStudioComposition(
   sleeveRotationDeg: number,
   sleeveCenterXPercent: number,
   sleeveBottomYPercent: number,
-  preserveDesktopGrooveAnchor: boolean
+  preserveDesktopGrooveAnchor: boolean,
+  lifestyleBackground: HTMLImageElement | null = null
 ) {
   if (!ghostHat) {
     context.drawImage(sleeve, 0, 0, canvas.width, canvas.height);
@@ -407,6 +430,9 @@ function drawStudioComposition(
   context.translate(composition.grooveX, composition.grooveY);
   context.scale(cameraZoom, cameraZoom);
   context.translate(-composition.grooveX, -composition.grooveY);
+  if (lifestyleBackground) {
+    drawImageContained(context, lifestyleBackground, canvas.width, canvas.height);
+  }
   context.drawImage(ghostHat, composition.left, composition.top, composition.drawnWidth, composition.drawnHeight);
   const sleeveWidth = canvas.width * sleeveWidthPercent / 100;
   const sleeveHeight = canvas.height * sleeveHeightPercent / 100;
@@ -510,6 +536,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
   const [ghostHat, setGhostHat] = useState(true);
+  const [previewBackground, setPreviewBackground] = useState<"studio" | "city">("studio");
   const [sleeveSize, setSleeveSize] = useState(initial.size ?? OFFICIAL_STUDIO_DEFAULTS.size);
   const previewSleeveSize = isMobilePreview ? sleeveSize : 0;
   const [sizeConfirmation, setSizeConfirmation] = useState<number | null>(null);
@@ -999,7 +1026,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleeveScaleRatio = overallLengthMm / largestOverallLengthMm;
   const currentHatTemplate = getHatTemplate(hatTemplateId);
   const currentHatProfile = isMobilePreview ? currentHatTemplate.mobile : currentHatTemplate;
-  const loadedHatSize = hatNaturalSize.src === currentHatProfile.imagePath ? hatNaturalSize : null;
+  const isCityLifestylePreview = previewBackground === "city" && ghostHat && !fixedProductConfiguration;
+  const renderedHatImagePath = isCityLifestylePreview
+    ? hatForegroundImagePath(currentHatTemplate.id, isMobilePreview)
+    : currentHatProfile.imagePath;
+  const lifestyleBackgroundPath = isMobilePreview
+    ? CITY_LIFESTYLE_BACKGROUND_PATHS.mobile
+    : CITY_LIFESTYLE_BACKGROUND_PATHS.desktop;
+  const loadedHatSize = hatNaturalSize.src === renderedHatImagePath ? hatNaturalSize : null;
   // Match the active source photograph's natural ratio. This fills the widened
   // desktop frame without cropping or distorting hat pixels.
   const stageAspectRatio = isMobilePreview
@@ -1271,7 +1305,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     try {
       const sleeveImage = await loadStudioImage(url);
       const ghostImage = ghostHat
-        ? await loadStudioImage(currentHatProfile.imagePath)
+        ? await loadStudioImage(renderedHatImagePath)
+        : null;
+      const lifestyleImage = isCityLifestylePreview
+        ? await loadStudioImage(lifestyleBackgroundPath)
         : null;
       const scale = exportScale;
       const canvas = document.createElement("canvas");
@@ -1296,7 +1333,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
         sleevePreviewBottomYPercent,
-        !isMobilePreview
+        !isMobilePreview,
+        lifestyleImage
       );
       const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("PNG encoding failed.")),
@@ -1388,7 +1426,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     try {
       const sleeveImage = await loadStudioImage(svgUrl);
       const ghostImage = ghostHat
-        ? await loadStudioImage(await resolveDataUrl(currentHatProfile.imagePath))
+        ? await loadStudioImage(await resolveDataUrl(renderedHatImagePath))
+        : null;
+      const lifestyleImage = isCityLifestylePreview
+        ? await loadStudioImage(await resolveDataUrl(lifestyleBackgroundPath))
         : null;
       // A 1.25× stage preview includes the hat and corrected overlay placement
       // while remaining below the existing private preview upload size limit.
@@ -1415,7 +1456,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         stageComposition.rotationDeg,
         sleevePreviewCenterXPercent,
         sleevePreviewBottomYPercent,
-        !isMobilePreview
+        !isMobilePreview,
+        lifestyleImage
       );
       const previewBlob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("Could not encode the design preview.")),
@@ -1699,6 +1741,31 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const previewBackgroundSelector = (
+    <div className="snapink-preview-background-toggle" role="group" aria-label="Preview background">
+      <button
+        type="button"
+        aria-pressed={previewBackground === "studio"}
+        onClick={() => setPreviewBackground("studio")}
+        className={previewBackground === "studio" ? "is-selected" : ""}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.25h12v9.5H2zM4 5.5h8M4 7.75h5M4 10h8" /></svg>
+        <span>Studio</span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={previewBackground === "city"}
+        disabled={!ghostHat || fixedProductConfiguration}
+        title={!ghostHat ? "Show the hat preview to use a background" : fixedProductConfiguration ? "Background selection is unavailable in this preview" : undefined}
+        onClick={() => setPreviewBackground("city")}
+        className={previewBackground === "city" ? "is-selected" : ""}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13.5V6h3v7.5M6.5 13.5V2.5H11v11M12.5 13.5V5H14v8.5M1.5 13.5h13" /><path d="M8 4.5h1M8 6.5h1M8 8.5h1M8 10.5h1" /></svg>
+        <span>NYC Lifestyle</span>
+      </button>
+    </div>
+  );
+
   const mobileOverlayWhiteTextStyle = {
     color: "#FFFFFF",
     WebkitTextFillColor: "#FFFFFF",
@@ -1819,7 +1886,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             Your SnapInk size matches the number of pegs left exposed when you wear your hat.
           </p>
         </div>
-        <button type="button" disabled={fixedProductConfiguration} aria-pressed={!ghostHat} onClick={() => setGhostHat(!ghostHat)} className="min-h-10 rounded-lg border border-neutral-700 px-3 py-2 text-xs text-neutral-200">
+        <button type="button" disabled={fixedProductConfiguration} aria-pressed={!ghostHat} onClick={() => { const next = !ghostHat; setGhostHat(next); if (!next) setPreviewBackground("studio"); }} className="min-h-10 rounded-lg border border-neutral-700 px-3 py-2 text-xs text-neutral-200">
           {ghostHat ? "Sleeve-only view" : "Show Ghost Hat"}
         </button>
         <button type="button" onClick={startNewDesign} className="min-h-10 rounded-lg border border-si-accent/50 px-3 py-2 text-xs font-semibold text-si-accent hover:bg-si-button/10">
@@ -1838,6 +1905,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
           ))}
         </div>
+        {previewBackgroundSelector}
         {instance === "desktop"
           ? <aside className="snapink-studio-intro-toolbar" aria-label="About SnapInk Studio">{studioIntroCopy}</aside>
           : <details className="snapink-studio-intro-mobile">
@@ -1874,21 +1942,33 @@ const SnapInkSleeveCustomizer = forwardRef<
           transformOrigin: `${cameraOriginXPercent}% ${cameraOriginYPercent}%`,
         }}
       >
+      {isCityLifestylePreview && !fixedProductConfiguration && <img
+        aria-hidden="true"
+        src={lifestyleBackgroundPath}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 h-full w-full object-contain"
+        style={{ pointerEvents: "none", zIndex: currentHatTemplate.sleevePlacement.layerOrder.hat }}
+        onError={() => setPreviewBackground("studio")}
+        data-testid="studio-city-lifestyle-background"
+      />}
       {ghostHat && !fixedProductConfiguration && <img
         aria-hidden="true"
-        src={currentHatProfile.imagePath}
+        src={renderedHatImagePath}
         alt=""
         draggable={false}
         className="absolute inset-0 h-full w-full object-contain"
         style={{ pointerEvents: "none", zIndex: currentHatTemplate.sleevePlacement.layerOrder.hat }}
         onLoad={(event) => setHatNaturalSize({
-          src: currentHatProfile.imagePath,
+          src: renderedHatImagePath,
           width: event.currentTarget.naturalWidth,
           height: event.currentTarget.naturalHeight,
         })}
+        onError={() => { if (isCityLifestylePreview) setPreviewBackground("studio"); }}
         data-testid="studio-hat-preview"
         data-hat-template={currentHatTemplate.id}
         data-hat-template-profile={isMobilePreview ? "mobile" : "desktop"}
+        data-hat-rendered-src={renderedHatImagePath}
       />}
       <svg
         ref={svgRef}
