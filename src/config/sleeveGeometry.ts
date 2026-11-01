@@ -53,6 +53,9 @@ export const SUPPORT_STYLE = "separate full-width PLA support, 0.200 mm cavity-s
 /** Visual-only sleeve scale in Studio's photographic composite. */
 export const STUDIO_SLEEVE_PREVIEW_SCALE = 1.25;
 
+/** Shared desktop-only vertical shift in native 1000px preview coordinates. */
+export const STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX = -5;
+
 /** Prior desktop CSS-pixel calibration plus Round 2 additions in 1000-stage px. */
 export const STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX = {
   0: { widthIncrease: 200, heightDecrease: 30, round2: { widthIncreaseStagePx: 20, heightIncreaseStagePx: 30 } },
