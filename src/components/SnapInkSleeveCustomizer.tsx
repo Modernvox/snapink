@@ -1105,7 +1105,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   const desktopWidthAdjustmentPx = desktopCalibratedWidthAdjustmentPx
     - desktopBoundaryAdjustment.rightEdgeInset + desktopHatEdgeAlignmentCorrectionPx;
   const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
-    ? renderGeometrySize <= 3
+    ? variant === "standard"
+      // Keep the groove and left edge fixed while terminating the mobile
+      // Standard sleeve at the photographed rear-opening boundary.
+      ? stageComposition.strapRight
+        - (stageComposition.grooveX + baseSleeveWidthPx * (1 - sleeveGrooveFraction))
+      : renderGeometrySize <= 3
       ? (() => {
         const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[renderGeometrySize as 0 | 1 | 2 | 3];
         const referenceGeometry = SLEEVE_GEOMETRY[variant].sizes[referenceSize];
