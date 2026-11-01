@@ -1483,7 +1483,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoControls = (instance: "mobile" | "desktop") => (
     <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
       <div>
-        {instance === "mobile" ? <div className="snapink-mobile-upload-picker" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 7, width: "100%" }}>
+        {instance === "mobile" ? <div className="snapink-mobile-upload-picker">
           <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Upload Artwork</span>
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" style={{ color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF", textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)" }} onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
@@ -1601,9 +1601,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)",
   } as const;
   const textInputControl = (instance: "mobile" | "desktop") => (
-    <label className="snapink-toolbar-text" style={instance === "mobile" ? {
-      display: "flex", width: "78%", flexDirection: "column", alignItems: "stretch", gap: 7, margin: "0 auto",
-    } : undefined}>
+    <label className="snapink-toolbar-text">
       <span style={instance === "mobile" ? mobileOverlayWhiteTextStyle : undefined}>Text</span>
       <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={25} />
     </label>
@@ -2038,9 +2036,9 @@ const SnapInkSleeveCustomizer = forwardRef<
         pointerEvents: "none",
       }}>
         <div className="snapink-mobile-entry-panel" style={{ pointerEvents: "auto" }}>
-          <div className="snapink-mobile-entry-primary" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 11 }}>
-            <div className="snapink-mobile-text-size" style={{ display: "flex", width: "78%", flexDirection: "column", gap: 4, margin: "0 auto" }}>
-              <label className="snapink-mobile-text-size-heading" style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 8, whiteSpace: "nowrap" }} htmlFor={`mobile-text-size-${uid}`}>
+          <div className="snapink-mobile-entry-primary">
+            <div className="snapink-mobile-text-size">
+              <label className="snapink-mobile-text-size-heading" htmlFor={`mobile-text-size-${uid}`}>
                 <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Text Size</span>
                 <output className="snapink-mobile-text-size-value" style={mobileOverlayWhiteTextStyle} aria-live="polite">{fontSize}px</output>
               </label>
