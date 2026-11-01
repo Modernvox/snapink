@@ -17,6 +17,8 @@ import {
   STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX,
   STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX,
   STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX,
+  STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION,
+  STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX,
   SLEEVE_GEOMETRY,
   STUDIO_HAT_CAMERA_ZOOM_CONFIG,
   STUDIO_SLEEVE_PREVIEW_SCALE,
@@ -955,25 +957,64 @@ const SnapInkSleeveCustomizer = forwardRef<
     ? -desktopSleeveCalibration.heightDecrease * previousDesktopAdjustmentScale
       + desktopSleeveCalibration.round2.heightIncreaseStagePx
     : 0;
-  const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx + desktopHeightAdjustmentPx);
+  const mobileRightEdgeAdjustmentPx = isMobilePreview && ghostHat
+    ? sleeveSize <= 3
+      ? (() => {
+        const referenceSize = STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.matchSize[sleeveSize as 0 | 1 | 2 | 3];
+        const referenceGeometry = SLEEVE_GEOMETRY[variant].sizes[referenceSize];
+        const referenceLengthMm = referenceGeometry.overallMaxXmm - referenceGeometry.overallMinXmm;
+        const referenceBounds = surfaceBounds(variant, referenceSize);
+        const referenceGrooveFraction = sleeveGrooveFractionFor(variant, referenceSize);
+        const currentRightFromGroovePx = baseSleeveWidthPx * (1 - sleeveGrooveFraction);
+        const referenceWidthPx = baseSleeveHeightPx
+          * (referenceLengthMm / (referenceBounds.maxY - referenceBounds.minY));
+        const referenceRightFromGroovePx = referenceWidthPx * (1 - referenceGrooveFraction);
+        // This is a right-edge-only extension; the left flap and groove stay
+        // at their original positions in the mobile stage.
+        return referenceRightFromGroovePx - currentRightFromGroovePx;
+      })()
+      : STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION.additionalStagePx[sleeveSize as 4 | 5]
+    : 0;
+  const mobileTopExpansionPx = isMobilePreview && ghostHat
+    ? STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX
+    : 0;
+  const sleevePreviewHeightPx = Math.max(1, baseSleeveHeightPx + desktopHeightAdjustmentPx + mobileTopExpansionPx);
   const sleevePreviewHeightPercent = (sleevePreviewHeightPx / stageCoordinateHeight) * 100;
-  const sleevePreviewWidthPx = baseSleeveWidthPx + desktopWidthAdjustmentPx;
+  const sleevePreviewWidthPx = baseSleeveWidthPx + desktopWidthAdjustmentPx + mobileRightEdgeAdjustmentPx;
   const sleevePreviewWidthPercent = (sleevePreviewWidthPx / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
+  const sleeveRenderViewW = isMobilePreview
+    ? viewW * (sleevePreviewWidthPx / baseSleeveWidthPx)
+    : viewW;
+  const sleeveRenderGrooveFraction = isMobilePreview && ghostHat
+    ? cadGrooveCanvasX / sleeveRenderViewW
+    : sleeveGrooveFraction;
+  const mobileBodyExtensionCanvasPx = isMobilePreview && ghostHat ? sleeveRenderViewW - viewW : 0;
+  const photoFaceRenderPath = mobileBodyExtensionCanvasPx > 0
+    ? `M ${photoFacePoints.map(([x, y], index) => `${(index === 1 || index === 2 ? x + mobileBodyExtensionCanvasPx : x).toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`
+    : photoFacePath;
   const desktopSleeveVerticalOffsetPercent = !isMobilePreview && ghostHat
     ? ((STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX
       + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[sleeveSize]) / stageCoordinateHeight) * 100
     : 0;
+  // Expand upward while holding the sleeve's bottom edge in place.
+  const mobileTopExpansionCenterOffsetPercent = mobileTopExpansionPx
+    ? (-mobileTopExpansionPx / 2 / stageCoordinateHeight) * 100
+    : 0;
   const sleevePreviewCenterYPercent = ghostHat
-    ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100 + desktopSleeveVerticalOffsetPercent
+    ? (stageComposition.strapCenterY / stageCoordinateHeight) * 100
+      + desktopSleeveVerticalOffsetPercent + mobileTopExpansionCenterOffsetPercent
     : 50;
   const sleevePreviewBottomYPercent = sleevePreviewCenterYPercent + sleevePreviewHeightPercent / 2;
   const sleeveSvgHeight = viewH;
   const sleevePreviewCenterXPercent = ghostHat
-    ? ((stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)) / STUDIO_STAGE_COORDINATE_WIDTH) * 100
+    ? (((isMobilePreview
+      ? stageComposition.grooveX - baseSleeveWidthPx * sleeveGrooveFraction + sleevePreviewWidthPx / 2
+      : stageComposition.grooveX + sleevePreviewWidthPx * (0.5 - sleeveGrooveFraction)))
+      / STUDIO_STAGE_COORDINATE_WIDTH) * 100
     : 50;
   const sleevePreviewLeftPercent = sleevePreviewCenterXPercent - sleevePreviewWidthPercent / 2;
   const sleevePreviewGrooveXPercent = sleevePreviewCenterXPercent
-    + sleevePreviewWidthPercent * (sleeveGrooveFraction - 0.5);
+    + sleevePreviewWidthPercent * (sleeveRenderGrooveFraction - 0.5);
   const sleevePreviewRightPercent = sleevePreviewCenterXPercent + sleevePreviewWidthPercent / 2;
   const cameraOriginXPercent = (stageComposition.grooveX / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
@@ -1682,8 +1723,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       />}
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${viewW} ${sleeveSvgHeight}`}
-        width={viewW}
+        viewBox={`0 0 ${sleeveRenderViewW} ${sleeveSvgHeight}`}
+        width={sleeveRenderViewW}
         height={sleeveSvgHeight}
         data-production-logo-x-percent={productionDraftPosition.logoX}
         data-production-logo-y-percent={productionDraftPosition.logoY}
@@ -1728,7 +1769,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           top: `${sleevePreviewCenterYPercent}%`,
           zIndex: currentHatTemplate.sleevePlacement.layerOrder.sleeve,
           transform: `rotate(${stageComposition.rotationDeg}deg)`,
-          transformOrigin: `${sleeveGrooveFraction * 100}% 50%`,
+          transformOrigin: `${sleeveRenderGrooveFraction * 100}% 50%`,
         }}
       >
         <defs>
@@ -1769,7 +1810,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             <path d={`${surfacePath} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
           </clipPath>
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
-            <path d={photoFacePath} />
+            <path d={photoFaceRenderPath} />
           </clipPath>
           {!isBlackSleeve && <filter id={sleeveColorFilterId} colorInterpolationFilters="sRGB">
             <feColorMatrix type="matrix" values={`0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0 0 0 1 0`} />
@@ -1785,7 +1826,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           data-product-image="true"
           x="0"
           y="0"
-          width={viewW}
+          width={sleeveRenderViewW}
           height={sleeveSvgHeight}
           aria-hidden="true"
         >
@@ -1796,7 +1837,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               preserveAspectRatio="none" filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined}
               data-testid="studio-blank-sleeve-photo" />
           </svg>
-          <svg x={cadGrooveCanvasX} y="0" width={viewW - cadGrooveCanvasX} height={sleeveSvgHeight}
+          <svg x={cadGrooveCanvasX} y="0" width={sleeveRenderViewW - cadGrooveCanvasX} height={sleeveSvgHeight}
             viewBox={`${photoGrooveSourceX} ${sleevePhoto.crop.y} ${sleevePhoto.crop.x + sleevePhoto.crop.width - photoGrooveSourceX} ${sleevePhoto.crop.height}`}
             preserveAspectRatio="none">
             <image href={sleevePhoto.src} x="0" y="0" width={sleevePhoto.sourceWidth} height={sleevePhoto.sourceHeight}

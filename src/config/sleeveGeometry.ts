@@ -75,6 +75,18 @@ export const STUDIO_DESKTOP_SLEEVE_CALIBRATION_PX = {
   5: { widthIncrease: 12, heightDecrease: 0, round2: { widthIncreaseStagePx: 8, heightIncreaseStagePx: 10 } },
 } as const;
 
+/** Mobile-only sleeve endpoint calibration in the native 1000px stage coordinate system.
+ * Sizes 0–3 match Size 5's CAD-derived right endpoint; Size 4 extends 2px;
+ * Size 5 remains the horizontal master. The renderer resolves 0–3 from CAD
+ * lengths and the active mobile strap thickness, before camera zoom.
+ */
+export const STUDIO_MOBILE_SLEEVE_RIGHT_EDGE_CALIBRATION = {
+  matchSize: { 0: 5, 1: 5, 2: 5, 3: 5 },
+  additionalStagePx: { 4: 2, 5: 0 },
+} as const;
+/** Expand the mobile sleeve at its top edge while holding its bottom fixed. */
+export const STUDIO_MOBILE_SLEEVE_TOP_EXPANSION_STAGE_PX = 3;
+
 /** Pixel landmarks measured from the owner-approved blank Size 4 on-hat master. */
 export const APPROVED_BLANK_SLEEVE_VISUAL_REFERENCE = {
   imagePath: "/images/website_images/blank_sleeve_on_snapback.png",
