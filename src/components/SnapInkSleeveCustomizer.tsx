@@ -1559,9 +1559,23 @@ const SnapInkSleeveCustomizer = forwardRef<
           <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Upload Artwork</span>
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" style={{ color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF", textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)" }} onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
-            {logoName && <span className="snapink-mobile-upload-name" title={logoName}>{logoName}</span>}
+            {logoName && <span className="snapink-mobile-upload-status" title={logoName} aria-label={`Artwork uploaded: ${logoName}`}>
+              <span aria-hidden="true">✓</span> Artwork uploaded
+            </span>}
+            {logoName && <button type="button" onClick={clearLogo} className="snapink-mobile-remove-artwork" aria-label="Remove uploaded artwork" title="Remove uploaded artwork">Remove</button>}
+            {(logoNeedsRemoval || logoHasProcessedRemoval || logoRemovalBusy) && <button
+              type="button"
+              onClick={removeLogoBackground}
+              disabled={logoRemovalBusy || !logoSourceFile}
+              className="snapink-mobile-remove-background"
+              aria-label={logoRemovalBusy ? "Removing artwork background" : logoHasProcessedRemoval ? "Retry background removal" : "Remove artwork background"}
+              title={logoRemovalMessage || "Remove artwork background"}
+            >
+              {logoRemovalBusy ? "Working…" : logoHasProcessedRemoval ? "Retry BG" : "Remove BG"}
+            </button>}
           </div>
           <input ref={mobileLogoInputRef} key={logoInputVersion} className="snapink-mobile-file-input" type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
+          {logoRemovalMessage && <span className="sr-only" aria-live="polite" aria-busy={logoRemovalBusy}>{logoRemovalMessage}{logoRemovalBusy && logoRemovalProgress > 0 ? ` ${logoRemovalProgress}%` : ""}</span>}
         </div> : <>
           <label className="block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
           <input
@@ -1572,8 +1586,11 @@ const SnapInkSleeveCustomizer = forwardRef<
             className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-sm text-neutral-200 file:mr-3 file:rounded-lg file:border-0 file:bg-si-button file:px-3 file:py-1.5 file:font-semibold file:text-neutral-950"
           />
         </>}
-        {instance === "mobile" && logoName && <button type="button" onClick={clearLogo} className="snapink-mobile-remove-artwork">Remove artwork</button>}
-        {logoRemovalMessage && (
+        {instance === "desktop" && logoName && <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
+            <span className="truncate">{logoName}</span>
+            <button type="button" onClick={clearLogo} className="rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800">Remove</button>
+          </div>}
+        {instance === "desktop" && logoRemovalMessage && (
           <div className="mt-2 space-y-2" aria-live="polite" aria-busy={logoRemovalBusy}>
             <p className={`text-xs leading-relaxed ${logoNeedsRemoval ? "text-amber-200" : "text-neutral-400"}`}>
               {logoRemovalMessage}{logoRemovalBusy && logoRemovalProgress > 0 ? ` ${logoRemovalProgress}%` : ""}
@@ -1593,18 +1610,6 @@ const SnapInkSleeveCustomizer = forwardRef<
                 {logoRemovalBusy ? "Processing logo…" : logoHasProcessedRemoval ? "Retry background removal" : "Remove background"}
               </button>
             )}
-          </div>
-        )}
-        {logoName && instance === "desktop" && (
-          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
-            <span className="truncate">{logoName}</span>
-            <button
-              type="button"
-              onClick={clearLogo}
-              className="rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800"
-            >
-              Remove
-            </button>
           </div>
         )}
       </div>
