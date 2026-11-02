@@ -534,6 +534,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [exportScale, setExportScale] = useState(2);
   const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
+  const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
   const [logoVisibleBounds, setLogoVisibleBounds] = useState({ x: 0, y: 0, width: 1, height: 1 });
   const [logoName, setLogoName] = useState(initial.logoName ?? "");
   const [logoInputVersion, setLogoInputVersion] = useState(0);
@@ -782,6 +783,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   useEffect(() => {
     if (!logoDataUrl) {
       setLogoAspectRatio(1);
+      setLogoSourceAspectRatio(1);
       setLogoVisibleBounds({ x: 0, y: 0, width: 1, height: 1 });
       return;
     }
@@ -849,6 +851,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             const trimmedDataUrl = croppedCanvas.toDataURL("image/png");
             setLogoVisibleBounds({ x: 0, y: 0, width: 1, height: 1 });
             setLogoAspectRatio(cropWidth / cropHeight);
+            setLogoSourceAspectRatio(cropWidth / cropHeight);
             setLogoDataUrl(trimmedDataUrl);
             return;
           } catch {
@@ -864,6 +867,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       };
       setLogoVisibleBounds(bounds);
       setLogoAspectRatio(visible.width / visible.height);
+      setLogoSourceAspectRatio(imageWidth / imageHeight);
     };
     uploadedImage.src = logoDataUrl;
     return () => { active = false; };
@@ -1219,7 +1223,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
   const logoImageHeightSvg = visibleLogoHeightSvg / logoVisibleBounds.height;
-  const logoImageWidthSvg = logoImageHeightSvg * logoAspectRatio * logoVisibleBounds.width / logoVisibleBounds.height;
+  // Use the source bitmap's true aspect ratio for its full SVG image box.
+  // The visible alpha bounds determine the centered artwork footprint; do not
+  // apply their width/height ratio a second time to the source dimensions.
+  const logoImageWidthSvg = logoImageHeightSvg * logoSourceAspectRatio;
   const logoCenterCanvasX = cadXToCanvasX(variant, renderGeometrySize, logoCenterXmm, viewW);
   const logoCenterCanvasY = viewH / 2;
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
