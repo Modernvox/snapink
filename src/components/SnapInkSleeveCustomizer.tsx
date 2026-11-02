@@ -1121,6 +1121,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   const photoFaceRenderPath = mobileBodyExtensionCanvasPx > 0
     ? `M ${photoFacePoints.map(([x, y], index) => `${(index === 1 || index === 2 ? x + mobileBodyExtensionCanvasPx : x).toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`
     : photoFacePath;
+  // Mobile's rectangular face mask lets the matte darkening reach the clipped
+  // Billboard free edge. Match that overlay boundary on desktop only; keep the
+  // curved artwork clip and the sleeve contour unchanged.
+  const billboardMatteRenderPath = variant === "billboard" && !isMobilePreview
+    ? `M ${photoFacePoints.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`
+    : photoFaceRenderPath;
   const billboardPhotoRightContourClipPath = variant === "billboard"
     ? `M 0 0 H ${sleeveRenderViewW} C ${sleeveRenderViewW - 7} ${viewH * 0.28} ${sleeveRenderViewW - 7} ${viewH * 0.72} ${sleeveRenderViewW} ${viewH} H 0 Z`
     : null;
@@ -2279,7 +2285,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           </svg>
           </g>
           {variant === "billboard" && <path
-            d={photoFaceRenderPath}
+            d={billboardMatteRenderPath}
             fill={`url(#${billboardMatteGradientId})`}
             pointerEvents="none"
             data-billboard-matte-lighting="true"
