@@ -357,6 +357,38 @@ function halfWidthAt(variant: SleeveVariant, x: number): number {
   return STANDARD_HALF_WIDTH_MM + billboardBowOffset(x);
 }
 
+/**
+ * Resolve a 0–100% vertical artwork control into the CAD top-face centerline.
+ * The range is limited by the printable face (excluding the entry flap/groove),
+ * the artwork's full height, and the physical edge clearance. 0 is top and 100
+ * is bottom; 50 is the center whenever the artwork can move in both directions.
+ */
+export function artworkCenterYForPositionMm(
+  variant: SleeveVariant,
+  size: number,
+  positionPercent: number,
+  artworkHeightMm: number,
+  edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM
+): number {
+  const bounds = surfaceBounds(variant, size);
+  const branding = brandingRegionFor(variant, size);
+  const left = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
+  const right = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
+  let minCenterY = -Infinity;
+  let maxCenterY = Infinity;
+  const samples = Math.max(1, Math.ceil((right - left) / 0.25));
+  for (let i = 0; i <= samples; i += 1) {
+    const x = left + ((right - left) * i) / samples;
+    const halfWidth = halfWidthAt(variant, x);
+    minCenterY = Math.max(minCenterY, -halfWidth + edgeMarginMm + halfArtworkHeight);
+    maxCenterY = Math.min(maxCenterY, halfWidth - edgeMarginMm - halfArtworkHeight);
+  }
+  if (maxCenterY < minCenterY) return (bounds.minY + bounds.maxY) / 2;
+  const percent = Math.max(0, Math.min(100, positionPercent));
+  return maxCenterY - ((maxCenterY - minCenterY) * percent) / 100;
+}
+
 function toCanvas(x: number, y: number, bounds: SurfaceBounds, width: number, height: number): [number, number] {
   return [
     ((x - bounds.minX) / (bounds.maxX - bounds.minX)) * width,
