@@ -144,6 +144,7 @@ export interface SnapInkSleeveCustomizerProps {
   fixedProductConfiguration?: boolean;
   fixedArtworkColor?: string;
   forcedStyleMode?: "emboss" | "flat";
+  enableProductPhotoGeneration?: boolean;
 }
 
 export interface SnapInkSleeveCustomizerRef {
@@ -314,6 +315,20 @@ const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
   desktop: { top: 0, bottom: 700 },
   mobile: { top: 24, bottom: 1100 },
 } as const;
+// Calibrated against snapink_billboard_blank_rear_test_v5.png. The groove is
+// the primary anchor; matching it to the left strap exit and the sleeve's
+// right end to the right strap opening determines a uniform scale.
+const REAR_PRODUCT_PHOTO = {
+  hatSrc: "/images/product_images/snapink_hat_rear_master.png",
+  width: 911,
+  height: 1024,
+  grooveSourceX: 465,
+  studioExportWidth: 4222,
+  leftStrapExitX: 260,
+  rightStrapOpeningX: 716,
+  sleeveCenterY: 716.5,
+  scale: 4,
+} as const;
 const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
   SleeveVariant,
   { rightEdgeInset: number; alignRightToHatEdge: boolean; heightReduction: number; verticalShift: number }
@@ -467,13 +482,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   SnapInkSleeveCustomizerRef,
   SnapInkSleeveCustomizerProps
 >(function SnapInkSleeveCustomizer(
-  { width = 1400, onChange, className = "", initial = {}, defaultArtworkPosition, fixedProductConfiguration = false, fixedArtworkColor, forcedStyleMode },
+  { width = 1400, onChange, className = "", initial = {}, defaultArtworkPosition, fixedProductConfiguration = false, fixedArtworkColor, forcedStyleMode, enableProductPhotoGeneration = false },
   ref
 ) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const mobileStageRef = useRef<HTMLDivElement | null>(null);
-  const dlRef = useRef<HTMLAnchorElement | null>(null);
   const [mobileStageWidth, setMobileStageWidth] = useState(0);
   const [stageClientWidth, setStageClientWidth] = useState(() =>
     typeof window !== "undefined" && window.innerWidth <= 640
@@ -529,6 +543,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
   useEffect(() => { if (fixedArtworkColor && /^#[0-9A-Fa-f]{6}$/.test(fixedArtworkColor)) setFill(fixedArtworkColor); }, [fixedArtworkColor]);
   const [exportScale, setExportScale] = useState(2);
+  const [isGeneratingProductImage, setIsGeneratingProductImage] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
   const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
@@ -1401,24 +1416,20 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  // Export PNG
-  async function handleExportPNG() {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; scale?: number } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
-      alert("Remove the logo background before exporting, or upload a transparent PNG.");
-      return;
+      throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg) throw new Error("The Studio sleeve preview is unavailable.");
 
-    // Inline local image assets before serializing. Blob-backed SVG image loads
-    // can otherwise finish after the parent SVG has already been rasterized.
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
     exportSvg.removeAttribute("style");
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
-      const href = image.getAttribute("href");
-      if (href && !href.startsWith("data:")) {
+        const href = image.getAttribute("href");
+        if (href && !href.startsWith("data:")) {
           const response = await fetch(new URL(href, window.location.href), { credentials: "same-origin" });
           if (!response.ok) throw new Error(`Image request failed (${response.status}).`);
           const imageBlob = await response.blob();
@@ -1433,26 +1444,24 @@ const SnapInkSleeveCustomizer = forwardRef<
       }
     } catch (error) {
       console.error("Studio PNG export could not package its image assets.", error);
-      alert("The sleeve image could not be prepared for export. Please try again.");
-      return;
+      throw new Error("The sleeve image could not be prepared for export.");
     }
+
     const xml = new XMLSerializer().serializeToString(exportSvg);
-    const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+    const svgUrl = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
     try {
-      const sleeveImage = await loadStudioImage(url);
-      const ghostImage = ghostHat
-        ? await loadStudioImage(renderedHatImagePath)
-        : null;
-      const lifestyleImage = isCityLifestylePreview
+      const sleeveImage = await loadStudioImage(svgUrl);
+      const includeHat = options.sleeveOnly ? false : ghostHat;
+      const ghostImage = includeHat ? await loadStudioImage(renderedHatImagePath) : null;
+      const lifestyleImage = ghostImage && isCityLifestylePreview
         ? await loadStudioImage(lifestyleBackgroundPath)
         : null;
-      const scale = exportScale;
+      const scale = options.scale ?? exportScale;
       const canvas = document.createElement("canvas");
-      canvas.width = ghostHat
+      canvas.width = ghostImage
         ? Math.round(viewW * scale)
         : Math.round(viewW * sleeveScaleRatio * scale);
-      canvas.height = ghostHat
+      canvas.height = ghostImage
         ? Math.round(canvas.width / stageAspectRatio)
         : Math.round(previewViewH * sleeveScaleRatio * scale);
       const context = canvas.getContext("2d");
@@ -1506,24 +1515,85 @@ const SnapInkSleeveCustomizer = forwardRef<
         framedContext.drawImage(canvas, 0, 0, canvas.width, framedHeight, 0, 0, canvas.width, framedHeight);
         outputCanvas = framedCanvas;
       }
-      const png = await new Promise<Blob>((resolve, reject) => outputCanvas.toBlob(
+      return await new Promise<Blob>((resolve, reject) => outputCanvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("PNG encoding failed.")),
         "image/png"
       ));
-      const downloadUrl = URL.createObjectURL(png);
-      const anchor = dlRef.current || document.createElement("a");
-      anchor.href = downloadUrl;
-      anchor.download = `snapink-preview-${Date.now()}-${scale}x.png`;
-      anchor.click();
-      URL.revokeObjectURL(downloadUrl);
-    } catch (error) {
-      console.error("Studio PNG export could not be rendered.", error);
-      alert("The Studio preview could not be converted to a PNG. Please try again.");
     } finally {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(svgUrl);
     }
   }
 
+  function downloadPNGBlob(png: Blob, filename: string) {
+    const downloadUrl = URL.createObjectURL(png);
+    const anchor = document.createElement("a");
+    anchor.href = downloadUrl;
+    anchor.download = filename;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  }
+
+  async function handleExportPNG() {
+    try {
+      const png = await renderStudioPNGBlob();
+      downloadPNGBlob(png, `snapink-preview-${Date.now()}-${exportScale}x.png`);
+    } catch (error) {
+      console.error("Studio PNG export could not be rendered.", error);
+      alert(error instanceof Error ? error.message : "The Studio preview could not be converted to a PNG. Please try again.");
+    }
+  }
+
+  function productPhotoSlug() {
+    const label = text.trim() || logoName.replace(/\.[^.]+$/, "") || "custom-design";
+    const slug = label.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return slug || "custom-design";
+  }
+
+  async function handleGenerateProductImage() {
+    if (!enableProductPhotoGeneration || variant !== "billboard" || isGeneratingProductImage) return;
+    setIsGeneratingProductImage(true);
+    let sleeveUrl: string | null = null;
+    try {
+      const [sleevePNG, hatImage] = await Promise.all([
+        renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
+        loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
+      ]);
+      if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
+        throw new Error("The approved rear hat master has unexpected dimensions.");
+      }
+      sleeveUrl = URL.createObjectURL(sleevePNG);
+      const sleeveImage = await loadStudioImage(sleeveUrl);
+      const canvas = document.createElement("canvas");
+      canvas.width = REAR_PRODUCT_PHOTO.width;
+      canvas.height = REAR_PRODUCT_PHOTO.height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("The product-image canvas is unavailable.");
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(hatImage, 0, 0);
+
+      const grooveFraction = REAR_PRODUCT_PHOTO.grooveSourceX / REAR_PRODUCT_PHOTO.studioExportWidth;
+      const sleeveWidth = Math.round(
+        (REAR_PRODUCT_PHOTO.rightStrapOpeningX - REAR_PRODUCT_PHOTO.leftStrapExitX) / (1 - grooveFraction)
+      );
+      const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
+      const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
+      const sleeveTop = Math.round(REAR_PRODUCT_PHOTO.sleeveCenterY - sleeveHeight / 2);
+      context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+      const productPNG = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+        (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
+        "image/png"
+      ));
+      downloadPNGBlob(productPNG, `snapink-billboard-${productPhotoSlug()}-rear.png`);
+    } catch (error) {
+      console.error("SnapInk product image could not be generated.", error);
+      alert(error instanceof Error ? error.message : "The product image could not be generated. Please try again.");
+    } finally {
+      if (sleeveUrl) URL.revokeObjectURL(sleeveUrl);
+      setIsGeneratingProductImage(false);
+    }
+  }
   async function handleGetOrderFiles() {
     if (logoNeedsRemoval) throw new Error("Finish logo background removal before submitting the design.");
     const source = logoDataUrl;
@@ -2746,6 +2816,18 @@ const SnapInkSleeveCustomizer = forwardRef<
               >
                 Download PNG preview
               </button>
+              {enableProductPhotoGeneration && <>
+                <button
+                  type="button"
+                  onClick={handleGenerateProductImage}
+                  disabled={variant !== "billboard" || isGeneratingProductImage}
+                  title={variant === "standard" ? "Standard rear-view placement needs separate calibration." : undefined}
+                  className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
+                </button>
+                {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
+              </>}
 
               <div className="flex items-center gap-2 text-xs text-neutral-420">
                 <span>Scale</span>
@@ -2766,7 +2848,6 @@ const SnapInkSleeveCustomizer = forwardRef<
                 Saves a PNG preview of your sleeve concept.
               </p>
 
-              <a ref={dlRef} className="hidden" />
             </div>
           )}
         </div>
@@ -3012,6 +3093,18 @@ const SnapInkSleeveCustomizer = forwardRef<
             >
               Download PNG preview
             </button>
+            {enableProductPhotoGeneration && <>
+              <button
+                type="button"
+                onClick={handleGenerateProductImage}
+                disabled={variant !== "billboard" || isGeneratingProductImage}
+                title={variant === "standard" ? "Standard rear-view placement needs separate calibration." : undefined}
+                className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
+              </button>
+              {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
+            </>}
 
             <div className="flex items-center gap-2 text-xs text-neutral-420">
               <span>Scale</span>
@@ -3032,7 +3125,6 @@ const SnapInkSleeveCustomizer = forwardRef<
               Saves a PNG preview of your sleeve concept.
             </p>
 
-            <a ref={dlRef} className="hidden" />
           </div>
 
         </div>
