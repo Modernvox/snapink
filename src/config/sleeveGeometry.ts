@@ -46,6 +46,9 @@ export const BRANDING_EDGE_CLEARANCE_MM = 1;
 export const APPROVED_CAD_GROOVE_RIGHT_EDGE_X_MM = -2.8;
 /** Python production insets the CAD-derived branding face by 1.05 mm. */
 export const PRODUCTION_BRANDING_INSET_MM = 1.05;
+/** Artwork slider positions extend one printable travel span beyond either end. */
+export const ARTWORK_VERTICAL_POSITION_MIN = -100;
+export const ARTWORK_VERTICAL_POSITION_MAX = 200;
 export const CAD_BODY_HEIGHT_MM = 3.26;
 export const MINIMUM_CHANNEL_MM = 66.675;
 export const SUPPORT_STYLE = "separate full-width PLA support, 0.200 mm cavity-side clearance";
@@ -357,20 +360,13 @@ function halfWidthAt(variant: SleeveVariant, x: number): number {
   return STANDARD_HALF_WIDTH_MM + billboardBowOffset(x);
 }
 
-/**
- * Resolve a 0–100% vertical artwork control into the CAD top-face centerline.
- * The range is limited by the printable face (excluding the entry flap/groove),
- * the artwork's full height, and the physical edge clearance. 0 is top and 100
- * is bottom; 50 is the center whenever the artwork can move in both directions.
- */
-export function artworkCenterYForPositionMm(
+/** Safe vertical center limits for artwork of the given full height. */
+export function artworkVerticalCenterRangeMm(
   variant: SleeveVariant,
   size: number,
-  positionPercent: number,
   artworkHeightMm: number,
   edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM
-): number {
-  const bounds = surfaceBounds(variant, size);
+): { minCenterY: number; maxCenterY: number } {
   const branding = brandingRegionFor(variant, size);
   const left = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
   const right = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
@@ -384,9 +380,32 @@ export function artworkCenterYForPositionMm(
     minCenterY = Math.max(minCenterY, -halfWidth + edgeMarginMm + halfArtworkHeight);
     maxCenterY = Math.min(maxCenterY, halfWidth - edgeMarginMm - halfArtworkHeight);
   }
-  if (maxCenterY < minCenterY) return (bounds.minY + bounds.maxY) / 2;
-  const percent = Math.max(0, Math.min(100, positionPercent));
-  return maxCenterY - ((maxCenterY - minCenterY) * percent) / 100;
+  return { minCenterY, maxCenterY };
+}
+
+/**
+ * Resolve the artwork control to the CAD top-face centerline. 0 is the top
+ * safe position, 100 the bottom safe position, and values outside that range
+ * extrapolate while preserving the user's requested offset.
+ */
+export function artworkCenterYForPositionMm(
+  variant: SleeveVariant,
+  size: number,
+  positionPercent: number,
+  artworkHeightMm: number,
+  edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM
+): number {
+  const bounds = surfaceBounds(variant, size);
+  const { minCenterY, maxCenterY } = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm);
+  if (maxCenterY >= minCenterY) {
+    return maxCenterY - ((maxCenterY - minCenterY) * positionPercent) / 100;
+  }
+  // If the artwork cannot fit vertically, still move it with the slider using
+  // the sleeve's physical edge as the reference. The warning reports the fit.
+  const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
+  const topCenterY = bounds.maxY - halfArtworkHeight;
+  const bottomCenterY = bounds.minY + halfArtworkHeight;
+  return topCenterY - ((topCenterY - bottomCenterY) * positionPercent) / 100;
 }
 
 function toCanvas(x: number, y: number, bounds: SurfaceBounds, width: number, height: number): [number, number] {

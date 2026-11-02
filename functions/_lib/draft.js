@@ -5,14 +5,16 @@ const POSITIONING_VERSION = "cad-flap-valley-to-right-edge-v1";
 
 export function validDraft(draft) {
   if (!draft || typeof draft !== "object" || Array.isArray(draft) || Object.keys(draft).length > 32) return false;
-  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","logoOpacity","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","hasCustomArtwork"]);
+  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","logoOpacity","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","hasCustomArtwork"]);
   if (Object.keys(draft).some((key) => !allowed.has(key))) return false;
   if (draft.productionGeometryVersion !== GEOMETRY_VERSION || draft.positioningVersion !== POSITIONING_VERSION) return false;
   if (typeof draft.hasCustomArtwork !== "boolean" || !Number.isFinite(draft.brandingCenterXmm) || !Number.isFinite(draft.artworkCenterXmm)) return false;
   if (typeof draft.text !== "string" || draft.text.length > 500 || typeof draft.font !== "string" || draft.font.length > 180 || !/^[\w ,.'"-]+$/.test(draft.font)) return false;
   if (!Number.isFinite(draft.fontSize) || draft.fontSize < 60 || draft.fontSize > 500 || !Number.isFinite(draft.fontWeight) || draft.fontWeight < 100 || draft.fontWeight > 1200) return false;
   if (!Number.isFinite(draft.tracking) || draft.tracking < -0.1 || draft.tracking > 0.3 || !Number.isFinite(draft.lineHeight) || draft.lineHeight < 0.9 || draft.lineHeight > 1.6 || !Number.isFinite(draft.arc) || draft.arc < -15 || draft.arc > 20) return false;
-  if (![draft.posX,draft.posY,draft.logoX,draft.logoY].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)) return false;
+  if (![draft.posX,draft.posY,draft.logoX].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)) return false;
+  if (!Number.isFinite(draft.logoY) || draft.logoY < -200 || draft.logoY > 300) return false;
+  if (draft.logoPosY != null && (!Number.isFinite(draft.logoPosY) || draft.logoPosY < -100 || draft.logoPosY > 200)) return false;
   const edge = RIGHT_EDGE_X_MM[draft.size];
   if (!Number.isFinite(edge)) return false;
   const expectedCenter = (FLAP_VALLEY_X_MM + edge) / 2;

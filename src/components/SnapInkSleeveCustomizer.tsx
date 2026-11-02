@@ -11,6 +11,9 @@ import React, {
 import { createPortal } from "react-dom";
 import {
   BRANDING_GROOVE_WIDTH_MM,
+  ARTWORK_VERTICAL_POSITION_MAX,
+  ARTWORK_VERTICAL_POSITION_MIN,
+  BRANDING_EDGE_CLEARANCE_MM,
   GEOMETRY_VERSION,
   POSITIONING_VERSION,
   PRODUCTION_BRANDING_INSET_MM,
@@ -27,6 +30,7 @@ import {
   brandingCenterCanvasPercentFor,
   brandingSurfacePath,
   artworkCenterYForPositionMm,
+  artworkVerticalCenterRangeMm,
   cadXToCanvasX,
   geometryFor,
   maximumContainedLogoHeightMm,
@@ -47,7 +51,11 @@ import {
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
 import PACKAGING_PRODUCT_PHOTO from "../config/packagingProductPhoto.json";
-import { createProductPhotoZip } from "../utils/leftAngleProductPhoto";
+import {
+  createProductPhotoZip,
+  LEFT_ANGLE_HAT_URL,
+  renderLeftAngleProductPhoto,
+} from "../utils/leftAngleProductPhoto";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
   desktop: "/images/product_images/desktop_lifesttyle_city.png",
@@ -248,11 +256,6 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   logoScale: 100,
   logoOpacity: 100,
 };
-
-// Desktop photo previews use a 1000-unit-wide stage reference before camera
-// zoom. Keep the default uploaded logo slightly lower on that stage without
-// changing the CAD artwork coordinates or the mobile preview.
-const DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX = { standard: 15, billboard: 25 } as const;
 
 // ---------- Color Swatches ----------
 const COLOR_SWATCHES = [
@@ -1207,15 +1210,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoPosY,
     logoArtworkHeightMm
   );
-  // The desktop photo applies a legacy downward default offset to logos after
-  // this coordinate is resolved. Compensate progressively toward either end
-  // of the slider so 0%/100% can reach the actual safe edge; keep the existing
-  // centered (50%) default appearance unchanged.
-  const desktopLogoOffsetMm = !isMobilePreview && ghostHat && !fixedProductConfiguration
-    ? DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX[variant] * ((bounds.maxY - bounds.minY) / viewH)
-    : 0;
-  const logoPositionEndpointCompensationMm = desktopLogoOffsetMm * (Math.abs(logoPosY - 50) / 50);
-  const logoCenterYmm = logoPositionCenterYmm + logoPositionEndpointCompensationMm;
+  // All previews and exports use the same CAD-referenced artwork position.
+  const logoCenterYmm = logoPositionCenterYmm;
   const svgUnitsPerMm = viewW / overallLengthMm;
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
@@ -1256,6 +1252,16 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoDataUrl ? logoPosY : posY,
     logoDataUrl ? productionLogoHeightMm : productionTextHeightMm
   );
+  const productionLogoVerticalRange = artworkVerticalCenterRangeMm(
+    variant,
+    sleeveSize,
+    productionLogoHeightMm,
+    BRANDING_EDGE_CLEARANCE_MM
+  );
+  const logoOutsidePrintableArea = Boolean(logoDataUrl && !logoNeedsRemoval && logoScale > 0 && (
+    productionCenterYmm < productionLogoVerticalRange.minCenterY - 0.001
+    || productionCenterYmm > productionLogoVerticalRange.maxCenterY + 0.001
+  ));
   const productionCanvasY = ((productionBounds.maxY - productionCenterYmm)
     / (productionBounds.maxY - productionBounds.minY)) * 100;
   const productionDraftPosition = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, productionCanvasY);
@@ -1613,9 +1619,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
-      const [sleevePNG, hatImage, packageImage] = await Promise.all([
+      const [sleevePNG, hatImage, leftAngleHatImage, packageImage] = await Promise.all([
         renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
         loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
+        loadStudioImage(LEFT_ANGLE_HAT_URL),
         loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc),
       ]);
       if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
@@ -1644,10 +1651,12 @@ const SnapInkSleeveCustomizer = forwardRef<
         (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
         "image/png"
       ));
+      const leftAnglePNG = await renderLeftAngleProductPhoto(leftAngleHatImage, sleeveImage);
       const packagingPNG = await renderPackagingProductPhoto(packageImage, sleeveImage);
       const slug = productPhotoSlug();
       const zip = await createProductPhotoZip([
         { filename: `snapink-billboard-${slug}-rear.png`, blob: productPNG },
+        { filename: `snapink-billboard-${slug}-left-angle.png`, blob: leftAnglePNG },
         { filename: `snapink-billboard-${slug}_packaging.png`, blob: packagingPNG },
       ]);
       downloadProductPhotoZip(zip, `snapink-billboard-${slug}-product-images.zip`);
@@ -1705,9 +1714,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     // never contain the presentation photo. Only the separate PNG preview has
     // the product image composited beneath the artwork.
     const artworkSvgNode = previewSvg.cloneNode(true) as SVGSVGElement;
-    artworkSvgNode.querySelectorAll('[data-desktop-photo-logo-default-offset="true"]').forEach((node) => {
-      node.removeAttribute("transform");
-    });
     artworkSvgNode.querySelectorAll('[data-mobile-photographic-text-offset="true"]').forEach((node) => {
       node.removeAttribute("transform");
     });
@@ -2142,7 +2148,9 @@ const SnapInkSleeveCustomizer = forwardRef<
         <Range label="Text vertical position" min={0} max={100} step={0.5} value={posY} setValue={setPosY} suffix="%" />
         <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
         {logoDataUrl && <>
-          <Range label="Artwork vertical position" min={0} max={100} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
+          <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
+          <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
+          {logoOutsidePrintableArea && <p role="status" className="text-xs text-amber-300">Artwork extends beyond the safe printable area. Its selected position is preserved; artwork may be clipped and production will need repositioning.</p>}
           <Range label="Logo size" min={0} max={100} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
         </>}
@@ -2430,12 +2438,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <g transform={photoArtworkTransform} data-artwork-overlay="true">
           <defs><path id={pathId} d={arcPath} /></defs>
         {logoDataUrl && !logoNeedsRemoval && (
-          <g
-            transform={!isMobilePreview && ghostHat
-              ? `translate(0 ${DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX[variant]})`
-              : undefined}
-            data-desktop-photo-logo-default-offset="true"
-          >
+          <g>
             <image
               href={logoDataUrl}
               x={logoImageX}
@@ -2817,13 +2820,15 @@ const SnapInkSleeveCustomizer = forwardRef<
               </div>
               {logoDataUrl && <Range
                 label="Artwork vertical position"
-                min={0}
-                max={100}
+                min={ARTWORK_VERTICAL_POSITION_MIN}
+                max={ARTWORK_VERTICAL_POSITION_MAX}
                 step={0.5}
                 value={logoPosY}
                 setValue={setLogoPosY}
                 suffix="%"
               />}
+              {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
+              {logoDataUrl && logoOutsidePrintableArea && <p role="status" className="text-xs text-amber-300">Artwork extends beyond the safe printable area. Its selected position is preserved; artwork may be clipped and production will need repositioning.</p>}
 
               <div className="grid grid-cols-2 gap-3">
                 <Range
@@ -2886,12 +2891,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
+                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat, Left-Angle Hat, and Packaging PNGs in a ZIP."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
-                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
+                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat, Left-Angle Hat, and Packaging images in one ZIP.</p>}
                 {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
               </>}
 
@@ -3109,13 +3114,15 @@ const SnapInkSleeveCustomizer = forwardRef<
             </div>
             {logoDataUrl && <Range
               label="Artwork vertical position"
-              min={0}
-              max={100}
+              min={ARTWORK_VERTICAL_POSITION_MIN}
+              max={ARTWORK_VERTICAL_POSITION_MAX}
               step={0.5}
               value={logoPosY}
               setValue={setLogoPosY}
               suffix="%"
             />}
+            {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
+            {logoDataUrl && logoOutsidePrintableArea && <p role="status" className="text-xs text-amber-300">Artwork extends beyond the safe printable area. Its selected position is preserved; artwork may be clipped and production will need repositioning.</p>}
 
             <div className="grid grid-cols-2 gap-3">
               <Range
@@ -3164,12 +3171,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
+                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat, Left-Angle Hat, and Packaging PNGs in a ZIP."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
-              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
+              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat, Left-Angle Hat, and Packaging images in one ZIP.</p>}
               {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
             </>}
 

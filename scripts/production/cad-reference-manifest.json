@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "cadRoot": "C:/Users/lovei/OneDrive/Documents/snapink_cad",
+  "grooveDatumBillboardSizes0To2Mm": -2.8,
+  "brandingClearanceMm": 1,
+  "profiles": [
+    {
+      "variant": "standard",
+      "size": 0,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_0/SnapInk_Standard_Size_0_Blank_Flap_TPU.step",
+      "sleeveSha256": "7e90f182e6a5c386175924465b9ad612385b4683ddb3d9c8e759d334b78eeb96",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_0/SnapInk_Standard_Size_0_PLA_Support.step",
+      "supportSha256": "544a5ac8021ec0fc8f9c3ca80e92d0bd652a0caae666f73b42d1756c80f96551"
+    },
+    {
+      "variant": "standard",
+      "size": 1,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_1/SnapInk_Standard_Size_1_Blank_Flap_TPU.step",
+      "sleeveSha256": "73ff423e6040581139c8fe2d5a6f6db0d21fa9a8e09d71e1e7d0e73da92e5186",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_1/SnapInk_Standard_Size_1_PLA_Support.step",
+      "supportSha256": "f27c87fd4196879fcc30457ae2f3f8e094c7ae54912e49e3c69401122a0ce6d9"
+    },
+    {
+      "variant": "standard",
+      "size": 2,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_2/SnapInk_Standard_Size_2_Blank_Flap_TPU.step",
+      "sleeveSha256": "68bbaff929c5c2f0ca6a47d96fad42404606c5f7233e99589785abf81135f6f9",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_2/SnapInk_Standard_Size_2_PLA_Support.step",
+      "supportSha256": "ba804286278221b5bd39cec199a6d3c95c7e1afdd6b70d3044c7aa4a4d253f53"
+    },
+    {
+      "variant": "standard",
+      "size": 3,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_3/SnapInk_Standard_Size_3_Blank_Flap_TPU.step",
+      "sleeveSha256": "09f8e4bad546b50ef7d2027a480502663e99097b2dbb1a4755728bdf88f4deda",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_3/SnapInk_Standard_Size_3_PLA_Support.step",
+      "supportSha256": "fd487c13cbf68caa194d8cb975845268dcb0192012cf0e415da1c99b91713c7a"
+    },
+    {
+      "variant": "standard",
+      "size": 4,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_4/SnapInk_Standard_Size_4_Blank_Flap_TPU.step",
+      "sleeveSha256": "756b5464b9bad8c4362bdc4d2b415ed36d7adddd994fda61deeda92a2ecd84dc",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_4/SnapInk_Standard_Size_4_PLA_Support.step",
+      "supportSha256": "0803abac5bd7432986112e48b466fe4fa58164f4bca47fae9b4204d93c146c15"
+    },
+    {
+      "variant": "standard",
+      "size": 5,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_5/SnapInk_Standard_Size_5_Blank_Flap_TPU.step",
+      "sleeveSha256": "42f96ec254a8cec7dd053f2c9b596e84b1ce652854fe13b513d21a2c32a3a774",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Standard/Size_5/SnapInk_Standard_Size_5_PLA_Support.step",
+      "supportSha256": "1ea63a125ea4cf95798dc791d8bc8102e48413741592433d87277bfc76d07c75"
+    },
+    {
+      "variant": "billboard",
+      "size": 0,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_0/SnapInk_Billboard_Size_0_Blank_Flap_TPU.step",
+      "sleeveSha256": "8fb62b58973d104414c2b73d7d611f405aab156f00cd173da263e9fcdccba2c7",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_0/SnapInk_Billboard_Size_0_PLA_Support.step",
+      "supportSha256": "a6cbfcb94bab7ac70c11dbd39e2e31a49622f8e63a79a44d772e9d049c6030c0"
+    },
+    {
+      "variant": "billboard",
+      "size": 1,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_1/SnapInk_Billboard_Size_1_Blank_Flap_TPU.step",
+      "sleeveSha256": "78855d881ce6d23bdacb17a471dc71ab2295c8861487353c6148ee8550c4dfee",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_1/SnapInk_Billboard_Size_1_PLA_Support.step",
+      "supportSha256": "a3fde10d1f1f0a905b8dbfd0dc9164aa0a6d19a6063ee1d2019e3fbfef4c50c9"
+    },
+    {
+      "variant": "billboard",
+      "size": 2,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_2/SnapInk_Billboard_Size_2_Blank_Flap_TPU.step",
+      "sleeveSha256": "f36ddd87d049070e814c47de8611c77b515f1c64b006479ab986156ef82534f6",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_2/SnapInk_Billboard_Size_2_PLA_Support.step",
+      "supportSha256": "4beb0c982b00044d7a174de9f32382e34af11e31e6ede497b43487c976e78c50"
+    },
+    {
+      "variant": "billboard",
+      "size": 3,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_3/SnapInk_Billboard_Size_3_Blank_Flap_TPU.step",
+      "sleeveSha256": "a7e2f8e65e21e74aebd291f8bab5bbb1d51ea2860dbaaffa11defd5e82b5a538",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_3/SnapInk_Billboard_Size_3_PLA_Support.step",
+      "supportSha256": "2c8feb61abe80e068b7a0f529f14b27d459d8d94202162ef61763a393dd907e2"
+    },
+    {
+      "variant": "billboard",
+      "size": 4,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_4/SnapInk_Billboard_Size_4_Blank_Flap_TPU.step",
+      "sleeveSha256": "84bd54842222cb951bd5f33b84a1029b3554821c8659d490d664cf5e92dacaa0",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_4/SnapInk_Billboard_Size_4_PLA_Support.step",
+      "supportSha256": "7fe32255839ece4c353dc8542395ce346cb8c53dc6804d24fa1748374f351349"
+    },
+    {
+      "variant": "billboard",
+      "size": 5,
+      "sleeveStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_5/SnapInk_Billboard_Size_5_Blank_Flap_TPU.step",
+      "sleeveSha256": "aedbdbee8be4513560cebdc00d764cf73710bdff135b968332b89fd60230eb5a",
+      "supportStep": "SnapInk_Production/VALIDATION/Blank_Flap_Centering_2026-10-26/SOURCE_GEOMETRY/Billboard/Size_5/SnapInk_Billboard_Size_5_PLA_Support.step",
+      "supportSha256": "1c78f06637866c8a2e2c0ab9437b3cf81d5601a27fef064b90cce5fef7060bb4"
+    }
+  ],
+  "status": "validation_candidate_only",
+  "geometryVersion": "blank-flap-candidate-v1"
+}
