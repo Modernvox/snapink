@@ -520,7 +520,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport());
   // Migrate earlier drafts that used the text vertical control for logo
   // placement, while keeping the logo's new position independently editable.
-  const [logoPosY, setLogoPosY] = useState(initial.logoPosY ?? initial.posY ?? 50);
+  const [logoPosY, setLogoPosY] = useState(initial.logoPosY ?? initial.posY ?? (isMobilePreview ? 50 : 0));
   const [align, setAlign] = useState<"start" | "center" | "end">(initialAlign);
   const [showGuides, setShowGuides] = useState(false);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? OFFICIAL_STUDIO_DEFAULTS.safeMargin);
@@ -751,7 +751,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     setArc(OFFICIAL_STUDIO_DEFAULTS.arc);
     setPosX(defaultArtworkXForViewport(defaultArtworkPosition, OFFICIAL_STUDIO_DEFAULTS.variant, OFFICIAL_STUDIO_DEFAULTS.size, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
     setPosY(50);
-    setLogoPosY(50);
+    setLogoPosY(isMobilePreview ? 50 : 0);
     setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
     setSafeMargin(OFFICIAL_STUDIO_DEFAULTS.safeMargin);
     setBackgroundColor(OFFICIAL_STUDIO_DEFAULTS.backgroundColor);
