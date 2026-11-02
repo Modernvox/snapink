@@ -117,6 +117,7 @@ export type SleeveDraft = {
   arc: number;
   posX: number;
   posY: number;
+  logoPosY: number;
   align: "start" | "center" | "end";
   safeMargin: number;
   bgType: "vector";
@@ -211,7 +212,7 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   SleeveDraft,
   | "size" | "variant" | "text" | "font" | "fontSize" | "fontWeight"
   | "tracking" | "lineHeight" | "fill" | "stroke" | "strokeWidth"
-  | "styleMode" | "arc" | "posX" | "posY" | "align" | "safeMargin"
+  | "styleMode" | "arc" | "posX" | "posY" | "logoPosY" | "align" | "safeMargin"
   | "bgType" | "backgroundColor" | "logoX" | "logoY" | "logoScale" | "logoOpacity"
 > = {
   size: 2,
@@ -229,6 +230,7 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   arc: 0,
   posX: brandingCenterCanvasPercentFor("billboard", 2),
   posY: 50,
+  logoPosY: 50,
   align: "center",
   safeMargin: 6,
   bgType: "vector",
@@ -516,6 +518,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     variantPosXRef.current = initial.posX === undefined ? {} : { [initialVariant]: initial.posX };
   }
   const [posY, setPosY] = useState(initial.posY ?? defaultArtworkYForViewport());
+  // Migrate earlier drafts that used the text vertical control for logo
+  // placement, while keeping the logo's new position independently editable.
+  const [logoPosY, setLogoPosY] = useState(initial.logoPosY ?? initial.posY ?? 50);
   const [align, setAlign] = useState<"start" | "center" | "end">(initialAlign);
   const [showGuides, setShowGuides] = useState(false);
   const [safeMargin, setSafeMargin] = useState(initial.safeMargin ?? OFFICIAL_STUDIO_DEFAULTS.safeMargin);
@@ -746,6 +751,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     setArc(OFFICIAL_STUDIO_DEFAULTS.arc);
     setPosX(defaultArtworkXForViewport(defaultArtworkPosition, OFFICIAL_STUDIO_DEFAULTS.variant, OFFICIAL_STUDIO_DEFAULTS.size, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
     setPosY(50);
+    setLogoPosY(50);
     setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
     setSafeMargin(OFFICIAL_STUDIO_DEFAULTS.safeMargin);
     setBackgroundColor(OFFICIAL_STUDIO_DEFAULTS.backgroundColor);
@@ -1153,17 +1159,20 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
   const logoHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 100) / 100);
   const embossedArtworkReliefMm = styleMode === "emboss" ? STUDIO_EMBOSSED_PREVIEW_RELIEF_MM : 0;
-  const previewArtworkHeightMm = Math.max(
-    textArtworkHeightMm,
-    logoDataUrl ? logoHeightMm + embossedArtworkReliefMm : 0
-  );
-  const logoCenterYmm = artworkCenterYForPositionMm(
+  const logoArtworkHeightMm = logoHeightMm + embossedArtworkReliefMm;
+  const textCenterYmm = artworkCenterYForPositionMm(
     variant,
     renderGeometrySize,
     posY,
-    previewArtworkHeightMm
+    textArtworkHeightMm
   );
-  const artworkCenterCanvasY = ((bounds.maxY - logoCenterYmm) / (bounds.maxY - bounds.minY)) * viewH;
+  const textCenterCanvasY = ((bounds.maxY - textCenterYmm) / (bounds.maxY - bounds.minY)) * viewH;
+  const logoCenterYmm = artworkCenterYForPositionMm(
+    variant,
+    renderGeometrySize,
+    logoPosY,
+    logoArtworkHeightMm
+  );
   const svgUnitsPerMm = viewW / overallLengthMm;
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
@@ -1173,7 +1182,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // apply their width/height ratio a second time to the source dimensions.
   const logoImageWidthSvg = logoImageHeightSvg * logoSourceAspectRatio;
   const logoCenterCanvasX = cadXToCanvasX(variant, renderGeometrySize, logoCenterXmm, viewW);
-  const logoCenterCanvasY = artworkCenterCanvasY;
+  const logoCenterCanvasY = ((bounds.maxY - logoCenterYmm) / (bounds.maxY - bounds.minY)) * viewH;
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
   const logoImageY = logoCenterCanvasY - visibleLogoHeightSvg / 2 - logoVisibleBounds.y * logoImageHeightSvg;
   const artworkCenterCanvasPercent = isMobilePreview || variant === "billboard"
@@ -1198,8 +1207,12 @@ const SnapInkSleeveCustomizer = forwardRef<
       logoAspectRatio
     ) * (clamp(logoScale, 0, 100) / 100) + embossedArtworkReliefMm
     : 0;
-  const productionArtworkHeightMm = Math.max(productionTextHeightMm, productionLogoHeightMm);
-  const productionCenterYmm = artworkCenterYForPositionMm(variant, sleeveSize, posY, productionArtworkHeightMm);
+  const productionCenterYmm = artworkCenterYForPositionMm(
+    variant,
+    sleeveSize,
+    logoDataUrl ? logoPosY : posY,
+    logoDataUrl ? productionLogoHeightMm : productionTextHeightMm
+  );
   const productionCanvasY = ((productionBounds.maxY - productionCenterYmm)
     / (productionBounds.maxY - productionBounds.minY)) * 100;
   const productionDraftPosition = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, productionCanvasY);
@@ -1221,6 +1234,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       arc,
       posX,
       posY,
+      logoPosY,
       align,
       safeMargin,
       bgType: "vector",
@@ -1252,6 +1266,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     arc,
     posX,
     posY,
+    logoPosY,
     align,
     safeMargin,
     backgroundColor,
@@ -1298,11 +1313,13 @@ const SnapInkSleeveCustomizer = forwardRef<
       setAlign(OFFICIAL_STUDIO_DEFAULTS.align);
       setPosX(defaultArtworkXForViewport(defaultArtworkPosition, variant, isMobilePreview ? previewSleeveSize : sleeveSize, isMobilePreview, OFFICIAL_STUDIO_DEFAULTS.align));
       setPosY(50);
+      setLogoPosY(50);
       return;
     }
     // Reset uses the same CAD-derived center as Center, including the 1 mm
     // production inset represented by the usable branding face.
     centerCurrentArtwork();
+    setLogoPosY(50);
   }
 
   function handleVariantChange(nextVariant: SleeveVariant) {
@@ -1353,10 +1370,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     const a = clamp(arc, -20, 20);
     const leftX = margin;
     const rightX = viewW - margin;
-    const baseY = clamp(artworkCenterCanvasY, margin, viewH - margin);
+    const baseY = clamp(textCenterCanvasY, margin, viewH - margin);
     const midY = clamp(baseY + (a / 100) * viewH, margin, viewH - margin);
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
-  }, [arc, artworkCenterCanvasY, margin, viewH]);
+  }, [arc, textCenterCanvasY, margin, viewH]);
 
   // Export PNG
   async function handleExportPNG() {
@@ -1961,9 +1978,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
         <Range label="Arc" min={-15} max={20} value={arc} setValue={setArc} suffix="%" />
         <Range label="Horizontal position" min={artworkMinXCanvasPercent} max={artworkMaxXCanvasPercent} step={0.5} value={posX} setValue={setPosX} suffix="%" />
-        <Range label="Vertical position" min={0} max={100} step={0.5} value={posY} setValue={setPosY} suffix="%" />
+        <Range label="Text vertical position" min={0} max={100} step={0.5} value={posY} setValue={setPosY} suffix="%" />
         <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
         {logoDataUrl && <>
+          <Range label="Artwork vertical position" min={0} max={100} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
           <Range label="Logo size" min={0} max={100} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
         </>}
@@ -2324,7 +2342,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                       key={i}
                       x={(posX / 100) * 1600}
                       y={
-                        artworkCenterCanvasY +
+                        textCenterCanvasY +
                         (i - (arr.length - 1) / 2) *
                           (scaledFontSize * lineHeight)
                       }
@@ -2619,7 +2637,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                   suffix="%"
                 />
                 <Range
-                  label="Vertical position"
+                  label="Text vertical position"
                   min={0}
                   max={100}
                   step={0.5}
@@ -2628,6 +2646,15 @@ const SnapInkSleeveCustomizer = forwardRef<
                   suffix="%"
                 />
               </div>
+              {logoDataUrl && <Range
+                label="Artwork vertical position"
+                min={0}
+                max={100}
+                step={0.5}
+                value={logoPosY}
+                setValue={setLogoPosY}
+                suffix="%"
+              />}
 
               <div className="grid grid-cols-2 gap-3">
                 <Range
@@ -2890,7 +2917,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 suffix="%"
               />
               <Range
-                label="Vertical position"
+                label="Text vertical position"
                 min={0}
                 max={100}
                 step={0.5}
@@ -2899,6 +2926,15 @@ const SnapInkSleeveCustomizer = forwardRef<
                 suffix="%"
               />
             </div>
+            {logoDataUrl && <Range
+              label="Artwork vertical position"
+              min={0}
+              max={100}
+              step={0.5}
+              value={logoPosY}
+              setValue={setLogoPosY}
+              suffix="%"
+            />}
 
             <div className="grid grid-cols-2 gap-3">
               <Range
