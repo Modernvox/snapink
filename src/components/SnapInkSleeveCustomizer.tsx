@@ -46,11 +46,8 @@ import {
   type HatTemplateImageProfile,
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
-import {
-  createProductPhotoZip,
-  LEFT_ANGLE_HAT_URL,
-  renderLeftAngleProductPhoto,
-} from "../utils/leftAngleProductPhoto";
+import PACKAGING_PRODUCT_PHOTO from "../config/packagingProductPhoto.json";
+import { createProductPhotoZip } from "../utils/leftAngleProductPhoto";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
   desktop: "/images/product_images/desktop_lifesttyle_city.png",
@@ -1547,6 +1544,53 @@ const SnapInkSleeveCustomizer = forwardRef<
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   }
 
+  async function renderPackagingProductPhoto(packageImage: HTMLImageElement, sleeveImage: HTMLImageElement) {
+    const { width, height, sleeve, contactShadow } = PACKAGING_PRODUCT_PHOTO;
+    if (packageImage.naturalWidth !== width || packageImage.naturalHeight !== height) {
+      throw new Error("The approved packaging master has unexpected dimensions.");
+    }
+    const sleeveWidth = sleeve.width;
+    const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
+    const sleeveLeft = Math.round(sleeve.centerX - sleeveWidth / 2);
+    const sleeveTop = sleeve.topY;
+    if (sleeveLeft < 0 || sleeveTop < 0 || sleeveLeft + sleeveWidth > width || sleeveTop + sleeveHeight > height) {
+      throw new Error("The approved packaging sleeve placement falls outside the package image.");
+    }
+
+    const shadowMask = document.createElement("canvas");
+    shadowMask.width = width;
+    shadowMask.height = height;
+    const maskContext = shadowMask.getContext("2d");
+    const shadowCanvas = document.createElement("canvas");
+    shadowCanvas.width = width;
+    shadowCanvas.height = height;
+    const shadowContext = shadowCanvas.getContext("2d");
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!maskContext || !shadowContext || !context) throw new Error("The packaging product-image canvas is unavailable.");
+
+    maskContext.imageSmoothingEnabled = true;
+    maskContext.imageSmoothingQuality = "high";
+    maskContext.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    maskContext.globalCompositeOperation = "source-in";
+    maskContext.fillStyle = `rgba(0, 0, 0, ${contactShadow.opacity})`;
+    maskContext.fillRect(0, 0, width, height);
+    shadowContext.filter = `blur(${contactShadow.blurRadius}px)`;
+    shadowContext.drawImage(shadowMask, contactShadow.offsetX, contactShadow.offsetY);
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(packageImage, 0, 0);
+    context.drawImage(shadowCanvas, 0, 0);
+    context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+      (output) => output ? resolve(output) : reject(new Error("Packaging product PNG encoding failed.")),
+      "image/png",
+    ));
+  }
+
   async function handleExportPNG() {
     try {
       const png = await renderStudioPNGBlob();
@@ -1569,10 +1613,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
-      const [sleevePNG, hatImage, leftAngleHatImage] = await Promise.all([
+      const [sleevePNG, hatImage, packageImage] = await Promise.all([
         renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
         loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
-        loadStudioImage(LEFT_ANGLE_HAT_URL),
+        loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc),
       ]);
       if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
         throw new Error("The approved rear hat master has unexpected dimensions.");
@@ -1600,13 +1644,11 @@ const SnapInkSleeveCustomizer = forwardRef<
         (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
         "image/png"
       ));
-      const leftAnglePNG = await renderLeftAngleProductPhoto(leftAngleHatImage, sleeveImage);
+      const packagingPNG = await renderPackagingProductPhoto(packageImage, sleeveImage);
       const slug = productPhotoSlug();
-      const rearFilename = `snapink-billboard-${slug}-rear.png`;
-      const leftAngleFilename = `snapink-billboard-${slug}-left-angle.png`;
       const zip = await createProductPhotoZip([
-        { filename: rearFilename, blob: productPNG },
-        { filename: leftAngleFilename, blob: leftAnglePNG },
+        { filename: `snapink-billboard-${slug}-rear.png`, blob: productPNG },
+        { filename: `snapink-billboard-${slug}_packaging.png`, blob: packagingPNG },
       ]);
       downloadProductPhotoZip(zip, `snapink-billboard-${slug}-product-images.zip`);
     } catch (error) {
@@ -2844,11 +2886,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and approved Test Image 31 left-angle product PNGs in one ZIP."}
+                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
+                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
                 {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
               </>}
 
@@ -3121,11 +3164,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and approved Test Image 31 left-angle product PNGs in one ZIP."}
+                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
+              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
               {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
             </>}
 

@@ -1,0 +1,17 @@
+{
+  "description": "Approved V1 packaging placement. Coordinates use package_master.png pixels.",
+  "packageSrc": "/images/package_master.png",
+  "width": 1086,
+  "height": 1448,
+  "sleeve": {
+    "centerX": 543,
+    "topY": 520,
+    "width": 570
+  },
+  "contactShadow": {
+    "offsetX": 0,
+    "offsetY": 3,
+    "blurRadius": 3,
+    "opacity": 0.18
+  }
+}
