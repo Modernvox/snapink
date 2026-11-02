@@ -2065,7 +2065,6 @@ const SnapInkSleeveCustomizer = forwardRef<
         </button>
       </div>
       <div className="snapink-stage-wrap">
-      {instance === "mobile" && previewToolbar(instance)}
       <div className="snapink-preview-config-row" aria-label="Preview options">
         {hatColorSelector(instance)}
         <div className="snapink-size-buttons" role="group" aria-label="Sleeve Size">
@@ -2502,6 +2501,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         <div className="snapink-preview-card p-2.5 sm:p-4 rounded-3xl border border-neutral-700/80 bg-neutral-900/75 shadow-xl shadow-black/20">
           {strapPreviewInner("mobile")}
         </div>
+        <details className="snapink-mobile-customize">
+          <summary>Customize Your Sleeve</summary>
+          {previewToolbar("mobile")}
+        </details>
       <div className="snapink-mobile-controls min-h-0 space-y-4 pb-4">
 
         {/* Text / Styling panel */}
