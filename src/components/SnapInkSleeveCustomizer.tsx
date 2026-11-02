@@ -1035,6 +1035,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     : backgroundColor.toLowerCase() === "#000000" ? 0 : 0.3;
   const sleeveTextureAmplitude = 1 - sleeveMaterialFloor;
   const sleeveColorFilterId = `sleeve-color-${uid}`;
+  const billboardMatteGradientId = `billboard-matte-${uid}`;
   const scaledFontSize = fontSize * (viewH / 450);
   const margin = (safeMargin / 100) * viewH;
 
@@ -2147,6 +2148,18 @@ const SnapInkSleeveCustomizer = forwardRef<
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
             <path d={photoFaceRenderPath} />
           </clipPath>
+          {variant === "billboard" && <linearGradient
+            id={billboardMatteGradientId}
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1="0"
+            x2={viewW}
+            y2="0"
+          >
+            <stop offset="54%" stopColor="#000000" stopOpacity="0" />
+            <stop offset="76%" stopColor="#000000" stopOpacity="0.045" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0.14" />
+          </linearGradient>}
           {!isBlackSleeve && <filter id={sleeveColorFilterId} colorInterpolationFilters="sRGB">
             <feColorMatrix type="matrix" values={`0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0.213 0.715 0.072 0 0 0 0 0 1 0`} />
             <feComponentTransfer>
@@ -2178,6 +2191,12 @@ const SnapInkSleeveCustomizer = forwardRef<
             <image href={sleevePhoto.src} x="0" y="0" width={sleevePhoto.sourceWidth} height={sleevePhoto.sourceHeight}
               preserveAspectRatio="none" filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined} />
           </svg>
+          {variant === "billboard" && <path
+            d={photoFaceRenderPath}
+            fill={`url(#${billboardMatteGradientId})`}
+            pointerEvents="none"
+            data-billboard-matte-lighting="true"
+          />}
         </svg>
 
         <g clipPath={`url(#${surfaceClipId}-printable-photo)`} data-artwork-clip="true">
