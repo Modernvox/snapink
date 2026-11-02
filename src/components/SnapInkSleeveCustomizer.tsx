@@ -46,6 +46,11 @@ import {
   type HatTemplateImageProfile,
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
+import {
+  createProductPhotoZip,
+  LEFT_ANGLE_HAT_URL,
+  renderLeftAngleProductPhoto,
+} from "../utils/leftAngleProductPhoto";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
   desktop: "/images/product_images/desktop_lifesttyle_city.png",
@@ -1533,6 +1538,15 @@ const SnapInkSleeveCustomizer = forwardRef<
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   }
 
+  function downloadProductPhotoZip(zip: Blob, filename: string) {
+    const downloadUrl = URL.createObjectURL(zip);
+    const anchor = document.createElement("a");
+    anchor.href = downloadUrl;
+    anchor.download = filename;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  }
+
   async function handleExportPNG() {
     try {
       const png = await renderStudioPNGBlob();
@@ -1555,9 +1569,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
-      const [sleevePNG, hatImage] = await Promise.all([
+      const [sleevePNG, hatImage, leftAngleHatImage] = await Promise.all([
         renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
         loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
+        loadStudioImage(LEFT_ANGLE_HAT_URL),
       ]);
       if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
         throw new Error("The approved rear hat master has unexpected dimensions.");
@@ -1585,7 +1600,15 @@ const SnapInkSleeveCustomizer = forwardRef<
         (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
         "image/png"
       ));
-      downloadPNGBlob(productPNG, `snapink-billboard-${productPhotoSlug()}-rear.png`);
+      const leftAnglePNG = await renderLeftAngleProductPhoto(leftAngleHatImage, sleeveImage);
+      const slug = productPhotoSlug();
+      const rearFilename = `snapink-billboard-${slug}-rear.png`;
+      const leftAngleFilename = `snapink-billboard-${slug}-left-angle.png`;
+      const zip = await createProductPhotoZip([
+        { filename: rearFilename, blob: productPNG },
+        { filename: leftAngleFilename, blob: leftAnglePNG },
+      ]);
+      downloadProductPhotoZip(zip, `snapink-billboard-${slug}-product-images.zip`);
     } catch (error) {
       console.error("SnapInk product image could not be generated.", error);
       alert(error instanceof Error ? error.message : "The product image could not be generated. Please try again.");
@@ -2821,7 +2844,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard rear-view placement needs separate calibration." : undefined}
+                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and V27 left-angle product PNGs in one ZIP."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
@@ -3098,7 +3121,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard rear-view placement needs separate calibration." : undefined}
+                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and V27 left-angle product PNGs in one ZIP."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}

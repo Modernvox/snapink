@@ -1,0 +1,173 @@
+{
+  "version": 2,
+  "tool": "SnapInk local left-angle perspective calibration",
+  "hat_master": "public/images/product_images/snapink_hat_angle_left_master.png",
+  "hat_master_size_px": [
+    619,
+    479
+  ],
+  "render_size_px": [
+    2000,
+    1548
+  ],
+  "sleeve_source": "public/images/product_images/experimental/snapink_relentless_billboard_studio_export.png",
+  "sleeve_source_size_px": [
+    4222,
+    1035
+  ],
+  "sleeve_height_percent": 100,
+  "source_quad_px": [
+    [
+      0,
+      0
+    ],
+    [
+      4221,
+      0
+    ],
+    [
+      4221,
+      1034
+    ],
+    [
+      0,
+      1034
+    ]
+  ],
+  "coordinate_system": "destination_quad_hat_native_px is expressed in the original 619 x 479 hat master coordinate system.",
+  "destination_quad_hat_native_px": [
+    [
+      55.891,
+      321.4812
+    ],
+    [
+      276.3129,
+      321.4812
+    ],
+    [
+      279.5354,
+      396.2284
+    ],
+    [
+      58.469,
+      373.031
+    ]
+  ],
+  "destination_quad_render_px": [
+    [
+      180.585,
+      1038.941
+    ],
+    [
+      892.772,
+      1038.941
+    ],
+    [
+      903.184,
+      1280.504
+    ],
+    [
+      188.914,
+      1205.537
+    ]
+  ],
+  "mesh_control_points_hat_native_px": [
+    {
+      "source_u": 0,
+      "source_x_px": 0,
+      "upper_hat_native_px": [
+        55.891,
+        321.4812
+      ],
+      "lower_hat_native_px": [
+        58.469,
+        373.031
+      ]
+    },
+    {
+      "source_u": 0.11017,
+      "source_x_px": 465.0276,
+      "upper_hat_native_px": [
+        73.2197,
+        321.4812
+      ],
+      "lower_hat_native_px": [
+        75.8601,
+        374.8559
+      ]
+    },
+    {
+      "source_u": 0.25,
+      "source_x_px": 1055.25,
+      "upper_hat_native_px": [
+        97.067,
+        322.77
+      ],
+      "lower_hat_native_px": [
+        99.7898,
+        382.6966
+      ]
+    },
+    {
+      "source_u": 0.4,
+      "source_x_px": 1688.4,
+      "upper_hat_native_px": [
+        125.2806,
+        322.1256
+      ],
+      "lower_hat_native_px": [
+        128.0962,
+        390.429
+      ]
+    },
+    {
+      "source_u": 0.55,
+      "source_x_px": 2321.55,
+      "upper_hat_native_px": [
+        156.6678,
+        321.2377
+      ],
+      "lower_hat_native_px": [
+        159.5804,
+        396.2284
+      ]
+    },
+    {
+      "source_u": 0.7,
+      "source_x_px": 2954.7,
+      "upper_hat_native_px": [
+        191.7961,
+        321.2463
+      ],
+      "lower_hat_native_px": [
+        194.8095,
+        398.5433
+      ]
+    },
+    {
+      "source_u": 0.85,
+      "source_x_px": 3587.85,
+      "upper_hat_native_px": [
+        231.3765,
+        323.697
+      ],
+      "lower_hat_native_px": [
+        234.4938,
+        399.4658
+      ]
+    },
+    {
+      "source_u": 1,
+      "source_x_px": 4221,
+      "upper_hat_native_px": [
+        276.3129,
+        321.4812
+      ],
+      "lower_hat_native_px": [
+        279.5354,
+        396.2284
+      ]
+    }
+  ],
+  "mesh_coordinate_note": "Mesh source_u values are fixed across the sleeve width. Upper and lower destination points are independently editable and stored in original hat-master pixels."
+}
