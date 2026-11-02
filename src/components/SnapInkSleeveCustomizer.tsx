@@ -908,7 +908,15 @@ const SnapInkSleeveCustomizer = forwardRef<
     (point[1] - sleevePhoto.crop.y) * photoScale * photoImageScaleY,
   ] as const;
   const photoFacePoints = sleevePhoto.face.map(photoPoint);
-  const photoFacePath = `M ${photoFacePoints.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`;
+  const photoFacePath = variant === "billboard"
+    ? (() => {
+      const [[leftTopX, leftTopY], [rightTopX, rightTopY], [rightBottomX, rightBottomY], [leftBottomX, leftBottomY]] = photoFacePoints;
+      // Follow the hat opening's slight inward curve at the Billboard free end.
+      // This only crops the preview image; CAD dimensions and Standard stay intact.
+      const inset = (rightTopX - leftTopX) * 0.0045;
+      return `M ${leftTopX.toFixed(2)} ${leftTopY.toFixed(2)} L ${rightTopX.toFixed(2)} ${rightTopY.toFixed(2)} C ${(rightTopX - inset).toFixed(2)} ${(rightTopY + (rightBottomY - rightTopY) * 0.28).toFixed(2)} ${(rightBottomX - inset).toFixed(2)} ${(rightTopY + (rightBottomY - rightTopY) * 0.72).toFixed(2)} ${rightBottomX.toFixed(2)} ${rightBottomY.toFixed(2)} L ${leftBottomX.toFixed(2)} ${leftBottomY.toFixed(2)} Z`;
+    })()
+    : `M ${photoFacePoints.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`;
   // Map the validated CAD branding region onto the photographed branding face.
   // This transform affects only the visual mockup. Production coordinates and
   // exported manufacturing artwork retain their original CAD coordinate space.
@@ -1113,6 +1121,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const photoFaceRenderPath = mobileBodyExtensionCanvasPx > 0
     ? `M ${photoFacePoints.map(([x, y], index) => `${(index === 1 || index === 2 ? x + mobileBodyExtensionCanvasPx : x).toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`
     : photoFacePath;
+  const billboardPhotoRightContourClipPath = variant === "billboard"
+    ? `M 0 0 H ${sleeveRenderViewW} C ${sleeveRenderViewW - 7} ${viewH * 0.28} ${sleeveRenderViewW - 7} ${viewH * 0.72} ${sleeveRenderViewW} ${viewH} H 0 Z`
+    : null;
   const desktopSleeveVerticalOffsetPercent = !isMobilePreview && ghostHat
     ? ((STUDIO_DESKTOP_SLEEVE_VERTICAL_OFFSET_STAGE_PX
       + STUDIO_DESKTOP_SLEEVE_VERTICAL_SIZE_ADJUSTMENT_STAGE_PX[previewSleeveSize]
@@ -2219,6 +2230,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
             <path d={photoFaceRenderPath} />
           </clipPath>
+          {billboardPhotoRightContourClipPath && <clipPath id={`${surfaceClipId}-billboard-photo-contour`} clipPathUnits="userSpaceOnUse">
+            <path d={billboardPhotoRightContourClipPath} />
+          </clipPath>}
           {variant === "billboard" && <linearGradient
             id={billboardMatteGradientId}
             gradientUnits="userSpaceOnUse"
@@ -2249,6 +2263,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           height={sleeveSvgHeight}
           aria-hidden="true"
         >
+          <g clipPath={variant === "billboard" ? `url(#${surfaceClipId}-billboard-photo-contour)` : undefined}>
           <svg x="0" y="0" width={cadGrooveCanvasX} height={sleeveSvgHeight}
             viewBox={`${sleevePhoto.crop.x} ${sleevePhoto.crop.y} ${photoGrooveSourceX - sleevePhoto.crop.x} ${sleevePhoto.crop.height}`}
             preserveAspectRatio="none">
@@ -2262,6 +2277,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             <image href={sleevePhoto.src} x="0" y="0" width={sleevePhoto.sourceWidth} height={sleevePhoto.sourceHeight}
               preserveAspectRatio="none" filter={!isBlackSleeve ? `url(#${sleeveColorFilterId})` : undefined} />
           </svg>
+          </g>
           {variant === "billboard" && <path
             d={photoFaceRenderPath}
             fill={`url(#${billboardMatteGradientId})`}
