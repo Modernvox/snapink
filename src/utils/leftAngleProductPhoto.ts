@@ -125,12 +125,12 @@ export async function renderLeftAngleProductPhoto(
   const [width, height] = LEFT_ANGLE_CALIBRATION.render_size_px;
   const [nativeWidth, nativeHeight] = LEFT_ANGLE_CALIBRATION.hat_master_size_px;
   if (hatImage.naturalWidth !== nativeWidth || hatImage.naturalHeight !== nativeHeight) {
-    throw new Error(`The V27 left-angle hat master must be ${nativeWidth} × ${nativeHeight} pixels.`);
+    throw new Error(`The approved Test Image 31 hat master must be ${nativeWidth} × ${nativeHeight} pixels.`);
   }
   const controls = LEFT_ANGLE_CALIBRATION.mesh_control_points_hat_native_px;
   const sourceSize = LEFT_ANGLE_CALIBRATION.sleeve_source_size_px;
   if (controls.length < 2 || controls.length > 16 || sourceSize.length !== 2) {
-    throw new Error("The V27 left-angle mesh calibration is incomplete or unsupported.");
+    throw new Error("The approved Test Image 31 mesh calibration is incomplete or unsupported.");
   }
 
   const hatCanvas = document.createElement("canvas");

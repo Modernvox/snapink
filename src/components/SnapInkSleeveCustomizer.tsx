@@ -2844,7 +2844,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and V27 left-angle product PNGs in one ZIP."}
+                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and approved Test Image 31 left-angle product PNGs in one ZIP."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
@@ -3121,7 +3121,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and V27 left-angle product PNGs in one ZIP."}
+                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads rear-view and approved Test Image 31 left-angle product PNGs in one ZIP."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
