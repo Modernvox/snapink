@@ -1198,8 +1198,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const cameraOriginXPercent = (stageComposition.grooveX / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
   const maximumWidthMm = bounds.maxY - bounds.minY;
-  // Artwork is always centered on the CAD branding wall, never on the total sleeve.
-  const logoCenterXmm = brandingRegion.centerXmm;
+  // Billboard logos center on the inset face customers see as printable,
+  // excluding the groove/flap side from the visual centering zone.
+  const billboardPrintableLeftXmm = brandingRegion.grooveXmm
+    + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
+  const billboardPrintableRightXmm = brandingRegion.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const logoCenterXmm = variant === "billboard"
+    ? (billboardPrintableLeftXmm + billboardPrintableRightXmm) / 2
+    : brandingRegion.centerXmm;
   const logoCenterYmm = (bounds.minY + bounds.maxY) / 2;
   const logoMaxHeightMm = maximumContainedLogoHeightMm(
     variant,
@@ -1218,7 +1224,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoCenterCanvasY = viewH / 2;
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
   const logoImageY = logoCenterCanvasY - visibleLogoHeightSvg / 2 - logoVisibleBounds.y * logoImageHeightSvg;
-  const artworkCenterCanvasPercent = isMobilePreview
+  const artworkCenterCanvasPercent = isMobilePreview || variant === "billboard"
     ? usableBrandingCenterCanvasPercentFor(variant, renderGeometrySize)
     : brandingCenterCanvasPercentFor(variant, renderGeometrySize);
   const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, renderGeometrySize);
@@ -1278,7 +1284,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     const wasDesktopCentered = !isMobilePreview && align === "center" && Math.abs(posX - artworkCenterCanvasPercent) < 0.01;
     setVariant(nextVariant);
     if (wasDesktopCentered) {
-      setPosX(brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
+      setPosX(nextVariant === "billboard"
+        ? usableBrandingCenterCanvasPercentFor(nextVariant, renderGeometrySize)
+        : brandingCenterCanvasPercentFor(nextVariant, sleeveSize));
     }
   }
 
