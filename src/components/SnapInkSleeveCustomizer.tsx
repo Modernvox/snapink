@@ -51,11 +51,7 @@ import {
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
 import PACKAGING_PRODUCT_PHOTO from "../config/packagingProductPhoto.json";
-import {
-  createProductPhotoZip,
-  LEFT_ANGLE_HAT_URL,
-  renderLeftAngleProductPhoto,
-} from "../utils/leftAngleProductPhoto";
+import { createProductPhotoZip } from "../utils/productPhotoZip";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
   desktop: "/images/product_images/desktop_lifesttyle_city.png",
@@ -1619,10 +1615,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
-      const [sleevePNG, hatImage, leftAngleHatImage, packageImage] = await Promise.all([
+      const [sleevePNG, hatImage, packageImage] = await Promise.all([
         renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
         loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
-        loadStudioImage(LEFT_ANGLE_HAT_URL),
         loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc),
       ]);
       if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
@@ -1651,12 +1646,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
         "image/png"
       ));
-      const leftAnglePNG = await renderLeftAngleProductPhoto(leftAngleHatImage, sleeveImage);
       const packagingPNG = await renderPackagingProductPhoto(packageImage, sleeveImage);
       const slug = productPhotoSlug();
       const zip = await createProductPhotoZip([
         { filename: `snapink-billboard-${slug}-rear.png`, blob: productPNG },
-        { filename: `snapink-billboard-${slug}-left-angle.png`, blob: leftAnglePNG },
         { filename: `snapink-billboard-${slug}_packaging.png`, blob: packagingPNG },
       ]);
       downloadProductPhotoZip(zip, `snapink-billboard-${slug}-product-images.zip`);
@@ -2891,12 +2884,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat, Left-Angle Hat, and Packaging PNGs in a ZIP."}
+                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
-                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat, Left-Angle Hat, and Packaging images in one ZIP.</p>}
+                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
                 {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
               </>}
 
@@ -3171,12 +3164,12 @@ const SnapInkSleeveCustomizer = forwardRef<
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat, Left-Angle Hat, and Packaging PNGs in a ZIP."}
+                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
-              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat, Left-Angle Hat, and Packaging images in one ZIP.</p>}
+              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
               {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
             </>}
 
