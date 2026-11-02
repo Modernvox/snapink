@@ -287,7 +287,7 @@ const HAT_COLOR_SWATCHES: Readonly<Record<HatTemplateId, string>> = {
 // face polygons follow the visible branding panels in those images.
 const SLEEVE_PHOTO = {
   billboard: {
-    src: "/images/website_images/blank_billboard_sleeve.png",
+    src: "/images/website_images/blank_billboard_sleeve_matte.png",
     sourceWidth: 1774,
     sourceHeight: 887,
     crop: { x: 96, y: 250, width: 1583, height: 388 },
