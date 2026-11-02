@@ -1167,12 +1167,21 @@ const SnapInkSleeveCustomizer = forwardRef<
     textArtworkHeightMm
   );
   const textCenterCanvasY = ((bounds.maxY - textCenterYmm) / (bounds.maxY - bounds.minY)) * viewH;
-  const logoCenterYmm = artworkCenterYForPositionMm(
+  const logoPositionCenterYmm = artworkCenterYForPositionMm(
     variant,
     renderGeometrySize,
     logoPosY,
     logoArtworkHeightMm
   );
+  // The desktop photo applies a legacy downward default offset to logos after
+  // this coordinate is resolved. Compensate progressively toward either end
+  // of the slider so 0%/100% can reach the actual safe edge; keep the existing
+  // centered (50%) default appearance unchanged.
+  const desktopLogoOffsetMm = !isMobilePreview && ghostHat && !fixedProductConfiguration
+    ? DESKTOP_PHOTO_LOGO_DEFAULT_OFFSET_STAGE_PX[variant] * ((bounds.maxY - bounds.minY) / viewH)
+    : 0;
+  const logoPositionEndpointCompensationMm = desktopLogoOffsetMm * (Math.abs(logoPosY - 50) / 50);
+  const logoCenterYmm = logoPositionCenterYmm + logoPositionEndpointCompensationMm;
   const svgUnitsPerMm = viewW / overallLengthMm;
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
