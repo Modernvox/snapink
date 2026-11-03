@@ -57,7 +57,7 @@ function App() {
 
   return <div className="mx-auto w-full max-w-[1440px] py-0">
     <div className="snapink-studio-application">
-      <SnapInkSleeveCustomizer ref={customizerRef} width={1440} className="snapink-studio-customizer" initial={{ bgType: "vector" }} defaultArtworkPosition={{ posX: 53.3, posY: 80, desktopPosY: 56.5 }} onChange={changeDesign} enableProductPhotoGeneration />
+      <SnapInkSleeveCustomizer ref={customizerRef} width={1440} className="snapink-studio-customizer" initial={{ bgType: "vector" }} onChange={changeDesign} enableProductPhotoGeneration />
       <section className="snapink-studio-submission snapink-draft-submission snapink-retail-order">
         {submitted ? <div className="snapink-retail-success" role="status" aria-live="polite">
           <p className="snapink-draft-eyebrow">DESIGN REVIEW</p>
