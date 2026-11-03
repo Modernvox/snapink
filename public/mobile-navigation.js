@@ -15,9 +15,45 @@
     else document.body.insertBefore(announcement, document.body.firstChild);
   };
 
+  const syncHeaderLogoLockups = () => {
+    document.querySelectorAll('.snapink-mobile-header__logo, img[alt="SnapInk"], img[alt="SnapInk Logo"]')
+      .forEach((logo) => {
+        if (logo.closest("footer")) return;
+        const lockup = logo.closest("a");
+        if (!lockup) return;
+        lockup.classList.add("snapink-logo-lockup");
+        lockup.setAttribute("aria-label", "SnapInk — Snapback Strap Sleeves home");
+        if (!lockup.querySelector(".snapink-brand-tagline")) {
+          const tagline = document.createElement("span");
+          tagline.className = "snapink-brand-tagline";
+          tagline.textContent = "Snapback Strap Sleeves";
+          lockup.append(tagline);
+        }
+        const tagline = lockup.querySelector(".snapink-brand-tagline");
+        const syncTagline = () => {
+          const logoWidth = logo.getBoundingClientRect().width;
+          if (!logoWidth) return;
+          tagline.style.width = `${logoWidth * .93}px`;
+          tagline.style.fontSize = "9px";
+          const availableWidth = tagline.clientWidth;
+          const textWidth = tagline.scrollWidth;
+          if (textWidth > availableWidth && availableWidth > 0) {
+            tagline.style.fontSize = `${Math.max(6, 9 * availableWidth / textWidth)}px`;
+          }
+        };
+        syncTagline();
+        logo.addEventListener("load", syncTagline);
+        if ("ResizeObserver" in window) new ResizeObserver(syncTagline).observe(logo);
+        else window.addEventListener("resize", syncTagline);
+      });
+  };
+
   const init = () => {
     addLaunchAnnouncement();
-    if (announcementOnly) return;
+    if (announcementOnly) {
+      syncHeaderLogoLockups();
+      return;
+    }
     if (document.querySelector(".snapink-mobile-shell")) return;
 
     document.querySelectorAll("body > header, .snap-shell > header").forEach((header) => {
@@ -74,37 +110,7 @@
     const announcement = document.querySelector(".snapink-launch-announcement");
     if (announcement && !announcement.closest(".shop-header")) document.body.insertBefore(announcement, shell);
 
-    document.querySelectorAll('.snapink-mobile-header__logo, img[alt="SnapInk"], img[alt="SnapInk Logo"]')
-      .forEach((logo) => {
-        if (logo.closest("footer")) return;
-        const lockup = logo.closest("a");
-        if (!lockup) return;
-        lockup.classList.add("snapink-logo-lockup");
-        lockup.setAttribute("aria-label", "SnapInk — Snapback Strap Sleeves home");
-        if (!lockup.querySelector(".snapink-brand-tagline")) {
-          const tagline = document.createElement("span");
-          tagline.className = "snapink-brand-tagline";
-          tagline.textContent = "Snapback Strap Sleeves";
-          lockup.append(tagline);
-        }
-        const tagline = lockup.querySelector(".snapink-brand-tagline");
-        const syncLogoLockup = () => {
-          const logoWidth = logo.getBoundingClientRect().width;
-          if (!logoWidth) return;
-          lockup.style.width = `${logoWidth}px`;
-          tagline.style.width = `${logoWidth * .93}px`;
-          tagline.style.fontSize = "9px";
-          const availableWidth = tagline.clientWidth;
-          const textWidth = tagline.scrollWidth;
-          if (textWidth > availableWidth && availableWidth > 0) {
-            tagline.style.fontSize = `${Math.max(6, 9 * availableWidth / textWidth)}px`;
-          }
-        };
-        syncLogoLockup();
-        logo.addEventListener("load", syncLogoLockup);
-        if ("ResizeObserver" in window) new ResizeObserver(syncLogoLockup).observe(logo);
-        else window.addEventListener("resize", syncLogoLockup);
-      });
+    syncHeaderLogoLockups();
 
     const toggle = shell.querySelector(".snapink-mobile-header__toggle");
     const panel = shell.querySelector(".snapink-mobile-panel");
