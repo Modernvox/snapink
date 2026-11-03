@@ -196,5 +196,11 @@
     "srcset": "/images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-480.webp 480w, /images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-960.webp 960w, /images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-1440.webp 1440w",
     "width": 1536,
     "height": 1024
+  },
+  "/images/website_images/one_hat_unlimited_looks_white.png": {
+    "src": "/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp",
+    "srcset": "/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-480.webp 480w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-960.webp 960w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1440.webp 1440w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp 1672w",
+    "width": 1672,
+    "height": 941
   }
 }
