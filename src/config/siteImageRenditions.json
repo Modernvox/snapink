@@ -156,16 +156,16 @@
     "height": 1671
   },
   "/images/product_images/snapink-size-2.png": {
-    "src": "/images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-941.webp",
-    "srcset": "/images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-480.webp 480w, /images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-941.webp 941w",
-    "width": 941,
-    "height": 1672
-  },
-  "/images/product_images/snapink-size-3.png": {
-    "src": "/images/optimized/images-product-images-snapink-size-3-png-3979684eb320-942.webp",
-    "srcset": "/images/optimized/images-product-images-snapink-size-3-png-3979684eb320-480.webp 480w, /images/optimized/images-product-images-snapink-size-3-png-3979684eb320-942.webp 942w",
+    "src": "/images/optimized/images-product-images-snapink-size-2-png-3979684eb320-942.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-2-png-3979684eb320-480.webp 480w, /images/optimized/images-product-images-snapink-size-2-png-3979684eb320-942.webp 942w",
     "width": 942,
     "height": 1670
+  },
+  "/images/product_images/snapink-size-3.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-3-png-8f81c10c0939-941.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-3-png-8f81c10c0939-480.webp 480w, /images/optimized/images-product-images-snapink-size-3-png-8f81c10c0939-941.webp 941w",
+    "width": 941,
+    "height": 1672
   },
   "/images/product_images/snapink-size-4.png": {
     "src": "/images/optimized/images-product-images-snapink-size-4-png-d838850fa7b3-942.webp",
