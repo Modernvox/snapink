@@ -1,0 +1,200 @@
+{
+  "/images/website_images/desktop_hero.png": {
+    "src": "/images/optimized/images-images-website_images-desktop-hero-010a018ba937-1672.webp",
+    "srcset": "/images/optimized/images-website-images-desktop-hero-png-010a018ba937-480.webp 480w, /images/optimized/images-website-images-desktop-hero-png-010a018ba937-960.webp 960w, /images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp 1440w, /images/optimized/images-images-website_images-desktop-hero-010a018ba937-1672.webp 1672w",
+    "width": 1672,
+    "height": 941
+  },
+  "/images/website_images/mobile_hero.png": {
+    "src": "/images/optimized/images-images-website_images-mobile-hero-fd8a01e6a63b-1536.webp",
+    "srcset": "/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-480.webp 480w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-960.webp 960w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp 1440w, /images/optimized/images-images-website_images-mobile-hero-fd8a01e6a63b-1536.webp 1536w",
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/website_images/fit_guide.png": {
+    "src": "/images/optimized/images-website-images-fit-guide-png-8da259d38ff6-1440.webp",
+    "srcset": "/images/optimized/images-website-images-fit-guide-png-8da259d38ff6-480.webp 480w, /images/optimized/images-website-images-fit-guide-png-8da259d38ff6-960.webp 960w, /images/optimized/images-website-images-fit-guide-png-8da259d38ff6-1440.webp 1440w",
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/website_images/Protect_your_strap.png": {
+    "src": "/images/optimized/images-website-images-protect-your-strap-png-b6ee4699b746-852.webp",
+    "srcset": "/images/optimized/images-website-images-protect-your-strap-png-b6ee4699b746-480.webp 480w, /images/optimized/images-website-images-protect-your-strap-png-b6ee4699b746-852.webp 852w",
+    "width": 852,
+    "height": 1846
+  },
+  "/images/website_images/lift_sleeve_on_table.png": {
+    "src": "/images/optimized/images-website-images-lift-sleeve-on-table-png-5fe090a62801-1440.webp",
+    "srcset": "/images/optimized/images-website-images-lift-sleeve-on-table-png-5fe090a62801-480.webp 480w, /images/optimized/images-website-images-lift-sleeve-on-table-png-5fe090a62801-960.webp 960w, /images/optimized/images-website-images-lift-sleeve-on-table-png-5fe090a62801-1440.webp 1440w",
+    "width": 1672,
+    "height": 941
+  },
+  "/images/website_images/sleeve_being_snapped_on.png": {
+    "src": "/images/optimized/images-website-images-sleeve-being-snapped-on-png-3b022c3afa6d-1440.webp",
+    "srcset": "/images/optimized/images-website-images-sleeve-being-snapped-on-png-3b022c3afa6d-480.webp 480w, /images/optimized/images-website-images-sleeve-being-snapped-on-png-3b022c3afa6d-960.webp 960w, /images/optimized/images-website-images-sleeve-being-snapped-on-png-3b022c3afa6d-1440.webp 1440w",
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/website_images/slide_on_blank.jpg": {
+    "src": "/images/optimized/images-website-images-slide-on-blank-jpg-7f6fb5a1ad6a-1440.webp",
+    "srcset": "/images/optimized/images-website-images-slide-on-blank-jpg-7f6fb5a1ad6a-480.webp 480w, /images/optimized/images-website-images-slide-on-blank-jpg-7f6fb5a1ad6a-960.webp 960w, /images/optimized/images-website-images-slide-on-blank-jpg-7f6fb5a1ad6a-1440.webp 1440w",
+    "width": 2123,
+    "height": 1796
+  },
+  "/images/website_images/directprinting.jpg": {
+    "src": "/images/optimized/images-website-images-directprinting-jpg-985e7415ae71-1440.webp",
+    "srcset": "/images/optimized/images-website-images-directprinting-jpg-985e7415ae71-480.webp 480w, /images/optimized/images-website-images-directprinting-jpg-985e7415ae71-960.webp 960w, /images/optimized/images-website-images-directprinting-jpg-985e7415ae71-1440.webp 1440w",
+    "width": 4032,
+    "height": 2268
+  },
+  "/images/website_images/0_pegs.png": {
+    "src": "/images/optimized/images-website-images-0-pegs-png-c98c97506bcf-914.webp",
+    "srcset": "/images/optimized/images-website-images-0-pegs-png-c98c97506bcf-480.webp 480w, /images/optimized/images-website-images-0-pegs-png-c98c97506bcf-914.webp 914w",
+    "width": 914,
+    "height": 609
+  },
+  "/images/website_images/1_pegs.png": {
+    "src": "/images/optimized/images-website-images-1-pegs-png-b0853269a90a-318.webp",
+    "srcset": "/images/optimized/images-website-images-1-pegs-png-b0853269a90a-318.webp 318w",
+    "width": 318,
+    "height": 247
+  },
+  "/images/website_images/2_pegs.png": {
+    "src": "/images/optimized/images-website-images-2-pegs-png-136da510e1c3-963.webp",
+    "srcset": "/images/optimized/images-website-images-2-pegs-png-136da510e1c3-480.webp 480w, /images/optimized/images-website-images-2-pegs-png-136da510e1c3-960.webp 960w, /images/optimized/images-website-images-2-pegs-png-136da510e1c3-963.webp 963w",
+    "width": 963,
+    "height": 642
+  },
+  "/images/website_images/3_pegs.png": {
+    "src": "/images/optimized/images-website-images-3-pegs-png-e59b3d980d61-963.webp",
+    "srcset": "/images/optimized/images-website-images-3-pegs-png-e59b3d980d61-480.webp 480w, /images/optimized/images-website-images-3-pegs-png-e59b3d980d61-960.webp 960w, /images/optimized/images-website-images-3-pegs-png-e59b3d980d61-963.webp 963w",
+    "width": 963,
+    "height": 642
+  },
+  "/images/website_images/4_pegs.png": {
+    "src": "/images/optimized/images-website-images-4-pegs-png-d76cebbf0777-963.webp",
+    "srcset": "/images/optimized/images-website-images-4-pegs-png-d76cebbf0777-480.webp 480w, /images/optimized/images-website-images-4-pegs-png-d76cebbf0777-960.webp 960w, /images/optimized/images-website-images-4-pegs-png-d76cebbf0777-963.webp 963w",
+    "width": 963,
+    "height": 642
+  },
+  "/images/website_images/5_pegs.png": {
+    "src": "/images/optimized/images-website-images-5-pegs-png-ca810a128da4-963.webp",
+    "srcset": "/images/optimized/images-website-images-5-pegs-png-ca810a128da4-480.webp 480w, /images/optimized/images-website-images-5-pegs-png-ca810a128da4-960.webp 960w, /images/optimized/images-website-images-5-pegs-png-ca810a128da4-963.webp 963w",
+    "width": 963,
+    "height": 642
+  },
+  "/images/product_images/Close_up_print.png": {
+    "src": "/images/optimized/images-product-images-close-up-print-png-2a296ac4084a-941.webp",
+    "srcset": "/images/optimized/images-product-images-close-up-print-png-2a296ac4084a-480.webp 480w, /images/optimized/images-product-images-close-up-print-png-2a296ac4084a-941.webp 941w",
+    "width": 941,
+    "height": 1671
+  },
+  "/images/product_images/Front_view.png": {
+    "src": "/images/optimized/images-product-images-front-view-png-2f9532d773f5-941.webp",
+    "srcset": "/images/optimized/images-product-images-front-view-png-2f9532d773f5-480.webp 480w, /images/optimized/images-product-images-front-view-png-2f9532d773f5-941.webp 941w",
+    "width": 941,
+    "height": 1672
+  },
+  "/images/product_images/Left_angle.png": {
+    "src": "/images/optimized/images-product-images-left-angle-png-9fe07899fc33-941.webp",
+    "srcset": "/images/optimized/images-product-images-left-angle-png-9fe07899fc33-480.webp 480w, /images/optimized/images-product-images-left-angle-png-9fe07899fc33-941.webp 941w",
+    "width": 941,
+    "height": 1672
+  },
+  "/images/product_images/Raised_lettering.png": {
+    "src": "/images/optimized/images-product-images-raised-lettering-png-724f7c1444ca-1440.webp",
+    "srcset": "/images/optimized/images-product-images-raised-lettering-png-724f7c1444ca-480.webp 480w, /images/optimized/images-product-images-raised-lettering-png-724f7c1444ca-960.webp 960w, /images/optimized/images-product-images-raised-lettering-png-724f7c1444ca-1440.webp 1440w",
+    "width": 1672,
+    "height": 941
+  },
+  "/images/product_images/three_star_sleeve_on_snapback.png": {
+    "src": "/images/optimized/images-product-images-three-star-sleeve-on-snapback-png-9b31561492b4-1440.webp",
+    "srcset": "/images/optimized/images-product-images-three-star-sleeve-on-snapback-png-9b31561492b4-480.webp 480w, /images/optimized/images-product-images-three-star-sleeve-on-snapback-png-9b31561492b4-960.webp 960w, /images/optimized/images-product-images-three-star-sleeve-on-snapback-png-9b31561492b4-1440.webp 1440w",
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/product_images/lift_sleeve_on _snapback.png": {
+    "src": "/images/optimized/images-product-images-lift-sleeve-on-snapback-png-2706f1415497-1440.webp",
+    "srcset": "/images/optimized/images-product-images-lift-sleeve-on-snapback-png-2706f1415497-480.webp 480w, /images/optimized/images-product-images-lift-sleeve-on-snapback-png-2706f1415497-960.webp 960w, /images/optimized/images-product-images-lift-sleeve-on-snapback-png-2706f1415497-1440.webp 1440w",
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/product_images/wholesale_blanks.png": {
+    "src": "/images/optimized/images-product-images-wholesale-blanks-png-1278aff6b53a-1440.webp",
+    "srcset": "/images/optimized/images-product-images-wholesale-blanks-png-1278aff6b53a-480.webp 480w, /images/optimized/images-product-images-wholesale-blanks-png-1278aff6b53a-960.webp 960w, /images/optimized/images-product-images-wholesale-blanks-png-1278aff6b53a-1440.webp 1440w",
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/product_images/pile_of_snapback_hats.png": {
+    "src": "/images/optimized/images-product-images-pile-of-snapback-hats-png-51ba1a74317d-1440.webp",
+    "srcset": "/images/optimized/images-product-images-pile-of-snapback-hats-png-51ba1a74317d-480.webp 480w, /images/optimized/images-product-images-pile-of-snapback-hats-png-51ba1a74317d-960.webp 960w, /images/optimized/images-product-images-pile-of-snapback-hats-png-51ba1a74317d-1440.webp 1440w",
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/product_images/snapink-billboard-futuristic-angular-lift-logo-rear.png": {
+    "src": "/images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-rear-png-84d95dd03051-911.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-rear-png-84d95dd03051-480.webp 480w, /images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-rear-png-84d95dd03051-911.webp 911w",
+    "width": 911,
+    "height": 1024
+  },
+  "/images/product_images/snapink-billboard-futuristic-angular-lift-logo_packaging.png": {
+    "src": "/images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-packaging-png-cd8e94619f7d-1086.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-packaging-png-cd8e94619f7d-480.webp 480w, /images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-packaging-png-cd8e94619f7d-960.webp 960w, /images/optimized/images-product-images-snapink-billboard-futuristic-angular-lift-logo-packaging-png-cd8e94619f7d-1086.webp 1086w",
+    "width": 1086,
+    "height": 1448
+  },
+  "/images/product_images/snapink-size-0.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-0-png-ea0f1913435e-941.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-0-png-ea0f1913435e-480.webp 480w, /images/optimized/images-product-images-snapink-size-0-png-ea0f1913435e-941.webp 941w",
+    "width": 941,
+    "height": 1672
+  },
+  "/images/product_images/snapink-size-1.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-1-png-94ffecd0cc56-941.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-1-png-94ffecd0cc56-480.webp 480w, /images/optimized/images-product-images-snapink-size-1-png-94ffecd0cc56-941.webp 941w",
+    "width": 941,
+    "height": 1671
+  },
+  "/images/product_images/snapink-size-2.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-941.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-480.webp 480w, /images/optimized/images-product-images-snapink-size-2-png-8f81c10c0939-941.webp 941w",
+    "width": 941,
+    "height": 1672
+  },
+  "/images/product_images/snapink-size-3.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-3-png-3979684eb320-942.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-3-png-3979684eb320-480.webp 480w, /images/optimized/images-product-images-snapink-size-3-png-3979684eb320-942.webp 942w",
+    "width": 942,
+    "height": 1670
+  },
+  "/images/product_images/snapink-size-4.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-4-png-d838850fa7b3-942.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-4-png-d838850fa7b3-480.webp 480w, /images/optimized/images-product-images-snapink-size-4-png-d838850fa7b3-942.webp 942w",
+    "width": 942,
+    "height": 1670
+  },
+  "/images/product_images/snapink-size-5.png": {
+    "src": "/images/optimized/images-product-images-snapink-size-5-png-73fc20659ba0-941.webp",
+    "srcset": "/images/optimized/images-product-images-snapink-size-5-png-73fc20659ba0-480.webp 480w, /images/optimized/images-product-images-snapink-size-5-png-73fc20659ba0-941.webp 941w",
+    "width": 941,
+    "height": 1670
+  },
+  "/images/product_images/custom_sleeves/Photo Oct 27 2026, 9 21 22 AM.png": {
+    "src": "/images/optimized/images-product-images-custom-sleeves-photo-oct-27-2026-9-21-22-am-png-8e019973bf33-1440.webp",
+    "srcset": "/images/optimized/images-product-images-custom-sleeves-photo-oct-27-2026-9-21-22-am-png-8e019973bf33-480.webp 480w, /images/optimized/images-product-images-custom-sleeves-photo-oct-27-2026-9-21-22-am-png-8e019973bf33-960.webp 960w, /images/optimized/images-product-images-custom-sleeves-photo-oct-27-2026-9-21-22-am-png-8e019973bf33-1440.webp 1440w",
+    "width": 1993,
+    "height": 789
+  },
+  "/images/product_images/custom_sleeves/three_star_sleeve.png": {
+    "src": "/images/optimized/images-product-images-custom-sleeves-three-star-sleeve-png-18cb9274b84b-1440.webp",
+    "srcset": "/images/optimized/images-product-images-custom-sleeves-three-star-sleeve-png-18cb9274b84b-480.webp 480w, /images/optimized/images-product-images-custom-sleeves-three-star-sleeve-png-18cb9274b84b-960.webp 960w, /images/optimized/images-product-images-custom-sleeves-three-star-sleeve-png-18cb9274b84b-1440.webp 1440w",
+    "width": 1993,
+    "height": 789
+  },
+  "/images/website_images/lift_sleeve_on_model.png": {
+    "src": "/images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-1440.webp",
+    "srcset": "/images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-480.webp 480w, /images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-960.webp 960w, /images/optimized/images-website-images-lift-sleeve-on-model-png-ae59f1b4684c-1440.webp 1440w",
+    "width": 1536,
+    "height": 1024
+  }
+}

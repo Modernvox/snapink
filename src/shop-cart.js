@@ -1,4 +1,5 @@
 import { calculateShopCartPricing } from "../functions/_lib/retail-pricing.mjs";
+import { applySiteImageRendition } from "./utils/imageRenditions.js";
 
 const STORAGE_KEY="snapink-exclusive-shop-cart";
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
@@ -33,7 +34,7 @@ export function mountShopCart(products){
       const product=productMap[item.productId];if(!product)return;
       const variant=product.variants.find((entry)=>entry.variantId===item.variantId)||product.variants[0];
       const row=document.createElement("article");row.className="shop-cart-line";
-      const image=document.createElement("img");image.src=variant?.sleeveImageUrl||product.imageUrl;image.alt=variant?.sleeveImageAlt||`${product.name} SnapInk Sleeve only; hat not included`;image.loading="lazy";
+      const image=document.createElement("img");applySiteImageRendition(image,variant?.sleeveImageUrl||product.imageUrl,"72px");image.alt=variant?.sleeveImageAlt||`${product.name} SnapInk Sleeve only; hat not included`;image.loading="lazy";
       const info=document.createElement("div"),title=document.createElement("strong"),clarification=document.createElement("p"),desc=document.createElement("p"),controls=document.createElement("div"),qty=document.createElement("input"),remove=document.createElement("button");
       title.textContent=product.name;desc.textContent=`${variant?.name||"Black sleeve / white artwork"} · Size ${item.size} · ${usd(product.prices[item.size])} each`;
       clarification.className="shop-cart-product-note";clarification.textContent="SnapInk Sleeve™ — Hat not included";
