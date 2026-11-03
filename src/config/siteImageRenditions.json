@@ -202,5 +202,11 @@
     "srcset": "/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-480.webp 480w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-960.webp 960w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1440.webp 1440w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp 1672w",
     "width": 1672,
     "height": 941
+  },
+  "/images/website_images/blanks.png": {
+    "src": "/images/optimized/images-website-images-blanks-png-9a9ff3c70186-1024.webp",
+    "srcset": "/images/optimized/images-website-images-blanks-png-9a9ff3c70186-480.webp 480w, /images/optimized/images-website-images-blanks-png-9a9ff3c70186-960.webp 960w, /images/optimized/images-website-images-blanks-png-9a9ff3c70186-1024.webp 1024w",
+    "width": 1024,
+    "height": 1024
   }
 }
