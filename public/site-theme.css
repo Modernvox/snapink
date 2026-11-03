@@ -73,7 +73,7 @@ a[href^="/customize.html#"].snap-btn:hover, a[href="/customize.html"].bg-pink-60
 .snap-btn:hover { background: var(--si-gold-hover) !important; color: var(--si-gold-ink) !important; }
 .snap-links a[href="/customize.html"], .snap-links a[href^="/customize.html#"] { color: var(--si-gold); }
 .snap-links a[href="/pilot.html"], .snapink-mobile-panel a[href="/pilot.html"],
-.snapink-mobile-panel a[href="/drop001.html"], .snapink-mobile-panel a[href="/wholesale"] { color: var(--si-accent); }
+.snapink-mobile-panel a[href="/wholesale"] { color: var(--si-accent); }
 .snapink-mobile-panel .snapink-mobile-panel__cta,
 .snapink-mobile-panel .snapink-mobile-panel__cta:hover,
 .snapink-mobile-panel .snapink-mobile-panel__cta[aria-current="page"] {
@@ -82,24 +82,20 @@ a[href^="/customize.html#"].snap-btn:hover, a[href="/customize.html"].bg-pink-60
 .snapink-mobile-panel .snapink-mobile-panel__cta:hover { background: var(--si-gold-hover); }
 .snapink-mobile-header__toggle { border-color: color-mix(in srgb, var(--si-accent) 36%, transparent); }
 .snapink-mobile-panel a[href="/customize.html"], .snapink-mobile-panel a[href^="/customize.html#"] { color: var(--si-gold); }
-.snapink-mobile-panel a[href="/pilot.html"], .snapink-mobile-panel a[href="/wholesale"],
-.snapink-mobile-panel a[href="/drop001.html"] { color: var(--si-marketing-pink); }
-.snapink-mobile-panel a[href="/pilot.html"]:hover, .snapink-mobile-panel a[href="/wholesale"]:hover,
-.snapink-mobile-panel a[href="/drop001.html"]:hover { color: var(--si-hover); }
+.snapink-mobile-panel a[href="/pilot.html"], .snapink-mobile-panel a[href="/wholesale"] { color: var(--si-marketing-pink); }
+.snapink-mobile-panel a[href="/pilot.html"]:hover, .snapink-mobile-panel a[href="/wholesale"]:hover { color: var(--si-hover); }
 .snap-links a[href="/pilot.html"] { color: #fff; }
 .snap-links a[href="/pilot.html"]:hover,
 .snap-links a[href="/pilot.html"]:focus-visible,
 .snap-links a[href="/pilot.html"][aria-current="page"] { color: #fff; }
-.links a[href="/pilot.html"], .links a[href="/wholesale-info.html"],
-.links a[href="/drop001.html"], .links a[href="/wholesale"] { color: var(--si-marketing-pink); }
+.links a[href="/pilot.html"], .links a[href="/wholesale-info.html"], .links a[href="/wholesale"] { color: var(--si-marketing-pink); }
 .links a[href="/pilot.html"],
 .links a[href="/pilot.html"]:hover,
 .links a[href="/pilot.html"]:focus-visible,
 .links a[href="/pilot.html"][aria-current="page"] { color: #fff; }
 .links a[href="/customize.html"] { color: var(--si-gold); }
 .links a[href="/customize.html"]:hover { color: var(--si-gold-hover); }
-.links a[href="/pilot.html"]:hover, .links a[href="/wholesale-info.html"]:hover,
-.links a[href="/drop001.html"]:hover, .links a[href="/wholesale"]:hover { color: var(--si-hover); }
+.links a[href="/pilot.html"]:hover, .links a[href="/wholesale-info.html"]:hover, .links a[href="/wholesale"]:hover { color: var(--si-hover); }
 .hero .eyebrow, .hero .patent-pending, .hero .patent-pending::before { color: var(--si-gold); }
 .hero .patent-pending { border-left-color: var(--si-gold); }
 .hero .subline { color: var(--si-accent) !important; }

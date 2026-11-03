@@ -71,8 +71,6 @@
       { label: "Customization", href: `${rootPrefix}#customization` },
       { label: "Studio", href: "/customize.html", key: "/customize.html" },
       { label: "Fit Guide", href: "/fit-guide.html", key: "/fit-guide.html" },
-      { label: "Drop 001", href: "/drop001.html", key: "/drop001.html" },
-      { label: "Press", href: "/press.html", key: "/press.html" },
       { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
       { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
       { label: "Contact", href: "/contact.html", key: "/contact.html" },

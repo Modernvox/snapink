@@ -26,8 +26,6 @@ export default defineConfig({
         customize: path.resolve(__dirname, "customize.html"), 
         fitGuide: path.resolve(__dirname, "fit-guide.html"),
         pilot: path.resolve(__dirname, "pilot.html"),
-        press: path.resolve(__dirname, "press.html"),
-        drop001: path.resolve(__dirname, "drop001.html"),
         wholesaleInfo: path.resolve(__dirname, "wholesale-info.html"),
         contact: path.resolve(__dirname, "contact.html"),
         partnerPortal: path.resolve(__dirname, "partner-portal.html"),
