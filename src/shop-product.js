@@ -2,7 +2,7 @@ import { mountShopCart } from "./shop-cart.js";
 import { applySiteImageRendition } from "./utils/imageRenditions.js";
 
 const root=document.querySelector("#shop-product-root"),usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const sizeImage=(size)=>`/images/website_images/${size}_pegs.png`;
+const sizeImage=(size)=>`/images/product_images/snapink-size-${size}.png`;
 function openLightbox(src,alt,label){
   let dialog=document.querySelector(".shop-size-lightbox");
   if(!dialog){dialog=document.createElement("dialog");dialog.className="shop-size-lightbox";dialog.innerHTML='<button type="button" class="shop-lightbox-close" aria-label="Close enlarged image">×</button><img class="shop-lightbox-image"><p class="shop-lightbox-caption"></p>';document.body.append(dialog);dialog.querySelector(".shop-lightbox-close").addEventListener("click",()=>dialog.close());dialog.addEventListener("click",(event)=>{if(event.target===dialog)dialog.close()})}
