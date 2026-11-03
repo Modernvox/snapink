@@ -311,6 +311,10 @@ const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
 const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
 // Visual preview only; matches the approved raised artwork reference height.
 const STUDIO_EMBOSSED_PREVIEW_RELIEF_MM = 0.8;
+// Render-only extrusion: stacked SVG copies create visible sidewalls without
+// changing artwork dimensions or the relief value used in draft/order data.
+const STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM = 1.35;
+const STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS = 16;
 // Natural-image pixel bounds for the download-only upper hat through nose crop.
 const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
   desktop: { top: 0, bottom: 700 },
@@ -1008,6 +1012,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   const pathId = `text-arc-path-${uid}`;
   const surfaceClipId = `printable-surface-${uid}`;
+  const embossFaceHighlightId = `emboss-face-highlight-${uid}`;
   const surfacePath = useMemo(
     () => brandingSurfacePath(variant, renderGeometrySize, viewW, viewH),
     [variant, renderGeometrySize, viewH]
@@ -1209,6 +1214,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   // All previews and exports use the same CAD-referenced artwork position.
   const logoCenterYmm = logoPositionCenterYmm;
   const svgUnitsPerMm = viewW / overallLengthMm;
+  const embossedExtrusionX = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.32;
+  const embossedExtrusionY = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.72;
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
   const visibleLogoHeightSvg = logoHeightMm * svgUnitsPerMm;
   const logoImageHeightSvg = visibleLogoHeightSvg / logoVisibleBounds.height;
@@ -1817,6 +1824,49 @@ const SnapInkSleeveCustomizer = forwardRef<
   const textAnchor =
     align === "start" ? "start" : align === "end" ? "end" : "middle";
 
+  const renderStudioText = () => (
+    <text
+      fontFamily={font}
+      fontSize={scaledFontSize}
+      fontWeight={fontWeight}
+      letterSpacing={`${tracking}em`}
+      fill={fill}
+      stroke={strokeWidth > 0 ? stroke : "none"}
+      strokeWidth={strokeWidth * (viewH / 450)}
+      dominantBaseline="central"
+      textAnchor={textAnchor}
+      paintOrder="stroke fill"
+    >
+      {Math.abs(arc) < 1
+        ? text.split("\n").map((line, i, arr) => (
+            <tspan
+              key={i}
+              x={(posX / 100) * 1600}
+              y={textCenterCanvasY + (i - (arr.length - 1) / 2) * (scaledFontSize * lineHeight)}
+            >
+              {line}
+            </tspan>
+          ))
+        : (() => {
+            const lines = text.split("\n");
+            const centerOffset = clamp(posX, safeMargin, 100 - safeMargin);
+            const lineGapPct = ((scaledFontSize * lineHeight) / viewH) * 100;
+            return lines.map((line, i) => {
+              const offsetPct = centerOffset + (i - (lines.length - 1) / 2) * lineGapPct;
+              return (
+                <textPath
+                  key={i}
+                  href={`#${pathId}`}
+                  startOffset={`${clamp(offsetPct, safeMargin, 100 - safeMargin)}%`}
+                >
+                  {line}
+                </textPath>
+              );
+            });
+          })()}
+    </text>
+  );
+
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2329,39 +2379,20 @@ const SnapInkSleeveCustomizer = forwardRef<
         }}
       >
         <defs>
-          <filter id="emboss" x="-25%" y="-25%" width="150%" height="150%">
+          <filter id={embossFaceHighlightId} x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
             <feOffset
               in="SourceAlpha"
-              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.25}
-              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.62}
-              result="embossShadowOffset"
-            />
-            <feGaussianBlur
-              in="embossShadowOffset"
-              stdDeviation={Math.max(0.35, STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.06)}
-              result="embossShadowBlur"
-            />
-            <feComposite in="embossShadowBlur" in2="SourceAlpha" operator="out" result="embossContactEdge" />
-            <feFlood floodColor="#080706" floodOpacity="0.62" result="embossContactColor" />
-            <feComposite in="embossContactColor" in2="embossContactEdge" operator="in" result="embossContactShadow" />
-            <feOffset
-              in="SourceAlpha"
-              dx={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.25}
-              dy={STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.62}
+              dx={STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.08}
+              dy={STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.08}
               result="embossLightOffset"
             />
-            <feComposite in="SourceAlpha" in2="embossLightOffset" operator="out" result="embossTopEdge" />
-            <feFlood floodColor="#ffffff" floodOpacity="0.24" result="embossHighlightColor" />
-            <feComposite in="embossHighlightColor" in2="embossTopEdge" operator="in" result="embossHighlight" />
+            <feComposite in="SourceAlpha" in2="embossLightOffset" operator="out" result="embossTopLeftEdge" />
+            <feFlood floodColor="#ffffff" floodOpacity="0.62" result="embossHighlightColor" />
+            <feComposite in="embossHighlightColor" in2="embossTopLeftEdge" operator="in" result="embossHighlight" />
             <feMerge>
-              <feMergeNode in="embossContactShadow" />
               <feMergeNode in="SourceGraphic" />
               <feMergeNode in="embossHighlight" />
             </feMerge>
-          </filter>
-
-          <filter id="shadowText" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.3" />
           </filter>
 
           <path id={pathId} d={arcPath} />
@@ -2432,6 +2463,27 @@ const SnapInkSleeveCustomizer = forwardRef<
           <defs><path id={pathId} d={arcPath} /></defs>
         {logoDataUrl && !logoNeedsRemoval && (
           <g>
+            {styleMode === "emboss" && Array.from({ length: STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS }, (_, index) => {
+              const layer = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS - index;
+              const depth = layer / STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS;
+              const sideBrightness = 0.36 + (1 - depth) * 0.3;
+              return (
+                <image
+                  key={`logo-extrusion-${layer}`}
+                  href={logoDataUrl}
+                  x={logoImageX}
+                  y={logoImageY}
+                  width={logoImageWidthSvg}
+                  height={logoImageHeightSvg}
+                  preserveAspectRatio="xMidYMid meet"
+                  transform={`translate(${embossedExtrusionX * depth} ${embossedExtrusionY * depth})`}
+                  style={{ filter: `brightness(${sideBrightness})` }}
+                  opacity={logoOpacity / 100}
+                  data-emboss-extrusion-step={layer}
+                  aria-hidden="true"
+                />
+              );
+            })}
             <image
               href={logoDataUrl}
               x={logoImageX}
@@ -2439,7 +2491,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               width={logoImageWidthSvg}
               height={logoImageHeightSvg}
               preserveAspectRatio="xMidYMid meet"
-              filter={styleMode === "emboss" ? "url(#emboss)" : undefined}
+              filter={styleMode === "emboss" ? `url(#${embossFaceHighlightId})` : undefined}
               opacity={logoOpacity / 100}
               data-testid="studio-logo-artwork"
               data-branding-center-x-mm={brandingRegion.centerXmm}
@@ -2473,75 +2525,36 @@ const SnapInkSleeveCustomizer = forwardRef<
           </g>
         )}
 
+        {Boolean(text) && styleMode === "emboss" && Array.from({ length: STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS }, (_, index) => {
+          const layer = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS - index;
+          const depth = layer / STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS;
+          const sideBrightness = 0.36 + (1 - depth) * 0.3;
+          return (
+            <g
+              key={`text-extrusion-${layer}`}
+              transform={`translate(${embossedExtrusionX * depth} ${embossedExtrusionY * depth})`}
+              style={{ filter: `brightness(${sideBrightness})` }}
+              data-emboss-extrusion-step={layer}
+              aria-hidden="true"
+            >
+              <g transform={isMobilePreview && ghostHat && !fixedProductConfiguration
+                ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
+                : undefined}>
+                {renderStudioText()}
+              </g>
+            </g>
+          );
+        })}
+
         {Boolean(text) && (
-          <g
-            filter={
-              styleMode === "emboss" ? "url(#emboss)" : "url(#shadowText)"
-            }
-          >
+          <g filter={styleMode === "emboss" ? `url(#${embossFaceHighlightId})` : undefined}>
             <g
               transform={isMobilePreview && ghostHat && !fixedProductConfiguration
                 ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
                 : undefined}
               data-mobile-photographic-text-offset={isMobilePreview && ghostHat && !fixedProductConfiguration ? "true" : undefined}
             >
-            <text
-              fontFamily={font}
-              fontSize={scaledFontSize}
-              fontWeight={fontWeight}
-              letterSpacing={`${tracking}em`}
-              fill={fill}
-              stroke={strokeWidth > 0 ? stroke : "none"}
-              strokeWidth={strokeWidth * (viewH / 450)}
-              dominantBaseline="central"
-              textAnchor={textAnchor}
-              paintOrder="stroke fill"
-            >
-              {Math.abs(arc) < 1
-                ? text.split("\n").map((line, i, arr) => (
-                    <tspan
-                      key={i}
-                      x={(posX / 100) * 1600}
-                      y={
-                        textCenterCanvasY +
-                        (i - (arr.length - 1) / 2) *
-                          (scaledFontSize * lineHeight)
-                      }
-                    >
-                      {line}
-                    </tspan>
-                  ))
-                : (() => {
-                    const lines = text.split("\n");
-                    const centerOffset = clamp(
-                      posX,
-                      safeMargin,
-                      100 - safeMargin
-                    );
-                    const lineGapPct =
-                      ((scaledFontSize * lineHeight) / viewH) * 100;
-
-                    return lines.map((line, i) => {
-                      const offsetPct =
-                        centerOffset +
-                        (i - (lines.length - 1) / 2) * lineGapPct;
-
-                      return (
-                        <textPath
-                          key={i}
-                          href={`#${pathId}`}
-                          startOffset={`${clamp(
-                            offsetPct,
-                            safeMargin,
-                            100 - safeMargin
-                          )}%`}
-                        >
-                          {line}
-                        </textPath>
-                      );
-                    });
-                  })()}
-            </text>
+              {renderStudioText()}
             </g>
           </g>
         )}
