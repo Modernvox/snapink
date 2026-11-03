@@ -55,7 +55,7 @@
       <header class="snapink-mobile-header">
         <div class="snapink-mobile-header__row">
           <a href="/" aria-label="SnapInk home">
-            <img class="snapink-mobile-header__logo" src="/images/logos/Futuristic%20White%20SNAPINK%20Logo.png" alt="SnapInk" width="300" height="100" />
+            <img class="snapink-mobile-header__logo" src="/images/logos/snapink-header-logo.png" alt="SnapInk" width="2172" height="242" />
           </a>
           <button class="snapink-mobile-header__toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="snapink-mobile-panel">
             <span></span><span></span><span></span>

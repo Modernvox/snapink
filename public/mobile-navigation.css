@@ -30,7 +30,7 @@
   flex-direction: column;
   align-items: center !important;
   justify-content: center;
-  gap: 0 !important;
+  gap: 4px !important;
   line-height: 1;
   text-decoration: none;
 }
@@ -51,10 +51,7 @@
   white-space: nowrap;
 }
 
-.snapink-logo-lockup .snapink-brand-tagline {
-  /* Compensate for transparent pixels beneath the artwork in the logo PNG. */
-  margin-top: -7.5%;
-}
+.snapink-logo-lockup > img { display: block; height: auto !important; }
 
 .snapink-desktop-header > div.py-3 {
   padding-block: 8px !important;
@@ -118,14 +115,10 @@
   .snapink-mobile-header__logo {
     display: block;
     flex: 0 1 auto;
-    width: clamp(118px, 36vw, 160px);
-    max-height: 48px;
+    width: min(clamp(118px, 36vw, 160px), 144px);
+    max-height: none;
     object-fit: contain;
     object-position: left center;
-  }
-
-  .snapink-mobile-header .snapink-brand-tagline {
-    margin-top: -7.5%;
   }
 
   .snapink-mobile-header__toggle {
