@@ -46,6 +46,11 @@
     .mobile-menu a[href="/pilot.html"]{width:max-content}
     .hero{background-image:linear-gradient(90deg,#111 3%,#111d 34%,#1115 70%),linear-gradient(0deg,#1118,transparent 46%),url("/images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp");background-position:center,center,center 62%;background-size:cover}
     .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,72px);align-items:center}
+    @media(min-width:801px){
+      .exclusive-shop-promo .exclusive-shop-cards{width:min(100%,920px);margin:26px auto}
+      .exclusive-shop-promo .exclusive-shop-cards>a{height:100%;gap:8px;padding:8px}
+      .exclusive-shop-promo .exclusive-shop-cards img{aspect-ratio:3/2;object-fit:contain;object-position:center}
+    }
     .one-hat-promo{display:flex;flex-direction:column;align-items:center;gap:24px}
     .one-hat-promo-image{display:block;width:min(100%,1120px);height:auto}
     .one-hat-promo>.button{width:min(100%,320px)}
