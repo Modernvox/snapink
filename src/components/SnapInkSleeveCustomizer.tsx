@@ -1912,12 +1912,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     ];
     const facePoly=extendBothEdges(deskFaceVertices);
     const insideFace=(x:number,y:number) => { let inside=false; for(let i=0,j=facePoly.length-1;i<facePoly.length;j=i++) { const [xi,yi]=facePoly[i],[xj,yj]=facePoly[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; };
-    // The Studio SVG already applies the selected artwork opacity. Standard
-    // desk art must stay opaque so the black TPU texture cannot show through
-    // lettering; the calibrated Billboard transparency remains unchanged.
-    const outputOpacity = productStyle === "standard"
-      ? 1
-      : styleMode === "emboss" ? calibration.embossedOpacity : calibration.flatOpacity;
+    // The Studio SVG already applies the selected artwork opacity and carries
+    // the embossed face and relief layers. Applying the photo calibration's
+    // opacity here would blend sleeve texture through otherwise opaque pixels.
     for(let y=minTargetY;y<=maxTargetY;y++) for(let x=minTargetX;x<=maxTargetX;x++) {
       const px=x+.5,py=y+.5; if(!insideFace(px,py)) continue;
       const denominator=h6*px+h7*py+1; if(Math.abs(denominator)<1e-9) continue;
@@ -1928,7 +1925,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       let alpha=0,red=0,green=0,blue=0;
       for(const [ix,iy,weight] of samples) { const at=(iy*artWidth+ix)*4, a=sourcePixels[at+3]/255*weight; alpha+=a; red+=sourcePixels[at]*a; green+=sourcePixels[at+1]*a; blue+=sourcePixels[at+2]*a; }
       if(alpha<=0) continue;
-      const at=(y*canvas.width+x)*4; outputPixels.data[at]=Math.round(red/alpha); outputPixels.data[at+1]=Math.round(green/alpha); outputPixels.data[at+2]=Math.round(blue/alpha); outputPixels.data[at+3]=Math.round(alpha*outputOpacity*255);
+      const at=(y*canvas.width+x)*4; outputPixels.data[at]=Math.round(red/alpha); outputPixels.data[at+1]=Math.round(green/alpha); outputPixels.data[at+2]=Math.round(blue/alpha); outputPixels.data[at+3]=Math.round(alpha*255);
     }
     const overlayPixels = outputPixels;
     const masterCanvas = document.createElement("canvas"); masterCanvas.width = canvas.width; masterCanvas.height = canvas.height;
