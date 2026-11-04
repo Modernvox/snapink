@@ -35,12 +35,14 @@ export function calculateShopTotals(merchandiseSubtotalCents, quantity) {
   return { merchandiseSubtotalCents, discountCents, discountedMerchandiseCents, shippingCents, totalBeforeTaxCents: discountedMerchandiseCents + shippingCents };
 }
 
-export function calculateRetailPricing(size, quantity) {
+export function calculateRetailPricing(size, quantity, extendedArtwork = false) {
   if (!Number.isInteger(size) || size < 0 || size > 5) throw new RangeError("Choose a sleeve size from 0 to 5.");
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > RETAIL_MAX_QUANTITY) {
     throw new RangeError(`Quantity must be between 1 and ${RETAIL_MAX_QUANTITY}.`);
   }
-  const unitPriceCents = size <= 3 ? 1599 : 1899;
+  const unitPriceCents = extendedArtwork
+    ? size <= 2 ? 2499 : 2999
+    : size <= 3 ? 1599 : 1899;
   const merchandiseSubtotalCents = unitPriceCents * quantity;
   const discountCents = quantity >= RETAIL_DISCOUNT_THRESHOLD
     ? Math.round((merchandiseSubtotalCents * RETAIL_DISCOUNT_PERCENT) / 100)

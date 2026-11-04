@@ -432,7 +432,9 @@
   font-size: 12px;
   line-height: 1.45;
 }
-.snapink-extended-artwork-popover p { margin: 0; color: #FFFFFF; }
+.snapink-extended-artwork-popover p { margin: 0 0 7px; color: #FFFFFF; }
+.snapink-extended-artwork-popover p:last-child { margin-bottom: 0; }
+.snapink-extended-artwork-popover strong { display: block; margin: 7px 0 3px; color: #FFFFFF; }
 .snapink-extended-artwork-popover > button {
   position: absolute;
   top: 5px;

@@ -63,13 +63,13 @@ async function sendPaymentLinkEmail(env, order, { claim = true } = {}) {
       WHERE id=? AND status='AWAITING_PAYMENT' AND payment_email_status IN ('pending','failed')`).bind(now(),order.id).run();
     if (!claimed.meta?.changes) return { sent: order.paymentEmailStatus === "sent", skipped: true };
   }
-  const pricing = calculateRetailPricing(order.size,order.quantity);
+  const draft = orderDraft(order);
+  const pricing = calculateRetailPricing(order.size,order.quantity,Boolean(draft.extendedArtwork));
   try {
-    const draft = orderDraft(order);
     const attachments = await designAttachments(env, order);
     const attachmentNote = attachments.length ? "A copy of your design is attached as a PNG." : "Your design preview remains saved securely with your order.";
     await sendSnapInkEmail(env,{ to:order.customerEmail,subject:`Your SnapInk order ${order.orderNumber} is approved`,text:
-      `Your SnapInk custom sleeve design has passed review and is ready for purchase. ${attachmentNote}\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(draft)}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nTo proceed, complete payment and provide your shipping address securely with Stripe: ${order.checkoutUrl}\n${stripeAutomaticTaxEnabled(env) ? "Stripe Checkout will calculate applicable sales tax from your shipping address." : "Taxes are not calculated in this checkout; the displayed total excludes any applicable taxes."} SnapInk does not receive or store your card details.`,attachments });
+      `Your SnapInk custom sleeve design has passed review and is ready for purchase. ${attachmentNote}\n\nOrder: ${order.orderNumber}\nStyle: ${order.variant}\nSize: ${order.size}\nQuantity: ${order.quantity}\n${designDescription(draft)}${draft.extendedArtwork ? `\nExtended premium design price: ${usd(calculateRetailPricing(order.size,1,true).unitPriceCents)} each` : ""}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTotal before applicable taxes: ${usd(pricing.totalBeforeTaxCents)}\n\nTo proceed, complete payment and provide your shipping address securely with Stripe: ${order.checkoutUrl}\n${stripeAutomaticTaxEnabled(env) ? "Stripe Checkout will calculate applicable sales tax from your shipping address." : "Taxes are not calculated in this checkout; the displayed total excludes any applicable taxes."} SnapInk does not receive or store your card details.`,attachments });
     await env.DB.prepare("UPDATE retail_orders SET payment_email_status='sent',updated_at=? WHERE id=? AND status='AWAITING_PAYMENT'").bind(now(),order.id).run();
     return { sent:true };
   } catch (error) {
@@ -83,7 +83,8 @@ async function createCheckoutSession(env, order, attempt) {
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) throw new Error("Payment links are disabled until STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are configured in Cloudflare Pages secrets.");
   if (env.RETAIL_PAYMENT_LINKS_ENABLED !== "true") throw new Error("Retail order payment links are not enabled yet.");
   const address = safeOrderJson(order.shippingAddressJson);
-  const pricing = calculateRetailPricing(order.size,order.quantity);
+  const draft = orderDraft(order);
+  const pricing = calculateRetailPricing(order.size,order.quantity,Boolean(draft.extendedArtwork));
   if (Number(order.unitPriceCents)!==pricing.unitPriceCents
     || Number(order.merchandiseSubtotalCents)!==pricing.merchandiseSubtotalCents
     || Number(order.discountCents)!==pricing.discountCents
@@ -185,7 +186,7 @@ export async function onRequestPatch({request,env}) {
         return json({error:"Order changed during approval. Refresh the retail order list and retry."},409);
       }
       await env.DB.prepare("INSERT INTO retail_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)")
-        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity).totalBeforeTaxCents,extendedArtworkReviewApproved:Boolean(draft.extendedArtwork),artworkExtensionMm:draft.artworkExtensionMm??0}),created).run();
+        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity,Boolean(draft.extendedArtwork)).totalBeforeTaxCents,extendedArtworkReviewApproved:Boolean(draft.extendedArtwork),artworkExtensionMm:draft.artworkExtensionMm??0}),created).run();
       order=await loadOrder(env.DB,body.id);
       const emailed=await sendPaymentLinkEmail(env,order);
       return json({ok:true,orderNumber:order.orderNumber,status:order.status,checkoutUrl:order.checkoutUrl,emailStatus:emailed.sent?"sent":"failed",warning:emailed.error||null});
@@ -208,7 +209,7 @@ export async function onRequestPatch({request,env}) {
       if(!["PAID","IN_PRODUCTION","SHIPPED","COMPLETED"].includes(order.status)) return json({error:"Payment notices can be retried only after payment is confirmed."},409);
       const paid=await env.DB.prepare("SELECT tax_cents AS taxCents,total_paid_cents AS totalPaidCents FROM retail_orders WHERE id=?").bind(order.id).first();
       if(!paid?.totalPaidCents) return json({error:"Verified Stripe payment details are not available for this order."},409);
-      const price=calculateRetailPricing(order.size,order.quantity);
+      const price=calculateRetailPricing(order.size,order.quantity,Boolean(orderDraft(order).extendedArtwork));
       const summary=`Order ${order.orderNumber}\n${order.variant} sleeve · Size ${order.size} · Quantity ${order.quantity}\nMerchandise subtotal: ${usd(price.merchandiseSubtotalCents)}\nQuantity discount: ${price.discountCents?`-${usd(price.discountCents)}`:"$0.00"}\nShipping: ${usd(price.shippingCents)}\nTax: ${usd(paid.taxCents)}\nPaid total: ${usd(paid.totalPaidCents)}`;
       const results={owner:order.ownerPaymentNoticeStatus,customer:order.paymentConfirmationStatus};
       for(const recipient of ["owner","customer"]) {

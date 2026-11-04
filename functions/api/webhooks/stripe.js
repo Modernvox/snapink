@@ -18,7 +18,7 @@ async function notifyPayment(env,order,pricing,taxCents,totalPaidCents) {
   const customerClaim=await env.DB.prepare("UPDATE retail_orders SET payment_confirmation_status='sending',updated_at=? WHERE id=? AND status='PAID' AND payment_confirmation_status IN ('pending','failed')").bind(time,order.id).run();
   if(!ownerClaim.meta?.changes&&!customerClaim.meta?.changes) return;
   const design=safeOrderJson(order.draftJson);
-  const summary=`Order ${order.orderNumber}\n${order.variant} sleeve / Size ${order.size} / Quantity ${order.quantity}\nDesign: ${design.text?.trim()?`“${design.text.trim()}”`:design.logoName?`Uploaded artwork (${design.logoName})`:"Custom sleeve colors / blank artwork"}\nColors: sleeve ${design.backgroundColor}, text ${design.fill}, outline ${design.stroke}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTax: ${usd(taxCents)}\nPaid total: ${usd(totalPaidCents)}`;
+  const summary=`Order ${order.orderNumber}\n${order.variant} sleeve / Size ${order.size} / Quantity ${order.quantity}\nDesign: ${design.text?.trim()?`“${design.text.trim()}”`:design.logoName?`Uploaded artwork (${design.logoName})`:"Custom sleeve colors / blank artwork"}\nColors: sleeve ${design.backgroundColor}, text ${design.fill}, outline ${design.stroke}${design.extendedArtwork?`\nExtended premium design price: ${usd(pricing.unitPriceCents)} each`:""}\nMerchandise subtotal: ${usd(pricing.merchandiseSubtotalCents)}\nQuantity discount: ${pricing.discountCents?`-${usd(pricing.discountCents)}`:"$0.00"}\nShipping: ${usd(pricing.shippingCents)}\nTax: ${usd(taxCents)}\nPaid total: ${usd(totalPaidCents)}`;
   const statuses={owner:"sent",customer:"sent"};
   if(ownerClaim.meta?.changes) {
     try { await sendSnapInkEmail(env,{to:"partners@snapbacksleeves.com",replyTo:order.customerEmail,subject:`Payment received for ${order.orderNumber}`,text:`Stripe confirmed payment for a SnapInk retail order.\n\n${summary}\n\nThe order is paid and ready for your production review. It has not been automatically sent to production.`}); }
@@ -76,7 +76,8 @@ export async function onRequestPost({request,env}) {
       return json({received:true,pendingPayment:true});
     }
     if(order.stripeSessionId!==session.id) return json({error:"Checkout session does not match the approved order."},409);
-    const pricing=calculateRetailPricing(order.size,order.quantity);
+    const design=safeOrderJson(order.draftJson);
+    const pricing=calculateRetailPricing(order.size,order.quantity,Boolean(design.extendedArtwork));
     const tax=stripeSessionTax(session);
     const taxCents=tax?.taxCents;
     const shippingCents=Number(session.total_details?.amount_shipping||0);

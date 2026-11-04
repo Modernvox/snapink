@@ -1933,8 +1933,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     const facePoly=extendBothEdges(deskFaceVertices);
     const insideFace=(x:number,y:number) => { let inside=false; for(let i=0,j=facePoly.length-1;i<facePoly.length;j=i++) { const [xi,yi]=facePoly[i],[xj,yj]=facePoly[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; };
     // The Studio SVG already applies the selected artwork opacity and carries
-    // the embossed face and relief layers. Applying the photo calibration's
-    // opacity here would blend sleeve texture through otherwise opaque pixels.
+    // the embossed face, highlights, and relief layers. Keep the front-face
+    // colors independent of the sleeve master pixels so its TPU grain cannot
+    // appear through otherwise opaque lettering.
     for(let y=minTargetY;y<=maxTargetY;y++) for(let x=minTargetX;x<=maxTargetX;x++) {
       const px=x+.5,py=y+.5; if(!insideFace(px,py)) continue;
       const denominator=h6*px+h7*py+1; if(Math.abs(denominator)<1e-9) continue;
@@ -1948,18 +1949,6 @@ const SnapInkSleeveCustomizer = forwardRef<
       const at=(y*canvas.width+x)*4; outputPixels.data[at]=Math.round(red/alpha); outputPixels.data[at+1]=Math.round(green/alpha); outputPixels.data[at+2]=Math.round(blue/alpha); outputPixels.data[at+3]=Math.round(alpha*255);
     }
     const overlayPixels = outputPixels;
-    const masterCanvas = document.createElement("canvas"); masterCanvas.width = canvas.width; masterCanvas.height = canvas.height;
-    const masterContext = masterCanvas.getContext("2d", { willReadFrequently: true });
-    if (!masterContext) throw new Error("The desk lighting map is unavailable.");
-    masterContext.drawImage(master, 0, 0);
-    const masterPixels = masterContext.getImageData(0, 0, canvas.width, canvas.height).data;
-    for (let i = 0; i < overlayPixels.data.length; i += 4) if (overlayPixels.data[i + 3]) {
-      const light = (masterPixels[i] + masterPixels[i + 1] + masterPixels[i + 2]) / (3 * 255);
-      const lighting = 0.70 + light * 0.50;
-      overlayPixels.data[i] = Math.round(overlayPixels.data[i] * lighting);
-      overlayPixels.data[i + 1] = Math.round(overlayPixels.data[i + 1] * lighting);
-      overlayPixels.data[i + 2] = Math.round(overlayPixels.data[i + 2] * lighting);
-    }
     context.putImageData(overlayPixels, 0, 0);
     context.globalAlpha = 1;
     const resultContext = canvas.getContext("2d");
@@ -2659,14 +2648,16 @@ const SnapInkSleeveCustomizer = forwardRef<
   const extendedArtworkNotice = (idSuffix: string) => {
     const visible = artworkIsExtended && !artworkInvalid;
     const infoId = `snapink-extended-artwork-info-${uid}-${idSuffix}`;
+    const currentExtendedPrice = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+      .format((sleeveSize <= 2 ? 2499 : 2999) / 100);
     return (
       <div className={`snapink-extended-artwork-slot${visible ? "" : " is-inactive"}`} aria-hidden={!visible}>
         <div className="snapink-extended-artwork-notice" role="status">
-          <span>EXTENDED ARTWORK — ADDITIONAL COST</span>
+          <span>EXTENDED ARTWORK — PREMIUM DESIGN</span>
           <button
             type="button"
             className="snapink-extended-artwork-info-button"
-            aria-label="More information about extended artwork cost"
+            aria-label="More information about extended design pricing"
             aria-expanded={visible && showExtendedArtworkInfo}
             aria-controls={infoId}
             onClick={() => setShowExtendedArtworkInfo((open) => !open)}
@@ -2674,7 +2665,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         </div>
         {visible && showExtendedArtworkInfo && <div id={infoId} className="snapink-extended-artwork-popover" role="note">
           <button type="button" aria-label="Close extended artwork information" onClick={() => setShowExtendedArtworkInfo(false)}>×</button>
-          <p>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</p>
+          <p>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work.</p>
+          <strong>Extended Design Pricing</strong>
+          <p>Sizes 0–2: $24.99 · Sizes 3–5: $29.99</p>
+          <p>Selected size {sleeveSize} premium design price: {currentExtendedPrice}. Final production feasibility will be confirmed during design review.</p>
         </div>}
       </div>
     );
@@ -3871,8 +3865,8 @@ const SnapInkSleeveCustomizer = forwardRef<
           <label className="block text-sm">Product Name<input required maxLength={100} value={publishProductName} onChange={(event)=>setPublishProductName(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <label className="block text-sm">Description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder="Custom SnapInk Sleevesâ„¢ add a personalized, interchangeable style to compatible standard plastic snapback closures. Sleeve only; hat sold separately." rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} Â· Sleeve Color: {backgroundColor}</p>
-          <p className="text-xs text-neutral-400">Sizes 0â€“3: $15.99 Â· Sizes 4â€“5: $18.99</p>
-          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork â€” Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} Ã— {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. The existing listing prices will remain unchanged.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I explicitly approve publishing this extended design at the existing listed prices, subject to production review.</span></label></div>}
+          <p className="text-xs text-neutral-400">{artworkIsExtended ? "Extended design prices: sizes 0-2 $24.99 | sizes 3-5 $29.99" : "Sizes 0-3: $15.99 | Sizes 4-5: $18.99"}</p>
+          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork â€” Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} Ã— {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. Extended design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(artworkIsExtended&&!approveExtendedArtwork)||artworkInvalid} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishingâ€¦":"Publish Product"}</button></div>
         </form>
