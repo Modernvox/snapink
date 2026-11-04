@@ -552,6 +552,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [isGeneratingProductImage, setIsGeneratingProductImage] = useState(false);
   const [productPhotoChoice, setProductPhotoChoice] = useState<"all" | "rear" | "packaging" | "desk">("all");
   const [productPhotoProgress, setProductPhotoProgress] = useState("");
+  const [showArtworkTransparencyWarning, setShowArtworkTransparencyWarning] = useState(() => {
+    try {
+      return window.localStorage.getItem("snapink.artworkTransparencyWarning.dismissed.v1") !== "true";
+    } catch {
+      return true;
+    }
+  });
   const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
   const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
@@ -2222,14 +2229,24 @@ const SnapInkSleeveCustomizer = forwardRef<
     setLogoInputVersion((version) => version + 1);
   }
 
-  const artworkTransparencyWarning = () => (
-    <aside aria-label="Artwork transparency requirement" className="rounded-lg border border-[#D8C08C] bg-[#F4E7C7] p-2.5 text-left text-[#17130B] sm:p-3">
-      <p className="text-[11px] font-black leading-snug sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
-      <p className="mt-1 text-[11px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
-      <p className="mt-1 text-[11px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
-      <a className="mt-1 inline-block text-[11px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here ↗</a>
+  const dismissArtworkTransparencyWarning = () => {
+    setShowArtworkTransparencyWarning(false);
+    try {
+      window.localStorage.setItem("snapink.artworkTransparencyWarning.dismissed.v1", "true");
+    } catch {
+      // The warning remains dismissed for this mounted session when storage is unavailable.
+    }
+  };
+
+  const artworkTransparencyWarning = () => showArtworkTransparencyWarning ? (
+    <aside aria-label="Artwork transparency requirement" className="relative rounded-lg border border-[#D8C08C] bg-[#F4E7C7] px-2.5 py-2 pr-11 text-left text-[#17130B] sm:p-3 sm:pr-12">
+      <button type="button" onClick={dismissArtworkTransparencyWarning} aria-label="Dismiss artwork transparency warning" title="Dismiss warning" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-xl font-semibold leading-none text-[#17130B] hover:bg-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#5A4212]">×</button>
+      <p className="pr-1 text-[10px] font-black leading-snug sm:pr-0 sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
+      <p className="mt-1 text-[10px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
+      <p className="mt-1 text-[10px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
+      <a className="mt-1 inline-block text-[10px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here ↗</a>
     </aside>
-  );
+  ) : null;
 
   const logoControls = (instance: "mobile" | "desktop") => (
     <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
