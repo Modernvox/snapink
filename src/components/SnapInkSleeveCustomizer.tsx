@@ -1670,19 +1670,32 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!artContext) throw new Error("The artwork crop could not be created.");
     artContext.drawImage(sourceCanvas, minX, minY, artWidth, artHeight, 0, 0, artWidth, artHeight);
 
-    // Calibration 08 is the approved physical artwork footprint. Studio size controls
-    // scale that footprint; the calibration's saved corner positions remain the anchor.
-    const baseScale = logoDataUrl ? logoScale / STUDIO_DEFAULT_ARTWORK_SCALE_PERCENT : fontSize / OFFICIAL_STUDIO_DEFAULTS.fontSize;
-    const fit = Math.min(width / artWidth, height / artHeight) * Math.max(0, baseScale);
-    const drawWidth = artWidth * fit, drawHeight = artHeight * fit;
-    const centerX = calibration.centerX + ((posX - artworkCenterCanvasPercent) / 100) *
-      (ON_DESK_PRODUCT_PHOTO.printableFace.topRight[0] - ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[0]);
-    const verticalPosition = logoDataUrl ? logoPosY : posY;
-    const centerY = calibration.centerY + ((verticalPosition - 50) / 100) *
-      (ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[1] - ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[1]);
+    // The Studio SVG already includes uploaded-image bounds, logoScale/fontSize,
+    // photoArtworkTransform, responsive preview transforms, and the position controls.
+    // Map its rendered artwork fraction from the visible sleeve face onto the desk face;
+    // Calibration 08 contributes perspective only and never normalizes designs to LIFT size.
+    const sourceFacePoints = JSON.parse(svg.getAttribute("data-photo-face-points") || "[]") as [number, number][];
+    if (sourceFacePoints.length !== 4) throw new Error("The Studio sleeve face geometry is unavailable.");
+    const boundsOf = (points: [number, number][]) => ({
+      left: Math.min(...points.map(([x]) => x)), right: Math.max(...points.map(([x]) => x)),
+      top: Math.min(...points.map(([, y]) => y)), bottom: Math.max(...points.map(([, y]) => y)),
+    });
+    const sourceFace = boundsOf(sourceFacePoints);
+    const deskFace = boundsOf([
+      ON_DESK_PRODUCT_PHOTO.printableFace.topLeft, ON_DESK_PRODUCT_PHOTO.printableFace.topRight,
+      ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight, ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft,
+    ]);
+    const targetCenterX = deskFace.left + ((minX + maxX) / 2 - sourceFace.left) /
+      (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
+    const targetCenterY = deskFace.top + ((minY + maxY) / 2 - sourceFace.top) /
+      (sourceFace.bottom - sourceFace.top) * (deskFace.bottom - deskFace.top);
+    const targetWidth = artWidth / (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
+    // Apply a uniform scale from sleeve-face width. Independent X/Y normalization would
+    // stretch artwork when the source hat photo and the desk photo have different face ratios.
+    const targetHeight = artHeight / (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
     const target = artworkQuad.map(([x, y]) => [
-      centerX + (x - calibration.centerX) * drawWidth / width,
-      centerY + (y - calibration.centerY) * drawHeight / height,
+      targetCenterX + (x - calibration.centerX) * targetWidth / width,
+      targetCenterY + (y - calibration.centerY) * targetHeight / height,
     ]) as [number, number][];
 
     const master = await loadStudioImage(ON_DESK_PRODUCT_PHOTO.masterSrc);
@@ -1694,40 +1707,47 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!context) throw new Error("The desk product-image canvas is unavailable.");
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
-    context.globalAlpha = (styleMode === "emboss" ? calibration.embossedOpacity : calibration.flatOpacity) *
-      (logoDataUrl ? logoOpacity / 100 : 1);
-    context.save();
-    context.beginPath();
-    context.moveTo(ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[0], ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[1]);
-    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.topRight[0], ON_DESK_PRODUCT_PHOTO.printableFace.topRight[1]);
-    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight[0], ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight[1]);
-    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[0], ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[1]); context.closePath(); context.clip();
-    const map = (u: number, v: number): [number, number] => {
-      const [tl, tr, br, bl] = target;
-      return [tl[0]*(1-u)*(1-v)+tr[0]*u*(1-v)+br[0]*u*v+bl[0]*(1-u)*v,
-        tl[1]*(1-u)*(1-v)+tr[1]*u*(1-v)+br[1]*u*v+bl[1]*(1-u)*v];
-    };
-    const drawTriangle = (srcPts: [number,number][], dstPts: [number,number][]) => {
-      const [s0,s1,s2]=srcPts, [d0,d1,d2]=dstPts;
-      const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
-      if (!den) return;
-      const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
-      const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
-      const e=(d0[0]*(s1[0]*s2[1]-s2[0]*s1[1])+d1[0]*(s2[0]*s0[1]-s0[0]*s2[1])+d2[0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;
-      const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s0[1]-s1[1]))/den;
-      const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[1]*(s1[0]-s0[0]))/den;
-      const f=(d0[1]*(s1[0]*s2[1]-s2[0]*s1[1])+d1[1]*(s2[0]*s0[1]-s0[0]*s2[1])+d2[1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;
-      context.save(); context.beginPath(); context.moveTo(...d0); context.lineTo(...d1); context.lineTo(...d2); context.closePath(); context.clip();
-      context.setTransform(a,b,c,d,e,f); context.drawImage(art,0,0); context.restore();
-    };
-    const cols=24, rows=8;
-    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) {
-      const u0=x/cols,u1=(x+1)/cols,v0=y/rows,v1=(y+1)/rows;
-      const s00:[number,number]=[u0*art.width,v0*art.height],s10:[number,number]=[u1*art.width,v0*art.height],s11:[number,number]=[u1*art.width,v1*art.height],s01:[number,number]=[u0*art.width,v1*art.height];
-      drawTriangle([s00,s10,s11],[map(u0,v0),map(u1,v0),map(u1,v1)]); drawTriangle([s00,s11,s01],[map(u0,v0),map(u1,v1),map(u0,v1)]);
+    // Inverse homography samples each output pixel from the source bitmap. This avoids
+    // triangle-mesh seams and interpolates premultiplied alpha so transparent holes stay clean.
+    const correspondences = [
+      [target[0][0], target[0][1], 0, 0], [target[1][0], target[1][1], artWidth, 0],
+      [target[2][0], target[2][1], artWidth, artHeight], [target[3][0], target[3][1], 0, artHeight],
+    ];
+    const equations: number[][] = [], values: number[] = [];
+    for (const [x, y, u, v] of correspondences) {
+      equations.push([x,y,1,0,0,0,-u*x,-u*y]); values.push(u);
+      equations.push([0,0,0,x,y,1,-v*x,-v*y]); values.push(v);
     }
-    context.restore();
-    const overlayPixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let col=0; col<8; col++) {
+      let pivot=col; for(let row=col+1;row<8;row++) if(Math.abs(equations[row][col])>Math.abs(equations[pivot][col])) pivot=row;
+      [equations[col],equations[pivot]]=[equations[pivot],equations[col]]; [values[col],values[pivot]]=[values[pivot],values[col]];
+      const divisor=equations[col][col]; if(Math.abs(divisor)<1e-12) throw new Error("Calibration 08 perspective transform is singular.");
+      for(let j=col;j<8;j++) equations[col][j]/=divisor; values[col]/=divisor;
+      for(let row=0;row<8;row++) if(row!==col) { const factor=equations[row][col]; for(let j=col;j<8;j++) equations[row][j]-=factor*equations[col][j]; values[row]-=factor*values[col]; }
+    }
+    const [h0,h1,h2,h3,h4,h5,h6,h7]=values;
+    const sourcePixels=artContext.getImageData(0,0,artWidth,artHeight).data;
+    const outputPixels=context.createImageData(canvas.width,canvas.height);
+    const minTargetX=Math.max(0,Math.floor(Math.min(...target.map(([x])=>x))));
+    const maxTargetX=Math.min(canvas.width-1,Math.ceil(Math.max(...target.map(([x])=>x))));
+    const minTargetY=Math.max(0,Math.floor(Math.min(...target.map(([,y])=>y))));
+    const maxTargetY=Math.min(canvas.height-1,Math.ceil(Math.max(...target.map(([,y])=>y))));
+    const facePoly=[ON_DESK_PRODUCT_PHOTO.printableFace.topLeft,ON_DESK_PRODUCT_PHOTO.printableFace.topRight,ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight,ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft];
+    const insideFace=(x:number,y:number) => { let inside=false; for(let i=0,j=facePoly.length-1;i<facePoly.length;j=i++) { const [xi,yi]=facePoly[i],[xj,yj]=facePoly[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; };
+    const outputOpacity=styleMode === "emboss" ? calibration.embossedOpacity : calibration.flatOpacity;
+    for(let y=minTargetY;y<=maxTargetY;y++) for(let x=minTargetX;x<=maxTargetX;x++) {
+      const px=x+.5,py=y+.5; if(!insideFace(px,py)) continue;
+      const denominator=h6*px+h7*py+1; if(Math.abs(denominator)<1e-9) continue;
+      const sx=(h0*px+h1*py+h2)/denominator, sy=(h3*px+h4*py+h5)/denominator;
+      if(sx<0||sy<0||sx>=artWidth||sy>=artHeight) continue;
+      const x0=Math.floor(sx),y0=Math.floor(sy),x1=Math.min(artWidth-1,x0+1),y1=Math.min(artHeight-1,y0+1),fx=sx-x0,fy=sy-y0;
+      const samples=[[x0,y0,(1-fx)*(1-fy)],[x1,y0,fx*(1-fy)],[x0,y1,(1-fx)*fy],[x1,y1,fx*fy]];
+      let alpha=0,red=0,green=0,blue=0;
+      for(const [ix,iy,weight] of samples) { const at=(iy*artWidth+ix)*4, a=sourcePixels[at+3]/255*weight; alpha+=a; red+=sourcePixels[at]*a; green+=sourcePixels[at+1]*a; blue+=sourcePixels[at+2]*a; }
+      if(alpha<=0) continue;
+      const at=(y*canvas.width+x)*4; outputPixels.data[at]=Math.round(red/alpha); outputPixels.data[at+1]=Math.round(green/alpha); outputPixels.data[at+2]=Math.round(blue/alpha); outputPixels.data[at+3]=Math.round(alpha*outputOpacity*255);
+    }
+    const overlayPixels = outputPixels;
     const masterCanvas = document.createElement("canvas"); masterCanvas.width = canvas.width; masterCanvas.height = canvas.height;
     const masterContext = masterCanvas.getContext("2d", { willReadFrequently: true });
     if (!masterContext) throw new Error("The desk lighting map is unavailable.");
@@ -2500,6 +2520,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         data-production-logo-y-percent={productionDraftPosition.logoY}
         data-production-geometry-version={GEOMETRY_VERSION}
         data-positioning-version={POSITIONING_VERSION}
+        data-photo-face-points={JSON.stringify(photoFacePoints)}
         data-sleeve-variant={variant}
         data-sleeve-size={sleeveSize}
         data-preview-sleeve-size={previewSleeveSize}
