@@ -10,7 +10,7 @@ const SITE = "https://snapbacksleeves.com";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const orderDraft = (order) => order.draft && typeof order.draft === "object" ? order.draft : safeOrderJson(order.draftJson);
 const orderShipping = (order) => order.shippingAddress && typeof order.shippingAddress === "object" ? order.shippingAddress : safeOrderJson(order.shippingAddressJson);
-const designDescription = (draft) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}`;
+const designDescription = (draft) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PRICING REVIEW REQUIRED\nExtension ${Number(draft.artworkExtensionMm).toFixed(2)} mm; artwork ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm; scale ${draft.artworkHeightScale}%; position X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm).toFixed(2)} mm.` : "");
 async function designAttachments(env, order) {
   const draft = orderDraft(order);
   if (!draft.emailPreviewKey || !env.PRIVATE_ASSETS) return [];
@@ -171,6 +171,8 @@ export async function onRequestPatch({request,env}) {
     if(body.action==="approve") {
       if(order.status==="AWAITING_PAYMENT"&&order.checkoutUrl) return json({ok:true,orderNumber:order.orderNumber,status:order.status,checkoutUrl:order.checkoutUrl,existing:true});
       if(!["PENDING_REVIEW","CHANGES_REQUESTED","APPROVED"].includes(order.status)) return json({error:`This order cannot be approved from ${order.status}.`},409);
+      const draft=orderDraft(order);
+      if(draft.extendedArtwork && body.extendedReviewApproved!==true) return json({error:"Extended artwork requires explicit administrator confirmation that production feasibility and final pricing were reviewed."},409);
       const attempt=Number(order.paymentAttempts||0)+1;
       const session=await createCheckoutSession(env,order,attempt);
       const created=now();
@@ -183,7 +185,7 @@ export async function onRequestPatch({request,env}) {
         return json({error:"Order changed during approval. Refresh the retail order list and retry."},409);
       }
       await env.DB.prepare("INSERT INTO retail_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)")
-        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity).totalBeforeTaxCents}),created).run();
+        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity).totalBeforeTaxCents,extendedArtworkReviewApproved:Boolean(draft.extendedArtwork),artworkExtensionMm:draft.artworkExtensionMm??0}),created).run();
       order=await loadOrder(env.DB,body.id);
       const emailed=await sendPaymentLinkEmail(env,order);
       return json({ok:true,orderNumber:order.orderNumber,status:order.status,checkoutUrl:order.checkoutUrl,emailStatus:emailed.sent?"sent":"failed",warning:emailed.error||null});

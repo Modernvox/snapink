@@ -4,3 +4,4 @@
 /drop001 / 301
 /drop001/ / 301
 /drop001.html / 301
+/shop/:slug /shop/product.html 200

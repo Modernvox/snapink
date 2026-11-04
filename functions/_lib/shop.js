@@ -22,7 +22,8 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
       const availableSizes = includeInactive ? configuredSizes : configuredSizes.filter((size) => !inventory.has(size) || inventory.get(size) > 0);
       variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,sleeveImageUrl:variant.sleeveImageUrl,sleeveImageAlt:variant.sleeveImageAlt,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
     }
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,prices,active:Boolean(row.active),variants});
+    const galleryRow = await db.prepare("SELECT gallery_json AS galleryJson FROM shop_product_galleries WHERE product_id=?").bind(row.productId).first().catch(()=>null);
+    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,gallery:parseShopJson(galleryRow?.galleryJson,"[]"),prices,active:Boolean(row.active),variants});
   }
   return products;
 }

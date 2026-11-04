@@ -34,6 +34,7 @@ export default defineConfig({
         shop: path.resolve(__dirname, "shop.html"),
         shopLift: path.resolve(__dirname, "shop/lift.html"),
         shopThreeStar: path.resolve(__dirname, "shop/three-star.html"),
+        shopProduct: path.resolve(__dirname, "shop/product.html"),
         shopComplete: path.resolve(__dirname, "shop/complete.html"),
       },
     },

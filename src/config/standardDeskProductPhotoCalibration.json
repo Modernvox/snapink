@@ -1,0 +1,34 @@
+{
+  "status": "visual_review_baseline",
+  "masterImage": "/images/product_images/black_standard_sleeve_dek_master.png",
+  "masterDimensions": { "width": 1760, "height": 893 },
+  "coordinateSpace": "native master-image pixels",
+  "printableFace": {
+    "topLeft": [316, 282],
+    "topRight": [1620, 284],
+    "bottomRight": [1620, 663],
+    "bottomLeft": [316, 665]
+  },
+  "approvedArtworkSource": "shared Studio artwork projection",
+  "selectedCandidate": "01",
+  "candidates": [
+    {
+      "id": "01",
+      "centerX": 968,
+      "centerY": 473.5,
+      "width": 630,
+      "height": 210,
+      "artworkQuad": [[653, 368], [1283, 370], [1283, 580], [653, 578]],
+      "flatOpacity": 0.88,
+      "embossedOpacity": 0.91,
+      "embossRelief": {
+        "shadowOffsetPx": [2, 3],
+        "shadowBlurPx": 2.2,
+        "shadowOpacity": 0.48,
+        "highlightOffsetPx": [-1, -1],
+        "highlightBlurPx": 1,
+        "highlightOpacity": 0.28
+      }
+    }
+  ]
+}

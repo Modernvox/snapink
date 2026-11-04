@@ -7,7 +7,7 @@ import { cleanRetailCustomer, decodeRetailFiles, RetailOrderValidationError, sou
 const MAX_JSON_BYTES = 40 * 1024 * 1024;
 const ADMIN_URL = "https://snapbacksleeves.com/admin.html";
 
-function describeDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}`; }
+function describeDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PRICING REVIEW REQUIRED\nExtension: ${Number(draft.artworkExtensionMm).toFixed(2)} mm\nArtwork: ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm\nHeight scale: ${draft.artworkHeightScale}%\nFinal design position: X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm ?? 0).toFixed(2)} mm` : ""); }
 async function notifyOrder(env, order, draft, emailPreview) {
   const summary = `Design review reference ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeDesign(draft)}\nQuantity: ${order.quantity}\n\nName: ${order.customerName}\nEmail: ${order.customerEmail}`;
   const results = { owner: "failed", customer: "failed" };
@@ -84,7 +84,7 @@ export async function onRequestPost({ request, env }) {
         artworkKey,await digest(artwork.bytes),previewKey,await digest(preview.bytes),sourceArtworkKey,source ? await digest(source.bytes) : null,
         price.unitPriceCents,price.merchandiseSubtotalCents,price.discountCents,price.shippingCents,price.totalBeforeTaxCents,createdAt,createdAt);
     const event = env.DB.prepare("INSERT INTO retail_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)")
-      .bind(id,"customer","order_submitted",JSON.stringify({ quantity, variant: draft.variant, size: draft.size, totalBeforeTaxCents: price.totalBeforeTaxCents }),createdAt);
+      .bind(id,"customer","order_submitted",JSON.stringify({ quantity, variant: draft.variant, size: draft.size, totalBeforeTaxCents: price.totalBeforeTaxCents, extendedArtwork: Boolean(draft.extendedArtwork), artworkExtensionMm: draft.artworkExtensionMm ?? 0, manualProductionReviewRequired: Boolean(draft.extendedArtwork), pricingReviewRequired: Boolean(draft.extendedArtwork) }),createdAt);
     try { await env.DB.batch([insert,event]); }
     catch (error) {
       const duplicate = await env.DB.prepare("SELECT id,order_number AS orderNumber,status,quantity,variant,size,unit_price_cents AS unitPriceCents,merchandise_subtotal_cents AS merchandiseSubtotalCents,discount_cents AS discountCents,shipping_cents AS shippingCents,total_before_tax_cents AS totalBeforeTaxCents,owner_email_status AS ownerEmailStatus,customer_email_status AS customerEmailStatus FROM retail_orders WHERE idempotency_key=?").bind(data.idempotencyKey).first();
