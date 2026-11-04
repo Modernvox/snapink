@@ -1310,14 +1310,19 @@ const SnapInkSleeveCustomizer = forwardRef<
   const productionTextHeightMm = textArtworkHeightMmScaled
     * ((productionBounds.maxY - productionBounds.minY) / (bounds.maxY - bounds.minY));
   const productionLogoCenterXmm = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, 50).centerXmm;
-  const productionLogoHeightMm = logoDataUrl
+  const productionLogoBaseHeightMm = logoDataUrl
     ? maximumContainedLogoHeightMm(
       variant,
       sleeveSize,
       productionLogoCenterXmm,
       (productionBounds.minY + productionBounds.maxY) / 2,
       logoAspectRatio
-    ) * (clamp(logoScale, 0, 100) / 100) * artworkHeightScale / 100 + embossedArtworkReliefMm
+    ) * (clamp(logoScale, 0, 100) / 100)
+    : 0;
+  // Studio applies artworkHeightScale only on Y (scale(1, scaleY)). Keep the
+  // visible width on its independent logoScale so validation matches preview.
+  const productionLogoHeightMm = logoDataUrl
+    ? productionLogoBaseHeightMm * artworkHeightScale / 100 + embossedArtworkReliefMm
     : 0;
   const productionCenterYmm = artworkCenterYForPositionMm(
     variant,
@@ -1329,7 +1334,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     MAX_BOTTOM_ARTWORK_EXTENSION_MM
   );
   const selectedArtworkWidthMm = logoDataUrl
-    ? (productionLogoHeightMm - embossedArtworkReliefMm) * logoAspectRatio
+    ? productionLogoBaseHeightMm * logoAspectRatio
     : Math.min(maximumWidthMm, textArtworkHeightMmScaled * Math.max(1, text.split("\n").reduce((max, line) => Math.max(max, line.length), 0) * 0.55));
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
   const artworkStatus = artworkBoundsStatusMm(
