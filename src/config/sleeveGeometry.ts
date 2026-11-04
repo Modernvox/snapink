@@ -42,8 +42,9 @@ export const BRANDING_GROOVE_X_MM = BRANDING_ENTRY_X_MM - 6.35;
 export const BRANDING_GROOVE_WIDTH_MM = 0.8;
 export const BRANDING_GROOVE_DEPTH_MM = 0.25;
 export const BRANDING_EDGE_CLEARANCE_MM = 1;
-/** Maximum permitted artwork extension above the physical sleeve top. */
+/** Maximum permitted artwork extension beyond either physical sleeve edge. */
 export const MAX_TOP_ARTWORK_EXTENSION_MM = 12.7;
+export const MAX_BOTTOM_ARTWORK_EXTENSION_MM = 12.7;
 /** The production CAD references expose the groove's right edge at -2.8 mm. */
 export const APPROVED_CAD_GROOVE_RIGHT_EDGE_X_MM = -2.8;
 /** Python production insets the CAD-derived branding face by 1.05 mm. */
@@ -371,7 +372,16 @@ export function artworkBoundsStatusMm(
   widthMm: number,
   heightMm: number,
   edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM
-): { extensionMm: number; crossesLockedEdge: boolean } {
+): {
+  extensionMm: number;
+  topExtensionMm: number;
+  bottomExtensionMm: number;
+  crossesLockedEdge: boolean;
+  crossesLeftEdge: boolean;
+  crossesRightEdge: boolean;
+  crossesGroove: boolean;
+  violatesClearance: boolean;
+} {
   const branding = brandingRegionFor(variant, size);
   const left = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
   const right = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
@@ -379,17 +389,50 @@ export function artworkBoundsStatusMm(
   const artRight = centerXmm + widthMm / 2;
   const grooveLeft = branding.grooveXmm - BRANDING_GROOVE_WIDTH_MM / 2 - edgeMarginMm;
   const grooveRight = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + edgeMarginMm;
-  let extensionMm = 0;
-  let crossesLockedEdge = artLeft < left - 1e-6 || artRight > right + 1e-6
-    || (artLeft < grooveRight && artRight > grooveLeft);
+  let topExtensionMm = 0;
+  let bottomExtensionMm = 0;
+  const crossesLeftEdge = artLeft < left - 1e-6;
+  const crossesRightEdge = artRight > right + 1e-6;
+  const crossesGroove = artLeft < grooveRight && artRight > grooveLeft;
   const samples = Math.max(1, Math.ceil(widthMm / 0.1));
   for (let i = 0; i <= samples; i += 1) {
     const x = artLeft + widthMm * i / samples;
     const halfWidth = halfWidthAt(variant, x);
-    extensionMm = Math.max(extensionMm, centerYmm + heightMm / 2 - halfWidth);
-    if (centerYmm - heightMm / 2 < -halfWidth + edgeMarginMm - 1e-6) crossesLockedEdge = true;
+    const artTop = centerYmm + heightMm / 2;
+    const artBottom = centerYmm - heightMm / 2;
+    const topDelta = artTop - halfWidth;
+    const bottomDelta = -halfWidth - artBottom;
+    topExtensionMm = Math.max(topExtensionMm, topDelta);
+    bottomExtensionMm = Math.max(bottomExtensionMm, bottomDelta);
   }
-  return { extensionMm: Math.max(0, extensionMm), crossesLockedEdge };
+  topExtensionMm = Math.max(0, topExtensionMm);
+  bottomExtensionMm = Math.max(0, bottomExtensionMm);
+  // The 1 mm clearance applies only when the artwork is fully contained.
+  // Near an edge, artwork may either retain that clearance or intentionally
+  // cross the edge as an explicitly extended design.
+  let violatesClearance = false;
+  if (topExtensionMm <= 1e-6 && bottomExtensionMm <= 1e-6) {
+    for (let i = 0; i <= samples; i += 1) {
+      const x = artLeft + widthMm * i / samples;
+      const halfWidth = halfWidthAt(variant, x);
+      const topDelta = centerYmm + heightMm / 2 - halfWidth;
+      const bottomDelta = -halfWidth - (centerYmm - heightMm / 2);
+      if (topDelta > -edgeMarginMm + 1e-6 || bottomDelta > -edgeMarginMm + 1e-6) {
+        violatesClearance = true;
+        break;
+      }
+    }
+  }
+  return {
+    extensionMm: Math.max(topExtensionMm, bottomExtensionMm),
+    topExtensionMm,
+    bottomExtensionMm,
+    crossesLockedEdge: crossesLeftEdge || crossesRightEdge || crossesGroove,
+    crossesLeftEdge,
+    crossesRightEdge,
+    crossesGroove,
+    violatesClearance,
+  };
 }
 
 /** Safe vertical center limits for artwork of the given full height. */
@@ -398,7 +441,8 @@ export function artworkVerticalCenterRangeMm(
   size: number,
   artworkHeightMm: number,
   edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM,
-  topExtensionMm = 0
+  topExtensionMm = 0,
+  bottomExtensionMm = 0
 ): { minCenterY: number; maxCenterY: number } {
   const branding = brandingRegionFor(variant, size);
   const left = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
@@ -410,7 +454,7 @@ export function artworkVerticalCenterRangeMm(
   for (let i = 0; i <= samples; i += 1) {
     const x = left + ((right - left) * i) / samples;
     const halfWidth = halfWidthAt(variant, x);
-    minCenterY = Math.max(minCenterY, -halfWidth + edgeMarginMm + halfArtworkHeight);
+    minCenterY = Math.max(minCenterY, -halfWidth - bottomExtensionMm + (bottomExtensionMm > 0 ? 0 : edgeMarginMm) + halfArtworkHeight);
     maxCenterY = Math.min(maxCenterY, halfWidth + topExtensionMm - (topExtensionMm > 0 ? 0 : edgeMarginMm) - halfArtworkHeight);
   }
   return { minCenterY, maxCenterY };
@@ -427,18 +471,28 @@ export function artworkCenterYForPositionMm(
   positionPercent: number,
   artworkHeightMm: number,
   edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM,
-  topExtensionMm = 0
+  topExtensionMm = 0,
+  bottomExtensionMm = 0
 ): number {
   const bounds = surfaceBounds(variant, size);
   const baseRange = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm);
-  const extendedRange = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm, topExtensionMm);
+  const extendedRange = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm, topExtensionMm, bottomExtensionMm);
   if (positionPercent < 0 && topExtensionMm > 0) {
     const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
     const baseTop = baseRange.maxCenterY >= baseRange.minCenterY ? baseRange.maxCenterY : bounds.maxY - halfArtworkHeight;
     const extendedTop = extendedRange.maxCenterY >= extendedRange.minCenterY ? extendedRange.maxCenterY : bounds.maxY + topExtensionMm - halfArtworkHeight;
     return baseTop + (extendedTop - baseTop) * Math.min(1, Math.max(0, -positionPercent / 100));
   }
-  const { minCenterY, maxCenterY } = topExtensionMm > 0 ? baseRange : extendedRange;
+  if (positionPercent > 100 && bottomExtensionMm > 0) {
+    const bottomCenter = baseRange.minCenterY >= baseRange.maxCenterY
+      ? bounds.minY + Math.max(0, artworkHeightMm) / 2
+      : baseRange.minCenterY;
+    const extendedBottomCenter = extendedRange.minCenterY <= extendedRange.maxCenterY
+      ? extendedRange.minCenterY
+      : bounds.minY - bottomExtensionMm + Math.max(0, artworkHeightMm) / 2;
+    return bottomCenter + (extendedBottomCenter - bottomCenter) * Math.min(1, Math.max(0, (positionPercent - 100) / 100));
+  }
+  const { minCenterY, maxCenterY } = topExtensionMm > 0 || bottomExtensionMm > 0 ? baseRange : extendedRange;
   if (maxCenterY >= minCenterY) {
     return maxCenterY - ((maxCenterY - minCenterY) * positionPercent) / 100;
   }
@@ -467,12 +521,14 @@ export function brandingSurfacePath(
   size: number,
   width: number,
   height: number,
-  topExtensionMm = 0
+  topExtensionMm = 0,
+  bottomExtensionMm = 0
 ): string {
   const bounds = surfaceBounds(variant, size);
   if (variant === "standard") {
     const extensionPx = topExtensionMm * height / (bounds.maxY - bounds.minY);
-    return `M 0 ${-extensionPx} H ${width} V ${height} H 0 Z`;
+    const bottomExtensionPx = bottomExtensionMm * height / (bounds.maxY - bounds.minY);
+    return `M 0 ${-extensionPx} H ${width} V ${height + bottomExtensionPx} H 0 Z`;
   }
 
   const stepMm = 0.25;
@@ -485,7 +541,7 @@ export function brandingSurfacePath(
   }
   const lower: [number, number][] = [];
   for (const x of [...xs].reverse()) {
-    lower.push(toCanvas(x, -halfWidthAt(variant, x), bounds, width, height));
+    lower.push(toCanvas(x, -halfWidthAt(variant, x) - bottomExtensionMm, bounds, width, height));
   }
   const points = [...upper, ...lower];
   return `${points.map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x.toFixed(3)} ${y.toFixed(3)}`).join(" ")} Z`;
