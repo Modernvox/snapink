@@ -550,7 +550,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   useEffect(() => { if (fixedArtworkColor && /^#[0-9A-Fa-f]{6}$/.test(fixedArtworkColor)) setFill(fixedArtworkColor); }, [fixedArtworkColor]);
   const [exportScale, setExportScale] = useState(2);
   const [isGeneratingProductImage, setIsGeneratingProductImage] = useState(false);
-  const [productPhotoChoice, setProductPhotoChoice] = useState<"bundle" | "rear" | "packaging" | "desk">("bundle");
+  const [productPhotoChoice, setProductPhotoChoice] = useState<"all" | "rear" | "packaging" | "desk">("all");
+  const [productPhotoProgress, setProductPhotoProgress] = useState("");
   const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
   const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
@@ -1800,68 +1801,115 @@ const SnapInkSleeveCustomizer = forwardRef<
     return slug || "custom-design";
   }
 
+  async function renderRearProductPhoto(sleeveImage: HTMLImageElement) {
+    const hatImage = await loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc);
+    if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
+      throw new Error("The approved rear hat master has unexpected dimensions.");
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = REAR_PRODUCT_PHOTO.width;
+    canvas.height = REAR_PRODUCT_PHOTO.height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("The product-image canvas is unavailable.");
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(hatImage, 0, 0);
+
+    const grooveFraction = REAR_PRODUCT_PHOTO.grooveSourceX / REAR_PRODUCT_PHOTO.studioExportWidth;
+    const sleeveWidth = Math.round(
+      (REAR_PRODUCT_PHOTO.rightStrapOpeningX - REAR_PRODUCT_PHOTO.leftStrapExitX) / (1 - grooveFraction)
+    );
+    const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
+    const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
+    const sleeveTop = Math.round(REAR_PRODUCT_PHOTO.sleeveCenterY - sleeveHeight / 2);
+    context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+      (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
+      "image/png"
+    ));
+  }
+
+  async function renderPackagingProductImage(sleeveImage: HTMLImageElement) {
+    const packageImage = await loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc);
+    return await renderPackagingProductPhoto(packageImage, sleeveImage);
+  }
+
+  function productPhotoStageError(name: string, error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return new Error(`${name} failed: ${detail}`);
+  }
+
   async function handleGenerateProductImage() {
     if (!enableProductPhotoGeneration || variant !== "billboard" || isGeneratingProductImage) return;
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
       if (productPhotoChoice === "desk") {
-        const deskPNG = await renderDeskProductPhoto();
+        setProductPhotoProgress("Generating On-Desk Product Image…");
+        let deskPNG: Blob;
+        try { deskPNG = await renderDeskProductPhoto(); }
+        catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
         downloadPNGBlob(deskPNG, `snapink-billboard-${productPhotoSlug()}-on-desk.png`);
         return;
       }
-      const [sleevePNG, hatImage, packageImage] = await Promise.all([
-        renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
-        loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
-        loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc),
-      ]);
-      if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
-        throw new Error("The approved rear hat master has unexpected dimensions.");
-      }
-      sleeveUrl = URL.createObjectURL(sleevePNG);
-      const sleeveImage = await loadStudioImage(sleeveUrl);
-      const canvas = document.createElement("canvas");
-      canvas.width = REAR_PRODUCT_PHOTO.width;
-      canvas.height = REAR_PRODUCT_PHOTO.height;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("The product-image canvas is unavailable.");
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = "high";
-      context.drawImage(hatImage, 0, 0);
-
-      const grooveFraction = REAR_PRODUCT_PHOTO.grooveSourceX / REAR_PRODUCT_PHOTO.studioExportWidth;
-      const sleeveWidth = Math.round(
-        (REAR_PRODUCT_PHOTO.rightStrapOpeningX - REAR_PRODUCT_PHOTO.leftStrapExitX) / (1 - grooveFraction)
-      );
-      const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
-      const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
-      const sleeveTop = Math.round(REAR_PRODUCT_PHOTO.sleeveCenterY - sleeveHeight / 2);
-      context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
-      const productPNG = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
-        (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
-        "image/png"
-      ));
-      const packagingPNG = await renderPackagingProductPhoto(packageImage, sleeveImage);
-      const slug = productPhotoSlug();
       if (productPhotoChoice === "rear") {
+        setProductPhotoProgress("Generating On-Hat Product Image…");
+        let sleeveImage: HTMLImageElement;
+        let productPNG: Blob;
+        try {
+          sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }));
+          sleeveImage = await loadStudioImage(sleeveUrl);
+          productPNG = await renderRearProductPhoto(sleeveImage);
+        }
+        catch (error) { throw productPhotoStageError("On-Hat Product Image", error); }
+        const slug = productPhotoSlug();
         downloadPNGBlob(productPNG, `snapink-billboard-${slug}-rear.png`);
         return;
       }
       if (productPhotoChoice === "packaging") {
+        setProductPhotoProgress("Generating Packaging Product Image…");
+        try { sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale })); }
+        catch (error) { throw productPhotoStageError("Packaging Product Image", error); }
+        let sleeveImage: HTMLImageElement;
+        let packagingPNG: Blob;
+        try {
+          sleeveImage = await loadStudioImage(sleeveUrl);
+          packagingPNG = await renderPackagingProductImage(sleeveImage);
+        }
+        catch (error) { throw productPhotoStageError("Packaging Product Image", error); }
+        const slug = productPhotoSlug();
         downloadPNGBlob(packagingPNG, `snapink-billboard-${slug}-packaging.png`);
         return;
       }
-      const zip = await createProductPhotoZip([
-        { filename: `snapink-billboard-${slug}-rear.png`, blob: productPNG },
-        { filename: `snapink-billboard-${slug}_packaging.png`, blob: packagingPNG },
-      ]);
-      downloadProductPhotoZip(zip, `snapink-billboard-${slug}-product-images.zip`);
+
+      const entries: { filename: string; blob: Blob }[] = [];
+      setProductPhotoProgress("Generating On-Hat Product Image (1 of 3)…");
+      try {
+        sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }));
+        const sleeveImage = await loadStudioImage(sleeveUrl);
+        entries.push({ filename: "SnapInk_On_Hat.png", blob: await renderRearProductPhoto(sleeveImage) });
+
+        setProductPhotoProgress("Generating Packaging Product Image (2 of 3)…");
+        entries.push({ filename: "SnapInk_Packaging.png", blob: await renderPackagingProductImage(sleeveImage) });
+      } catch (error) {
+        throw productPhotoStageError(entries.length === 0 ? "On-Hat Product Image" : "Packaging Product Image", error);
+      }
+      setProductPhotoProgress("Generating On-Desk Product Image (3 of 3)…");
+      try { entries.push({ filename: "SnapInk_On_Desk.png", blob: await renderDeskProductPhoto() }); }
+      catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
+
+      setProductPhotoProgress("Packaging all three PNGs into a ZIP…");
+      let zip: Blob;
+      try { zip = await createProductPhotoZip(entries); }
+      catch (error) { throw new Error(`Could not package the three product images into a ZIP: ${error instanceof Error ? error.message : String(error)}`); }
+      downloadProductPhotoZip(zip, "SnapInk_Product_Images.zip");
     } catch (error) {
       console.error("SnapInk product image could not be generated.", error);
       alert(error instanceof Error ? error.message : "The product image could not be generated. Please try again.");
     } finally {
       if (sleeveUrl) URL.revokeObjectURL(sleeveUrl);
       setIsGeneratingProductImage(false);
+      setProductPhotoProgress("");
     }
   }
   async function handleGetOrderFiles() {
@@ -3095,7 +3143,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {enableProductPhotoGeneration && <>
                 <label className="block text-xs text-neutral-400">Product image option
                   <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
-                    <option value="bundle">On-Hat + Packaging (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
+                    <option value="all">All 3 Product Images (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
                   </select>
                 </label>
                 <button
@@ -3107,7 +3155,8 @@ const SnapInkSleeveCustomizer = forwardRef<
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
-                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the Rear Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "Rear Hat and Packaging images in one ZIP."}</p>}
+                {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
+                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>}
                 {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
               </>}
 
@@ -3381,7 +3430,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             {enableProductPhotoGeneration && <>
               <label className="block text-xs text-neutral-400">Product image option
                 <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
-                  <option value="bundle">On-Hat + Packaging (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
+                  <option value="all">All 3 Product Images (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
                 </select>
               </label>
               <button
@@ -3393,7 +3442,8 @@ const SnapInkSleeveCustomizer = forwardRef<
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
-              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the Rear Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "Rear Hat and Packaging images in one ZIP."}</p>}
+              {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
+              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>}
               {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
             </>}
 
