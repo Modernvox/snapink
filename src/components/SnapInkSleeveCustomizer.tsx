@@ -2625,8 +2625,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
-  const previewToolbar = (instance: "mobile" | "desktop") => (
-    <div className="snapink-preview-toolbar" style={instance === "desktop" ? {
+  const previewToolbar = (instance: "mobile" | "desktop", basicOnly = false) => (
+    <div className={`snapink-preview-toolbar${basicOnly ? " snapink-desktop-basic-toolbar" : ""}`} style={instance === "desktop" && !basicOnly ? {
       position: "static",
       width: "100%",
       minWidth: 0,
@@ -2661,14 +2661,14 @@ const SnapInkSleeveCustomizer = forwardRef<
           </select>
         </label>
       </div>
-      {colorGroups}
-      <div className="snapink-toolbar-secondary">
+      {!basicOnly && colorGroups}
+      {!basicOnly && <div className="snapink-toolbar-secondary">
         <span className="snapink-toolbar-count" aria-live="polite">{text.length}/{characterLimit}</span>
         <button type="button" className="snapink-toolbar-advanced-toggle" aria-expanded={toolbarAdvancedOpen} onClick={() => setToolbarAdvancedOpen((open) => !open)}>
           {toolbarAdvancedOpen ? "Close advanced" : "Advanced controls"}
         </button>
-      </div>
-      {toolbarAdvancedOpen && <div className="snapink-toolbar-advanced">
+      </div>}
+      {!basicOnly && toolbarAdvancedOpen && <div className="snapink-toolbar-advanced">
         {instance === "desktop" && <Range label="Font size" min={60} max={500} value={fontSize} setValue={setFontSize} suffix="px" />}
         <Range label="Font weight" min={100} max={1200} step={50} value={fontWeight} setValue={setFontWeight} />
         <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
@@ -3084,6 +3084,9 @@ const SnapInkSleeveCustomizer = forwardRef<
       </svg>
       </div>
       </div>
+      {instance === "desktop" && <div className={`snapink-desktop-basic-overlay${desktopCustomizationCollapsed ? " is-collapsed" : ""}`} data-preview-only="true" role="group" aria-label="Basic Studio controls">
+        {previewToolbar("desktop", true)}
+      </div>}
       {instance === "desktop" && <div className={`snapink-desktop-controls-overlay${desktopCustomizationCollapsed ? " is-collapsed" : ""}`} data-preview-only="true" style={{
         position: "absolute",
         zIndex: 30,
