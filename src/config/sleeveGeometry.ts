@@ -381,6 +381,8 @@ export function artworkBoundsStatusMm(
   crossesRightEdge: boolean;
   crossesGroove: boolean;
   violatesClearance: boolean;
+  violatesTopClearance: boolean;
+  violatesBottomClearance: boolean;
 } {
   const branding = brandingRegionFor(variant, size);
   const left = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
@@ -410,17 +412,17 @@ export function artworkBoundsStatusMm(
   // The 1 mm clearance applies only when the artwork is fully contained.
   // Near an edge, artwork may either retain that clearance or intentionally
   // cross the edge as an explicitly extended design.
-  let violatesClearance = false;
+  let violatesTopClearance = false;
+  let violatesBottomClearance = false;
   if (topExtensionMm <= 1e-6 && bottomExtensionMm <= 1e-6) {
     for (let i = 0; i <= samples; i += 1) {
       const x = artLeft + widthMm * i / samples;
       const halfWidth = halfWidthAt(variant, x);
       const topDelta = centerYmm + heightMm / 2 - halfWidth;
       const bottomDelta = -halfWidth - (centerYmm - heightMm / 2);
-      if (topDelta > -edgeMarginMm + 1e-6 || bottomDelta > -edgeMarginMm + 1e-6) {
-        violatesClearance = true;
-        break;
-      }
+      if (topDelta > -edgeMarginMm + 1e-6) violatesTopClearance = true;
+      if (bottomDelta > -edgeMarginMm + 1e-6) violatesBottomClearance = true;
+      if (violatesTopClearance && violatesBottomClearance) break;
     }
   }
   return {
@@ -431,7 +433,9 @@ export function artworkBoundsStatusMm(
     crossesLeftEdge,
     crossesRightEdge,
     crossesGroove,
-    violatesClearance,
+    violatesClearance: violatesTopClearance || violatesBottomClearance,
+    violatesTopClearance,
+    violatesBottomClearance,
   };
 }
 

@@ -859,35 +859,43 @@ const SnapInkSleeveCustomizer = forwardRef<
       const imageHeight = uploadedImage.naturalHeight;
       let visible = { x: 0, y: 0, width: imageWidth, height: imageHeight };
       try {
-        const scanScale = Math.min(1, 1024 / Math.max(imageWidth, imageHeight));
-        const scanWidth = Math.max(1, Math.round(imageWidth * scanScale));
-        const scanHeight = Math.max(1, Math.round(imageHeight * scanScale));
+        // Use the source alpha at native resolution. A downsampled scan can
+        // shift the visible bounds and therefore the CAD width used for checks.
+        const tileSize = 1024;
         const canvas = document.createElement("canvas");
-        canvas.width = scanWidth;
-        canvas.height = scanHeight;
         const context = canvas.getContext("2d", { willReadFrequently: true });
         if (context) {
-          context.drawImage(uploadedImage, 0, 0, scanWidth, scanHeight);
-          const pixels = context.getImageData(0, 0, scanWidth, scanHeight).data;
-          let minX = scanWidth;
-          let minY = scanHeight;
+          let minX = imageWidth;
+          let minY = imageHeight;
           let maxX = -1;
           let maxY = -1;
-          for (let y = 0; y < scanHeight; y += 1) {
-            for (let x = 0; x < scanWidth; x += 1) {
-              if (pixels[(y * scanWidth + x) * 4 + 3] === 0) continue;
-              minX = Math.min(minX, x);
-              minY = Math.min(minY, y);
-              maxX = Math.max(maxX, x);
-              maxY = Math.max(maxY, y);
+          for (let tileY = 0; tileY < imageHeight; tileY += tileSize) {
+            for (let tileX = 0; tileX < imageWidth; tileX += tileSize) {
+              const tileWidth = Math.min(tileSize, imageWidth - tileX);
+              const tileHeight = Math.min(tileSize, imageHeight - tileY);
+              canvas.width = tileWidth;
+              canvas.height = tileHeight;
+              context.drawImage(uploadedImage, tileX, tileY, tileWidth, tileHeight, 0, 0, tileWidth, tileHeight);
+              const pixels = context.getImageData(0, 0, tileWidth, tileHeight).data;
+              for (let y = 0; y < tileHeight; y += 1) {
+                for (let x = 0; x < tileWidth; x += 1) {
+                  if (pixels[(y * tileWidth + x) * 4 + 3] === 0) continue;
+                  const sourceX = tileX + x;
+                  const sourceY = tileY + y;
+                  minX = Math.min(minX, sourceX);
+                  minY = Math.min(minY, sourceY);
+                  maxX = Math.max(maxX, sourceX);
+                  maxY = Math.max(maxY, sourceY);
+                }
+              }
             }
           }
           if (maxX >= minX && maxY >= minY) {
             visible = {
-              x: minX / scanWidth * imageWidth,
-              y: minY / scanHeight * imageHeight,
-              width: (maxX - minX + 1) / scanWidth * imageWidth,
-              height: (maxY - minY + 1) / scanHeight * imageHeight,
+              x: minX,
+              y: minY,
+              width: maxX - minX + 1,
+              height: maxY - minY + 1,
             };
           }
         }
@@ -1242,14 +1250,11 @@ const SnapInkSleeveCustomizer = forwardRef<
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
   const maximumWidthMm = bounds.maxY - bounds.minY;
   const productionBounds = surfaceBounds(variant, sleeveSize);
+  const productionLogoCenterXmm = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, 50).centerXmm;
   // Billboard logos center on the inset face customers see as printable,
-  // excluding the groove/flap side from the visual centering zone.
-  const logoFitCenterXmm = studioArtworkPositionFor(
-    variant,
-    sleeveSize,
-    posX,
-    50
-  ).centerXmm;
+  // excluding the groove/flap side from the visual centering zone. Preview
+  // size and validation share this same selected-CAD fit calculation.
+  const logoFitCenterXmm = productionLogoCenterXmm;
   const logoFitCenterYmm = (productionBounds.minY + productionBounds.maxY) / 2;
   const logoMaxHeightMm = maximumContainedLogoHeightMm(
     variant,
@@ -1258,13 +1263,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoFitCenterYmm,
     logoAspectRatio
   );
+  const logoBaseHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 100) / 100);
   const selectedBrandingRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
   const previewBrandingRange = usableBrandingCanvasRangePercentFor(variant, renderGeometrySize);
   const renderPosX = previewBrandingRange.start
     + ((posX - selectedBrandingRange.start) / (selectedBrandingRange.end - selectedBrandingRange.start))
       * (previewBrandingRange.end - previewBrandingRange.start);
   const logoCenterXmm = studioArtworkPositionFor(variant, renderGeometrySize, renderPosX, 50).centerXmm;
-  const logoHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 100) / 100);
+  const logoHeightMm = logoBaseHeightMm;
   const embossedArtworkReliefMm = styleMode === "emboss" ? STUDIO_EMBOSSED_PREVIEW_RELIEF_MM : 0;
   const logoArtworkHeightMm = (logoHeightMm + embossedArtworkReliefMm) * artworkHeightScale / 100;
   const textArtworkHeightMmScaled = textArtworkHeightMm * artworkHeightScale / 100;
@@ -1309,16 +1315,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const artworkMaxXCanvasPercent = usableArtworkRange.end;
   const productionTextHeightMm = textArtworkHeightMmScaled
     * ((productionBounds.maxY - productionBounds.minY) / (bounds.maxY - bounds.minY));
-  const productionLogoCenterXmm = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, 50).centerXmm;
-  const productionLogoBaseHeightMm = logoDataUrl
-    ? maximumContainedLogoHeightMm(
-      variant,
-      sleeveSize,
-      productionLogoCenterXmm,
-      (productionBounds.minY + productionBounds.maxY) / 2,
-      logoAspectRatio
-    ) * (clamp(logoScale, 0, 100) / 100)
-    : 0;
+  const productionLogoBaseHeightMm = logoDataUrl ? logoBaseHeightMm : 0;
   // Studio applies artworkHeightScale only on Y (scale(1, scaleY)). Keep the
   // visible width on its independent logoScale so validation matches preview.
   const productionLogoHeightMm = logoDataUrl
@@ -1346,12 +1343,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     || artworkStatus.bottomExtensionMm > MAX_BOTTOM_ARTWORK_EXTENSION_MM + 0.001;
   const artworkIsExtended = artworkStatus.topExtensionMm > 0.001 || artworkStatus.bottomExtensionMm > 0.001;
   const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension;
-  const artworkInvalidBoundary = artworkStatus.crossesLeftEdge ? "left edge"
-    : artworkStatus.crossesRightEdge ? "right edge"
-      : artworkStatus.crossesGroove ? "the flap groove"
-        : artworkStatus.violatesClearance ? "the required 1 mm edge clearance"
-          : artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "the 12.7 mm top allowance"
-            : "the 12.7 mm bottom allowance";
+  const artworkInvalidBoundary = artworkStatus.crossesLeftEdge ? "left edge clearance"
+    : artworkStatus.crossesRightEdge ? "right edge clearance"
+      : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
+        : artworkStatus.violatesTopClearance ? "top edge clearance"
+          : artworkStatus.violatesBottomClearance ? "bottom edge clearance"
+            : artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "maximum top extension (12.7 mm)"
+              : "maximum bottom extension (12.7 mm)";
   function artworkPointInCadCanvas(clientX: number, clientY: number) {
     const svg = svgRef.current;
     const overlay = svg?.querySelector<SVGGElement>('[data-artwork-overlay="true"]');
@@ -2118,10 +2116,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
   async function handleGetOrderFiles() {
     if (logoNeedsRemoval) throw new Error("Finish logo background removal before submitting the design.");
-    if (artworkExceedsAllowedExtension) throw new Error(`Artwork exceeds the 12.7 mm ${artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM ? "top" : "bottom"} allowance.`);
-    if (artworkStatus.crossesLockedEdge) throw new Error(`Artwork crosses the ${artworkInvalidBoundary}. Move or resize it before submitting.`);
-    if (artworkStatus.violatesClearance) throw new Error("Artwork needs at least 1 mm clearance when it remains within the sleeve edge.");
-    if (artworkStatus.violatesClearance) throw new Error("Artwork needs at least 1 mm clearance when it remains within the sleeve edge.");
+    if (artworkExceedsAllowedExtension) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}.`);
+    if (artworkStatus.crossesLockedEdge) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}. Move or resize it before submitting.`);
+    if (artworkStatus.violatesClearance) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}; keep at least 1 mm clearance.`);
     const source = logoDataUrl;
     const hasTextArtwork = text.trim().length > 0;
     const blankDesign = !source && !hasTextArtwork;
