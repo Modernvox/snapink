@@ -1,0 +1,34 @@
+{
+  "status": "approved_geometry_baseline",
+  "masterImage": "/images/product_images/blank_sleeve_desk_master.png",
+  "masterDimensions": { "width": 1761, "height": 893 },
+  "coordinateSpace": "native master-image pixels",
+  "printableFace": {
+    "topLeft": [292, 297],
+    "topRight": [1608, 307],
+    "bottomRight": [1615, 649],
+    "bottomLeft": [291, 652]
+  },
+  "approvedArtworkSource": "/images/logos/Futuristic Angular LIFT Logo.png",
+  "selectedCandidate": "08",
+  "candidates": [
+    {
+      "id": "08",
+      "centerX": 965,
+      "centerY": 482,
+      "width": 630,
+      "height": 210,
+      "artworkQuad": [[650, 377], [1280, 380], [1277, 587], [651, 585]],
+      "flatOpacity": 0.88,
+      "embossedOpacity": 0.91,
+      "embossRelief": {
+        "shadowOffsetPx": [2, 3],
+        "shadowBlurPx": 2.2,
+        "shadowOpacity": 0.48,
+        "highlightOffsetPx": [-1, -1],
+        "highlightBlurPx": 1,
+        "highlightOpacity": 0.28
+      }
+    }
+  ]
+}

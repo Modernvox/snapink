@@ -49,6 +49,7 @@ import {
   type HatTemplateId,
 } from "../config/hatTemplateRegistry";
 import PACKAGING_PRODUCT_PHOTO from "../config/packagingProductPhoto.json";
+import DESK_PRODUCT_PHOTO_CALIBRATION from "../config/deskProductPhotoCalibration.json";
 import { createProductPhotoZip } from "../utils/productPhotoZip";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
@@ -327,6 +328,13 @@ const REAR_PRODUCT_PHOTO = {
   sleeveCenterY: 716.5,
   scale: 4,
 } as const;
+const ON_DESK_PRODUCT_PHOTO = {
+  masterSrc: DESK_PRODUCT_PHOTO_CALIBRATION.masterImage,
+  width: DESK_PRODUCT_PHOTO_CALIBRATION.masterDimensions.width,
+  height: DESK_PRODUCT_PHOTO_CALIBRATION.masterDimensions.height,
+  printableFace: DESK_PRODUCT_PHOTO_CALIBRATION.printableFace,
+  calibration: DESK_PRODUCT_PHOTO_CALIBRATION.candidates.find((candidate) => candidate.id === "08")!,
+} as const;
 const DESKTOP_SLEEVE_PREVIEW_BOUNDARY_ADJUSTMENTS_STAGE_PX: Record<
   SleeveVariant,
   { rightEdgeInset: number; alignRightToHatEdge: boolean; heightReduction: number; verticalShift: number }
@@ -542,6 +550,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   useEffect(() => { if (fixedArtworkColor && /^#[0-9A-Fa-f]{6}$/.test(fixedArtworkColor)) setFill(fixedArtworkColor); }, [fixedArtworkColor]);
   const [exportScale, setExportScale] = useState(2);
   const [isGeneratingProductImage, setIsGeneratingProductImage] = useState(false);
+  const [productPhotoChoice, setProductPhotoChoice] = useState<"bundle" | "rear" | "packaging" | "desk">("bundle");
   const [logoDataUrl, setLogoDataUrl] = useState(initial.logoDataUrl ?? "");
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
   const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
@@ -1616,6 +1625,131 @@ const SnapInkSleeveCustomizer = forwardRef<
     ));
   }
 
+  async function renderDeskProductPhoto() {
+    if (logoNeedsRemoval) throw new Error("Finish removing the logo background before generating a product image.");
+    const svg = svgRef.current;
+    if (!svg) throw new Error("The Studio artwork is unavailable.");
+    const calibration = ON_DESK_PRODUCT_PHOTO.calibration;
+    const { width, height, artworkQuad } = calibration;
+    const exportSvg = svg.cloneNode(true) as SVGSVGElement;
+    exportSvg.querySelectorAll('[data-preview-only="true"], [data-product-image="true"], line').forEach((node) => node.remove());
+    exportSvg.removeAttribute("style");
+    for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
+      const href = image.getAttribute("href");
+      if (href && !href.startsWith("data:")) {
+        const response = await fetch(new URL(href, window.location.href), { credentials: "same-origin" });
+        if (!response.ok) throw new Error("Could not prepare the selected artwork for the desk product image.");
+        const blob = await response.blob();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader(); reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("Could not package the selected artwork.")); reader.readAsDataURL(blob);
+        });
+        image.setAttribute("href", dataUrl);
+      }
+    }
+    const source = new Image();
+    const svgUrl = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(exportSvg)], { type: "image/svg+xml;charset=utf-8" }));
+    try {
+      await new Promise<void>((resolve, reject) => { source.onload = () => resolve(); source.onerror = () => reject(new Error("Could not render the selected Studio artwork.")); source.src = svgUrl; });
+    } finally { URL.revokeObjectURL(svgUrl); }
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = Math.max(1, Math.round(svg.viewBox.baseVal.width));
+    sourceCanvas.height = Math.max(1, Math.round(svg.viewBox.baseVal.height));
+    const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+    if (!sourceContext) throw new Error("The artwork export canvas is unavailable.");
+    sourceContext.drawImage(source, 0, 0, sourceCanvas.width, sourceCanvas.height);
+    const pixels = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+    let minX = sourceCanvas.width, minY = sourceCanvas.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < sourceCanvas.height; y++) for (let x = 0; x < sourceCanvas.width; x++) {
+      if (pixels.data[(y * sourceCanvas.width + x) * 4 + 3] > 4) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+    }
+    if (maxX < minX || maxY < minY) throw new Error("Add text or a logo before generating a desk product image.");
+    const artWidth = maxX - minX + 1, artHeight = maxY - minY + 1;
+    const art = document.createElement("canvas"); art.width = artWidth; art.height = artHeight;
+    const artContext = art.getContext("2d");
+    if (!artContext) throw new Error("The artwork crop could not be created.");
+    artContext.drawImage(sourceCanvas, minX, minY, artWidth, artHeight, 0, 0, artWidth, artHeight);
+
+    // Calibration 08 is the approved physical artwork footprint. Studio size controls
+    // scale that footprint; the calibration's saved corner positions remain the anchor.
+    const baseScale = logoDataUrl ? logoScale / STUDIO_DEFAULT_ARTWORK_SCALE_PERCENT : fontSize / OFFICIAL_STUDIO_DEFAULTS.fontSize;
+    const fit = Math.min(width / artWidth, height / artHeight) * Math.max(0, baseScale);
+    const drawWidth = artWidth * fit, drawHeight = artHeight * fit;
+    const centerX = calibration.centerX + ((posX - artworkCenterCanvasPercent) / 100) *
+      (ON_DESK_PRODUCT_PHOTO.printableFace.topRight[0] - ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[0]);
+    const verticalPosition = logoDataUrl ? logoPosY : posY;
+    const centerY = calibration.centerY + ((verticalPosition - 50) / 100) *
+      (ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[1] - ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[1]);
+    const target = artworkQuad.map(([x, y]) => [
+      centerX + (x - calibration.centerX) * drawWidth / width,
+      centerY + (y - calibration.centerY) * drawHeight / height,
+    ]) as [number, number][];
+
+    const master = await loadStudioImage(ON_DESK_PRODUCT_PHOTO.masterSrc);
+    if (master.naturalWidth !== ON_DESK_PRODUCT_PHOTO.width || master.naturalHeight !== ON_DESK_PRODUCT_PHOTO.height) {
+      throw new Error("The desk master image dimensions do not match its approved calibration.");
+    }
+    const canvas = document.createElement("canvas"); canvas.width = ON_DESK_PRODUCT_PHOTO.width; canvas.height = ON_DESK_PRODUCT_PHOTO.height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("The desk product-image canvas is unavailable.");
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.globalAlpha = (styleMode === "emboss" ? calibration.embossedOpacity : calibration.flatOpacity) *
+      (logoDataUrl ? logoOpacity / 100 : 1);
+    context.save();
+    context.beginPath();
+    context.moveTo(ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[0], ON_DESK_PRODUCT_PHOTO.printableFace.topLeft[1]);
+    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.topRight[0], ON_DESK_PRODUCT_PHOTO.printableFace.topRight[1]);
+    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight[0], ON_DESK_PRODUCT_PHOTO.printableFace.bottomRight[1]);
+    context.lineTo(ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[0], ON_DESK_PRODUCT_PHOTO.printableFace.bottomLeft[1]); context.closePath(); context.clip();
+    const map = (u: number, v: number): [number, number] => {
+      const [tl, tr, br, bl] = target;
+      return [tl[0]*(1-u)*(1-v)+tr[0]*u*(1-v)+br[0]*u*v+bl[0]*(1-u)*v,
+        tl[1]*(1-u)*(1-v)+tr[1]*u*(1-v)+br[1]*u*v+bl[1]*(1-u)*v];
+    };
+    const drawTriangle = (srcPts: [number,number][], dstPts: [number,number][]) => {
+      const [s0,s1,s2]=srcPts, [d0,d1,d2]=dstPts;
+      const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
+      if (!den) return;
+      const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
+      const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+      const e=(d0[0]*(s1[0]*s2[1]-s2[0]*s1[1])+d1[0]*(s2[0]*s0[1]-s0[0]*s2[1])+d2[0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;
+      const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s0[1]-s1[1]))/den;
+      const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[1]*(s1[0]-s0[0]))/den;
+      const f=(d0[1]*(s1[0]*s2[1]-s2[0]*s1[1])+d1[1]*(s2[0]*s0[1]-s0[0]*s2[1])+d2[1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;
+      context.save(); context.beginPath(); context.moveTo(...d0); context.lineTo(...d1); context.lineTo(...d2); context.closePath(); context.clip();
+      context.setTransform(a,b,c,d,e,f); context.drawImage(art,0,0); context.restore();
+    };
+    const cols=24, rows=8;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) {
+      const u0=x/cols,u1=(x+1)/cols,v0=y/rows,v1=(y+1)/rows;
+      const s00:[number,number]=[u0*art.width,v0*art.height],s10:[number,number]=[u1*art.width,v0*art.height],s11:[number,number]=[u1*art.width,v1*art.height],s01:[number,number]=[u0*art.width,v1*art.height];
+      drawTriangle([s00,s10,s11],[map(u0,v0),map(u1,v0),map(u1,v1)]); drawTriangle([s00,s11,s01],[map(u0,v0),map(u1,v1),map(u0,v1)]);
+    }
+    context.restore();
+    const overlayPixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const masterCanvas = document.createElement("canvas"); masterCanvas.width = canvas.width; masterCanvas.height = canvas.height;
+    const masterContext = masterCanvas.getContext("2d", { willReadFrequently: true });
+    if (!masterContext) throw new Error("The desk lighting map is unavailable.");
+    masterContext.drawImage(master, 0, 0);
+    const masterPixels = masterContext.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 0; i < overlayPixels.data.length; i += 4) if (overlayPixels.data[i + 3]) {
+      const light = (masterPixels[i] + masterPixels[i + 1] + masterPixels[i + 2]) / (3 * 255);
+      const lighting = 0.70 + light * 0.50;
+      overlayPixels.data[i] = Math.round(overlayPixels.data[i] * lighting);
+      overlayPixels.data[i + 1] = Math.round(overlayPixels.data[i + 1] * lighting);
+      overlayPixels.data[i + 2] = Math.round(overlayPixels.data[i + 2] * lighting);
+    }
+    context.putImageData(overlayPixels, 0, 0);
+    context.globalAlpha = 1;
+    const resultContext = canvas.getContext("2d");
+    if (!resultContext) throw new Error("The desk product-image output is unavailable.");
+    resultContext.globalCompositeOperation = "destination-over";
+    resultContext.drawImage(master, 0, 0);
+    resultContext.globalCompositeOperation = "source-over";
+    return await new Promise<Blob>((resolve,reject)=>canvas.toBlob((blob)=>blob?resolve(blob):reject(new Error("Desk product PNG encoding failed.")),"image/png"));
+  }
+
   async function handleExportPNG() {
     try {
       const png = await renderStudioPNGBlob();
@@ -1638,6 +1772,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
+      if (productPhotoChoice === "desk") {
+        const deskPNG = await renderDeskProductPhoto();
+        downloadPNGBlob(deskPNG, `snapink-billboard-${productPhotoSlug()}-on-desk.png`);
+        return;
+      }
       const [sleevePNG, hatImage, packageImage] = await Promise.all([
         renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }),
         loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc),
@@ -1671,6 +1810,14 @@ const SnapInkSleeveCustomizer = forwardRef<
       ));
       const packagingPNG = await renderPackagingProductPhoto(packageImage, sleeveImage);
       const slug = productPhotoSlug();
+      if (productPhotoChoice === "rear") {
+        downloadPNGBlob(productPNG, `snapink-billboard-${slug}-rear.png`);
+        return;
+      }
+      if (productPhotoChoice === "packaging") {
+        downloadPNGBlob(packagingPNG, `snapink-billboard-${slug}-packaging.png`);
+        return;
+      }
       const zip = await createProductPhotoZip([
         { filename: `snapink-billboard-${slug}-rear.png`, blob: productPNG },
         { filename: `snapink-billboard-${slug}_packaging.png`, blob: packagingPNG },
@@ -2912,16 +3059,21 @@ const SnapInkSleeveCustomizer = forwardRef<
                 Download PNG preview
               </button>
               {enableProductPhotoGeneration && <>
+                <label className="block text-xs text-neutral-400">Product image option
+                  <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
+                    <option value="bundle">On-Hat + Packaging (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
+                  </select>
+                </label>
                 <button
                   type="button"
                   onClick={handleGenerateProductImage}
                   disabled={variant !== "billboard" || isGeneratingProductImage}
-                  title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
+                  title={variant === "standard" ? "Product photography is available for billboard sleeves." : "Generate the selected product image."}
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
-                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
+                {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the Rear Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "Rear Hat and Packaging images in one ZIP."}</p>}
                 {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
               </>}
 
@@ -3193,16 +3345,21 @@ const SnapInkSleeveCustomizer = forwardRef<
               Download PNG preview
             </button>
             {enableProductPhotoGeneration && <>
+              <label className="block text-xs text-neutral-400">Product image option
+                <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
+                  <option value="bundle">On-Hat + Packaging (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
+                </select>
+              </label>
               <button
                 type="button"
                 onClick={handleGenerateProductImage}
                 disabled={variant !== "billboard" || isGeneratingProductImage}
-                title={variant === "standard" ? "Standard product photography needs separate calibration." : "Downloads Rear Hat and Packaging PNGs in a ZIP."}
+                title={variant === "standard" ? "Product photography is available for billboard sleeves." : "Generate the selected product image."}
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
-              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads Rear Hat and Packaging images in one ZIP.</p>}
+              {variant === "billboard" && <p className="text-xs text-neutral-400">Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the Rear Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "Rear Hat and Packaging images in one ZIP."}</p>}
               {variant === "standard" && <p className="text-xs text-neutral-400">Standard product-image placement is disabled until its rear-view fit is calibrated.</p>}
             </>}
 
