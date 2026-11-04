@@ -733,6 +733,35 @@
 }
 
 @media (min-width: 1280px) {
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-light-text,
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-desktop-basic-toolbar .snapink-toolbar-primary label > span {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+  }
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-info {
+    padding: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+  }
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-info :is(p, a, button) {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+  }
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-filename-row,
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-upload-status,
+  .snapink-studio-customizer .snapink-desktop-basic-overlay .snapink-basic-panel-upload-status p {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+    background: transparent !important;
+  }
+}
+
+@media (min-width: 1280px) {
   .snapink-studio-customizer .snapink-desktop-basic-overlay {
     position: absolute;
     z-index: 31;

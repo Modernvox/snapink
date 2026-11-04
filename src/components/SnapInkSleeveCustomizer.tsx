@@ -2482,12 +2482,12 @@ const SnapInkSleeveCustomizer = forwardRef<
     }
   };
 
-  const artworkTransparencyWarning = () => showArtworkTransparencyWarning ? (
-    <aside aria-label="Artwork transparency requirement" className="relative rounded-lg border border-[#D8C08C] bg-[#F4E7C7] px-2.5 py-2 pr-11 text-left text-[#17130B] sm:p-3 sm:pr-12">
+  const artworkTransparencyWarning = (desktop = false) => showArtworkTransparencyWarning ? (
+    <aside aria-label="Artwork transparency requirement" className={`relative rounded-lg border border-[#D8C08C] bg-[#F4E7C7] px-2.5 py-2 pr-11 text-left text-[#17130B] sm:p-3 sm:pr-12${desktop ? " snapink-basic-panel-info" : ""}`}>
       <button type="button" onClick={dismissArtworkTransparencyWarning} aria-label="Dismiss artwork transparency warning" title="Dismiss warning" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-xl font-semibold leading-none text-[#17130B] hover:bg-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#5A4212]">Ã—</button>
-      <p className="pr-1 text-[10px] font-black leading-snug sm:pr-0 sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
-      <p className="mt-1 text-[10px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
-      <p className="mt-1 text-[10px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
+      <p className="snapink-basic-panel-light-text pr-1 text-[10px] font-black leading-snug sm:pr-0 sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
+      <p className="snapink-basic-panel-light-text mt-1 text-[10px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
+      <p className="snapink-basic-panel-light-text mt-1 text-[10px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
       <a className="mt-1 inline-block text-[10px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here â†—</a>
     </aside>
   ) : null;
@@ -2497,7 +2497,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div>
         {instance === "mobile" ? <div className="snapink-mobile-upload-picker">
           <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Upload Artwork</span>
-          {artworkTransparencyWarning()}
+          {artworkTransparencyWarning(instance === "desktop")}
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" style={{ color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF", textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)" }} onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
             {logoName && <span className="snapink-mobile-upload-status" title={logoName} aria-label={`Artwork uploaded: ${logoName}`}>
@@ -2518,8 +2518,8 @@ const SnapInkSleeveCustomizer = forwardRef<
           <input ref={mobileLogoInputRef} key={logoInputVersion} className="snapink-mobile-file-input" type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
           {logoRemovalMessage && <span className="sr-only" aria-live="polite" aria-busy={logoRemovalBusy}>{logoRemovalMessage}{logoRemovalBusy && logoRemovalProgress > 0 ? ` ${logoRemovalProgress}%` : ""}</span>}
         </div> : <>
-          {artworkTransparencyWarning()}
-          <label className="block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
+          {artworkTransparencyWarning(true)}
+          <label className="snapink-basic-panel-light-text block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
           <input
             key={logoInputVersion}
             type="file"
@@ -2528,13 +2528,13 @@ const SnapInkSleeveCustomizer = forwardRef<
             className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-3 py-2 text-sm text-neutral-200 file:mr-3 file:rounded-lg file:border-0 file:bg-si-button file:px-3 file:py-1.5 file:font-semibold file:text-neutral-950"
           />
         </>}
-        {instance === "desktop" && logoName && <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
-            <span className="truncate">{logoName}</span>
+        {instance === "desktop" && logoName && <div className="snapink-basic-panel-filename-row mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
+            <span className="snapink-basic-panel-light-text truncate">{logoName}</span>
             <button type="button" onClick={clearLogo} className="rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800">Remove</button>
           </div>}
         {instance === "desktop" && logoRemovalMessage && (
-          <div className="mt-2 space-y-2" aria-live="polite" aria-busy={logoRemovalBusy}>
-            <p className={`text-xs leading-relaxed ${logoNeedsRemoval ? "text-amber-200" : "text-neutral-400"}`}>
+          <div className="snapink-basic-panel-upload-status mt-2 space-y-2" aria-live="polite" aria-busy={logoRemovalBusy}>
+            <p className={`snapink-basic-panel-light-text text-xs leading-relaxed ${logoNeedsRemoval ? "text-amber-200" : "text-neutral-400"}`}>
               {logoRemovalMessage}{logoRemovalBusy && logoRemovalProgress > 0 ? ` ${logoRemovalProgress}%` : ""}
             </p>
             {logoRemovalBusy && (
@@ -2646,7 +2646,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   } as const;
   const textInputControl = (instance: "mobile" | "desktop") => (
     <label className="snapink-toolbar-text">
-      <span style={instance === "mobile" ? mobileOverlayWhiteTextStyle : undefined}>Text</span>
+      <span className={instance === "desktop" ? "snapink-basic-panel-light-text" : undefined} style={instance === "mobile" ? mobileOverlayWhiteTextStyle : undefined}>Text</span>
       <input aria-label="Custom text" value={text} onChange={(event) => setText(event.target.value)} placeholder={instance === "mobile" ? "YOUR TEXT" : "ENTER YOUR TEXT"} maxLength={characterLimit} />
     </label>
   );
@@ -2696,20 +2696,20 @@ const SnapInkSleeveCustomizer = forwardRef<
         {instance === "desktop" && textInputControl(instance)}
         {instance === "desktop" && logoUploadControl(instance)}
         <label className="snapink-toolbar-select">
-          <span>Font</span>
+          <span className={instance === "desktop" ? "snapink-basic-panel-light-text" : undefined}>Font</span>
           <select aria-label="Font" value={font} style={{ fontFamily: font }} onChange={(event) => setFont(event.target.value)}>
             {WEB_SAFE_FONTS.map((f) => <option key={f.label} value={f.stack} style={{ fontFamily: f.stack }}>{f.label}</option>)}
           </select>
         </label>
         <label className="snapink-toolbar-select">
-          <span>Style</span>
+          <span className={instance === "desktop" ? "snapink-basic-panel-light-text" : undefined}>Style</span>
           <select aria-label="Text style" disabled={Boolean(forcedStyleMode)} value={styleMode} onChange={(event) => setStyleMode(event.target.value as "emboss" | "flat")}>
             <option value="emboss">Embossed</option>
             <option value="flat">Printed</option>
           </select>
         </label>
         <label className="snapink-toolbar-select">
-          <span>Sleeve</span>
+          <span className={instance === "desktop" ? "snapink-basic-panel-light-text" : undefined}>Sleeve</span>
           <select aria-label="Sleeve Style" disabled={fixedProductConfiguration} value={variant} onChange={(event) => handleVariantChange(event.target.value as SleeveVariant)}>
             <option value="standard">Standard</option>
             <option value="billboard">Billboard</option>
