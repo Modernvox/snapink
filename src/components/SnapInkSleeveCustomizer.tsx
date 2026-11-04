@@ -1276,7 +1276,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoFitCenterYmm,
     logoAspectRatio
   );
-  const logoBaseHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 100) / 100);
+  const logoBaseHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 200) / 100);
   const selectedBrandingRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
   const previewBrandingRange = usableBrandingCanvasRangePercentFor(variant, renderGeometrySize);
   const renderPosX = previewBrandingRange.start
@@ -2696,7 +2696,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
           {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] !text-white opacity-100"><strong className="block break-words font-bold !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block break-words whitespace-normal !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
-          <Range label="Logo size" min={0} max={100} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
+          <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
           <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
         </>}
