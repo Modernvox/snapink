@@ -652,7 +652,7 @@
   .snapink-studio-customizer .snapink-desktop-basic-overlay {
     position: absolute;
     z-index: 31;
-    top: 50%;
+    top: calc(50% - 200px);
     left: 12px;
     width: 220px;
     max-width: calc(100% - 24px);
