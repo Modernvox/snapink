@@ -618,6 +618,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     "export"
   );
   const [toolbarAdvancedOpen, setToolbarAdvancedOpen] = useState(false);
+  const [showExtendedArtworkInfo, setShowExtendedArtworkInfo] = useState(false);
   const [desktopCustomizationCollapsed, setDesktopCustomizationCollapsed] = useState(false);
   const [mobileEntryCollapsed, setMobileEntryCollapsed] = useState(Boolean(initial.logoDataUrl));
   const [ghostHat, setGhostHat] = useState(true);
@@ -2636,6 +2637,30 @@ const SnapInkSleeveCustomizer = forwardRef<
     </div>
   );
 
+  const extendedArtworkNotice = (idSuffix: string) => {
+    const visible = artworkIsExtended && !artworkInvalid;
+    const infoId = `snapink-extended-artwork-info-${uid}-${idSuffix}`;
+    return (
+      <div className={`snapink-extended-artwork-slot${visible ? "" : " is-inactive"}`} aria-hidden={!visible}>
+        <div className="snapink-extended-artwork-notice" role="status">
+          <span>EXTENDED ARTWORK — ADDITIONAL COST</span>
+          <button
+            type="button"
+            className="snapink-extended-artwork-info-button"
+            aria-label="More information about extended artwork cost"
+            aria-expanded={visible && showExtendedArtworkInfo}
+            aria-controls={infoId}
+            onClick={() => setShowExtendedArtworkInfo((open) => !open)}
+          >ⓘ</button>
+        </div>
+        {visible && showExtendedArtworkInfo && <div id={infoId} className="snapink-extended-artwork-popover" role="note">
+          <button type="button" aria-label="Close extended artwork information" onClick={() => setShowExtendedArtworkInfo(false)}>×</button>
+          <p>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</p>
+        </div>}
+      </div>
+    );
+  };
+
   const previewToolbar = (instance: "mobile" | "desktop", basicOnly = false) => (
     <div className={`snapink-preview-toolbar${basicOnly ? " snapink-desktop-basic-toolbar" : ""}`} style={instance === "desktop" && !basicOnly ? {
       position: "static",
@@ -2692,7 +2717,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
           <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-          {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] !text-white opacity-100"><strong className="block break-words font-bold !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block break-words whitespace-normal !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+          {extendedArtworkNotice("toolbar")}
           <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
           <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
@@ -3381,7 +3406,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
               {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-              {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] !text-white opacity-100"><strong className="block break-words font-bold !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block break-words whitespace-normal !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+              {extendedArtworkNotice("mobile")}
 
               <div className="grid grid-cols-2 gap-3">
                 <Range
@@ -3684,7 +3709,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
             {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-            {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] !text-white opacity-100"><strong className="block break-words font-bold !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block break-words whitespace-normal !text-white" style={{ color: "#FFFFFF", opacity: 1 }}>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+            {extendedArtworkNotice("desktop")}
 
             <div className="grid grid-cols-2 gap-3">
               <Range
