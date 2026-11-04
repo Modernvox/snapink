@@ -2678,7 +2678,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
           <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-          {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-3 text-xs text-amber-100"><strong className="block">EXTENDED ARTWORK — ADDITIONAL COST</strong><span>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+          {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] text-white opacity-100"><strong className="block font-bold text-white">EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block text-white">Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
           <Range label="Logo size" min={0} max={100} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
           <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
@@ -3367,7 +3367,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
               {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-              {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-3 text-xs text-amber-100"><strong className="block">EXTENDED ARTWORK — ADDITIONAL COST</strong><span>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+              {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] text-white opacity-100"><strong className="block font-bold text-white">EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block text-white">Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
 
               <div className="grid grid-cols-2 gap-3">
                 <Range
@@ -3670,7 +3670,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
             {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
-            {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-3 text-xs text-amber-100"><strong className="block">EXTENDED ARTWORK — ADDITIONAL COST</strong><span>Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
+            {artworkIsExtended && !artworkInvalid && <aside role="status" className="rounded-lg border border-amber-400/70 bg-amber-950/80 p-4 text-[13px] leading-[1.5] text-white opacity-100"><strong className="block font-bold text-white">EXTENDED ARTWORK — ADDITIONAL COST</strong><span className="block text-white">Your artwork extends beyond the sleeve's top or bottom edge. Extended designs require additional production work and may cost extra. Final pricing and feasibility will be confirmed during design review.</span></aside>}
 
             <div className="grid grid-cols-2 gap-3">
               <Range
