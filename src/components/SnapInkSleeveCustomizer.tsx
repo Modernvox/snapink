@@ -1633,6 +1633,19 @@ const SnapInkSleeveCustomizer = forwardRef<
     const { width, height, artworkQuad } = calibration;
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"], [data-product-image="true"], line').forEach((node) => node.remove());
+    if (styleMode === "emboss") {
+      // Production relief is 0.8 mm; the generic Studio preview extrusion is
+      // intentionally deeper. Thin only the copied sidewall layers for desk photos.
+      for (const layer of Array.from(exportSvg.querySelectorAll<SVGElement>("[data-emboss-extrusion-step]"))) {
+        const transform = layer.getAttribute("transform") || "";
+        layer.setAttribute("transform", transform.replace(
+          /translate\(\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*[, ]\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*\)/i,
+          (_match, x: string, y: string) => `translate(${Number(x) * 0.35} ${Number(y) * 0.35})`,
+        ));
+        const opacity = Number(layer.getAttribute("opacity") ?? 1);
+        layer.setAttribute("opacity", String(opacity * 0.8));
+      }
+    }
     exportSvg.removeAttribute("style");
     for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
       const href = image.getAttribute("href");
