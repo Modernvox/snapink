@@ -1074,14 +1074,28 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleeveColorFilterId = `sleeve-color-${uid}`;
   const billboardMatteGradientId = `billboard-matte-${uid}`;
   const scaledFontSize = fontSize * (viewH / 450);
-  const textLineCount = Math.max(1, text.split("\n").length);
-  // Estimate the full text footprint, including line spacing and stroke, in
-  // CAD units so vertical placement stays inside the real printable face.
-  const textArtworkHeightMm = text.trim()
-    ? (scaledFontSize * (1 + (textLineCount - 1) * lineHeight)
-      + strokeWidth * (viewH / 450)) * ((bounds.maxY - bounds.minY) / viewH)
-      + (styleMode === "emboss" ? STUDIO_EMBOSSED_PREVIEW_RELIEF_MM : 0)
-    : 0;
+  // Measure the glyphs using the same browser font metrics as the SVG preview;
+  // do not treat the SVG line-height box as printed artwork.
+  const textGlyphBounds = (() => {
+    if (!text.trim() || typeof document === "undefined") return { width: 0, height: 0 };
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) return { width: 0, height: 0 };
+    context.font = `${fontWeight} ${scaledFontSize}px "${font.replace(/"/g, "\\\"")}"`;
+    const lines = text.split("\n");
+    const metrics = lines.map((line) => context.measureText(line));
+    const trackingPx = tracking * scaledFontSize;
+    const width = Math.max(0, ...metrics.map((metric, index) =>
+      metric.width + Math.max(0, lines[index].length - 1) * trackingPx
+    )) + strokeWidth * (viewH / 450);
+    const ascent = Math.max(0, ...metrics.map((metric) => metric.actualBoundingBoxAscent || 0));
+    const descent = Math.max(0, ...metrics.map((metric) => metric.actualBoundingBoxDescent || 0));
+    const height = ascent + descent + (lines.length - 1) * scaledFontSize * lineHeight
+      + strokeWidth * (viewH / 450);
+    return { width, height };
+  })();
+  const textArtworkWidthMm = textGlyphBounds.width * ((bounds.maxX - bounds.minX) / viewW);
+  const textArtworkHeightMm = textGlyphBounds.height * ((bounds.maxY - bounds.minY) / viewH);
   const margin = (safeMargin / 100) * viewH;
 
   const pathId = `text-arc-path-${uid}`;
@@ -1248,7 +1262,6 @@ const SnapInkSleeveCustomizer = forwardRef<
   const sleevePreviewRightPercent = sleevePreviewCenterXPercent + sleevePreviewWidthPercent / 2;
   const cameraOriginXPercent = (stageComposition.grooveX / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
-  const maximumWidthMm = bounds.maxY - bounds.minY;
   const productionBounds = surfaceBounds(variant, sleeveSize);
   const productionLogoCenterXmm = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, 50).centerXmm;
   // Billboard logos center on the inset face customers see as printable,
@@ -1271,8 +1284,10 @@ const SnapInkSleeveCustomizer = forwardRef<
       * (previewBrandingRange.end - previewBrandingRange.start);
   const logoCenterXmm = studioArtworkPositionFor(variant, renderGeometrySize, renderPosX, 50).centerXmm;
   const logoHeightMm = logoBaseHeightMm;
-  const embossedArtworkReliefMm = styleMode === "emboss" ? STUDIO_EMBOSSED_PREVIEW_RELIEF_MM : 0;
-  const logoArtworkHeightMm = (logoHeightMm + embossedArtworkReliefMm) * artworkHeightScale / 100;
+  // Boundary placement follows the visible alpha image face. Emboss extrusion
+  // is rendered as offset edge layers and must not inflate the centered face
+  // bounds used for clearance checks.
+  const logoArtworkHeightMm = logoHeightMm * artworkHeightScale / 100;
   const textArtworkHeightMmScaled = textArtworkHeightMm * artworkHeightScale / 100;
   const textCenterYmm = artworkCenterYForPositionMm(
     variant,
@@ -1315,11 +1330,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   const artworkMaxXCanvasPercent = usableArtworkRange.end;
   const productionTextHeightMm = textArtworkHeightMmScaled
     * ((productionBounds.maxY - productionBounds.minY) / (bounds.maxY - bounds.minY));
+  const productionTextWidthMm = textArtworkWidthMm
+    * ((productionBounds.maxX - productionBounds.minX) / (bounds.maxX - bounds.minX));
   const productionLogoBaseHeightMm = logoDataUrl ? logoBaseHeightMm : 0;
   // Studio applies artworkHeightScale only on Y (scale(1, scaleY)). Keep the
   // visible width on its independent logoScale so validation matches preview.
   const productionLogoHeightMm = logoDataUrl
-    ? productionLogoBaseHeightMm * artworkHeightScale / 100 + embossedArtworkReliefMm
+    ? productionLogoBaseHeightMm * artworkHeightScale / 100
     : 0;
   const productionCenterYmm = artworkCenterYForPositionMm(
     variant,
@@ -1332,7 +1349,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
   const selectedArtworkWidthMm = logoDataUrl
     ? productionLogoBaseHeightMm * logoAspectRatio
-    : Math.min(maximumWidthMm, textArtworkHeightMmScaled * Math.max(1, text.split("\n").reduce((max, line) => Math.max(max, line.length), 0) * 0.55));
+    : productionTextWidthMm;
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
