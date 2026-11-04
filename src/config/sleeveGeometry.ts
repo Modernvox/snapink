@@ -371,7 +371,8 @@ export function artworkBoundsStatusMm(
   centerYmm: number,
   widthMm: number,
   heightMm: number,
-  edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM
+  edgeMarginMm = BRANDING_EDGE_CLEARANCE_MM,
+  visibleProfile?: readonly { x: number; top: number; bottom: number }[]
 ): {
   extensionMm: number;
   topExtensionMm: number;
@@ -395,13 +396,23 @@ export function artworkBoundsStatusMm(
   let bottomExtensionMm = 0;
   const crossesLeftEdge = artLeft < left - 1e-6;
   const crossesRightEdge = artRight > right + 1e-6;
-  const crossesGroove = artLeft < grooveRight && artRight > grooveLeft;
-  const samples = Math.max(1, Math.ceil(widthMm / 0.1));
-  for (let i = 0; i <= samples; i += 1) {
-    const x = artLeft + widthMm * i / samples;
+  const fallbackSampleCount = Math.max(1, Math.ceil(widthMm / 0.1));
+  const profile = visibleProfile?.length ? visibleProfile : Array.from({ length: fallbackSampleCount + 1 }, (_, i) => ({
+    x: i / fallbackSampleCount,
+    top: 0,
+    bottom: 1,
+  }));
+  const crossesGroove = visibleProfile?.length
+    ? profile.some((point) => {
+      const x = artLeft + widthMm * point.x;
+      return x > grooveLeft && x < grooveRight;
+    })
+    : artLeft < grooveRight && artRight > grooveLeft;
+  for (const point of profile) {
+    const x = artLeft + widthMm * point.x;
     const halfWidth = halfWidthAt(variant, x);
-    const artTop = centerYmm + heightMm / 2;
-    const artBottom = centerYmm - heightMm / 2;
+    const artTop = centerYmm + heightMm * (0.5 - point.top);
+    const artBottom = centerYmm + heightMm * (0.5 - point.bottom);
     const topDelta = artTop - halfWidth;
     const bottomDelta = -halfWidth - artBottom;
     topExtensionMm = Math.max(topExtensionMm, topDelta);
@@ -415,11 +426,11 @@ export function artworkBoundsStatusMm(
   let violatesTopClearance = false;
   let violatesBottomClearance = false;
   if (topExtensionMm <= 1e-6 && bottomExtensionMm <= 1e-6) {
-    for (let i = 0; i <= samples; i += 1) {
-      const x = artLeft + widthMm * i / samples;
+    for (const point of profile) {
+      const x = artLeft + widthMm * point.x;
       const halfWidth = halfWidthAt(variant, x);
-      const topDelta = centerYmm + heightMm / 2 - halfWidth;
-      const bottomDelta = -halfWidth - (centerYmm - heightMm / 2);
+      const topDelta = centerYmm + heightMm * (0.5 - point.top) - halfWidth;
+      const bottomDelta = -halfWidth - (centerYmm + heightMm * (0.5 - point.bottom));
       if (topDelta > -edgeMarginMm + 1e-6) violatesTopClearance = true;
       if (bottomDelta > -edgeMarginMm + 1e-6) violatesBottomClearance = true;
       if (violatesTopClearance && violatesBottomClearance) break;

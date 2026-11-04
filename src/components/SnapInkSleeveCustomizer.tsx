@@ -596,6 +596,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [logoAspectRatio, setLogoAspectRatio] = useState(1);
   const [logoSourceAspectRatio, setLogoSourceAspectRatio] = useState(1);
   const [logoVisibleBounds, setLogoVisibleBounds] = useState({ x: 0, y: 0, width: 1, height: 1 });
+  const [logoAlphaProfile, setLogoAlphaProfile] = useState<Array<{ x: number; top: number; bottom: number }>>([]);
   const [logoName, setLogoName] = useState(initial.logoName ?? "");
   const [logoInputVersion, setLogoInputVersion] = useState(0);
   const mobileLogoInputRef = useRef<HTMLInputElement | null>(null);
@@ -850,6 +851,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       setLogoAspectRatio(1);
       setLogoSourceAspectRatio(1);
       setLogoVisibleBounds({ x: 0, y: 0, width: 1, height: 1 });
+      setLogoAlphaProfile([]);
       return;
     }
     const uploadedImage = new Image();
@@ -859,6 +861,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       const imageWidth = uploadedImage.naturalWidth;
       const imageHeight = uploadedImage.naturalHeight;
       let visible = { x: 0, y: 0, width: imageWidth, height: imageHeight };
+      const alphaColumnTop = new Int32Array(imageWidth).fill(imageHeight);
+      const alphaColumnBottom = new Int32Array(imageWidth).fill(-1);
       try {
         // Use the source alpha at native resolution. A downsampled scan can
         // shift the visible bounds and therefore the CAD width used for checks.
@@ -887,6 +891,8 @@ const SnapInkSleeveCustomizer = forwardRef<
                   minY = Math.min(minY, sourceY);
                   maxX = Math.max(maxX, sourceX);
                   maxY = Math.max(maxY, sourceY);
+                  alphaColumnTop[sourceX] = Math.min(alphaColumnTop[sourceX], sourceY);
+                  alphaColumnBottom[sourceX] = Math.max(alphaColumnBottom[sourceX], sourceY);
                 }
               }
             }
@@ -910,6 +916,18 @@ const SnapInkSleeveCustomizer = forwardRef<
       const cropBottom = Math.min(imageHeight, Math.ceil(visible.y + visible.height));
       const cropWidth = cropRight - cropX;
       const cropHeight = cropBottom - cropY;
+      const alphaProfile = Array.from({ length: Math.max(0, cropWidth) }, (_, index) => {
+        const sourceX = cropX + index;
+        const top = alphaColumnTop[sourceX];
+        const bottom = alphaColumnBottom[sourceX];
+        if (bottom < top) return null;
+        return {
+          x: (index + 0.5) / cropWidth,
+          top: (top - cropY) / cropHeight,
+          bottom: (bottom - cropY + 1) / cropHeight,
+        };
+      }).filter((point): point is { x: number; top: number; bottom: number } => point !== null);
+      setLogoAlphaProfile(alphaProfile);
 
       // Trim transparent padding once when the logo is loaded. The resulting data URL
       // is shared by the editor, saved draft, preview, and PNG export.
@@ -1354,7 +1372,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
-    selectedArtworkWidthMm, selectedArtworkHeightMm
+    selectedArtworkWidthMm, selectedArtworkHeightMm, undefined,
+    logoDataUrl ? logoAlphaProfile : undefined
   );
   const artworkExtensionMm = artworkStatus.extensionMm;
   const artworkExceedsAllowedExtension = artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001
