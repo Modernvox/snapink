@@ -2222,11 +2222,21 @@ const SnapInkSleeveCustomizer = forwardRef<
     setLogoInputVersion((version) => version + 1);
   }
 
+  const artworkTransparencyWarning = () => (
+    <aside aria-label="Artwork transparency requirement" className="rounded-lg border border-[#D8C08C] bg-[#F4E7C7] p-2.5 text-left text-[#17130B] sm:p-3">
+      <p className="text-[11px] font-black leading-snug sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
+      <p className="mt-1 text-[11px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
+      <p className="mt-1 text-[11px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
+      <a className="mt-1 inline-block text-[11px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here ↗</a>
+    </aside>
+  );
+
   const logoControls = (instance: "mobile" | "desktop") => (
     <div className={instance === "mobile" ? "snapink-mobile-upload-content" : "space-y-3"}>
       <div>
         {instance === "mobile" ? <div className="snapink-mobile-upload-picker">
           <span className="snapink-mobile-control-label" style={mobileOverlayWhiteTextStyle}>Upload Artwork</span>
+          {artworkTransparencyWarning()}
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" style={{ color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF", textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)" }} onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
             {logoName && <span className="snapink-mobile-upload-status" title={logoName} aria-label={`Artwork uploaded: ${logoName}`}>
@@ -2247,6 +2257,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <input ref={mobileLogoInputRef} key={logoInputVersion} className="snapink-mobile-file-input" type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
           {logoRemovalMessage && <span className="sr-only" aria-live="polite" aria-busy={logoRemovalBusy}>{logoRemovalMessage}{logoRemovalBusy && logoRemovalProgress > 0 ? ` ${logoRemovalProgress}%` : ""}</span>}
         </div> : <>
+          {artworkTransparencyWarning()}
           <label className="block text-xs text-neutral-400 mb-1">Upload logo or artwork</label>
           <input
             key={logoInputVersion}
