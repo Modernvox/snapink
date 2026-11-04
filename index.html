@@ -26,6 +26,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"SnapInk","url":"https://snapbacksleeves.com/","logo":"https://snapbacksleeves.com/images/logos/snapink-header-logo.png","sameAs":["https://www.instagram.com/snapinkhats/"]},{"@type":"WebSite","name":"SnapInk","url":"https://snapbacksleeves.com/"},{"@type":"WebPage","@id":"https://snapbacksleeves.com/#webpage","url":"https://snapbacksleeves.com/","name":"SnapInk™ | Custom Snapback Strap Sleeves & Covers","primaryImageOfPage":{"@type":"ImageObject","url":"https://snapbacksleeves.com/images/website_images/optimized/installed-lift-rear.webp"}}]}</script>
   <link rel="preload" as="image" href="/images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp" imagesrcset="/images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp 1x, /images/optimized/images-images-website_images-desktop-hero-010a018ba937-1672.webp 2x" media="(min-width: 801px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp" imagesrcset="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp 1x, /images/optimized/images-images-website_images-mobile-hero-fd8a01e6a63b-1536.webp 2x" media="(max-width: 800px)" fetchpriority="high" />
+  <link rel="preload" as="image" href="/images/carousel/1c9a98ed-aa77-4a0f-ae8a-f072e7505bd4.png" media="(max-width: 800px)" fetchpriority="high" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -163,7 +164,32 @@
   .hero-mobile-video{display:none}
   .hero-mobile-poster{display:block}
 }
-</style>  <link rel="icon" href="/favicon.ico" sizes="any">
+</style>
+<style>
+  .mobile-hat-carousel{display:none}
+  @media(max-width:800px){
+    #shop.one-hat-promo-section{padding-block:0}
+    #shop .one-hat-promo{width:100%;gap:0}
+    #shop .one-hat-promo-image{display:none}
+    .mobile-hat-carousel{display:block;width:100vw;margin:0 calc(50% - 50vw);overflow:hidden;background:#08090b url('/images/carousel/carousel_background.png') center 63%/cover no-repeat;color:#fff;text-align:center}
+    .mobile-hat-carousel-heading{margin:0;padding:20px 16px 0;font:800 clamp(22px,6vw,30px)/1.02 Manrope,sans-serif;letter-spacing:.035em;text-wrap:balance}
+    .mobile-hat-carousel-heading span{display:block;color:var(--si-accent)}
+    .mobile-hat-carousel-subtitle{margin:7px 0 0;color:#eee;font-size:14px;line-height:1.35}
+    .mobile-hat-carousel-stage{position:relative;width:100%;height:clamp(250px,76vw,330px);margin:0 auto;overflow:hidden;perspective:1000px;perspective-origin:50% 48%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+    .mobile-hat-carousel-card{position:absolute;top:50%;left:50%;display:block;width:min(78vw,430px);margin:0;padding:0;transform:translate3d(calc(-50% + var(--carousel-x)),calc(-50% + var(--carousel-y)),var(--carousel-z)) rotateY(var(--carousel-tilt)) scale(var(--carousel-scale));transform-style:preserve-3d;transform-origin:center center;backface-visibility:hidden;border:0;background:transparent;opacity:var(--carousel-opacity);filter:brightness(var(--carousel-brightness)) drop-shadow(0 14px 16px #0009);transition:transform 900ms cubic-bezier(.2,.72,.18,1),opacity 850ms ease,filter 850ms ease;will-change:transform,opacity;cursor:pointer}
+    .mobile-hat-carousel-card img{display:block;width:100%;height:auto;pointer-events:none}
+    .mobile-hat-carousel-card[aria-current="true"]{cursor:default}
+    .mobile-hat-carousel-label{min-height:22px;margin:0;padding:0 12px;color:#fff;font-size:13px;font-weight:800;letter-spacing:.2em;line-height:22px;text-transform:uppercase;transition:opacity 180ms ease,transform 180ms ease}
+    .mobile-hat-carousel-label.is-changing{opacity:.25;transform:translateY(3px)}
+    .mobile-hat-carousel-dots{display:flex;justify-content:center;align-items:center;gap:10px;margin:10px auto 14px;padding:0}
+    .mobile-hat-carousel-dot{width:8px;height:8px;min-width:8px;padding:0;border:0;border-radius:50%;background:#858585;opacity:.72;transition:width 220ms ease,background-color 220ms ease,opacity 220ms ease;cursor:pointer}
+    .mobile-hat-carousel-dot[aria-current="true"]{width:20px;border-radius:999px;background:var(--si-accent);opacity:1}
+    #shop .one-hat-promo>.button{width:min(calc(100% - 32px),320px);margin:16px 16px 22px}
+  }
+  @media(max-width:360px){.mobile-hat-carousel-heading{font-size:21px}.mobile-hat-carousel-stage{height:260px}.mobile-hat-carousel-card{width:80vw}}
+  @media(prefers-reduced-motion:reduce){.mobile-hat-carousel-card,.mobile-hat-carousel-label,.mobile-hat-carousel-dot{transition:none!important}}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
@@ -220,7 +246,31 @@
         desktop.addEventListener?.('change', syncPlayback);
       })();
     </script>
-    <section class="section site-band site-band--light" id="shop"><div class="wrap one-hat-promo"><img class="one-hat-promo-image" src="/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp" srcset="/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-480.webp 480w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-960.webp 960w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1440.webp 1440w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp 1672w" sizes="(max-width: 540px) calc(100vw - 32px), (max-width: 1280px) calc(100vw - 40px), 1120px" width="1672" height="941" alt="One hat, endless possibilities: five black snapback hats display APEX, LIFT, three stars, Unc., and EMINEM sleeves; interchangeable styles fit standard snapback closures" loading="lazy" decoding="async" /><a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a></div></section>
+    <section class="section site-band site-band--light one-hat-promo-section" id="shop"><div class="wrap one-hat-promo">
+      <div class="mobile-hat-carousel" aria-label="SnapInk hat designs">
+        <h2 class="mobile-hat-carousel-heading">ONE HAT.<span>ENDLESS POSSIBILITIES.</span></h2>
+        <p class="mobile-hat-carousel-subtitle">Swap your style in seconds.</p>
+        <div class="mobile-hat-carousel-stage" role="region" aria-label="Rotating hat designs">
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="0" aria-label="Show LIFT hat"></button>
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="1" aria-label="Show DAD hat"></button>
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="2" aria-label="Show THREE STAR hat"></button>
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="3" aria-label="Show APEX hat"></button>
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="4" aria-label="Show APEX RED hat"></button>
+          <button class="mobile-hat-carousel-card" type="button" data-hat-index="5" aria-label="Show UNC hat"></button>
+        </div>
+        <p class="mobile-hat-carousel-label" aria-live="polite" aria-atomic="true">LIFT</p>
+        <nav class="mobile-hat-carousel-dots" aria-label="Choose a hat design">
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show LIFT" data-hat-dot="0"></button>
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show DAD" data-hat-dot="1"></button>
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show THREE STAR" data-hat-dot="2"></button>
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show APEX" data-hat-dot="3"></button>
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show APEX RED" data-hat-dot="4"></button>
+          <button class="mobile-hat-carousel-dot" type="button" aria-label="Show UNC" data-hat-dot="5"></button>
+        </nav>
+      </div>
+      <img class="one-hat-promo-image" src="/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp" srcset="/images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-480.webp 480w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-960.webp 960w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1440.webp 1440w, /images/optimized/images-website-images-one-hat-unlimited-looks-white-png-05c7c6936019-1672.webp 1672w" sizes="(max-width: 540px) calc(100vw - 32px), (max-width: 1280px) calc(100vw - 40px), 1120px" width="1672" height="941" alt="One hat, endless possibilities: five black snapback hats display APEX, LIFT, three stars, Unc., and EMINEM sleeves; interchangeable styles fit standard snapback closures" loading="lazy" decoding="async" />
+      <a class="button primary" href="/customize.html">Design Your Snapback Sleeve</a>
+    </div></section>
     <section class="site-band site-band--dark lifestyle-ad" aria-labelledby="lifestyle-ad-title">
       <div class="wrap lifestyle-ad-grid">
         <figure class="lifestyle-ad-visual">
@@ -274,5 +324,5 @@
     viewport.addEventListener('pointerup',finishTouch);viewport.addEventListener('pointercancel',finishTouch);
   })();
   </script>
-<script defer src="/shop-nav.js"></script><script type="module" src="/src/fit-guide-videos.js"></script></body>
+<script defer src="/shop-nav.js"></script><script defer src="/mobile-hat-carousel.js"></script><script type="module" src="/src/fit-guide-videos.js"></script></body>
 </html>
