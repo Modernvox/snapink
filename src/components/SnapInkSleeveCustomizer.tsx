@@ -209,7 +209,7 @@ const WEB_SAFE_FONTS = [
   { label: "Tangerine", stack: "'Tangerine', cursive" },
   { label: "Hurricane", stack: "'Hurricane', cursive" },
 
-  // NEW â€” High-quality cursive additions
+  // NEW — High-quality cursive additions
   { label: "Petemoss", stack: "'Petemoss', cursive" },
   { label: "Ms Madi", stack: "'Ms Madi', cursive" },
   { label: "Kristi", stack: "'Kristi', cursive" },
@@ -842,7 +842,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   // Normalize (tm)
   useEffect(() => {
-    const normalized = text.replace(/\(tm\)/gi, "â„¢");
+    const normalized = text.replace(/\(tm\)/gi, "™");
     if (normalized !== text) setText(normalized);
   }, [text]);
 
@@ -2038,7 +2038,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     let sleeveUrl: string | null = null;
     try {
       if (productPhotoChoice === "desk") {
-        setProductPhotoProgress("Generating On-Desk Product Imageâ€¦");
+        setProductPhotoProgress("Generating On-Desk Product Image…");
         let deskPNG: Blob;
         try { deskPNG = await renderDeskProductPhoto(); }
         catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
@@ -2046,7 +2046,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         return;
       }
       if (productPhotoChoice === "rear") {
-        setProductPhotoProgress("Generating On-Hat Product Imageâ€¦");
+        setProductPhotoProgress("Generating On-Hat Product Image…");
         let sleeveImage: HTMLImageElement;
         let productPNG: Blob;
         try {
@@ -2060,7 +2060,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         return;
       }
       if (productPhotoChoice === "packaging") {
-        setProductPhotoProgress("Generating Packaging Product Imageâ€¦");
+        setProductPhotoProgress("Generating Packaging Product Image…");
         try { sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale })); }
         catch (error) { throw productPhotoStageError("Packaging Product Image", error); }
         let sleeveImage: HTMLImageElement;
@@ -2076,22 +2076,22 @@ const SnapInkSleeveCustomizer = forwardRef<
       }
 
       const entries: { filename: string; blob: Blob }[] = [];
-      setProductPhotoProgress("Generating On-Hat Product Image (1 of 3)â€¦");
+      setProductPhotoProgress("Generating On-Hat Product Image (1 of 3)…");
       try {
         sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }));
         const sleeveImage = await loadStudioImage(sleeveUrl);
         entries.push({ filename: variant === "billboard" ? "SnapInk_On_Hat.png" : "SnapInk_Standard_On_Hat.png", blob: await renderRearProductPhoto(sleeveImage, variant) });
 
-        setProductPhotoProgress("Generating Packaging Product Image (2 of 3)â€¦");
+        setProductPhotoProgress("Generating Packaging Product Image (2 of 3)…");
         entries.push({ filename: variant === "billboard" ? "SnapInk_Packaging.png" : "SnapInk_Standard_Packaging.png", blob: await renderPackagingProductImage(sleeveImage) });
       } catch (error) {
         throw productPhotoStageError(entries.length === 0 ? "On-Hat Product Image" : "Packaging Product Image", error);
       }
-      setProductPhotoProgress("Generating On-Desk Product Image (3 of 3)â€¦");
+      setProductPhotoProgress("Generating On-Desk Product Image (3 of 3)…");
       try { entries.push({ filename: variant === "billboard" ? "SnapInk_On_Desk.png" : "SnapInk_Standard_On_Desk.png", blob: await renderDeskProductPhoto(variant) }); }
       catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
 
-      setProductPhotoProgress("Packaging all three PNGs into a ZIPâ€¦");
+      setProductPhotoProgress("Packaging all three PNGs into a ZIP…");
       let zip: Blob;
       try { zip = await createProductPhotoZip(entries); }
       catch (error) { throw new Error(`Could not package the three product images into a ZIP: ${error instanceof Error ? error.message : String(error)}`); }
@@ -2125,7 +2125,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
     if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
-    setPublishingProduct(true);setPublishProductStatus("Publishing productâ€¦");
+    setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     const form=new FormData();form.set("name",publishProductName);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
     form.set("onHat",generatedShopImages.onHat,"on-hat.png");form.set("packaging",generatedShopImages.packaging,"packaging.png");form.set("onDesk",generatedShopImages.onDesk,"on-desk.png");
     form.set("extendedArtwork", artworkIsExtended ? "true" : "false");form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
@@ -2221,7 +2221,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       const lifestyleImage = isCityLifestylePreview
         ? await loadStudioImage(await resolveDataUrl(lifestyleBackgroundPath))
         : null;
-      // A 1.25Ã— stage preview includes the hat and corrected overlay placement
+      // A 1.25× stage preview includes the hat and corrected overlay placement
       // while remaining below the existing private preview upload size limit.
       const previewScale = 1.25;
       const canvas = document.createElement("canvas");
@@ -2363,7 +2363,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoRemovalLockRef.current = 0;
     setLogoRemovalBusy(false);
     setLogoRemovalProgress(0);
-    setLogoRemovalMessage("Checking image transparencyâ€¦");
+    setLogoRemovalMessage("Checking image transparency…");
     setLogoNeedsRemoval(false);
     setLogoHasProcessedRemoval(false);
     setLogoSourceFile(file);
@@ -2473,11 +2473,11 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   const artworkTransparencyWarning = (desktop = false) => showArtworkTransparencyWarning ? (
     <aside aria-label="Artwork transparency requirement" className={`relative rounded-lg border border-[#D8C08C] bg-[#F4E7C7] px-2.5 py-2 pr-11 text-left text-[#17130B] sm:p-3 sm:pr-12${desktop ? " snapink-basic-panel-info" : ""}`}>
-      <button type="button" onClick={dismissArtworkTransparencyWarning} aria-label="Dismiss artwork transparency warning" title="Dismiss warning" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-xl font-semibold leading-none text-[#17130B] hover:bg-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#5A4212]">Ã—</button>
+      <button type="button" onClick={dismissArtworkTransparencyWarning} aria-label="Dismiss artwork transparency warning" title="Dismiss warning" className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-xl font-semibold leading-none text-[#17130B] hover:bg-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#5A4212]">×</button>
       <p className="snapink-basic-panel-light-text pr-1 text-[10px] font-black leading-snug sm:pr-0 sm:text-xs">IMPORTANT: REMOVE YOUR IMAGE BACKGROUND BEFORE UPLOADING</p>
       <p className="snapink-basic-panel-light-text mt-1 text-[10px] leading-snug sm:text-xs">Your logo or artwork must have a transparent background. White, black, or colored backgrounds may appear on your finished sleeve. Remove the background before uploading for the best results.</p>
       <p className="snapink-basic-panel-light-text mt-1 text-[10px] font-semibold leading-snug sm:text-xs">Recommended format: PNG with transparency.</p>
-      <a className="mt-1 inline-block text-[10px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here â†—</a>
+      <a className="mt-1 inline-block text-[10px] font-bold leading-snug text-[#5A4212] underline decoration-[#8D6D26] underline-offset-2 hover:text-black sm:text-xs" href="https://www.remove.bg/" target="_blank" rel="noopener noreferrer">Need to remove your background? Remove it here ↗</a>
     </aside>
   ) : null;
 
@@ -2490,7 +2490,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <div className="snapink-mobile-upload-row">
             <button type="button" className="snapink-mobile-choose-image" style={{ color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF", textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)" }} onClick={() => mobileLogoInputRef.current?.click()}>Choose Image</button>
             {logoName && <span className="snapink-mobile-upload-status" title={logoName} aria-label={`Artwork uploaded: ${logoName}`}>
-              <span aria-hidden="true">âœ“</span> Artwork uploaded
+              <span aria-hidden="true">✓</span> Artwork uploaded
             </span>}
             {logoName && <button type="button" onClick={clearLogo} className="snapink-mobile-remove-artwork" aria-label="Remove uploaded artwork" title="Remove uploaded artwork">Remove</button>}
             {(logoNeedsRemoval || logoHasProcessedRemoval || logoRemovalBusy) && <button
@@ -2501,7 +2501,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               aria-label={logoRemovalBusy ? "Removing artwork background" : logoHasProcessedRemoval ? "Retry background removal" : "Remove artwork background"}
               title={logoRemovalMessage || "Remove artwork background"}
             >
-              {logoRemovalBusy ? "Workingâ€¦" : logoHasProcessedRemoval ? "Retry BG" : "Remove BG"}
+              {logoRemovalBusy ? "Working…" : logoHasProcessedRemoval ? "Retry BG" : "Remove BG"}
             </button>}
           </div>
           <input ref={mobileLogoInputRef} key={logoInputVersion} className="snapink-mobile-file-input" type="file" accept="image/*" aria-label="Upload Artwork" onChange={handleLogoUpload} />
@@ -2538,7 +2538,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 disabled={logoRemovalBusy || !logoSourceFile}
                 className="rounded-lg bg-si-button px-3 py-2 text-xs font-semibold text-neutral-950 hover:bg-si-hover disabled:cursor-wait disabled:opacity-60"
               >
-                {logoRemovalBusy ? "Processing logoâ€¦" : logoHasProcessedRemoval ? "Retry background removal" : "Remove background"}
+                {logoRemovalBusy ? "Processing logo…" : logoHasProcessedRemoval ? "Retry background removal" : "Remove background"}
               </button>
             )}
           </div>
@@ -2547,7 +2547,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
       <div className="grid grid-cols-2 gap-3">
         <p className="col-span-2 text-xs leading-5 text-neutral-400">
-          Artwork is centered between this sleeveâ€™s flap groove and far-right edge, then centered vertically on the branding surface.
+          Artwork is centered between this sleeve’s flap groove and far-right edge, then centered vertically on the branding surface.
         </p>
       </div>
     </div>
@@ -2581,7 +2581,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <span className="snapink-hat-picker-trigger-swatch" style={{ backgroundColor: HAT_COLOR_SWATCHES[hatTemplateId] }} />
         <span className="snapink-hat-picker-trigger-label">Hat Color</span>
         <span className="snapink-hat-picker-trigger-value">{currentHatTemplate.displayName.replace(" Trucker Hat", "")}</span>
-        <span className={`snapink-hat-picker-chevron ${hatColorPickerOpen ? "is-open" : ""}`} aria-hidden="true">âŒ„</span>
+        <span className={`snapink-hat-picker-chevron ${hatColorPickerOpen ? "is-open" : ""}`} aria-hidden="true">⌄</span>
       </button>
       {hatColorPickerOpen && <div id={`snapink-hat-colors-${uid}-${instance}`} className="snapink-hat-picker-menu" role="group" aria-label="Choose a hat color">
         {HAT_TEMPLATE_REGISTRY.map((template) => (
@@ -2594,7 +2594,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           >
             <span className="snapink-hat-picker-option-swatch" style={{ backgroundColor: HAT_COLOR_SWATCHES[template.id] }} />
             <span>{template.displayName.replace(" Trucker Hat", "")}</span>
-            {hatTemplateId === template.id && <span className="snapink-hat-picker-check" aria-hidden="true">âœ“</span>}
+            {hatTemplateId === template.id && <span className="snapink-hat-picker-check" aria-hidden="true">✓</span>}
           </button>
         ))}
       </div>}
@@ -2742,7 +2742,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   const studioIntroCopy = (
     <p>
-      Choose Standard or Billboard style, select your exposed-peg configuration, customize text and colors, upload a logo, and preview your sleeve on a hat. Export a design preview when ready. Sizes 0â€“5 match exposed pegs; sleeves fit standard plastic 7-peg snapback closures. <a href="/fit-guide.html">Will It Fit? View the Fit Guide.</a> Production access is available through reviewed pilot-partner applications.
+      Choose Standard or Billboard style, select your exposed-peg configuration, customize text and colors, upload a logo, and preview your sleeve on a hat. Export a design preview when ready. Sizes 0–5 match exposed pegs; sleeves fit standard plastic 7-peg snapback closures. <a href="/fit-guide.html">Will It Fit? View the Fit Guide.</a> Production access is available through reviewed pilot-partner applications.
     </p>
   );
 
@@ -2760,17 +2760,17 @@ const SnapInkSleeveCustomizer = forwardRef<
               aria-controls={`snapink-size-examples-${uid}-${instance}`}
               onClick={() => setSizeExamplesOpen((open) => !open)}
             >
-              {sizeExamplesOpen ? "âˆ’ Hide Size Examples" : "+ View Size Examples"}
+              {sizeExamplesOpen ? "− Hide Size Examples" : "+ View Size Examples"}
             </button>
             <div id={`snapink-size-examples-${uid}-${instance}`} className="snapink-fit-grid mt-2" role="group" aria-label="Snapback compatibility configurations" hidden={!sizeExamplesOpen}>
               {[0, 1, 2, 3, 4, 5].map((size) => (
                 <div key={size} className={"snapink-fit-card min-w-0 overflow-hidden rounded-lg border p-1 transition-colors " + (sleeveSize === size ? "border-si-accent bg-neutral-800" : "border-neutral-700 bg-neutral-900")}>
-                  <button type="button" aria-label={`Enlarge Size ${size} â€” ${size} exposed ${size === 1 ? "peg" : "pegs"} example`} className="snapink-fit-example-trigger" onClick={() => { setFitLightboxSize(size); setFitLightboxZoom(1); setFitLightboxPan({ x: 0, y: 0 }); }}>
+                  <button type="button" aria-label={`Enlarge Size ${size} — ${size} exposed ${size === 1 ? "peg" : "pegs"} example`} className="snapink-fit-example-trigger" onClick={() => { setFitLightboxSize(size); setFitLightboxZoom(1); setFitLightboxPan({ x: 0, y: 0 }); }}>
                     <img src={`/images/website_images/${size}_pegs.png`} alt={`Compatibility view showing ${size} exposed ${size === 1 ? "peg" : "pegs"}`} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-neutral-100 object-contain" />
                     <span className="snapink-fit-zoom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2M10.8 7.7v6.2M7.7 10.8h6.2"/></svg></span>
                   </button>
                   <button type="button" aria-label={`Choose size ${size}: ${size} exposed ${size === 1 ? "peg" : "pegs"}`} aria-pressed={sleeveSize === size} onClick={() => handleSizeChange(size)} className="snapink-fit-card-select block w-full px-1 py-1.5 text-center text-xs font-semibold text-neutral-200">
-                    Size {size} â€” {size} exposed {size === 1 ? "peg" : "pegs"}
+                    Size {size} — {size} exposed {size === 1 ? "peg" : "pegs"}
                   </button>
                 </div>
               ))}
@@ -2817,7 +2817,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <div aria-hidden="true" className="snapink-stage-shadow absolute left-1/2 top-[88%] h-[7%] w-[54%] -translate-x-1/2 rounded-[50%]" />
       {instance === "desktop" && !isMobilePreview && sizeConfirmation !== null && (
         <div key={sizeConfirmation} className="snapink-size-confirmation" role="status" aria-live="polite">
-          <span className="snapink-size-confirmation-icon" aria-hidden="true">âœ“</span>
+          <span className="snapink-size-confirmation-icon" aria-hidden="true">✓</span>
           <span><strong>Size {sizeConfirmation} selected &amp; saved</strong><small>Your sleeve size has been updated.</small></span>
         </div>
       )}
@@ -3490,10 +3490,10 @@ const SnapInkSleeveCustomizer = forwardRef<
                   title="Generate the selected product image."
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isGeneratingProductImage ? "Generating Product Imageâ€¦" : "Generate Product Image"}
+                  {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
                 {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-                <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style Â· Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
+                <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style · Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
                 <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
               </>}
 
@@ -3506,7 +3506,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 >
                   {[1, 2, 3, 4].map((s) => (
                     <option key={s} value={s}>
-                      {s}Ã—
+                      {s}×
                     </option>
                   ))}
                 </select>
@@ -3779,10 +3779,10 @@ const SnapInkSleeveCustomizer = forwardRef<
                 title="Generate the selected product image."
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isGeneratingProductImage ? "Generating Product Imageâ€¦" : "Generate Product Image"}
+                {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
               {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-              <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style Â· Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
+              <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style · Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
               <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
             </>}
 
@@ -3795,7 +3795,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               >
                 {[1, 2, 3, 4].map((s) => (
                   <option key={s} value={s}>
-                    {s}Ã—
+                    {s}×
                   </option>
                 ))}
               </select>
@@ -3817,7 +3817,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         if (fitLightboxZoom <= 1 && !clickedControl) setFitLightboxSize(null);
       }}>
         <div className="snapink-fit-lightbox-header">
-          <h2 id={`snapink-fit-lightbox-title-${uid}`}>Size {fitLightboxSize} â€” {fitLightboxSize} exposed {fitLightboxSize === 1 ? "peg" : "pegs"}</h2>
+          <h2 id={`snapink-fit-lightbox-title-${uid}`}>Size {fitLightboxSize} — {fitLightboxSize} exposed {fitLightboxSize === 1 ? "peg" : "pegs"}</h2>
           <button ref={fitLightboxCloseRef} type="button" className="snapink-fit-lightbox-close" aria-label="Close enlarged size example" onClick={() => setFitLightboxSize(null)}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
@@ -3849,9 +3849,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           </button>
         </div>
         <div className="snapink-fit-lightbox-footer">
-          <span>Swipe between sizes Â· Pinch to zoom Â· Drag to pan</span>
+          <span>Swipe between sizes · Pinch to zoom · Drag to pan</span>
           <div>
-            <button type="button" aria-label="Zoom out" disabled={fitLightboxZoom <= 1} onClick={() => { const zoom = Math.max(1, fitLightboxZoom - 0.5); setFitLightboxZoom(zoom); if (zoom === 1) setFitLightboxPan({ x: 0, y: 0 }); }}>âˆ’</button>
+            <button type="button" aria-label="Zoom out" disabled={fitLightboxZoom <= 1} onClick={() => { const zoom = Math.max(1, fitLightboxZoom - 0.5); setFitLightboxZoom(zoom); if (zoom === 1) setFitLightboxPan({ x: 0, y: 0 }); }}>−</button>
             <span>{Math.round(fitLightboxZoom * 100)}%</span>
             <button type="button" aria-label="Zoom in" disabled={fitLightboxZoom >= 4} onClick={() => setFitLightboxZoom(Math.min(4, fitLightboxZoom + 0.5))}>+</button>
           </div>
@@ -3861,14 +3861,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     )}
       {showPublishProduct && <div role="dialog" aria-modal="true" aria-label="Add product to shop" className="fixed inset-0 z-[10000] grid place-items-center bg-black/70 p-4" onClick={(event)=>{if(event.target===event.currentTarget)setShowPublishProduct(false);}}>
         <form onSubmit={handlePublishProduct} className="w-full max-w-lg space-y-4 rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-neutral-100 shadow-2xl">
-          <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Three generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">Ã—</button></div>
+          <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Three generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">×</button></div>
           <label className="block text-sm">Product Name<input required maxLength={100} value={publishProductName} onChange={(event)=>setPublishProductName(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
-          <label className="block text-sm">Description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder="Custom SnapInk Sleevesâ„¢ add a personalized, interchangeable style to compatible standard plastic snapback closures. Sleeve only; hat sold separately." rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
-          <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} Â· Sleeve Color: {backgroundColor}</p>
+          <label className="block text-sm">Description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder="Custom SnapInk Sleeves™ add a personalized, interchangeable style to compatible standard plastic snapback closures. Sleeve only; hat sold separately." rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
+          <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
           <p className="text-xs text-neutral-400">{artworkIsExtended ? "Extended design prices: sizes 0-2 $24.99 | sizes 3-5 $29.99" : "Sizes 0-3: $15.99 | Sizes 4-5: $18.99"}</p>
-          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork â€” Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} Ã— {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. Extended design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
+          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork — Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} × {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. Extended design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(artworkIsExtended&&!approveExtendedArtwork)||artworkInvalid} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishingâ€¦":"Publish Product"}</button></div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(artworkIsExtended&&!approveExtendedArtwork)||artworkInvalid} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
       </div>}
     </>
