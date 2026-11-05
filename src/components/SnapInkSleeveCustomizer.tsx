@@ -582,8 +582,30 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [generatedShopImages, setGeneratedShopImages] = useState<Record<string,Blob>|null>(null);
   const [generatedPhotoEntries,setGeneratedPhotoEntries]=useState<{key:string;label:string;filename:string;blob:Blob}[]>([]);
   const [shopImageSelection,setShopImageSelection]=useState<string[]>([]);
-  const generatedPreviewUrls=useMemo(()=>generatedPhotoEntries.map(entry=>({key:entry.key,url:URL.createObjectURL(entry.blob)})),[generatedPhotoEntries]);
-  useEffect(()=>()=>generatedPreviewUrls.forEach(item=>URL.revokeObjectURL(item.url)),[generatedPreviewUrls]);
+  const [generatedPreviewUrls,setGeneratedPreviewUrls]=useState<{key:string;url:string}[]>([]);
+  useEffect(()=>{
+    let cancelled=false;const urls:string[]=[];setGeneratedPreviewUrls([]);
+    const createThumbnails=async()=>{
+      const previews:{key:string;url:string}[]=[];
+      for(const entry of generatedPhotoEntries){
+        try{
+          const bitmap=await createImageBitmap(entry.blob),scale=Math.min(1,320/bitmap.width),canvas=document.createElement("canvas");
+          canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+          const context=canvas.getContext("2d");if(!context){bitmap.close();continue}
+          context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+          const thumbnail=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,"image/webp",0.84));
+          if(!thumbnail)continue;
+          const url=URL.createObjectURL(thumbnail);urls.push(url);previews.push({key:entry.key,url});
+        }catch{ /* The generated artwork and download remain available if a preview cannot be encoded. */ }
+      }
+      if(cancelled){urls.forEach(url=>URL.revokeObjectURL(url));return}
+      setGeneratedPreviewUrls(previews);
+    };
+    void createThumbnails();
+    return()=>{cancelled=true;urls.forEach(url=>URL.revokeObjectURL(url))};
+  },[generatedPhotoEntries]);
+  const productPhotoPreviewLabel=(key:string)=>({rear:"On-Hat",desk:"Sleeve",packaging:"Packaging",maleLifestyle:"Male Lifestyle",femaleLifestyle:"Female Lifestyle"} as Record<string,string>)[key]||key;
+  const generatedPhotoResults=<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{generatedPhotoEntries.map(entry=>{const preview=generatedPreviewUrls.find(item=>item.key===entry.key);return <article key={entry.key} className="w-full max-w-[160px] min-w-0 rounded border border-neutral-700 p-2"><div className="flex h-24 items-center justify-center overflow-hidden rounded bg-neutral-900 sm:h-28">{preview?<img className="block max-h-full max-w-full object-contain" src={preview.url} alt={`${productPhotoPreviewLabel(entry.key)} thumbnail`} />:<span className="text-xs text-neutral-500">Preparing thumbnail…</span>}</div><p className="truncate py-1 text-xs font-semibold" title={productPhotoPreviewLabel(entry.key)}>{productPhotoPreviewLabel(entry.key)}</p><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></article>})}</div>;
   const [generatedShopImageSignature, setGeneratedShopImageSignature] = useState("");
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
@@ -2110,7 +2132,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         const filename=`snapink-${variant}-${slug}-${imageSlug[key]}.png`;
         entries.push({key,label:labels[key],filename,blob});
       }
-      setGeneratedPhotoEntries(entries);setGeneratedShopImages(Object.fromEntries(entries.map(x=>[x.key,x.blob])));
+      setGeneratedPreviewUrls([]);setGeneratedPhotoEntries(entries);setGeneratedShopImages(Object.fromEntries(entries.map(x=>[x.key,x.blob])));
       setShopImageSelection(entries.map(x=>x.key));setGeneratedShopImageSignature(shopImageDesignSignature());
       if(entries.length===1)downloadPNGBlob(entries[0].blob,entries[0].filename);
       else {const zip=await createProductPhotoZip(entries);downloadProductPhotoZip(zip,`snapink-${variant}-${slug}-product-images.zip`);}
@@ -3518,7 +3540,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
                 {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-                {generatedPhotoEntries.map(entry=><div key={entry.key} className="rounded border border-neutral-700 p-2"><img className="w-full rounded" src={generatedPreviewUrls.find(item=>item.key===entry.key)?.url} alt={entry.label} /><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></div>)}
+                {generatedPhotoEntries.length>0&&<section className="space-y-2" aria-label="Generated product image previews"><h3 className="text-xs font-semibold text-neutral-300">Generated images</h3>{generatedPhotoResults}</section>}
                 <p className="text-xs text-neutral-400">Choose any image combination. Multiple images download as a ZIP.</p>
                 <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
               </>}
@@ -3804,7 +3826,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
               {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-              {generatedPhotoEntries.map(entry=><div key={entry.key} className="rounded border border-neutral-700 p-2"><img className="w-full rounded" src={generatedPreviewUrls.find(item=>item.key===entry.key)?.url} alt={entry.label} /><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></div>)}
+              {generatedPhotoEntries.length>0&&<section className="space-y-2" aria-label="Generated product image previews"><h3 className="text-xs font-semibold text-neutral-300">Generated images</h3>{generatedPhotoResults}</section>}
               <p className="text-xs text-neutral-400">Choose any image combination. Multiple images download as a ZIP.</p>
               <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
             </>}
