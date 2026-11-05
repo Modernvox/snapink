@@ -587,8 +587,6 @@ const SnapInkSleeveCustomizer = forwardRef<
   const generatedPreviewUrls=useMemo(()=>generatedPhotoEntries.map(entry=>({key:entry.key,url:URL.createObjectURL(entry.blob)})),[generatedPhotoEntries]);
   useEffect(()=>()=>generatedPreviewUrls.forEach(item=>URL.revokeObjectURL(item.url)),[generatedPreviewUrls]);
   const [generatedShopImageSignature, setGeneratedShopImageSignature] = useState("");
-  const lifestylePreviewSignature=JSON.stringify({design:shopImageDesignSignature(),lifestylePreview,lifestyleCalibration});
-  useEffect(()=>{let active=true;let objectUrl="";(async()=>{try{const sleeve=await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:REAR_PRODUCT_PHOTO.scale});const sleeveUrl=URL.createObjectURL(sleeve);try{const image=await loadStudioImage(sleeveUrl);const result=await renderLifestyleProductPhoto(lifestylePreview,image);if(active){objectUrl=URL.createObjectURL(result);setLifestyleLivePreview(objectUrl);}}finally{URL.revokeObjectURL(sleeveUrl);}}catch{}})();return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[lifestylePreviewSignature]);
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
   const [publishProductName, setPublishProductName] = useState("");
@@ -654,6 +652,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [fitLightboxSize, setFitLightboxSize] = useState<number | null>(null);
   const [fitLightboxZoom, setFitLightboxZoom] = useState(1);
   const [fitLightboxPan, setFitLightboxPan] = useState({ x: 0, y: 0 });
+  const lifestylePreviewSignature=JSON.stringify({design:shopImageDesignSignature(),lifestylePreview,lifestyleCalibration});
+  useEffect(()=>{let active=true;let objectUrl="";(async()=>{try{const sleeve=await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:REAR_PRODUCT_PHOTO.scale});const sleeveUrl=URL.createObjectURL(sleeve);try{const image=await loadStudioImage(sleeveUrl);const result=await renderLifestyleProductPhoto(lifestylePreview,image);if(active){objectUrl=URL.createObjectURL(result);setLifestyleLivePreview(objectUrl);}}finally{URL.revokeObjectURL(sleeveUrl);}}catch{}})();return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[lifestylePreviewSignature]);
   const fitLightboxOpen = fitLightboxSize !== null;
   const fitLightboxDialogRef = useRef<HTMLDivElement | null>(null);
   const fitLightboxRef = useRef<HTMLDivElement | null>(null);
