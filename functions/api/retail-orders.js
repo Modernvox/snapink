@@ -9,8 +9,10 @@ const ADMIN_URL = "https://snapbacksleeves.com/admin.html";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
 function describeDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nExtension: ${Number(draft.artworkExtensionMm).toFixed(2)} mm\nArtwork: ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm\nHeight scale: ${draft.artworkHeightScale}%\nFinal design position: X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm ?? 0).toFixed(2)} mm` : ""); }
+function describeCustomerDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nProduction approval is required.` : ""); }
 async function notifyOrder(env, order, draft, emailPreview) {
   const summary = `Design review reference ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeDesign(draft)}\nQuantity: ${order.quantity}\n\nName: ${order.customerName}\nEmail: ${order.customerEmail}`;
+  const customerSummary = `Design review reference ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeCustomerDesign(draft)}\nQuantity: ${order.quantity}`;
   const results = { owner: "failed", customer: "failed" };
   const attachments = emailPreview ? [createSnapInkEmailAttachment(`SnapInk-${order.orderNumber}-design.png`, emailPreview.bytes, "image/png")] : [];
   const attachmentNote = attachments.length ? "A copy of the submitted design is attached as a PNG." : "Your design preview is saved securely for review.";
@@ -21,7 +23,7 @@ async function notifyOrder(env, order, draft, emailPreview) {
     console.error("Retail order owner notification failed", { orderNumber: order.orderNumber, error: error instanceof EmailDeliveryError ? error.message : "Unexpected email error" });
   }
   try {
-    await sendSnapInkEmail(env, { to: order.customerEmail, subject: `SnapInk design ${order.orderNumber} received for review`, text: `Design Submitted! Your custom SnapInk Sleeve design has been received for review. We'll check that it can be produced and contact you by email with the next steps. No payment is required. Submitting a design does not place a paid order or guarantee production approval.\n\n${summary}\n\n${attachmentNote}`, attachments });
+    await sendSnapInkEmail(env, { to: order.customerEmail, subject: `SnapInk design ${order.orderNumber} received for review`, text: `Design Submitted! Your custom SnapInk Sleeve design has been received for review. We'll check that it can be produced and contact you by email with the next steps. No payment is required. Submitting a design does not place a paid order or guarantee production approval.\n\n${customerSummary}\n\n${attachmentNote}`, attachments });
     results.customer = "sent";
   } catch (error) {
     console.error("Retail order customer confirmation failed", { orderNumber: order.orderNumber, error: error instanceof EmailDeliveryError ? error.message : "Unexpected email error" });
@@ -54,7 +56,10 @@ export async function onRequestPost({ request, env }) {
     const existing = await env.DB.prepare(`SELECT id,order_number AS orderNumber,status,quantity,variant,size,draft_json AS draftJson,unit_price_cents AS unitPriceCents,merchandise_subtotal_cents AS merchandiseSubtotalCents,
       discount_cents AS discountCents,shipping_cents AS shippingCents,total_before_tax_cents AS totalBeforeTaxCents,owner_email_status AS ownerEmailStatus,customer_email_status AS customerEmailStatus
       FROM retail_orders WHERE idempotency_key=?`).bind(data.idempotencyKey).first();
-    if (existing) return json({ ok: true, duplicate: true, order: { ...existing, ...calculateRetailPricing(existing.size, existing.quantity, Boolean(safeOrderJson(existing.draftJson).extendedArtwork)) } }, 200);
+    if (existing) {
+      const { draftJson, ...publicOrder } = existing;
+      return json({ ok: true, duplicate: true, order: { ...publicOrder, ...calculateRetailPricing(existing.size, existing.quantity, Boolean(safeOrderJson(draftJson).extendedArtwork)) } }, 200);
+    }
     if (!(await enforcePublicFormRateLimit(env.DB, request, env.CLOUDFLARE_EMAIL_API_TOKEN || env.ADMIN_REVIEW_TOKEN || "snapink-retail-order-rate-limit", "retail-order", 5))) {
       return json({ error: "Too many design submissions from this connection. Please wait and try again." }, 429);
     }
@@ -89,7 +94,7 @@ export async function onRequestPost({ request, env }) {
     try { await env.DB.batch([insert,event]); }
     catch (error) {
       const duplicate = await env.DB.prepare("SELECT id,order_number AS orderNumber,status,quantity,variant,size,draft_json AS draftJson,unit_price_cents AS unitPriceCents,merchandise_subtotal_cents AS merchandiseSubtotalCents,discount_cents AS discountCents,shipping_cents AS shippingCents,total_before_tax_cents AS totalBeforeTaxCents,owner_email_status AS ownerEmailStatus,customer_email_status AS customerEmailStatus FROM retail_orders WHERE idempotency_key=?").bind(data.idempotencyKey).first();
-      if (duplicate) { await Promise.allSettled(uploaded.map((key) => env.PRIVATE_ASSETS.delete(key))); uploaded=[]; return json({ ok: true, duplicate: true, order: { ...duplicate, ...calculateRetailPricing(duplicate.size, duplicate.quantity, Boolean(safeOrderJson(duplicate.draftJson).extendedArtwork)) } }, 200); }
+      if (duplicate) { await Promise.allSettled(uploaded.map((key) => env.PRIVATE_ASSETS.delete(key))); uploaded=[]; const { draftJson: savedDraftJson, ...publicOrder } = duplicate; return json({ ok: true, duplicate: true, order: { ...publicOrder, ...calculateRetailPricing(duplicate.size, duplicate.quantity, Boolean(safeOrderJson(savedDraftJson).extendedArtwork)) } }, 200); }
       throw error;
     }
     const order = { id, orderNumber, customerName: customer.name, customerEmail: customer.email, customerPhone: customer.phone, quantity };

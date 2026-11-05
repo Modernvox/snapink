@@ -44,8 +44,25 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
   return products;
 }
 
+// Product records retain complete production notes. This projection removes
+// measurement-bearing clauses only when they are sent to public shop clients.
+export function customerShopDescription(value) {
+  const withoutTechnicalMeasurements = String(value || "").split(/(\r?\n)/).map((line) => {
+    if (line === "\n" || line === "\r\n") return line;
+    return line.split(/(?<=[.!?])(?=\s+)/).filter((sentence) => {
+      const technical = /\b(?:artwork|logo|design|graphic|extension|height\s*scale|scale|position|coordinates?|dimensions?)\b/i.test(sentence);
+      const measurement = /\b\d+(?:\.\d+)?\s*(?:mm|millimeters?|cm|centimeters?|inches?|in\.?)(?![a-z])|\b\d+(?:\.\d+)?\s*%(?![a-z])/i.test(sentence)
+        || /\b\d+(?:\.\d+)?\s*[×x]\s*\d+(?:\.\d+)?\b/i.test(sentence)
+        || /\bposition\s*[XY]\s*[:=]?\s*-?\d/i.test(sentence)
+        || /\b(?:top|bottom)\s+extension\b/i.test(sentence);
+      return !(technical && measurement);
+    }).join("");
+  }).join("");
+  return withoutTechnicalMeasurements.trim();
+}
+
 export function publicShopProduct(product) {
-  return {...product,variants:product.variants.filter((variant) => variant.active && variant.availableSizes.length).map(({inventory,...variant})=>variant)};
+  return {...product,description:customerShopDescription(product.description),cardDescription:customerShopDescription(product.cardDescription),variants:product.variants.filter((variant) => variant.active && variant.availableSizes.length).map(({inventory,...variant})=>variant)};
 }
 
 export function checkoutUnavailable(env) {

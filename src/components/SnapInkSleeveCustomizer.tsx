@@ -1414,8 +1414,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
         : artworkStatus.violatesTopClearance ? "top edge clearance"
           : artworkStatus.violatesBottomClearance ? "bottom edge clearance"
-            : artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "maximum top extension (12.7 mm)"
-              : "maximum bottom extension (12.7 mm)";
+            : artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "approved top production boundary"
+              : "approved bottom production boundary";
   function artworkPointInCadCanvas(clientX: number, clientY: number) {
     const svg = svgRef.current;
     const overlay = svg?.querySelector<SVGGElement>('[data-artwork-overlay="true"]');
@@ -2190,7 +2190,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (logoNeedsRemoval) throw new Error("Finish logo background removal before submitting the design.");
     if (artworkExceedsAllowedExtension) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}.`);
     if (artworkStatus.crossesLockedEdge) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}. Move or resize it before submitting.`);
-    if (artworkStatus.violatesClearance) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}; keep at least 1 mm clearance.`);
+    if (artworkStatus.violatesClearance) throw new Error(`Artwork exceeds ${artworkInvalidBoundary}.`);
     const source = logoDataUrl;
     const hasTextArtwork = text.trim().length > 0;
     const blankDesign = !source && !hasTextArtwork;
@@ -2772,16 +2772,16 @@ const SnapInkSleeveCustomizer = forwardRef<
         <Range label="Tracking" min={-0.1} max={0.3} step={0.01} value={tracking} setValue={setTracking} suffix="em" />
         <Range label="Line height" min={0.9} max={1.6} step={0.01} value={lineHeight} setValue={setLineHeight} />
         <Range label="Arc" min={-15} max={20} value={arc} setValue={setArc} suffix="%" />
-        <Range label="Horizontal position" min={artworkMinXCanvasPercent} max={artworkMaxXCanvasPercent} step="any" precision={3} value={posX} setValue={setPosX} suffix="%" />
-        <Range label="Text vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={posY} setValue={setPosY} suffix="%" />
+        <Range label="Horizontal position" min={artworkMinXCanvasPercent} max={artworkMaxXCanvasPercent} step="any" precision={3} value={posX} setValue={setPosX} suffix="%" showValue={false} />
+        <Range label="Text vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={posY} setValue={setPosY} suffix="%" showValue={false} />
         <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
         {logoDataUrl && <>
-          <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" />
+          <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" showValue={false} />
           <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
           {extendedArtworkNotice("toolbar")}
-          <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" />
-          <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />
+          <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" showValue={false} />
+          <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />
           <Range label="Logo opacity" min={10} max={100} step={5} value={logoOpacity} setValue={setLogoOpacity} suffix="%" />
         </>}
         <label className="snapink-toolbar-guides"><input type="checkbox" checked={showGuides} onChange={(event) => setShowGuides(event.target.checked)} /> Show safe area</label>
@@ -3465,7 +3465,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 setValue={setLogoPosY}
                 suffix="%"
               />}
-              {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
+              {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
               {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
               {extendedArtworkNotice("mobile")}
@@ -3765,7 +3765,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               setValue={setLogoPosY}
               suffix="%"
             />}
-              {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" />}
+              {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
             {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
             {extendedArtworkNotice("desktop")}
@@ -3910,7 +3910,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <label className="block text-sm">Full product description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder={`Make the ${publishProductName || "design"} your own with a SnapInk sleeve made for compatible snapback closures. Sleeve only; hat sold separately.`} rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
           <p className="text-xs text-neutral-400">{artworkIsExtended ? "Extended design prices: sizes 0-2 $24.99 | sizes 3-5 $29.99" : "Sizes 0-3: $15.99 | Sizes 4-5: $18.99"}</p>
-          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork — Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} × {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. Extended design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
+          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork — Pricing Review Required</strong><p>Premium design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(artworkIsExtended&&!approveExtendedArtwork)||artworkInvalid} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
@@ -3931,6 +3931,7 @@ function Range({
   value,
   setValue,
   suffix = "",
+  showValue = true,
 }: {
   label: string;
   min: number;
@@ -3940,6 +3941,7 @@ function Range({
   value: number;
   setValue: (n: number) => void;
   suffix?: string;
+  showValue?: boolean;
 }) {
   return (
     <div className="min-w-0">
@@ -3954,10 +3956,9 @@ function Range({
           onChange={(e) => setValue(Number(e.target.value))}
           className="min-w-0 flex-1 accent-si-accent"
         />
-        <span className="w-14 shrink-0 text-right text-neutral-300 text-sm tabular-nums">
-          {Number(value.toFixed(precision))}
-          {suffix}
-        </span>
+        {showValue && <span className="w-14 shrink-0 text-right text-neutral-300 text-sm tabular-nums">
+          {Number(value.toFixed(precision))}{suffix}
+        </span>}
       </div>
     </div>
   );
