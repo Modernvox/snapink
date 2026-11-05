@@ -161,9 +161,9 @@ button[type="submit"]:hover, input[type="submit"]:hover,
 .site-band--dark { background: #0B0B0D; color: #F4F4F5; }
 .site-band--light { background: #F4F4F5 !important; color: #0B0B0D !important; border-color: #D4D4D8 !important; }
 .site-band--light:not(.studio-editor-band) { color-scheme: light; }
-.site-band--light:not(.studio-editor-band) :is(h1, h2, h3, h4, h5, strong, label, .text-white, .text-neutral-100, .text-neutral-200) { color: #0B0B0D !important; }
+.site-band--light:not(.studio-editor-band) :is(h1, h2, h3, h4, h5, strong, label, .text-white, .text-neutral-100, .text-neutral-200):not(.mobile-hat-carousel-heading) { color: #0B0B0D !important; }
 .site-band--light:not(.studio-editor-band) :is(.fit-guide-size-card strong, .fit-guide-install-copy strong) { color: #80652F !important; }
-.site-band--light:not(.studio-editor-band) :is(p, li, figcaption, small, .lede, .lead, .text-neutral-300, .text-neutral-400, .text-neutral-500) { color: #45454D !important; }
+.site-band--light:not(.studio-editor-band) :is(p, li, figcaption, small, .lede, .lead, .text-neutral-300, .text-neutral-400, .text-neutral-500):not(.mobile-hat-carousel-subtitle):not(.mobile-hat-carousel-label) { color: #45454D !important; }
 .site-band--light:not(.studio-editor-band) .eyebrow { color: #80652F !important; }
 .site-band--light:not(.studio-editor-band) :is(.number, .status) { color: #970052 !important; }
 .site-band--light:not(.studio-editor-band) a:not(.button):not(.snap-btn):not(.fit-guide-create):not(.studio-cta):not([href^="/customize.html"]) { color: #970052; }
