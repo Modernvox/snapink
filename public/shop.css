@@ -35,3 +35,10 @@
 .shop-product-info .shop-description strong{color:#f4f4f5;font-weight:800}
 @media(max-width:800px){.shop-product-info h1{max-width:20ch;font-size:clamp(2rem,6vw,2.6rem)}}
 @media(max-width:560px){.shop-product-info h1{max-width:22ch;font-size:clamp(1.9rem,8vw,2.3rem)}}
+
+/* Product pages keep the information and purchasing controls side-by-side on desktop,
+   then move purchasing ahead of the description on smaller screens. */
+.shop-product-detail{grid-template-columns:minmax(0,1.05fr) minmax(250px,.95fr) minmax(280px,.8fr);grid-template-areas:"gallery summary purchase" "gallery description purchase";gap:32px;align-items:start}
+.shop-product-gallery{grid-area:gallery;min-width:0}.shop-product-summary{grid-area:summary;min-width:0}.shop-product-description{grid-area:description;min-width:0}.shop-product-description .shop-description{max-width:62ch;margin:0;color:#bbb;font-size:15px;line-height:1.75}.shop-product-description .shop-description p{margin:0 0 1em}.shop-product-description .shop-description p:last-child{margin-bottom:0}
+.shop-purchase-panel{grid-area:purchase;min-width:0;padding:18px;border:1px solid #36363b;border-radius:8px;background:#151517}.shop-purchase-panel .shop-size-reference{margin:0 0 14px;padding:0;border:0;background:transparent}.shop-purchase-panel .shop-size-reference h2{font-size:18px}.shop-purchase-panel .shop-size-reference>p{margin:7px 0 10px}.shop-purchase-panel .shop-size-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.shop-purchase-panel .shop-size-card img{height:58px}.shop-purchase-panel .shop-size-reference>a{display:inline-block;margin-top:10px;color:var(--shop-gold);font-size:13px;font-weight:800}.shop-purchase-panel .shop-price{display:none}.shop-purchase-panel .shop-shipping-message{margin-top:12px}.shop-purchase-panel .shop-sleeve-only-note{margin-bottom:0}
+@media(max-width:1000px){.shop-product-detail{grid-template-columns:minmax(0,1fr);grid-template-areas:"gallery" "summary" "purchase" "description";gap:20px}.shop-product-summary .shop-price{margin:12px 0 0}.shop-purchase-panel{padding:16px}}
