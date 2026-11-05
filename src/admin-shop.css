@@ -40,6 +40,8 @@
 .admin-shop-size-card input[type=number]{width:100%;min-width:0}
 .admin-shop-inventory-status{color:var(--muted);font-size:11px}
 .admin-shop-save{min-width:190px}
+.admin-shop-delete{min-height:42px;padding:0 16px;border:1px solid #B42318;border-radius:7px;background:#B42318;color:#fff;font-weight:750;cursor:pointer}
+.admin-shop-delete:hover{background:#912018;border-color:#912018}.admin-shop-delete:disabled{cursor:wait;opacity:.65}
 .admin-product-preview{width:min(90vw,900px);max-width:900px;max-height:90vh;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);box-shadow:0 24px 70px rgb(16 24 40 / 24%)}
 .admin-product-preview::backdrop{background:rgb(32 36 43 / 45%)}
 .admin-product-preview>button{display:block;margin-left:auto}

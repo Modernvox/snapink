@@ -30,11 +30,11 @@ export function mountAdminShop(api){
   productsToggle.addEventListener("click",async()=>{productsPanel.classList.remove("hidden");ordersPanel.classList.add("hidden");await renderProducts()});
   ordersToggle.addEventListener("click",async()=>{ordersPanel.classList.remove("hidden");productsPanel.classList.add("hidden");await renderOrders()});
 
-  async function renderProducts(){
+  async function renderProducts(statusMessage="",statusIsError=false){
     productsRoot.replaceChildren();productsMessage.textContent="Loading product catalog...";productsMessage.className="notice";
     try{
-      const {data}=await api("/api/admin/shop-products"),products=data.products||[];productsMessage.textContent="";
-      if(!products.length){productsMessage.textContent="No products are configured yet.";return}
+      const {data}=await api("/api/admin/shop-products"),products=data.products||[];productsMessage.textContent=statusMessage;productsMessage.className=statusMessage?`notice ${statusIsError?"error":"success"}`:"notice";
+      if(!products.length){productsMessage.textContent=statusMessage||"No products are configured yet.";return}
       const images=[...new Map(products.flatMap((product)=>[
         {url:product.imageUrl,label:`${product.name} storefront image`},
         ...(product.variants||[]).map((variant)=>({url:variant.sleeveImageUrl,label:`${product.name} — ${variant.name} sleeve-only image`}))
@@ -81,7 +81,16 @@ export function mountAdminShop(api){
           section.append(sizeGrid);settings.append(section);variantControls.push({variant,variantActive,sizeControls});
         }
 
-        const save=el("button",{type:"button",className:"admin-shop-save"},"Save product settings"),feedback=el("span",{className:"admin-shop-inline-status","aria-live":"polite"}),saveActions=el("div",{className:"admin-shop-save-actions"});saveActions.append(save,feedback);settings.append(saveActions);card.append(settings);
+        const save=el("button",{type:"button",className:"admin-shop-save"},"Save product settings"),deleteProduct=el("button",{type:"button",className:"admin-shop-delete"},"Delete Product"),feedback=el("span",{className:"admin-shop-inline-status","aria-live":"polite"}),saveActions=el("div",{className:"admin-shop-save-actions"});saveActions.append(save,deleteProduct,feedback);settings.append(saveActions);card.append(settings);
+        deleteProduct.addEventListener("click",async()=>{
+          if(!window.confirm(`Permanently delete “${product.name}”? This removes the product from the Shop and admin inventory.`))return;
+          deleteProduct.disabled=true;feedback.textContent="Deleting product...";feedback.className="admin-shop-inline-status";
+          try{
+            const {data}=await api("/api/admin/shop-products",{method:"DELETE",body:JSON.stringify({productId:product.productId})});
+            const warning=data.cleanupWarning?` ${data.cleanupWarning}`:"";
+            await renderProducts(`Product “${data.productName||product.name}” permanently deleted.${warning}`,Boolean(warning));
+          }catch(error){feedback.textContent=error.message;feedback.className="admin-shop-inline-status error";deleteProduct.disabled=false}
+        });
         active.addEventListener("change",()=>{status.textContent=active.checked?"Active":"Inactive";status.className=`admin-shop-status ${active.checked?"is-active":"is-inactive"}`});
         expand.addEventListener("click",()=>{const open=settings.hidden;settings.hidden=!open;expand.setAttribute("aria-expanded",String(open));expand.textContent=open?"Close settings −":"Settings +"});
         save.addEventListener("click",async()=>{save.disabled=true;feedback.textContent="Saving...";feedback.className="admin-shop-inline-status";try{
