@@ -577,7 +577,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   type ProductPhotoKey = "rear" | "packaging" | "desk" | "maleLifestyle" | "femaleLifestyle";
   const productPhotoOptions: {key: ProductPhotoKey; label: string}[] = [{key:"rear",label:"On-Hat Product Image"},{key:"packaging",label:"Packaging Product Image"},{key:"desk",label:"On-Desk Product Image"},{key:"maleLifestyle",label:"Male Lifestyle Image"},{key:"femaleLifestyle",label:"Female Lifestyle Image"}];
   const [productPhotoChoice, setProductPhotoChoice] = useState<ProductPhotoKey[]>(() => { try { const v=JSON.parse(localStorage.getItem("snapink.productPhotoSelections.v1")||"null"); return Array.isArray(v)?v.filter((x):x is ProductPhotoKey=>["rear","packaging","desk","maleLifestyle","femaleLifestyle"].includes(x)): ["rear","packaging","desk"]; } catch { return ["rear","packaging","desk"]; } });
-  const [lifestyleCalibration, setLifestyleCalibration] = useState(()=>{try{return JSON.parse(localStorage.getItem("snapink.lifestyleCalibration.v1")||"null")||{x:530,y:263,width:370,height:100,rotation:0,perspective:0,verticalArtworkScale:120};}catch{return{x:530,y:263,width:370,height:100,rotation:0,perspective:0,verticalArtworkScale:120};}});
+  const [lifestyleCalibration, setLifestyleCalibration] = useState(()=>{const defaults={x:530,y:263,width:370,height:100,rotation:0,perspective:0};try{const saved=JSON.parse(localStorage.getItem("snapink.lifestyleCalibration.v1")||"null");if(!saved||typeof saved!=="object")return defaults;return{x:Number(saved.x??defaults.x),y:Number(saved.y??defaults.y),width:Number(saved.width??defaults.width),height:Number(saved.height??defaults.height),rotation:Number(saved.rotation??defaults.rotation),perspective:Number(saved.perspective??defaults.perspective)};}catch{return defaults;}});
   const [productPhotoProgress, setProductPhotoProgress] = useState("");
   const [generatedShopImages, setGeneratedShopImages] = useState<Record<string,Blob>|null>(null);
   const [generatedPhotoEntries,setGeneratedPhotoEntries]=useState<{key:string;label:string;filename:string;blob:Blob}[]>([]);
@@ -1998,21 +1998,26 @@ const SnapInkSleeveCustomizer = forwardRef<
     // Female master has a small fixed photo registration offset; the admin controls remain one shared male-master calibration.
     const registration=key==="femaleLifestyle"?{x:5,y:12,width:-2,height:-5}:{x:0,y:0,width:0,height:0};
     const c=lifestyleCalibration,x=c.x+registration.x,y=c.y+registration.y,w=c.width+registration.width,h=c.height+registration.height;
-    const verticalScale=clamp(Number(c.verticalArtworkScale??120),80,140)/100;
-    let scaledArtwork:CanvasImageSource=artworkImage;
-    if(verticalScale!==1){
-      const sourceCanvas=document.createElement("canvas");sourceCanvas.width=artworkImage.naturalWidth;sourceCanvas.height=artworkImage.naturalHeight;
-      const sourceContext=sourceCanvas.getContext("2d",{willReadFrequently:true});if(!sourceContext)throw new Error("The lifestyle artwork canvas is unavailable.");
-      sourceContext.drawImage(artworkImage,0,0);const alpha=sourceContext.getImageData(0,0,sourceCanvas.width,sourceCanvas.height).data;
-      let minY=sourceCanvas.height,maxY=-1;for(let py=0;py<sourceCanvas.height;py++)for(let px=0;px<sourceCanvas.width;px++)if(alpha[(py*sourceCanvas.width+px)*4+3]>0){minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
-      if(maxY>=minY){const centerY=(minY+maxY+1)/2,scaledCanvas=document.createElement("canvas");scaledCanvas.width=sourceCanvas.width;scaledCanvas.height=sourceCanvas.height;const scaledContext=scaledCanvas.getContext("2d");if(!scaledContext)throw new Error("The scaled lifestyle artwork canvas is unavailable.");scaledContext.translate(0,centerY);scaledContext.scale(1,verticalScale);scaledContext.translate(0,-centerY);scaledContext.drawImage(sourceCanvas,0,0);scaledArtwork=scaledCanvas;}
-    }
+    // Preserve Studio's native pixel scale: both axes use the calibrated sleeve width
+    // as their scale datum. The old fixed-height mapping compressed the full, padded
+    // Studio artboard vertically. Keep its visible artwork center at the same sleeve Y.
+    const sourceWidth=artworkImage.naturalWidth,sourceHeight=artworkImage.naturalHeight;
+    const alphaCanvas=document.createElement("canvas");alphaCanvas.width=sourceWidth;alphaCanvas.height=sourceHeight;
+    const alphaContext=alphaCanvas.getContext("2d",{willReadFrequently:true});if(!alphaContext)throw new Error("The lifestyle artwork canvas is unavailable.");
+    alphaContext.drawImage(artworkImage,0,0);const alpha=alphaContext.getImageData(0,0,sourceWidth,sourceHeight).data;
+    let minY=sourceHeight,maxY=-1;for(let py=0;py<sourceHeight;py++)for(let px=0;px<sourceWidth;px++)if(alpha[(py*sourceWidth+px)*4+3]>0){minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
+    if(maxY<minY)throw new Error("The Studio artwork is empty.");
+    const artworkCenterY=(minY+maxY+1)/2,centerRatio=artworkCenterY/sourceHeight;
+    const widthScale=w/sourceWidth,heightScale=widthScale;
+    const targetHeight=sourceHeight*heightScale;
+    const preservedCenterY=y+centerRatio*h;
+    const targetTop=preservedCenterY-artworkCenterY*heightScale;
     const angle=(Number(c.rotation)||0)*Math.PI/180,inset=w*Math.max(-0.8,Math.min(0.8,Number(c.perspective)||0))/200;
-    const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),y+h/2+px*Math.sin(angle)+py*Math.cos(angle)];
-    const target=[rotatePoint(-w/2+inset,-h/2),rotatePoint(w/2-inset,-h/2),rotatePoint(w/2,h/2),rotatePoint(-w/2,h/2)];
-    const source:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[artworkImage.naturalWidth,0],[artworkImage.naturalWidth,artworkImage.naturalHeight],[0,artworkImage.naturalHeight]];
-    const drawTriangle=(ids:[number,number,number])=>{const [i0,i1,i2]=ids,[sx0,sy0]=source[i0],[sx1,sy1]=source[i1],[sx2,sy2]=source[i2],[dx0,dy0]=target[i0],[dx1,dy1]=target[i1],[dx2,dy2]=target[i2];const det=sx0*(sy1-sy2)+sx1*(sy2-sy0)+sx2*(sy0-sy1);if(!det)return;const a=(dx0*(sy1-sy2)+dx1*(sy2-sy0)+dx2*(sy0-sy1))/det,cx=(dx0*(sx2-sx1)+dx1*(sx0-sx2)+dx2*(sx1-sx0))/det,e=(dx0*(sx1*sy2-sx2*sy1)+dx1*(sx2*sy0-sx0*sy2)+dx2*(sx0*sy1-sx1*sy0))/det,b=(dy0*(sy1-sy2)+dy1*(sy2-sy0)+dy2*(sy0-sy1))/det,d=(dy0*(sx2-sx1)+dy1*(sx0-sx2)+dy2*(sx1-sx0))/det,f=(dy0*(sx1*sy2-sx2*sy1)+dy1*(sx2*sy0-sx0*sy2)+dy2*(sx0*sy1-sx1*sy0))/det;ctx.save();ctx.beginPath();ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);ctx.lineTo(dx2,dy2);ctx.closePath();ctx.clip();ctx.transform(a,b,cx,d,e,f);ctx.drawImage(scaledArtwork,0,0);ctx.restore();};
-    // Two clipped affine triangles map artwork through the shared four-corner perspective quad.
+    const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),preservedCenterY+px*Math.sin(angle)+py*Math.cos(angle)];
+    const target=[rotatePoint(-w/2+inset,targetTop-preservedCenterY),rotatePoint(w/2-inset,targetTop-preservedCenterY),rotatePoint(w/2,targetTop+targetHeight-preservedCenterY),rotatePoint(-w/2,targetTop+targetHeight-preservedCenterY)];
+    const source:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[sourceWidth,0],[sourceWidth,sourceHeight],[0,sourceHeight]];
+    const drawTriangle=(ids:[number,number,number])=>{const [i0,i1,i2]=ids,[sx0,sy0]=source[i0],[sx1,sy1]=source[i1],[sx2,sy2]=source[i2],[dx0,dy0]=target[i0],[dx1,dy1]=target[i1],[dx2,dy2]=target[i2];const det=sx0*(sy1-sy2)+sx1*(sy2-sy0)+sx2*(sy0-sy1);if(!det)return;const a=(dx0*(sy1-sy2)+dx1*(sy2-sy0)+dx2*(sy0-sy1))/det,cx=(dx0*(sx2-sx1)+dx1*(sx0-sx2)+dx2*(sx1-sx0))/det,e=(dx0*(sx1*sy2-sx2*sy1)+dx1*(sx2*sy0-sx0*sy2)+dx2*(sx0*sy1-sx1*sy0))/det,b=(dy0*(sy1-sy2)+dy1*(sy2-sy0)+dy2*(sy0-sy1))/det,d=(dy0*(sx2-sx1)+dy1*(sx0-sx2)+dy2*(sx1-sx0))/det,f=(dy0*(sx1*sy2-sx2*sy1)+dy1*(sx2*sy0-sx0*sy2)+dy2*(sx0*sy1-sx1*sy0))/det;ctx.save();ctx.beginPath();ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);ctx.lineTo(dx2,dy2);ctx.closePath();ctx.clip();ctx.transform(a,b,cx,d,e,f);ctx.drawImage(artworkImage,0,0);ctx.restore();};
+    // Two clipped affine triangles map artwork through the shared perspective quad.
     drawTriangle([0,1,2]);drawTriangle([0,2,3]);
     return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Lifestyle PNG encoding failed.")),"image/png"));
   }
@@ -3490,7 +3495,6 @@ const SnapInkSleeveCustomizer = forwardRef<
               </button>
               {enableProductPhotoGeneration && <>
                 <fieldset className="space-y-1"><legend className="text-xs text-neutral-400">Product images</legend>{productPhotoOptions.map(option=><label key={option.key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={productPhotoChoice.includes(option.key)} onChange={e=>{const next=e.target.checked?[...productPhotoChoice,option.key]:productPhotoChoice.filter(x=>x!==option.key);setProductPhotoChoice(next);localStorage.setItem("snapink.productPhotoSelections.v1",JSON.stringify(next));}} />{option.label}</label>)}</fieldset>
-                {productPhotoChoice.some(key=>key==="maleLifestyle"||key==="femaleLifestyle")&&<label className="block text-xs text-neutral-400">Shared lifestyle artwork height <span className="text-neutral-200">{lifestyleCalibration.verticalArtworkScale??120}%</span><input type="range" min="80" max="140" step="1" value={lifestyleCalibration.verticalArtworkScale??120} onChange={e=>{const next={...lifestyleCalibration,verticalArtworkScale:Number(e.target.value)};setLifestyleCalibration(next);localStorage.setItem("snapink.lifestyleCalibration.v1",JSON.stringify(next));}} className="mt-1 w-full" /></label>}
                 <button
                   type="button"
                   onClick={handleGenerateProductImage}
@@ -3777,7 +3781,6 @@ const SnapInkSleeveCustomizer = forwardRef<
             </button>
             {enableProductPhotoGeneration && <>
               <fieldset className="space-y-1"><legend className="text-xs text-neutral-400">Product images</legend>{productPhotoOptions.map(option=><label key={option.key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={productPhotoChoice.includes(option.key)} onChange={e=>{const next=e.target.checked?[...productPhotoChoice,option.key]:productPhotoChoice.filter(x=>x!==option.key);setProductPhotoChoice(next);localStorage.setItem("snapink.productPhotoSelections.v1",JSON.stringify(next));}} />{option.label}</label>)}</fieldset>
-              {productPhotoChoice.some(key=>key==="maleLifestyle"||key==="femaleLifestyle")&&<label className="block text-xs text-neutral-400">Shared lifestyle artwork height <span className="text-neutral-200">{lifestyleCalibration.verticalArtworkScale??120}%</span><input type="range" min="80" max="140" step="1" value={lifestyleCalibration.verticalArtworkScale??120} onChange={e=>{const next={...lifestyleCalibration,verticalArtworkScale:Number(e.target.value)};setLifestyleCalibration(next);localStorage.setItem("snapink.lifestyleCalibration.v1",JSON.stringify(next));}} className="mt-1 w-full" /></label>}
               <button
                 type="button"
                 onClick={handleGenerateProductImage}
