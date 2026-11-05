@@ -51,13 +51,13 @@
       const offset = ((index - active + designs.length + designs.length / 2) % designs.length) - designs.length / 2;
       const distance = Math.abs(offset);
       const direction = Math.sign(offset);
-      let x = "0vw", y = "0px", z = "-280px", scale = ".34", tilt = "0deg", brightness = ".5", opacity = ".48";
+      let x = "0vw", y = "-24px", z = "-280px", scale = ".34", tilt = "0deg", brightness = ".5", opacity = ".48";
       if (distance === 0) {
         z = "70px"; scale = "1"; brightness = "1"; opacity = "1";
       } else if (distance === 1) {
-        x = `${direction * 35}vw`; y = "7px"; z = "-14px"; scale = ".69"; tilt = `${direction * -14}deg`; brightness = ".84"; opacity = ".94";
+        x = `${direction * 35}vw`; y = "-17px"; z = "-14px"; scale = ".69"; tilt = `${direction * -14}deg`; brightness = ".84"; opacity = ".94";
       } else if (distance === 2) {
-        x = `${direction * 51}vw`; y = "10px"; z = "-155px"; scale = ".48"; tilt = `${direction * -27}deg`; brightness = ".66"; opacity = ".78";
+        x = `${direction * 51}vw`; y = "-14px"; z = "-155px"; scale = ".48"; tilt = `${direction * -27}deg`; brightness = ".66"; opacity = ".78";
       }
       card.style.setProperty("--carousel-x", x);
       card.style.setProperty("--carousel-y", y);
