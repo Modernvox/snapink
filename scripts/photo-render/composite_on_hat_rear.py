@@ -189,42 +189,19 @@ def composite(reference: dict, args) -> dict:
     mapped_delta = cv2.warpPerspective(delta, render_to_plate, (width, height),
                                        flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
                                        borderValue=(0, 0, 0))
-    hard_mask = (coverage >= 0.5).astype(np.uint8)
-    eroded = cv2.erode(hard_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)))
-    edge_band = cv2.GaussianBlur((hard_mask - eroded).astype(np.float32), (0, 0), 0.38)
-    shifted = np.zeros_like(hard_mask)
-    shifted[:-1, :-1] = hard_mask[1:, 1:]
-    lit_edge = cv2.GaussianBlur(np.clip(hard_mask.astype(np.float32) - shifted.astype(np.float32), 0, 1),
-                                (0, 0), 0.45)
-
     master_linear = srgb_to_linear(master.astype(np.float32) / 255.0)
-    # Color is baked into the sanitized upload by Photo Studio. Preserve those
-    # pixels through the projective mapping for every selected color so dark
-    # outline/stroke details are not flattened into the fill color.
-    source_bgr_linear = srgb_to_linear(artwork_rgba[:, :, :3].astype(np.float32) / 255.0)
-    source_opacity = artwork_rgba[:, :, 3].astype(np.float32) / 255.0
-    mapped_premultiplied = cv2.warpPerspective(
-        source_bgr_linear * source_opacity[..., None], source_to_plate, (width, height),
-        flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
-    mapped_opacity = cv2.warpPerspective(source_opacity, source_to_plate, (width, height),
-                                         flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
-                                         borderValue=0.0)
-    mapped_color = mapped_premultiplied / np.maximum(mapped_opacity[..., None], 1e-6)
+    # Apply the physical mesh's rendered color and light difference directly.
+    # This retains the actual raised top faces, sharp sidewalls, and directional
+    # contact shadows instead of replacing them with a flat source-color fill
+    # and an artificial all-around highlight.
+    candidate = master_linear + mapped_delta
 
-    candidate = master_linear * (1.0 - coverage[..., None]) + mapped_color * coverage[..., None]
-    edge_light = np.clip(mapped_delta, 0.0, 0.10) * edge_band[..., None] * 0.20
-    edge_light += lit_edge[..., None] * 0.040
-    candidate += edge_light
-    shifted_shadow = np.zeros_like(coverage)
-    shifted_shadow[3:, 3:] = coverage[:-3, :-3]
-    contact = cv2.GaussianBlur(np.clip(shifted_shadow - coverage, 0, 1), (0, 0), 0.8)
-    candidate *= 1.0 - contact[..., None] * 0.32
-
-    # The 5 px ring is the complete allowance for antialiasing and contact
+    # The 5 px ring admits the rendered sidewall, antialiasing, and contact
     # shadow. It remains clipped to the 1 mm-inset CAD-printable polygon.
     shadow_support = cv2.dilate((coverage > 0.001).astype(np.uint8),
                                 cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11)))
     allowed_mask = ((shadow_support > 0) & (printable_mask > 0))
+    candidate[~allowed_mask] = master_linear[~allowed_mask]
     encoded = np.round(linear_to_srgb(candidate) * 255.0).astype(np.uint8)
     encoded[~allowed_mask] = master[~allowed_mask]
     changed = np.any(encoded != master, axis=2)

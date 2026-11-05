@@ -117,7 +117,7 @@ def main():
         vector_data=args.vector_data, output=args.passes_dir / "scene.jpg", artwork=args.artwork))
     artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box)
     bsdf = artwork.data.materials[0].node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Roughness"].default_value = reference["artworkMaterial"]["roughness"]
+    bsdf.inputs["Roughness"].default_value = 0.46
     coat = bsdf.inputs.get("Coat Weight")
     if coat:
         coat.default_value = reference["artworkMaterial"]["coatWeight"]
@@ -177,8 +177,9 @@ def main():
     surface_z = max(vertex.co.z for vertex in sleeve.data.vertices)
     target = Vector((float(settings["geometryCenterXmm"]) * MM, 0.0, surface_z))
     lights = reference["lighting"]
-    pipeline.make_area("Locked soft key", target + Vector(lights["key"]["relativePositionM"]), target,
-                       lights["key"]["power"], lights["key"]["sizeM"], tuple(lights["key"]["color"]))
+    key_size = 0.032
+    pipeline.make_area("On-Hat directional key", target + Vector(lights["key"]["relativePositionM"]), target,
+                       lights["key"]["power"], key_size, tuple(lights["key"]["color"]))
     pipeline.make_area("Locked cool fill", target + Vector(lights["fill"]["relativePositionM"]), target,
                        lights["fill"]["power"], lights["fill"]["sizeM"], tuple(lights["fill"]["color"]), False)
     pipeline.make_area("Locked grazing edge", target + Vector(lights["grazing"]["relativePositionM"]), target,
