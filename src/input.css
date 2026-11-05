@@ -890,8 +890,8 @@
     white-space: nowrap;
   }
   .snapink-studio-customizer .snapink-desktop-basic-toolbar .snapink-toolbar-logo > .space-y-3 > .mt-2.flex.items-center.justify-between > button {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
     opacity: 1 !important;
     font-size: 12px;
   }
