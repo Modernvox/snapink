@@ -7,6 +7,7 @@ queue. The reference photo is composited by composite_on_hat_rear.py.
 import argparse
 import hashlib
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -116,6 +117,12 @@ def main():
     vector_path = pipeline.resolve_vector_data(SimpleNamespace(
         vector_data=args.vector_data, output=args.passes_dir / "scene.jpg", artwork=args.artwork))
     artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box)
+    edge_bevel = artwork.modifiers.new("Subtle on-hat TPU edge catch", "BEVEL")
+    edge_bevel.width = 0.00012
+    edge_bevel.segments = 2
+    edge_bevel.limit_method = "ANGLE"
+    edge_bevel.angle_limit = math.radians(30)
+    edge_bevel.harden_normals = True
     bsdf = artwork.data.materials[0].node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Roughness"].default_value = 0.46
     coat = bsdf.inputs.get("Coat Weight")
@@ -180,6 +187,11 @@ def main():
     key_size = 0.032
     pipeline.make_area("On-Hat directional key", target + Vector(lights["key"]["relativePositionM"]), target,
                        lights["key"]["power"], key_size, tuple(lights["key"]["color"]))
+    # A restrained, shadow-free upper-left source puts a soft catch on the
+    # opposite contour edges without creating a second drop shadow.
+    upper_left_fill = Vector((-0.046, -0.018, 0.014))
+    pipeline.make_area("On-Hat upper-left edge fill", target + upper_left_fill, target,
+                       6.5, 0.014, (1.0, 0.97, 0.92), False)
     pipeline.make_area("Locked cool fill", target + Vector(lights["fill"]["relativePositionM"]), target,
                        lights["fill"]["power"], lights["fill"]["sizeM"], tuple(lights["fill"]["color"]), False)
     pipeline.make_area("Locked grazing edge", target + Vector(lights["grazing"]["relativePositionM"]), target,
