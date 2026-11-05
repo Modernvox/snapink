@@ -3,19 +3,15 @@ export const RETAIL_SHIPPING_CENTS = 399;
 export const RETAIL_DISCOUNT_THRESHOLD = 10;
 export const RETAIL_DISCOUNT_PERCENT = 10;
 export const RETAIL_FREE_SHIPPING_THRESHOLD_CENTS = 3600;
-export const SHOP_PRODUCT_CATALOG = Object.freeze({
-  lift: Object.freeze({ slug: "lift", name: "LIFT", description: "A clean, raised LIFT statement for the back of your snapback.", image: "/images/product_images/lift_sleeve_on%20_snapback.png", alt: "Black snapback with a black SnapInk sleeve featuring raised white LIFT lettering", variants: Object.freeze([{ id: "black-white", name: "Black sleeve / white artwork", sleeveColor: "Black", artworkColor: "White" }]), prices: Object.freeze([1599,1599,1599,1599,1899,1899]) }),
-  "three-star": Object.freeze({ slug: "three-star", name: "THREE STAR", description: "Three raised white stars in the approved SnapInk arrangement.", image: "/images/product_images/three_star_sleeve_on_snapback.png", alt: "Black snapback with a black SnapInk sleeve featuring three raised white stars", variants: Object.freeze([{ id: "black-white", name: "Black sleeve / white stars", sleeveColor: "Black", artworkColor: "White" }]), prices: Object.freeze([1599,1599,1599,1599,1899,1899]) }),
-});
-
-export function calculateShopCartPricing(items, products = SHOP_PRODUCT_CATALOG) {
+export function calculateShopCartPricing(items, products) {
   if (!Array.isArray(items) || items.length < 1 || items.length > 50) throw new RangeError("Cart must contain 1 to 50 product lines.");
+  if (!Array.isArray(products) && !(products instanceof Map) && (!products || typeof products !== "object")) throw new RangeError("The active Shop product catalog is unavailable.");
   let quantity = 0;
   let merchandiseSubtotalCents = 0;
   const normalized = items.map((item) => {
-    const product = products[item.productId];
+    const product = Array.isArray(products) ? products.find((entry) => entry?.productId === item.productId) : products instanceof Map ? products.get(item.productId) : Object.hasOwn(products,item.productId) ? products[item.productId] : null;
     const size = Number(item.size), count = Number(item.quantity);
-    if (!product || !Number.isInteger(size) || size < 0 || size > 5) throw new RangeError("Choose a valid exclusive product and size.");
+    if (!product || !Number.isInteger(size) || size < 0 || size > 5 || !Array.isArray(product.prices) || product.prices.length !== 6 || !Number.isSafeInteger(product.prices[size]) || product.prices[size] < 1) throw new RangeError("Choose a valid exclusive product and size.");
     if (!Number.isInteger(count) || count < 1 || count > RETAIL_MAX_QUANTITY) throw new RangeError(`Quantity must be between 1 and ${RETAIL_MAX_QUANTITY} per line.`);
     quantity += count;
     const unitPriceCents = product.prices[size];

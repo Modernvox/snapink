@@ -3,10 +3,11 @@ import { applySiteImageRendition } from "./utils/imageRenditions.js";
 
 const STORAGE_KEY="snapink-exclusive-shop-cart";
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const safeCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart.filter((item)=>item&&typeof item.productId==="string"&&typeof item.variantId==="string"&&Number.isInteger(item.size)&&Number.isInteger(item.quantity)):[]}catch{return[]}};
+const integerField=(value)=>typeof value==="number"?value:typeof value==="string"&&value.trim()!==""?Number(value):NaN;
+const safeCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart.flatMap((item)=>{const size=integerField(item?.size),quantity=integerField(item?.quantity);return item&&typeof item.productId==="string"&&typeof item.variantId==="string"&&Number.isInteger(size)&&size>=0&&size<=5&&Number.isInteger(quantity)&&quantity>=1&&quantity<=100?[{...item,size,quantity}]:[]}):[]}catch{return[]}};
 
 export function mountShopCart(products){
-  const productMap=Object.fromEntries(products.map((product)=>[product.productId,product]));
+  const productMap=new Map(products.map((product)=>[product.productId,product]));
   let trigger=document.querySelector(".shop-cart-trigger");
   if(!trigger){
     const header=document.querySelector("header");
@@ -31,7 +32,7 @@ export function mountShopCart(products){
     if(!cart.length){lines.textContent="Your bag is empty.";dialog.querySelector(".shop-checkout-actions").hidden=true;return}
     dialog.querySelector(".shop-checkout-actions").hidden=false;
     cart.forEach((item,index)=>{
-      const product=productMap[item.productId];if(!product)return;
+      const product=productMap.get(item.productId);if(!product)return;
       const variant=product.variants.find((entry)=>entry.variantId===item.variantId)||product.variants[0];
       const row=document.createElement("article");row.className="shop-cart-line";
       const image=document.createElement("img");applySiteImageRendition(image,variant?.sleeveImageUrl||product.imageUrl,"72px");image.alt=variant?.sleeveImageAlt||`${product.name} SnapInk Sleeve only; hat not included`;image.loading="lazy";
@@ -43,14 +44,14 @@ export function mountShopCart(products){
       controls.append(qty,remove);info.append(title,clarification,desc,controls);row.append(image,info);lines.append(row);
     });
     try{
-      const priced=calculateShopCartPricing(cart,productMap);
+      const priced=calculateShopCartPricing(cart,products);
       const data=[["Merchandise subtotal",priced.merchandiseSubtotalCents],["Quantity discount",-priced.discountCents],["Standard shipping",priced.shippingCents],["Total before tax",priced.totalBeforeTaxCents]];
       for(const [label,value] of data){if(label==="Quantity discount"&&!value)continue;const row=document.createElement("div");row.className="shop-total-row";const name=document.createElement("span"),amount=document.createElement("strong");name.textContent=label;amount.textContent=`${value<0?"−":""}${usd(Math.abs(value))}`;row.append(name,amount);totals.append(row)}
       const tax=document.createElement("p");tax.className="shop-tax-note";tax.textContent="Tax is not calculated or included in this order total.";totals.append(tax);
     }catch(error){const message=document.createElement("p");message.className="shop-error";message.textContent=error.message;totals.append(message)}
   };
   window.snapInkShopAdd=(productId,variantId,size,quantity=1)=>{
-    const product=productMap[productId];if(!product)return;
+    const product=productMap.get(productId);if(!product)return;
     const cart=safeCart(),found=cart.find((item)=>item.productId===productId&&item.variantId===variantId&&item.size===size);
     if(found)found.quantity=Math.min(100,found.quantity+quantity);else cart.push({productId,variantId,size,quantity});
     persist(cart);dialog.showModal();

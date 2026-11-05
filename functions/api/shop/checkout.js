@@ -7,7 +7,8 @@ import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-meth
 
 const SITE = "https://snapbacksleeves.com";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-const validLine = (item) => item && typeof item.productId === "string" && typeof item.variantId === "string" && Number.isInteger(item.size) && Number.isInteger(item.quantity);
+const isIntegerInput = (value) => (typeof value === "number" && Number.isInteger(value)) || (typeof value === "string" && value.trim() !== "" && Number.isInteger(Number(value)));
+const validLine = (item) => item && typeof item.productId === "string" && typeof item.variantId === "string" && isIntegerInput(item.size) && isIntegerInput(item.quantity);
 
 async function releaseReservations(db, items, time) {
   for (const item of items) await db.prepare("UPDATE shop_inventory SET reserved_quantity=MAX(0,reserved_quantity-?),updated_at=? WHERE product_id=? AND variant_id=? AND size=?")
@@ -42,6 +43,7 @@ export async function onRequestPost({ request, env }) {
   } catch { return json({ error: "Check your cart and try again." }, 400); }
   if (typeof body.idempotencyKey !== "string" || !/^[a-f0-9-]{16,64}$/i.test(body.idempotencyKey)) return json({ error: "Refresh the cart and try checkout again." }, 400);
   if (!Array.isArray(body.items) || body.items.length < 1 || body.items.length > 50 || !body.items.every(validLine)) return json({ error: "Add a valid product, size, and quantity to the cart." }, 400);
+  body.items=body.items.map((item)=>({...item,size:Number(item.size),quantity:Number(item.quantity)}));
   if (!(await enforcePublicFormRateLimit(env.DB, request, env.CLOUDFLARE_EMAIL_API_TOKEN || env.ADMIN_REVIEW_TOKEN || "snapink-shop-checkout-rate-limit", "shop-checkout", 12))) return json({ error: "Too many checkout attempts. Please wait before trying again." }, 429);
   const time = now();
   let reserved = [];
@@ -53,7 +55,6 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "This checkout is already being prepared. Refresh your cart in a moment." }, 409);
     }
     const products = await readShopProducts(env.DB);
-    const productMap = Object.fromEntries(products.map((product) => [product.productId, product]));
     const normalizedMap = new Map();
     for (const line of body.items) {
       const product = products.find((entry) => entry.productId === line.productId && entry.active);
@@ -66,7 +67,7 @@ export async function onRequestPost({ request, env }) {
     }
     const normalized = [...normalizedMap.values()];
     if (normalized.reduce((sum, line) => sum + line.quantity, 0) > RETAIL_MAX_QUANTITY) return json({ error: `Combined cart quantity cannot exceed ${RETAIL_MAX_QUANTITY}.` }, 400);
-    const pricing = calculateShopCartPricing(normalized, productMap);
+    const pricing = calculateShopCartPricing(normalized, products);
     for (const line of pricing.items) {
       const update = await env.DB.prepare("UPDATE shop_inventory SET reserved_quantity=reserved_quantity+?,updated_at=? WHERE product_id=? AND variant_id=? AND size=? AND available_quantity-reserved_quantity>=?")
         .bind(line.quantity, time, line.productId, line.variantId, line.size, line.quantity).run();

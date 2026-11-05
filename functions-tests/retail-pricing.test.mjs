@@ -37,15 +37,16 @@ test("free shipping applies only when discounted merchandise is strictly over $3
 });
 
 test("exclusive shop uses approved size prices and calculates mixed-product discounts", () => {
+  const products={lift:{prices:[1599,1599,1599,1599,1899,1899]},"three-star":{prices:[1599,1599,1599,1599,1899,1899]}};
   const cart = calculateShopCartPricing([
     { productId:"lift", variantId:"black-white", size:0, quantity:5 },
     { productId:"three-star", variantId:"black-white", size:4, quantity:5 },
-  ]);
+  ],products);
   assert.equal(cart.quantity,10);
   assert.equal(cart.merchandiseSubtotalCents,5*1599+5*1899);
   assert.equal(cart.discountCents,Math.round((5*1599+5*1899)*0.1));
   assert.equal(cart.shippingCents,0);
-  assert.equal(calculateShopCartPricing([{productId:"lift",variantId:"black-white",size:4,quantity:1}]).items[0].unitPriceCents,1899);
+  assert.equal(calculateShopCartPricing([{productId:"lift",variantId:"black-white",size:4,quantity:1}],products).items[0].unitPriceCents,1899);
 });
 
 test("shop shipping threshold is checked after the mixed-cart discount and is strictly over $36", () => {
