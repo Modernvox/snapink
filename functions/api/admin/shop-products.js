@@ -22,14 +22,16 @@ export async function onRequestPatch({request,env}){
   let body;try{body=await request.json()}catch{return json({error:"Invalid product update."},400)}
   if(typeof body.productId!=="string")return json({error:"Choose a valid product."},400);
   try{
-    const product=await env.DB.prepare("SELECT product_id FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
-    if(body.imageUrl!==undefined&&!isPublicProductImagePath(body.imageUrl))return json({error:"Choose an image under /images/product_images/ with a supported image extension."},400);
+    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    // Legacy products can retain a previously published image path that no
+    // longer meets the current image upload rules. Allow status-only admin
+    // changes to keep that image unchanged; validate any replacement path.
+    if(body.imageUrl!==undefined&&body.imageUrl!==product.imageUrl&&!isPublicProductImagePath(body.imageUrl))return json({error:"Choose an image under /images/product_images/ with a supported image extension."},400);
     if(body.imageAlt!==undefined&&(typeof body.imageAlt!=="string"||!body.imageAlt.trim()||body.imageAlt.length>300))return json({error:"Enter descriptive image alt text up to 300 characters."},400);
     const time=now();
     if(body.active!==undefined){if(typeof body.active!=="boolean")return json({error:"Product activation must be true or false."},400);await env.DB.prepare("UPDATE shop_products SET active=?,updated_at=? WHERE product_id=?").bind(body.active?1:0,time,body.productId).run()}
     if(body.imageUrl!==undefined||body.imageAlt!==undefined){
-      const current=await env.DB.prepare("SELECT image_url AS imageUrl,image_alt AS imageAlt FROM shop_products WHERE product_id=?").bind(body.productId).first();
-      await env.DB.prepare("UPDATE shop_products SET image_url=?,image_alt=?,updated_at=? WHERE product_id=?").bind(body.imageUrl??current.imageUrl,body.imageAlt?.trim()??current.imageAlt,time,body.productId).run();
+      await env.DB.prepare("UPDATE shop_products SET image_url=?,image_alt=?,updated_at=? WHERE product_id=?").bind(body.imageUrl??product.imageUrl,body.imageAlt?.trim()??product.imageAlt,time,body.productId).run();
     }
     if(body.prices!==undefined){
       if(!Array.isArray(body.prices)||body.prices.length!==6||body.prices.some((value)=>!Number.isSafeInteger(value)||value<1||value>100000))return json({error:"Enter six valid USD prices in cents."},400);
