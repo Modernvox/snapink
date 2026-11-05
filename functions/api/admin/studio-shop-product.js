@@ -30,13 +30,16 @@ export async function onRequestPost({request,env}) {
   if(!name||name.length>100||!safeSlug(name)||cardDescription.length>240||description.length>2000||!['standard','billboard'].includes(style)||!/^#[0-9a-f]{6}$/i.test(color)) return json({error:"Enter a product name and use the current sleeve style and color."},400);
   const files=form.getAll("galleryImages").filter(file=>file instanceof File);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
+  const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File);
+  if(thumbnails.length&& (thumbnails.length!==files.length||thumbnails.some(file=>file.type!=="image/webp"||file.size<100||file.size>2*1024*1024)))return json({error:"Product image thumbnails are invalid."},400);
   const slug=safeSlug(name);
   const prices=extendedArtwork?[2499,2499,2499,2999,2999,2999]:[1599,1599,1599,1599,1899,1899];
   const existing=await env.DB.prepare("SELECT product_id AS productId,slug FROM shop_products WHERE slug=?").bind(slug).first();
   if(existing)return json({ok:true,duplicate:true,product:{productId:existing.productId,slug:existing.slug,url:`/shop/${existing.slug}`}});
-  const productId=`studio-${crypto.randomUUID()}`, time=now(), objectKeys=files.map((_,i)=>`shop-products/${productId}/${i+1}.png`);
+  const productId=`studio-${crypto.randomUUID()}`, time=now(), objectKeys=files.map((_,i)=>`shop-products/${productId}/${i+1}.png`),thumbnailKeys=thumbnails.map((_,i)=>`shop-products/${productId}/${i+1}-thumb.webp`),storedKeys=[...objectKeys,...thumbnailKeys];
   try {
     for(let i=0;i<files.length;i++) await env.PRIVATE_ASSETS.put(objectKeys[i],files[i].stream(),{httpMetadata:{contentType:"image/png",cacheControl:"public, max-age=31536000, immutable"}});
+    for(let i=0;i<thumbnails.length;i++) await env.PRIVATE_ASSETS.put(thumbnailKeys[i],thumbnails[i].stream(),{httpMetadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
       env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} custom SnapInk product image`,JSON.stringify(prices),time,time),
@@ -45,7 +48,7 @@ export async function onRequestPost({request,env}) {
     ]);
     return json({ok:true,product:{productId,slug,url:`/shop/${slug}`}} ,201);
   } catch(error) {
-    for(const key of objectKeys) await env.PRIVATE_ASSETS.delete(key).catch(()=>{});
+    for(const key of storedKeys) await env.PRIVATE_ASSETS.delete(key).catch(()=>{});
     const duplicate=await env.DB.prepare("SELECT product_id AS productId,slug FROM shop_products WHERE slug=?").bind(slug).first().catch(()=>null);
     if(duplicate)return json({ok:true,duplicate:true,product:{productId:duplicate.productId,slug:duplicate.slug,url:`/shop/${duplicate.slug}`}});
     console.error("Studio shop product publish failed",error instanceof Error?error.message:"unknown");

@@ -17,7 +17,8 @@ const jobStageName = (s) => ({
 }[s] || s);
 const escapeText = (s) => String(s ?? "");
 async function api(url, options = {}) {
-  const response = await fetch(url, { ...options, headers: { Authorization: `Bearer ${adminToken}`, ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }, cache: "no-store" });
+  const isFormData = options.body instanceof FormData;
+  const response = await fetch(url, { ...options, headers: { Authorization: `Bearer ${adminToken}`, ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }, cache: "no-store" });
   const data = response.headers.get("content-type")?.includes("application/json") ? await response.json() : null;
   if (!response.ok) throw new Error(data?.error || `Request failed (${response.status}).`);
   return { response, data };

@@ -22,6 +22,7 @@ export function mountAdminShop(api){
   desk.querySelector("h1")?.insertAdjacentElement("afterend",controls);
   const productsPanel=el("section",{className:"panel hidden"}),ordersPanel=el("section",{className:"panel hidden"});productsPanel.id="shop-products-panel";ordersPanel.id="shop-orders-panel";
   productsPanel.append(el("h2",{},"Shop products, prices & inventory"),el("p",{className:"muted"},"Manage the shared size-based price schedule, active designs, variants, availability, and optional stock counts. Blank stock fields mean inventory is not tracked."));
+  const thumbnailTools=el("div",{className:"tools"}),backfillThumbnails=el("button",{type:"button",className:"secondary"},"Backfill Shop gallery thumbnails");thumbnailTools.append(backfillThumbnails);productsPanel.append(thumbnailTools);
   const productsRoot=el("div",{className:"admin-shop-products"}),productsMessage=el("p",{className:"notice",role:"status"});productsPanel.append(productsRoot,productsMessage);
   const previewDialog=el("dialog",{className:"admin-product-preview"}),previewFigure=el("figure",{}),previewCaption=el("figcaption",{}),previewClose=el("button",{type:"button",className:"secondary"},"Close preview");previewFigure.append(previewCaption);previewDialog.append(previewClose,previewFigure);productsPanel.append(previewDialog);
   previewClose.addEventListener("click",()=>previewDialog.close());previewDialog.addEventListener("click",(event)=>{if(event.target===previewDialog)previewDialog.close()});
@@ -29,6 +30,34 @@ export function mountAdminShop(api){
   const orderTools=el("div",{className:"tools"}),search=el("input",{type:"search",placeholder:"Search Shop order, customer, email"}),refresh=el("button",{type:"button",className:"secondary"},"Refresh Shop orders");orderTools.append(search,refresh);const ordersMessage=el("p",{className:"notice",role:"status"}),tableWrap=el("div",{className:"table-wrap"}),table=el("table",{className:"orders"}),thead=el("thead"),headRow=el("tr");for(const label of ["Order / customer","Items","Payment / total","Shipping details","Fulfillment","Actions"])headRow.append(el("th",{},label));thead.append(headRow);const tbody=el("tbody");table.append(thead,tbody);tableWrap.append(table);ordersPanel.append(orderTools,ordersMessage,tableWrap);desk.append(productsPanel,ordersPanel);
   productsToggle.addEventListener("click",async()=>{productsPanel.classList.remove("hidden");ordersPanel.classList.add("hidden");await renderProducts()});
   ordersToggle.addEventListener("click",async()=>{ordersPanel.classList.remove("hidden");productsPanel.classList.add("hidden");await renderOrders()});
+  backfillThumbnails.addEventListener("click",backfillShopThumbnails);
+
+  async function backfillShopThumbnails(){
+    backfillThumbnails.disabled=true;productsMessage.textContent="Preparing existing product gallery thumbnails…";productsMessage.className="notice";
+    try{
+      const {data}=await api("/api/admin/shop-products"),images=new Map();
+      for(const product of data.products||[])for(const image of [{url:product.imageUrl},...(product.gallery||[])]){
+        if(!image.url)continue;
+        const url=new URL(image.url,location.origin),key=url.pathname==="/api/shop/product-image"?url.searchParams.get("key"):null;
+        if(key&&/^shop-products\/studio-[a-f0-9-]{36}\/(?:[1-5]|on-hat|packaging|on-desk)\.png$/.test(key))images.set(key,image.url);
+      }
+      if(!images.size){productsMessage.textContent="No stored Studio gallery images need thumbnails.";return}
+      const upload=new FormData();
+      for(const [key,source] of images){
+        const response=await fetch(source,{cache:"force-cache"});if(!response.ok)throw new Error(`Could not load a stored product image (${response.status}).`);
+        const bitmap=await createImageBitmap(await response.blob()),scale=Math.min(1,480/bitmap.width),canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+        const context=canvas.getContext("2d");if(!context){bitmap.close();throw new Error("Thumbnail canvas is unavailable.")}
+        context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+        const thumbnail=await new Promise((resolve,reject)=>canvas.toBlob((blob)=>blob?resolve(blob):reject(new Error("Thumbnail encoding failed.")),"image/webp",0.96));
+        if(thumbnail.type!=="image/webp")throw new Error("WebP thumbnail encoding is unavailable.");
+        upload.append("imageKeys",key);upload.append("thumbnails",thumbnail,key.split("/").pop().replace(/\.png$/,".webp"));
+      }
+      const {data:result}=await api("/api/admin/shop-product-thumbnails",{method:"POST",body:upload});
+      productsMessage.textContent=`Backfilled ${result.thumbnailCount} existing Shop gallery thumbnails. Product images and records were left unchanged.`;productsMessage.className="notice success";
+    }catch(error){productsMessage.textContent=error.message||"Could not backfill Shop gallery thumbnails.";productsMessage.className="notice error"}
+    finally{backfillThumbnails.disabled=false}
+  }
 
   async function renderProducts(statusMessage="",statusIsError=false){
     productsRoot.replaceChildren();productsMessage.textContent="Loading product catalog...";productsMessage.className="notice";

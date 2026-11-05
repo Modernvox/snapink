@@ -1,5 +1,5 @@
 import { mountShopCart } from "./shop-cart.js";
-import { applySiteImageRendition, getSiteImageRendition } from "./utils/imageRenditions.js";
+import { applyShopProductThumbnail, getSiteImageRendition } from "./utils/imageRenditions.js";
 
 const root=document.querySelector("#shop-products");
 const error=document.querySelector("#shop-error");
@@ -15,7 +15,7 @@ try{
     if(!product.variants?.length)continue;
     const variant=product.variants[0],card=document.createElement("article");card.className="shop-product-card";
     const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} SnapInk sleeve details`);
-    const image=document.createElement("img");applySiteImageRendition(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width ||= 1536;image.height ||= 1024;image.loading="lazy";image.decoding="async";
+    const image=document.createElement("img");applyShopProductThumbnail(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width ||= 1536;image.height ||= 1024;image.loading="lazy";image.decoding="async";
     const body=document.createElement("div");body.className="shop-product-card-body";
     const name=document.createElement("h3");name.textContent=product.name;
     const desc=document.createElement("p");desc.textContent=product.cardDescription||product.description;

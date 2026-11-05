@@ -20,7 +20,7 @@ function storedProductImageKey(value){
 }
 
 function imageKeysFromReferences(references){
-  const keys=new Set();for(const reference of references){const key=storedProductImageKey(reference);if(key)keys.add(key)}return keys;
+  const keys=new Set();for(const reference of references){const key=storedProductImageKey(reference);if(key){keys.add(key);keys.add(key.replace(/\.png$/,"-thumb.webp"))}}return keys;
 }
 
 export async function onRequestGet({request,env}){

@@ -2143,7 +2143,20 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
-    for(const key of shopImageSelection){const entry=generatedPhotoEntries.find(x=>x.key===key);if(entry)form.append("galleryImages",entry.blob,entry.filename);}
+    const selectedEntries=shopImageSelection.map(key=>generatedPhotoEntries.find(x=>x.key===key)).filter((entry):entry is (typeof generatedPhotoEntries)[number]=>Boolean(entry));
+    for(const entry of selectedEntries)form.append("galleryImages",entry.blob,entry.filename);
+    try {
+      const thumbnailFiles=await Promise.all(selectedEntries.map(async(entry)=>{
+        const bitmap=await createImageBitmap(entry.blob),scale=Math.min(1,480/bitmap.width),canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+        const context=canvas.getContext("2d");if(!context){bitmap.close();throw new Error("Thumbnail canvas is unavailable.")}
+        context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+        const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob((result)=>result?resolve(result):reject(new Error("Thumbnail encoding failed.")),"image/webp",0.96));
+        if(blob.type!=="image/webp")throw new Error("WebP thumbnail encoding is unavailable.");
+        return {blob,name:entry.filename.replace(/\.[^.]+$/,".webp")};
+      }));
+      for(const thumbnail of thumbnailFiles)form.append("galleryThumbnails",thumbnail.blob,thumbnail.name);
+    } catch { /* Keep publishing functional when a browser cannot create WebP thumbnails. */ }
     form.set("extendedArtwork", artworkIsExtended ? "true" : "false");form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
     try {
       const response=await fetch("/api/admin/studio-shop-product",{method:"POST",headers:{Authorization:`Bearer ${studioAdminToken}`},body:form});const result=await response.json().catch(()=>null);
