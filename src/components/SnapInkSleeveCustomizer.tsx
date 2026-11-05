@@ -1985,10 +1985,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
       throw new Error("The approved rear hat master has unexpected dimensions.");
     }
-    const canvas = document.createElement("canvas");
-    canvas.width = REAR_PRODUCT_PHOTO.width;
-    canvas.height = REAR_PRODUCT_PHOTO.height;
-    const context = canvas.getContext("2d");
+    const composition = document.createElement("canvas");
+    composition.width = REAR_PRODUCT_PHOTO.width;
+    composition.height = REAR_PRODUCT_PHOTO.height;
+    const context = composition.getContext("2d");
     if (!context) throw new Error("The product-image canvas is unavailable.");
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
@@ -2012,6 +2012,17 @@ const SnapInkSleeveCustomizer = forwardRef<
       - (productStyle === "standard" ? 5 : 0)
     );
     context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    // Frame the completed, calibrated hat + sleeve composition as a unit. The
+    // square canvas gives the hat consistent Shop sizing without moving or
+    // scaling the sleeve independently of the master photograph.
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const framedContext = canvas.getContext("2d");
+    if (!framedContext) throw new Error("The product-image canvas is unavailable.");
+    framedContext.fillStyle = "#ffffff";
+    framedContext.fillRect(0, 0, canvas.width, canvas.height);
+    framedContext.drawImage(composition, (canvas.width - composition.width) / 2, 0);
     return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
       (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
       "image/png"
