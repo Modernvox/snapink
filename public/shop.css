@@ -23,6 +23,7 @@
 
 /* Product details: readable Markdown blocks and a restrained responsive title. */
 .shop-product-info h1{max-width:18ch;font-size:clamp(2rem,3.6vw,2.85rem);line-height:1.08;letter-spacing:-.04em;overflow-wrap:anywhere}
+.shop-shipping-message{display:flex;align-items:center;gap:8px;margin:8px 0 14px;color:var(--shop-gold);font-size:13px;font-weight:800;line-height:1.4}.shop-shipping-message svg{width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}
 .shop-product-info .shop-description{max-width:62ch}
 .shop-product-info .shop-description p{margin:0 0 1em}
 .shop-product-info .shop-description p:last-child{margin-bottom:0}
