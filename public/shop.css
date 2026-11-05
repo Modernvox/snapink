@@ -20,3 +20,14 @@
 .shop-product-card p{display:-webkit-box;overflow:hidden;min-height:3.2em;max-height:3.2em;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.6;white-space:normal;overflow-wrap:anywhere}
 .shop-product-card .shop-view-button{margin-top:auto}
 @media(max-width:800px){.shop-product-card img{aspect-ratio:1/1}}
+
+/* Product details: readable Markdown blocks and a restrained responsive title. */
+.shop-product-info h1{max-width:18ch;font-size:clamp(2rem,3.6vw,2.85rem);line-height:1.08;letter-spacing:-.04em;overflow-wrap:anywhere}
+.shop-product-info .shop-description{max-width:62ch}
+.shop-product-info .shop-description p{margin:0 0 1em}
+.shop-product-info .shop-description p:last-child{margin-bottom:0}
+.shop-product-info .shop-description ul{margin:.35em 0 1em;padding-left:1.35em;list-style:disc}
+.shop-product-info .shop-description li{padding-left:.15em;margin:.25em 0}
+.shop-product-info .shop-description strong{color:#f4f4f5;font-weight:800}
+@media(max-width:800px){.shop-product-info h1{max-width:20ch;font-size:clamp(2rem,6vw,2.6rem)}}
+@media(max-width:560px){.shop-product-info h1{max-width:22ch;font-size:clamp(1.9rem,8vw,2.3rem)}}

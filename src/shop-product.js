@@ -3,6 +3,18 @@ import { applySiteImageRendition } from "./utils/imageRenditions.js";
 
 const root=document.querySelector("#shop-product-root"),usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
 const sizeImage=(size)=>`/images/product_images/snapink-size-${size}.png`;
+function appendDescriptionInline(parent,text){
+  const pattern=/\*\*([^*]+)\*\*|__([^_]+)__/g;let cursor=0,match;
+  while((match=pattern.exec(text))){if(match.index>cursor)parent.append(document.createTextNode(text.slice(cursor,match.index)));const strong=document.createElement("strong");strong.textContent=match[1]||match[2];parent.append(strong);cursor=pattern.lastIndex;}
+  if(cursor<text.length)parent.append(document.createTextNode(text.slice(cursor)));
+}
+function renderProductDescription(value){
+  const fragment=document.createDocumentFragment(),lines=String(value||"").replace(/\r\n?/g,"\n").split("\n");let paragraph=[],list=null;
+  const flushParagraph=()=>{if(!paragraph.length)return;const node=document.createElement("p");paragraph.forEach((line,index)=>{if(index)node.append(document.createElement("br"));appendDescriptionInline(node,line);});fragment.append(node);paragraph=[];};
+  const flushList=()=>{if(list){fragment.append(list);list=null;}};
+  for(const line of lines){const bullet=line.match(/^\s*[-*+]\s+(.+)$/);if(bullet){flushParagraph();if(!list)list=document.createElement("ul");const item=document.createElement("li");appendDescriptionInline(item,bullet[1]);list.append(item);continue;}if(!line.trim()){flushParagraph();flushList();continue;}flushList();paragraph.push(line);}
+  flushParagraph();flushList();return fragment;
+}
 function normalizeProductGallery(value){let gallery=value;for(let depth=0;depth<2&&typeof gallery==="string";depth++){try{gallery=JSON.parse(gallery)}catch{return[]}}return Array.isArray(gallery)?gallery.filter((image)=>image&&typeof image==="object"&&!Array.isArray(image)&&typeof image.url==="string"&&image.url.trim()):[]}
 function openLightbox(src,alt,label){
   let dialog=document.querySelector(".shop-size-lightbox");
@@ -19,7 +31,7 @@ try{
   root.replaceChildren();
   const galleryBox=document.createElement("div"),mainImage=document.createElement("img");galleryBox.className="shop-product-gallery";mainImage.className="shop-product-hero";applySiteImageRendition(mainImage,gallery[0].src,"(max-width: 700px) 100vw, 50vw");mainImage.alt=gallery[0].alt;mainImage.width ||= 1536;mainImage.height ||= 1024;mainImage.decoding="async";mainImage.addEventListener("click",()=>openLightbox(mainImage.src,mainImage.alt,`${product.name} exclusive sleeve`));galleryBox.append(mainImage);
   if(gallery.length>1){const thumbs=document.createElement("div");thumbs.className="shop-gallery-thumbs";gallery.forEach((entry)=>{const img=document.createElement("img");applySiteImageRendition(img,entry.src,"120px");img.alt=`${product.name} ${entry.label}: ${entry.alt}`;img.loading="lazy";img.addEventListener("click",()=>{applySiteImageRendition(mainImage,entry.src,"(max-width: 700px) 100vw, 50vw");mainImage.alt=img.alt});thumbs.append(img)});galleryBox.append(thumbs)}
-  const info=document.createElement("section");info.className="shop-product-info";const eyebrow=document.createElement("p");eyebrow.className="shop-eyebrow";eyebrow.textContent="SnapInk exclusive";const title=document.createElement("h1");title.textContent=product.name;const description=document.createElement("p");description.className="shop-description";description.textContent=product.description;const price=document.createElement("p");price.className="shop-price";
+  const info=document.createElement("section");info.className="shop-product-info";const eyebrow=document.createElement("p");eyebrow.className="shop-eyebrow";eyebrow.textContent="SnapInk exclusive";const title=document.createElement("h1");title.textContent=product.name;const description=document.createElement("div");description.className="shop-description";description.append(renderProductDescription(product.description));const price=document.createElement("p");price.className="shop-price";
   const availabilityNote=document.createElement("p");availabilityNote.className="shop-sleeve-only-note";availabilityNote.textContent="Sleeve only. Snapback hat sold separately.";
   const variantLabel=document.createElement("label");variantLabel.textContent="Color combination";const variantBox=document.createElement("span");variantBox.className="shop-variant-box";const dot=document.createElement("i");dot.className="shop-color-dot";dot.setAttribute("aria-hidden","true");variantBox.append(dot,document.createTextNode(variant.name));variantLabel.append(variantBox);
   const sizeLabel=document.createElement("label");sizeLabel.textContent="SnapInk size";const sizeSelect=document.createElement("select");sizeSelect.setAttribute("aria-label","Choose SnapInk size");for(const size of availableSizes){const option=document.createElement("option");option.value=String(size);option.textContent=`Size ${size} — ${size} exposed ${size===1?"peg":"pegs"}`;sizeSelect.append(option)}sizeLabel.append(sizeSelect);
