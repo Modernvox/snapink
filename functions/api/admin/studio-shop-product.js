@@ -1,4 +1,5 @@
 import { bearer, json, now } from "../../_lib/orders.js";
+import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy } from "../../_lib/shop.js";
 
 const defaultCardDescription = (name) => `${name} features custom artwork on a SnapInk sleeve for compatible snapback hats.`;
 const defaultDescription = (name) => `${name} brings a distinctive SnapInk detail to compatible snapback hats. Choose your sleeve size and color to complete your look. Sleeve only; hat sold separately.`;
@@ -15,25 +16,33 @@ export async function onRequestPost({request,env}) {
   if(!env.DB||!env.PRIVATE_ASSETS) return json({error:"Shop storage is unavailable. Confirm the shop database and private asset bucket are configured."},503);
   let form; try { form=await request.formData(); } catch { return json({error:"Product details or images are invalid."},400); }
   const name=String(form.get("name")||"").trim();
-  const cardDescription=cleanCardDescription(form.get("cardDescription"))||defaultCardDescription(name);
+  let cardDescription=cleanCardDescription(form.get("cardDescription"))||defaultCardDescription(name);
   let description=String(form.get("description")||"").trim()||defaultDescription(name);
   const style=String(form.get("style")||""), color=String(form.get("color")||"").trim();
-  const extendedArtwork=String(form.get("extendedArtwork")||"false")==="true";
+  const artworkTier=String(form.get("artworkTier")||"standard");
+  if(!["standard","premium"].includes(artworkTier))return json({error:"Choose Standard or Premium Extended Artwork."},400);
+  const premiumArtwork=artworkTier==="premium";
   const extensionMm=Number(form.get("artworkExtensionMm")||0), artworkWidthMm=Number(form.get("artworkWidthMm")||0), artworkHeightMm=Number(form.get("artworkHeightMm")||0);
-  if (extendedArtwork) {
+  const productionMetadata={artworkWidthMm,artworkHeightMm,artworkExtensionMm:extensionMm,artworkTopExtensionMm:Number(form.get("artworkTopExtensionMm")||0),artworkBottomExtensionMm:Number(form.get("artworkBottomExtensionMm")||0),artworkHeightScale:Number(form.get("artworkHeightScale")||100),artworkCenterXmm:Number(form.get("artworkCenterXmm")||0),artworkCenterYmm:Number(form.get("artworkCenterYmm")||0)};
+  if (premiumArtwork) {
     if (String(form.get("approveExtendedArtwork"))!=="true") return json({error:"Explicit administrator approval is required to publish extended artwork at its premium price."},403);
     if (!Number.isFinite(extensionMm)||extensionMm<=0||extensionMm>12.701||!Number.isFinite(artworkWidthMm)||artworkWidthMm<=0||!Number.isFinite(artworkHeightMm)||artworkHeightMm<=0) return json({error:"Extended artwork measurements are invalid or exceed the 12.7 mm limit."},400);
     const heightScale=Number(form.get("artworkHeightScale")), centerX=Number(form.get("artworkCenterXmm")), centerY=Number(form.get("artworkCenterYmm"));
     if (![heightScale,centerX,centerY].every(Number.isFinite)||heightScale<25||heightScale>200) return json({error:"Extended artwork position and scale must be valid before publishing."},400);
-  } else if (extensionMm > 0.001) return json({error:"The artwork extension status does not match its measured dimensions."},400);
-  if(extendedArtwork) description=`${description}\n\nExtended artwork pricing: sizes 0–2 $24.99; sizes 3–5 $29.99. Final production feasibility will be confirmed during design review.`;
+    if(![productionMetadata.artworkTopExtensionMm,productionMetadata.artworkBottomExtensionMm].every(Number.isFinite)||productionMetadata.artworkTopExtensionMm<0||productionMetadata.artworkBottomExtensionMm<0)return json({error:"Extended artwork measurements are invalid."},400);
+  } else {
+    description=removeExtendedArtworkCopy(description);
+    cardDescription=removeExtendedArtworkCopy(cardDescription);
+  }
   if(!name||name.length>100||!safeSlug(name)||cardDescription.length>240||description.length>2000||!['standard','billboard'].includes(style)||!/^#[0-9a-f]{6}$/i.test(color)) return json({error:"Enter a product name and use the current sleeve style and color."},400);
   const files=form.getAll("galleryImages").filter(file=>file instanceof File);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
   const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File);
   if(thumbnails.length&& (thumbnails.length!==files.length||thumbnails.some(file=>file.type!=="image/webp"||file.size<100||file.size>2*1024*1024)))return json({error:"Product image thumbnails are invalid."},400);
   const slug=safeSlug(name);
-  const prices=extendedArtwork?[2499,2499,2499,2999,2999,2999]:[1599,1599,1599,1599,1899,1899];
+  const standardPrices=await readStandardShopPrices(env.DB);
+  const prices=premiumArtwork?PREMIUM_EXTENDED_SHOP_PRICES:standardPrices;
+  if(premiumArtwork&&!/extended artwork pricing/i.test(description))description=`${description}\n\nExtended artwork pricing: sizes 0–2 $24.99; sizes 3–5 $29.99. Final production feasibility will be confirmed during design review.`;
   const existing=await env.DB.prepare("SELECT product_id AS productId,slug FROM shop_products WHERE slug=?").bind(slug).first();
   if(existing)return json({ok:true,duplicate:true,product:{productId:existing.productId,slug:existing.slug,url:`/shop/${existing.slug}`}});
   const productId=`studio-${crypto.randomUUID()}`, time=now(), objectKeys=files.map((_,i)=>`shop-products/${productId}/${i+1}.png`),thumbnailKeys=thumbnails.map((_,i)=>`shop-products/${productId}/${i+1}-thumb.webp`),storedKeys=[...objectKeys,...thumbnailKeys];
@@ -42,7 +51,7 @@ export async function onRequestPost({request,env}) {
     for(let i=0;i<thumbnails.length;i++) await env.PRIVATE_ASSETS.put(thumbnailKeys[i],thumbnails[i].stream(),{httpMetadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} custom SnapInk product image`,JSON.stringify(prices),time,time),
+      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} custom SnapInk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),time,time),
       env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify([0,1,2,3,4,5])),
       env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} SnapInk product image ${i+2}`,label:files[i+1]?.name||`Image ${i+2}`})))),
     ]);

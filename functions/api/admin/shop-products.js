@@ -1,5 +1,5 @@
 import {bearer,json,now} from "../../_lib/orders.js";
-import {readShopProducts} from "../../_lib/shop.js";
+import {PREMIUM_EXTENDED_SHOP_PRICES, readShopProducts, readStandardShopPrices, removeExtendedArtworkCopy} from "../../_lib/shop.js";
 
 function isPublicProductImagePath(value){
   if(typeof value!=="string"||value!==value.trim()||value.length<1||value.length>500||/[\u0000-\u001f\\]/.test(value))return false;
@@ -36,7 +36,8 @@ export async function onRequestPatch({request,env}){
   let body;try{body=await request.json()}catch{return json({error:"Invalid product update."},400)}
   if(typeof body.productId!=="string")return json({error:"Choose a valid product."},400);
   try{
-    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt,description,card_description AS cardDescription,artwork_tier AS artworkTier FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    if(body.artworkTier!==undefined&&!["standard","premium"].includes(body.artworkTier))return json({error:"Choose Standard or Premium Extended Artwork."},400);
     // Legacy products can retain a previously published image path that no
     // longer meets the current image upload rules. Allow status-only admin
     // changes to keep that image unchanged; validate any replacement path.
@@ -47,11 +48,18 @@ export async function onRequestPatch({request,env}){
     if(body.imageUrl!==undefined||body.imageAlt!==undefined){
       await env.DB.prepare("UPDATE shop_products SET image_url=?,image_alt=?,updated_at=? WHERE product_id=?").bind(body.imageUrl??product.imageUrl,body.imageAlt?.trim()??product.imageAlt,time,body.productId).run();
     }
+    if(body.artworkTier!==undefined){
+      const premium=body.artworkTier==="premium",prices=premium?PREMIUM_EXTENDED_SHOP_PRICES:await readStandardShopPrices(env.DB,body.productId);
+      let description=premium?product.description:removeExtendedArtworkCopy(product.description);
+      const cardDescription=premium?product.cardDescription:removeExtendedArtworkCopy(product.cardDescription);
+      if(premium&&!/extended artwork pricing/i.test(description))description=`${description}\n\nExtended artwork pricing: sizes 0–2 $24.99; sizes 3–5 $29.99. Final production feasibility will be confirmed during design review.`;
+      await env.DB.prepare("UPDATE shop_products SET artwork_tier=?,prices_json=?,description=?,card_description=?,updated_at=? WHERE product_id=?")
+        .bind(body.artworkTier,JSON.stringify(prices),description,cardDescription,time,body.productId).run();
+    }
     if(body.prices!==undefined){
       if(!Array.isArray(body.prices)||body.prices.length!==6||body.prices.some((value)=>!Number.isSafeInteger(value)||value<1||value>100000))return json({error:"Enter six valid USD prices in cents."},400);
-      // The approved size-based schedule is shared by all exclusive designs.
-      // Keeping it synchronized prevents LIFT and THREE STAR from drifting apart.
-      await env.DB.prepare("UPDATE shop_products SET prices_json=?,updated_at=?").bind(JSON.stringify(body.prices),time).run();
+      if(product.artworkTier!=="standard")return json({error:"Global Shop pricing applies to Standard products. Resolve the artwork tier before editing this product's pricing."},409);
+      await env.DB.prepare("UPDATE shop_products SET prices_json=?,updated_at=? WHERE artwork_tier='standard'").bind(JSON.stringify(body.prices),time).run();
     }
     if(body.variantId!==undefined){
       if(typeof body.variantId!=="string")return json({error:"Choose a valid product variant."},400);

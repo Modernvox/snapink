@@ -611,6 +611,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [publishProductName, setPublishProductName] = useState("");
   const [publishProductCardDescription, setPublishProductCardDescription] = useState("");
   const [publishProductDescription, setPublishProductDescription] = useState("");
+  const [publishArtworkTier, setPublishArtworkTier] = useState<"standard" | "premium">("standard");
   const [approveExtendedArtwork, setApproveExtendedArtwork] = useState(false);
   const [publishProductStatus, setPublishProductStatus] = useState("");
   const [publishingProduct, setPublishingProduct] = useState(false);
@@ -2157,11 +2158,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!studioAdminToken) return;
     if (!generatedShopImages) { alert("Generate product images first, then click Add to Shop."); return; }
     if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null);setGeneratedPhotoEntries([]); alert("The design changed after these images were generated. Generate the product images again before publishing."); return; }
-    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setApproveExtendedArtwork(false);setShowPublishProduct(true);
+    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setPublishArtworkTier("standard");setApproveExtendedArtwork(false);setShowPublishProduct(true);
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
-    if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
+    if (publishArtworkTier==="premium" && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
     for(const entry of generatedPhotoEntries)form.append("galleryImages",entry.blob,entry.filename);
@@ -2177,7 +2178,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       }));
       for(const thumbnail of thumbnailFiles)form.append("galleryThumbnails",thumbnail.blob,thumbnail.name);
     } catch { /* Keep publishing functional when a browser cannot create WebP thumbnails. */ }
-    form.set("extendedArtwork", artworkIsExtended ? "true" : "false");form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
+    form.set("artworkTier",publishArtworkTier);form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkTopExtensionMm",String(artworkStatus.topExtensionMm));form.set("artworkBottomExtensionMm",String(artworkStatus.bottomExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
     try {
       const response=await fetch("/api/admin/studio-shop-product",{method:"POST",headers:{Authorization:`Bearer ${studioAdminToken}`},body:form});const result=await response.json().catch(()=>null);
       if(!response.ok)throw new Error(result?.error||"Product could not be published.");
@@ -3909,10 +3910,11 @@ const SnapInkSleeveCustomizer = forwardRef<
           <label className="block text-sm">Short Shop card description (optional)<textarea maxLength={240} value={publishProductCardDescription} onChange={(event)=>setPublishProductCardDescription(event.target.value)} placeholder={`${publishProductName || "This design"} adds a distinctive, interchangeable detail to your compatible snapback.`} rows={2} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <label className="block text-sm">Full product description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder={`Make the ${publishProductName || "design"} your own with a SnapInk sleeve made for compatible snapback closures. Sleeve only; hat sold separately.`} rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
-          <p className="text-xs text-neutral-400">{artworkIsExtended ? "Extended design prices: sizes 0-2 $24.99 | sizes 3-5 $29.99" : "Sizes 0-3: $15.99 | Sizes 4-5: $18.99"}</p>
-          {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork — Pricing Review Required</strong><p>Premium design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={publishArtworkTier==="premium"} onChange={(event)=>{setPublishArtworkTier(event.target.checked?"premium":"standard");setApproveExtendedArtwork(false);}} /><span>Premium Extended Artwork</span></label>
+          <p className="text-xs text-neutral-400">{publishArtworkTier==="premium" ? "Premium design prices: sizes 0–2 $24.99 | sizes 3–5 $29.99" : "Standard pricing uses the current Shop schedule."}</p>
+          {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(artworkIsExtended&&!approveExtendedArtwork)||artworkInvalid} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(publishArtworkTier==="premium"&&(!approveExtendedArtwork||artworkInvalid))} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
       </div>}
     </>
