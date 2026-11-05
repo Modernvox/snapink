@@ -1,10 +1,15 @@
 import { bearer, json, now } from "../../_lib/orders.js";
 import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy } from "../../_lib/shop.js";
 
-const defaultCardDescription = (name) => `${name} features custom artwork on a SnapInk sleeve for compatible snapback hats.`;
-const defaultDescription = (name) => `${name} brings a distinctive SnapInk detail to compatible snapback hats. Choose your sleeve size and color to complete your look. Sleeve only; hat sold separately.`;
+const defaultCardDescription = (name) => `${name} is a premium swappable snapback hat strap featuring custom artwork on a SnapInk Sleeve™.`;
+const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
 const cleanCardDescription = (value) => String(value||"").replace(/!\[([^\]]*)\]\([^)]+\)/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/<[^>]*>/g,"").replace(/^\s*(?:[-*+]|\d+\.)\s+/gm,"").replace(/[`*_~>#]/g,"").replace(/[\r\n\t]+/g," ").replace(/\s+/g," ").trim();
 const safeSlug = (name) => name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,70).replace(/-+$/g,"");
+const productTitle = (value) => {
+  const suffix = /\s+(?:swappable\s+)?snapback\s+hat\s+strap(?:\s+(?:sleeve|cover))?(?:\s*[–—-]\s*(?:swappable\s+cover|snapink\s+sleeve™?))?\s*$/i;
+  const design = String(value || "").trim().replace(suffix, "").trim();
+  return `${design} Swappable Snapback Hat Strap – SnapInk Sleeve™`;
+};
 
 export async function onRequestGet({request,env}) {
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN))return json({error:"Unauthorized"},401);
@@ -15,7 +20,7 @@ export async function onRequestPost({request,env}) {
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN)) return json({error:"Unauthorized"},401);
   if(!env.DB||!env.PRIVATE_ASSETS) return json({error:"Shop storage is unavailable. Confirm the shop database and private asset bucket are configured."},503);
   let form; try { form=await request.formData(); } catch { return json({error:"Product details or images are invalid."},400); }
-  const name=String(form.get("name")||"").trim();
+  const name=productTitle(form.get("name"));
   let cardDescription=cleanCardDescription(form.get("cardDescription"))||defaultCardDescription(name);
   let description=String(form.get("description")||"").trim()||defaultDescription(name);
   const style=String(form.get("style")||""), color=String(form.get("color")||"").trim();
@@ -42,7 +47,6 @@ export async function onRequestPost({request,env}) {
   const slug=safeSlug(name);
   const standardPrices=await readStandardShopPrices(env.DB);
   const prices=premiumArtwork?PREMIUM_EXTENDED_SHOP_PRICES:standardPrices;
-  if(premiumArtwork&&!/extended artwork pricing/i.test(description))description=`${description}\n\nExtended artwork pricing: sizes 0–2 $24.99; sizes 3–5 $29.99. Final production feasibility will be confirmed during design review.`;
   const existing=await env.DB.prepare("SELECT product_id AS productId,slug FROM shop_products WHERE slug=?").bind(slug).first();
   if(existing)return json({ok:true,duplicate:true,product:{productId:existing.productId,slug:existing.slug,url:`/shop/${existing.slug}`}});
   const productId=`studio-${crypto.randomUUID()}`, time=now(), objectKeys=files.map((_,i)=>`shop-products/${productId}/${i+1}.png`),thumbnailKeys=thumbnails.map((_,i)=>`shop-products/${productId}/${i+1}-thumb.webp`),storedKeys=[...objectKeys,...thumbnailKeys];

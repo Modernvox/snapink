@@ -4,7 +4,7 @@ import { applyShopProductThumbnail, getSiteImageRendition } from "./utils/imageR
 const root=document.querySelector("#shop-products");
 const error=document.querySelector("#shop-error");
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const jsonLd=(products)=>({"@context":"https://schema.org","@type":"ItemList",name:"SnapInk Exclusive Sleeves",itemListElement:products.map((product,index)=>({"@type":"ListItem",position:index+1,url:`https://snapbacksleeves.com/shop/${product.slug}`,item:{"@type":"Product",name:`SnapInk ${product.name} Sleeve`,description:product.cardDescription||product.description,image:`https://snapbacksleeves.com${getSiteImageRendition(product.imageUrl)?.src||product.imageUrl}`,brand:{"@type":"Brand",name:"SnapInk"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:(Math.min(...product.prices)/100).toFixed(2),highPrice:(Math.max(...product.prices)/100).toFixed(2),url:`https://snapbacksleeves.com/shop/${product.slug}`}}}))});
+const jsonLd=(products)=>({"@context":"https://schema.org","@type":"ItemList",name:"Premium Swappable Snapback Hat Straps by SnapInk",itemListElement:products.map((product,index)=>({"@type":"ListItem",position:index+1,url:`https://snapbacksleeves.com/shop/${product.slug}`,item:{"@type":"Product",name:product.name,description:product.description,image:`https://snapbacksleeves.com${getSiteImageRendition(product.imageUrl)?.src||product.imageUrl}`,sku:product.productId,brand:{"@type":"Brand",name:"SnapInk"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:(Math.min(...product.prices)/100).toFixed(2),highPrice:(Math.max(...product.prices)/100).toFixed(2),availability:"https://schema.org/InStock",url:`https://snapbacksleeves.com/shop/${product.slug}`}}}))});
 
 async function loadShopPage(){
 try{
@@ -14,7 +14,7 @@ try{
   for(const product of products){
     if(!product.variants?.length)continue;
     const variant=product.variants[0],card=document.createElement("article");card.className="shop-product-card";
-    const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} SnapInk sleeve details`);
+    const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} details`);
     const image=document.createElement("img");applyShopProductThumbnail(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width ||= 1536;image.height ||= 1024;image.loading="lazy";image.decoding="async";
     const body=document.createElement("div");body.className="shop-product-card-body";
     const name=document.createElement("h3");name.textContent=product.name;

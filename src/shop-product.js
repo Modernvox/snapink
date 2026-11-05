@@ -17,6 +17,17 @@ function renderProductDescription(value){
   flushParagraph();flushList();return fragment;
 }
 function normalizeProductGallery(value){let gallery=value;for(let depth=0;depth<2&&typeof gallery==="string";depth++){try{gallery=JSON.parse(gallery)}catch{return[]}}return Array.isArray(gallery)?gallery.filter((image)=>image&&typeof image==="object"&&!Array.isArray(image)&&typeof image.url==="string"&&image.url.trim()):[]}
+function setMeta(selector,attribute,value){let element=document.head.querySelector(selector);if(!element){element=document.createElement("meta");const [key,name]=attribute;element.setAttribute(key,name);document.head.append(element)}element.content=value}
+function setProductSeo(product){
+  const canonical=`https://snapbacksleeves.com/shop/${product.slug}`,fullDescription=(product.description||product.cardDescription||`${product.name} is a premium swappable snapback hat strap by SnapInk.`).replace(/\*\*|__|[`*_>#]/g,"").replace(/\s+/g," ").trim(),description=fullDescription.slice(0,300),image=product.imageUrl.startsWith("http")?product.imageUrl:`https://snapbacksleeves.com${product.imageUrl}`;
+  document.title=`${product.name} | SnapInk`;
+  let link=document.head.querySelector('link[rel="canonical"]');if(!link){link=document.createElement("link");link.rel="canonical";document.head.append(link)}link.href=canonical;
+  setMeta('meta[name="description"]',["name","description"],description);
+  setMeta('meta[property="og:type"]',["property","og:type"],"product");setMeta('meta[property="og:title"]',["property","og:title"],product.name);setMeta('meta[property="og:description"]',["property","og:description"],description);setMeta('meta[property="og:url"]',["property","og:url"],canonical);setMeta('meta[property="og:image"]',["property","og:image"],image);
+  setMeta('meta[name="twitter:card"]',["name","twitter:card"],"summary_large_image");setMeta('meta[name="twitter:title"]',["name","twitter:title"],product.name);setMeta('meta[name="twitter:description"]',["name","twitter:description"],description);setMeta('meta[name="twitter:image"]',["name","twitter:image"],image);
+  const prices=product.prices||[],available=(product.variants||[]).some((variant)=>variant.availableSizes?.length),schema={"@context":"https://schema.org","@type":"Product",name:product.name,description:fullDescription,image,sku:product.productId,url:canonical,brand:{"@type":"Brand",name:"SnapInk"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:(Math.min(...prices)/100).toFixed(2),highPrice:(Math.max(...prices)/100).toFixed(2),availability:`https://schema.org/${available?"InStock":"OutOfStock"}`,url:canonical}};
+  let script=document.head.querySelector('script[data-product-schema]');if(!script){script=document.createElement("script");script.type="application/ld+json";script.dataset.productSchema="true";document.head.append(script)}script.textContent=JSON.stringify(schema);
+}
 function createShippingMessage(){
   const message=document.createElement("p"),icon=document.createElementNS("http://www.w3.org/2000/svg","svg");
   message.className="shop-shipping-message";icon.setAttribute("viewBox","0 0 24 24");icon.setAttribute("width","20");icon.setAttribute("height","20");icon.setAttribute("aria-hidden","true");icon.setAttribute("fill","none");icon.setAttribute("stroke","#d8bf86");icon.setAttribute("stroke-width","1.8");icon.setAttribute("stroke-linecap","round");icon.setAttribute("stroke-linejoin","round");
@@ -31,7 +42,7 @@ function openLightbox(src,alt,label){
 async function loadShopProduct(){
 try{
   const response=await fetch("/api/shop/products",{cache:"no-store"}),data=await response.json().catch(()=>null);if(!response.ok||!Array.isArray(data?.products))throw new Error(data?.error||"Product information is temporarily unavailable.");
-  const slug=location.pathname.replace(/\/+$/," ").trim().split("/").pop(),product=data.products.find((entry)=>entry.slug===slug);if(!product)throw new Error("This exclusive design is not currently available.");
+  const slug=location.pathname.replace(/\/+$/," ").trim().split("/").pop(),product=data.products.find((entry)=>entry.slug===slug);if(!product)throw new Error("This exclusive design is not currently available.");setProductSeo(product);
   mountShopCart(data.products);
   const variants=product.variants||[];let selectedVariant=variants[0];if(!selectedVariant)throw new Error("This product is not currently available.");let availableSizes=selectedVariant.availableSizes;const productGallery=normalizeProductGallery(product.gallery),galleryItems=Array.isArray(productGallery)?productGallery:[];
   const gallery=[{src:product.imageUrl,alt:product.imageAlt,label:"Installed on a snapback"},...galleryItems.map((image,index)=>({src:image.url,alt:image.alt,label:image.label||`Product view ${index+2}`})),...(!galleryItems.length&&selectedVariant.sleeveImageUrl?[{src:selectedVariant.sleeveImageUrl,alt:selectedVariant.sleeveImageAlt,label:"Sleeve only"}]:[])].filter((image)=>image.src);
