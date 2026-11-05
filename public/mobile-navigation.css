@@ -231,6 +231,11 @@
     transition: color .16s ease, background-color .16s ease;
   }
 
+  .snapink-mobile-panel a.snapink-mobile-panel__shop {
+    color: var(--si-accent);
+    font-weight: 800;
+  }
+
   .snapink-mobile-panel a:hover,
   .snapink-mobile-panel a[aria-current="page"] {
     color: var(--si-hover);

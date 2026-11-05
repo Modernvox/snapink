@@ -62,15 +62,17 @@
 
     const path = window.location.pathname.replace(/\/+$/, "") || "/";
     const isHome = path === "/" || path.toLowerCase() === "/index.html";
+    const isShop = path.toLowerCase() === "/shop" || path.toLowerCase().startsWith("/shop/");
     const isStudio = path.toLowerCase() === "/customize.html";
-    const pageKey = isHome ? "home" : path.toLowerCase();
+    const pageKey = isHome ? "home" : isShop ? "/shop" : path.toLowerCase();
     const rootPrefix = isHome ? "" : "/";
     const links = [
       { label: "Home", href: "/", key: "home" },
+      { label: "Shop", href: "/shop", key: "/shop" },
       { label: "How It Works", href: `${rootPrefix}#how` },
       { label: "Customization", href: `${rootPrefix}#customization` },
-      { label: "Studio", href: "/customize.html", key: "/customize.html" },
       { label: "Fit Guide", href: "/fit-guide.html", key: "/fit-guide.html" },
+      { label: "Studio", href: "/customize.html", key: "/customize.html" },
       { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
       { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
       { label: "Contact", href: "/contact.html", key: "/contact.html" },
@@ -78,7 +80,8 @@
     const activeKey = pageKey === "/" ? "home" : pageKey;
     const linkMarkup = links.map(({ label, href, key }) => {
       const active = key && key === activeKey;
-      return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+      const shopClass = key === "/shop" ? ' class="snapink-mobile-panel__shop"' : "";
+      return `<a href="${href}"${shopClass}${active ? ' aria-current="page"' : ""}>${label}</a>`;
     }).join("");
     const ctaHref = isStudio ? "#customizer-root" : "/customize.html#customizer-root";
 
