@@ -889,7 +889,7 @@
     border-color: rgba(255, 255, 255, .24);
     white-space: nowrap;
   }
-  .snapink-studio-customizer .snapink-desktop-basic-toolbar .snapink-toolbar-logo > .space-y-3 > .mt-2.flex.items-center.justify-between > button {
+  .snapink-studio-customizer .snapink-desktop-artwork-remove {
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
     opacity: 1 !important;

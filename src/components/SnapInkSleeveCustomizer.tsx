@@ -2519,7 +2519,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </>}
         {instance === "desktop" && logoName && <div className="snapink-basic-panel-filename-row mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
             <span className="snapink-basic-panel-light-text truncate">{logoName}</span>
-            <button type="button" onClick={clearLogo} className="rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800">Remove</button>
+            <button type="button" onClick={clearLogo} className="snapink-desktop-artwork-remove rounded-lg border border-neutral-700 px-2 py-1 text-neutral-200 hover:bg-neutral-800">Remove</button>
           </div>}
         {instance === "desktop" && logoRemovalMessage && (
           <div className="snapink-basic-panel-upload-status mt-2 space-y-2" aria-live="polite" aria-busy={logoRemovalBusy}>
