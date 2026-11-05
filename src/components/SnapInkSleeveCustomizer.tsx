@@ -581,6 +581,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
   const [publishProductName, setPublishProductName] = useState("");
+  const [publishProductCardDescription, setPublishProductCardDescription] = useState("");
   const [publishProductDescription, setPublishProductDescription] = useState("");
   const [approveExtendedArtwork, setApproveExtendedArtwork] = useState(false);
   const [publishProductStatus, setPublishProductStatus] = useState("");
@@ -2131,13 +2132,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!studioAdminToken) return;
     if (!generatedShopImages) { alert("Generate all three product images first, then click Add to Shop."); return; }
     if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null); alert("The design changed after these images were generated. Generate all three product images again before publishing."); return; }
-    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductDescription("");setPublishProductStatus("");setApproveExtendedArtwork(false);setShowPublishProduct(true);
+    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setApproveExtendedArtwork(false);setShowPublishProduct(true);
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
     if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
-    const form=new FormData();form.set("name",publishProductName);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
+    const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
     form.set("onHat",generatedShopImages.onHat,"on-hat.png");form.set("packaging",generatedShopImages.packaging,"packaging.png");form.set("onDesk",generatedShopImages.onDesk,"on-desk.png");
     form.set("extendedArtwork", artworkIsExtended ? "true" : "false");form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
     try {
@@ -3874,7 +3875,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         <form onSubmit={handlePublishProduct} className="w-full max-w-lg space-y-4 rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-neutral-100 shadow-2xl">
           <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Three generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">×</button></div>
           <label className="block text-sm">Product Name<input required maxLength={100} value={publishProductName} onChange={(event)=>setPublishProductName(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
-          <label className="block text-sm">Description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder="Custom SnapInk Sleeves™ add a personalized, interchangeable style to compatible standard plastic snapback closures. Sleeve only; hat sold separately." rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
+          <label className="block text-sm">Short Shop card description (optional)<textarea maxLength={240} value={publishProductCardDescription} onChange={(event)=>setPublishProductCardDescription(event.target.value)} placeholder={`${publishProductName || "This design"} adds a distinctive, interchangeable detail to your compatible snapback.`} rows={2} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
+          <label className="block text-sm">Full product description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder={`Make the ${publishProductName || "design"} your own with a SnapInk sleeve made for compatible snapback closures. Sleeve only; hat sold separately.`} rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
           <p className="text-xs text-neutral-400">{artworkIsExtended ? "Extended design prices: sizes 0-2 $24.99 | sizes 3-5 $29.99" : "Sizes 0-3: $15.99 | Sizes 4-5: $18.99"}</p>
           {artworkIsExtended && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Extended Artwork — Pricing Review Required</strong><p>Extension top {artworkStatus.topExtensionMm.toFixed(1)} mm / bottom {artworkStatus.bottomExtensionMm.toFixed(1)} mm; artwork {selectedArtworkWidthMm.toFixed(1)} × {selectedArtworkHeightMm.toFixed(1)} mm; height {artworkHeightScale}%; position X {productionDraftPosition.centerXmm.toFixed(1)} mm, Y {productionCenterYmm.toFixed(1)} mm. Extended design pricing: sizes 0-2 $24.99; sizes 3-5 $29.99. Final production feasibility will be confirmed during design review.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this extended design at the premium design price shown above, subject to production review.</span></label></div>}

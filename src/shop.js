@@ -4,7 +4,7 @@ import { applySiteImageRendition, getSiteImageRendition } from "./utils/imageRen
 const root=document.querySelector("#shop-products");
 const error=document.querySelector("#shop-error");
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const jsonLd=(products)=>({"@context":"https://schema.org","@type":"ItemList",name:"SnapInk Exclusive Sleeves",itemListElement:products.map((product,index)=>({"@type":"ListItem",position:index+1,url:`https://snapbacksleeves.com/shop/${product.slug}`,item:{"@type":"Product",name:`SnapInk ${product.name} Sleeve`,description:product.description,image:`https://snapbacksleeves.com${getSiteImageRendition(product.imageUrl)?.src||product.imageUrl}`,brand:{"@type":"Brand",name:"SnapInk"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:(Math.min(...product.prices)/100).toFixed(2),highPrice:(Math.max(...product.prices)/100).toFixed(2),url:`https://snapbacksleeves.com/shop/${product.slug}`}}}))});
+const jsonLd=(products)=>({"@context":"https://schema.org","@type":"ItemList",name:"SnapInk Exclusive Sleeves",itemListElement:products.map((product,index)=>({"@type":"ListItem",position:index+1,url:`https://snapbacksleeves.com/shop/${product.slug}`,item:{"@type":"Product",name:`SnapInk ${product.name} Sleeve`,description:product.cardDescription||product.description,image:`https://snapbacksleeves.com${getSiteImageRendition(product.imageUrl)?.src||product.imageUrl}`,brand:{"@type":"Brand",name:"SnapInk"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:(Math.min(...product.prices)/100).toFixed(2),highPrice:(Math.max(...product.prices)/100).toFixed(2),url:`https://snapbacksleeves.com/shop/${product.slug}`}}}))});
 
 async function loadShopPage(){
 try{
@@ -18,7 +18,7 @@ try{
     const image=document.createElement("img");applySiteImageRendition(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width ||= 1536;image.height ||= 1024;image.loading="lazy";image.decoding="async";
     const body=document.createElement("div");body.className="shop-product-card-body";
     const name=document.createElement("h3");name.textContent=product.name;
-    const desc=document.createElement("p");desc.textContent=product.description;
+    const desc=document.createElement("p");desc.textContent=product.cardDescription||product.description;
     const price=document.createElement("strong");price.className="shop-starting";price.textContent=`Starting at ${usd(Math.min(...product.prices))}`;
     const color=document.createElement("span");color.className="shop-color-chip";const dot=document.createElement("i");dot.className="shop-color-dot";dot.setAttribute("aria-hidden","true");color.append(dot,document.createTextNode(variant.name));
     const button=document.createElement("span");button.className="shop-view-button";button.textContent="VIEW DETAILS";

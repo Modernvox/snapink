@@ -14,8 +14,15 @@ export function parseShopGallery(value) {
 }
 
 export async function readShopProducts(db, { includeInactive = false } = {}) {
-  const rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
-    FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
+  let rows;
+  try {
+    rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,card_description AS cardDescription,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
+      FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
+  } catch (error) {
+    if (!/no such column:\s*card_description/i.test(error instanceof Error ? error.message : String(error))) throw error;
+    rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
+      FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
+  }
   const products = [];
   for (const row of rows.results || []) {
     const prices = parseShopJson(row.pricesJson, null);
@@ -32,7 +39,7 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
       variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,sleeveImageUrl:variant.sleeveImageUrl,sleeveImageAlt:variant.sleeveImageAlt,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
     }
     const galleryRow = await db.prepare("SELECT gallery_json AS galleryJson FROM shop_product_galleries WHERE product_id=?").bind(row.productId).first().catch(()=>null);
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,gallery:parseShopGallery(galleryRow?.galleryJson),prices,active:Boolean(row.active),variants});
+    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,gallery:parseShopGallery(galleryRow?.galleryJson),prices,active:Boolean(row.active),variants});
   }
   return products;
 }
