@@ -581,7 +581,6 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [productPhotoProgress, setProductPhotoProgress] = useState("");
   const [generatedShopImages, setGeneratedShopImages] = useState<Record<string,Blob>|null>(null);
   const [generatedPhotoEntries,setGeneratedPhotoEntries]=useState<{key:string;label:string;filename:string;blob:Blob}[]>([]);
-  const [shopImageSelection,setShopImageSelection]=useState<string[]>([]);
   const [generatedPreviewUrls,setGeneratedPreviewUrls]=useState<{key:string;url:string}[]>([]);
   useEffect(()=>{
     let cancelled=false;const urls:string[]=[];setGeneratedPreviewUrls([]);
@@ -605,7 +604,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return()=>{cancelled=true;urls.forEach(url=>URL.revokeObjectURL(url))};
   },[generatedPhotoEntries]);
   const productPhotoPreviewLabel=(key:string)=>({rear:"On-Hat",desk:"Sleeve",packaging:"Packaging",maleLifestyle:"Male Lifestyle",femaleLifestyle:"Female Lifestyle"} as Record<string,string>)[key]||key;
-  const generatedPhotoResults=<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{generatedPhotoEntries.map(entry=>{const preview=generatedPreviewUrls.find(item=>item.key===entry.key);return <article key={entry.key} className="w-full max-w-[160px] min-w-0 rounded border border-neutral-700 p-2"><div className="flex h-24 items-center justify-center overflow-hidden rounded bg-neutral-900 sm:h-28">{preview?<img className="block max-h-full max-w-full object-contain" src={preview.url} alt={`${productPhotoPreviewLabel(entry.key)} thumbnail`} />:<span className="text-xs text-neutral-500">Preparing thumbnail…</span>}</div><p className="truncate py-1 text-xs font-semibold" title={productPhotoPreviewLabel(entry.key)}>{productPhotoPreviewLabel(entry.key)}</p><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></article>})}</div>;
+  const generatedPhotoResults=<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{generatedPhotoEntries.map(entry=>{const preview=generatedPreviewUrls.find(item=>item.key===entry.key);return <article key={entry.key} className="w-full max-w-[160px] min-w-0 rounded border border-neutral-700 p-2"><div className="flex h-24 items-center justify-center overflow-hidden rounded bg-neutral-900 sm:h-28">{preview?<img className="block max-h-full max-w-full object-contain" src={preview.url} alt={`${productPhotoPreviewLabel(entry.key)} thumbnail`} />:<span className="text-xs text-neutral-500">Preparing thumbnail…</span>}</div><p className="truncate py-1 text-xs font-semibold" title={productPhotoPreviewLabel(entry.key)}>{productPhotoPreviewLabel(entry.key)}</p><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></article>})}</div>;
   const [generatedShopImageSignature, setGeneratedShopImageSignature] = useState("");
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
@@ -2133,7 +2132,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         entries.push({key,label:labels[key],filename,blob});
       }
       setGeneratedPreviewUrls([]);setGeneratedPhotoEntries(entries);setGeneratedShopImages(Object.fromEntries(entries.map(x=>[x.key,x.blob])));
-      setShopImageSelection(entries.map(x=>x.key));setGeneratedShopImageSignature(shopImageDesignSignature());
+      setGeneratedShopImageSignature(shopImageDesignSignature());
       if(entries.length===1)downloadPNGBlob(entries[0].blob,entries[0].filename);
       else {const zip=await createProductPhotoZip(entries);downloadProductPhotoZip(zip,`snapink-${variant}-${slug}-product-images.zip`);}
     } catch (error) {
@@ -2165,10 +2164,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
-    const selectedEntries=shopImageSelection.map(key=>generatedPhotoEntries.find(x=>x.key===key)).filter((entry):entry is (typeof generatedPhotoEntries)[number]=>Boolean(entry));
-    for(const entry of selectedEntries)form.append("galleryImages",entry.blob,entry.filename);
+    for(const entry of generatedPhotoEntries)form.append("galleryImages",entry.blob,entry.filename);
     try {
-      const thumbnailFiles=await Promise.all(selectedEntries.map(async(entry)=>{
+      const thumbnailFiles=await Promise.all(generatedPhotoEntries.map(async(entry)=>{
         const bitmap=await createImageBitmap(entry.blob),scale=Math.min(1,480/bitmap.width),canvas=document.createElement("canvas");
         canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
         const context=canvas.getContext("2d");if(!context){bitmap.close();throw new Error("Thumbnail canvas is unavailable.")}
