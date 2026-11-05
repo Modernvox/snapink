@@ -574,10 +574,21 @@ const SnapInkSleeveCustomizer = forwardRef<
   useEffect(() => { if (fixedArtworkColor && /^#[0-9A-Fa-f]{6}$/.test(fixedArtworkColor)) setFill(fixedArtworkColor); }, [fixedArtworkColor]);
   const [exportScale, setExportScale] = useState(2);
   const [isGeneratingProductImage, setIsGeneratingProductImage] = useState(false);
-  const [productPhotoChoice, setProductPhotoChoice] = useState<"all" | "rear" | "packaging" | "desk">("all");
+  type ProductPhotoKey = "rear" | "packaging" | "desk" | "maleLifestyle" | "femaleLifestyle";
+  const productPhotoOptions: {key: ProductPhotoKey; label: string}[] = [{key:"rear",label:"On-Hat Product Image"},{key:"packaging",label:"Packaging Product Image"},{key:"desk",label:"On-Desk Product Image"},{key:"maleLifestyle",label:"Male Lifestyle Image"},{key:"femaleLifestyle",label:"Female Lifestyle Image"}];
+  const [productPhotoChoice, setProductPhotoChoice] = useState<ProductPhotoKey[]>(() => { try { const v=JSON.parse(localStorage.getItem("snapink.productPhotoSelections.v1")||"null"); return Array.isArray(v)?v.filter((x):x is ProductPhotoKey=>["rear","packaging","desk","maleLifestyle","femaleLifestyle"].includes(x)): ["rear","packaging","desk"]; } catch { return ["rear","packaging","desk"]; } });
+  const [lifestylePreview, setLifestylePreview] = useState<"maleLifestyle"|"femaleLifestyle">("maleLifestyle");
+  const [lifestyleCalibration, setLifestyleCalibration] = useState(()=>{try{return JSON.parse(localStorage.getItem("snapink.lifestyleCalibration.v1")||"null")||{x:530,y:263,width:370,height:100,rotation:0,perspective:0};}catch{return{x:530,y:263,width:370,height:100,rotation:0,perspective:0};}});
+  const [lifestyleLivePreview,setLifestyleLivePreview]=useState("");
   const [productPhotoProgress, setProductPhotoProgress] = useState("");
-  const [generatedShopImages, setGeneratedShopImages] = useState<{onHat:Blob;packaging:Blob;onDesk:Blob}|null>(null);
+  const [generatedShopImages, setGeneratedShopImages] = useState<Record<string,Blob>|null>(null);
+  const [generatedPhotoEntries,setGeneratedPhotoEntries]=useState<{key:string;label:string;filename:string;blob:Blob}[]>([]);
+  const [shopImageSelection,setShopImageSelection]=useState<string[]>([]);
+  const generatedPreviewUrls=useMemo(()=>generatedPhotoEntries.map(entry=>({key:entry.key,url:URL.createObjectURL(entry.blob)})),[generatedPhotoEntries]);
+  useEffect(()=>()=>generatedPreviewUrls.forEach(item=>URL.revokeObjectURL(item.url)),[generatedPreviewUrls]);
   const [generatedShopImageSignature, setGeneratedShopImageSignature] = useState("");
+  const lifestylePreviewSignature=JSON.stringify({design:shopImageDesignSignature(),lifestylePreview,lifestyleCalibration});
+  useEffect(()=>{let active=true;let objectUrl="";(async()=>{try{const sleeve=await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:REAR_PRODUCT_PHOTO.scale});const sleeveUrl=URL.createObjectURL(sleeve);try{const image=await loadStudioImage(sleeveUrl);const result=await renderLifestyleProductPhoto(lifestylePreview,image);if(active){objectUrl=URL.createObjectURL(result);setLifestyleLivePreview(objectUrl);}}finally{URL.revokeObjectURL(sleeveUrl);}}catch{}})();return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[lifestylePreviewSignature]);
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
   const [publishProductName, setPublishProductName] = useState("");
@@ -1611,7 +1622,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; scale?: number } = {}): Promise<Blob> {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
       throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
@@ -1620,6 +1631,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
+    if(options.artworkOnly)exportSvg.querySelectorAll('[data-product-image="true"]').forEach(node=>node.remove());
     exportSvg.removeAttribute("style");
     const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
@@ -1978,7 +1990,26 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function shopImageDesignSignature() {
-    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,sleeveSize});
+    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,sleeveSize,lifestyleCalibration});
+  }
+
+  async function renderLifestyleProductPhoto(key:"maleLifestyle"|"femaleLifestyle", artworkImage:HTMLImageElement) {
+    const master=await loadStudioImage(`/images/product_images/${key==="maleLifestyle"?"male_master.png":"female_master.png"}`);
+    if(master.naturalWidth!==1448||master.naturalHeight!==1086) throw new Error("The approved lifestyle master must remain 4:3.");
+    const canvas=document.createElement("canvas");canvas.width=master.naturalWidth;canvas.height=master.naturalHeight;
+    const ctx=canvas.getContext("2d");if(!ctx)throw new Error("The lifestyle image canvas is unavailable.");
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(master,0,0);
+    // Female master has a small fixed photo registration offset; the admin controls remain one shared male-master calibration.
+    const registration=key==="femaleLifestyle"?{x:5,y:12,width:-2,height:-5}:{x:0,y:0,width:0,height:0};
+    const c=lifestyleCalibration,x=c.x+registration.x,y=c.y+registration.y,w=c.width+registration.width,h=c.height+registration.height;
+    const angle=(Number(c.rotation)||0)*Math.PI/180,inset=w*Math.max(-0.8,Math.min(0.8,Number(c.perspective)||0))/200;
+    const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),y+h/2+px*Math.sin(angle)+py*Math.cos(angle)];
+    const target=[rotatePoint(-w/2+inset,-h/2),rotatePoint(w/2-inset,-h/2),rotatePoint(w/2,h/2),rotatePoint(-w/2,h/2)];
+    const source:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[artworkImage.naturalWidth,0],[artworkImage.naturalWidth,artworkImage.naturalHeight],[0,artworkImage.naturalHeight]];
+    const drawTriangle=(ids:[number,number,number])=>{const [i0,i1,i2]=ids,[sx0,sy0]=source[i0],[sx1,sy1]=source[i1],[sx2,sy2]=source[i2],[dx0,dy0]=target[i0],[dx1,dy1]=target[i1],[dx2,dy2]=target[i2];const det=sx0*(sy1-sy2)+sx1*(sy2-sy0)+sx2*(sy0-sy1);if(!det)return;const a=(dx0*(sy1-sy2)+dx1*(sy2-sy0)+dx2*(sy0-sy1))/det,cx=(dx0*(sx2-sx1)+dx1*(sx0-sx2)+dx2*(sx1-sx0))/det,e=(dx0*(sx1*sy2-sx2*sy1)+dx1*(sx2*sy0-sx0*sy2)+dx2*(sx0*sy1-sx1*sy0))/det,b=(dy0*(sy1-sy2)+dy1*(sy2-sy0)+dy2*(sy0-sy1))/det,d=(dy0*(sx2-sx1)+dy1*(sx0-sx2)+dy2*(sx1-sx0))/det,f=(dy0*(sx1*sy2-sx2*sy1)+dy1*(sx2*sy0-sx0*sy2)+dy2*(sx0*sy1-sx1*sy0))/det;ctx.save();ctx.beginPath();ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);ctx.lineTo(dx2,dy2);ctx.closePath();ctx.clip();ctx.transform(a,b,cx,d,e,f);ctx.drawImage(artworkImage,0,0);ctx.restore();};
+    // Two clipped affine triangles map artwork through the shared four-corner perspective quad.
+    drawTriangle([0,1,2]);drawTriangle([0,2,3]);
+    return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Lifestyle PNG encoding failed.")),"image/png"));
   }
 
   async function renderRearProductPhoto(sleeveImage: HTMLImageElement, productStyle: SleeveVariant = variant) {
@@ -2041,7 +2072,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   async function handleGenerateProductImage() {
-    if (!enableProductPhotoGeneration || isGeneratingProductImage) return;
+    if (!enableProductPhotoGeneration || isGeneratingProductImage || productPhotoChoice.length===0) return;
     if (artworkInvalid) {
       alert(`Artwork exceeds ${artworkInvalidBoundary}. Move or resize it before generating product images.`);
       return;
@@ -2049,67 +2080,30 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     try {
-      if (productPhotoChoice === "desk") {
-        setProductPhotoProgress("Generating On-Desk Product Image…");
-        let deskPNG: Blob;
-        try { deskPNG = await renderDeskProductPhoto(); }
-        catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
-        downloadPNGBlob(deskPNG, `snapink-${variant}-${productPhotoSlug()}-on-desk.png`);
-        return;
+      const slug=productPhotoSlug();
+      sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale}));
+      const sleeveImage=await loadStudioImage(sleeveUrl);
+      const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
+      const needsSleeve=productPhotoChoice.some(key=>key==="rear"||key==="packaging"||key==="desk");
+      let artworkImage:HTMLImageElement|null=null;
+      if(productPhotoChoice.some(key=>key==="maleLifestyle"||key==="femaleLifestyle")){const artUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:REAR_PRODUCT_PHOTO.scale}));try{artworkImage=await loadStudioImage(artUrl);}finally{URL.revokeObjectURL(artUrl);}}
+      if(!needsSleeve){URL.revokeObjectURL(sleeveUrl);sleeveUrl=null;}
+      const entries:{key:string;label:string;filename:string;blob:Blob}[]=[];
+      for(const [i,key] of productPhotoChoice.entries()) {
+        setProductPhotoProgress(`Generating ${labels[key]} (${i+1} of ${productPhotoChoice.length})…`);
+        let blob:Blob;
+        if(key==="rear")blob=await renderRearProductPhoto(sleeveImage,variant);
+        else if(key==="packaging")blob=await renderPackagingProductImage(sleeveImage);
+        else if(key==="desk")blob=await renderDeskProductPhoto(variant);
+        else {if(!artworkImage)throw new Error("Studio artwork could not be prepared.");blob=await renderLifestyleProductPhoto(key,artworkImage);}
+        const imageSlug:Record<ProductPhotoKey,string>={rear:"on-hat",packaging:"packaging",desk:"on-desk",maleLifestyle:"male-lifestyle",femaleLifestyle:"female-lifestyle"};
+        const filename=`snapink-${variant}-${slug}-${imageSlug[key]}.png`;
+        entries.push({key,label:labels[key],filename,blob});
       }
-      if (productPhotoChoice === "rear") {
-        setProductPhotoProgress("Generating On-Hat Product Image…");
-        let sleeveImage: HTMLImageElement;
-        let productPNG: Blob;
-        try {
-          sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }));
-          sleeveImage = await loadStudioImage(sleeveUrl);
-          productPNG = await renderRearProductPhoto(sleeveImage, variant);
-        }
-        catch (error) { throw productPhotoStageError("On-Hat Product Image", error); }
-        const slug = productPhotoSlug();
-        downloadPNGBlob(productPNG, `snapink-${variant}-${slug}-rear.png`);
-        return;
-      }
-      if (productPhotoChoice === "packaging") {
-        setProductPhotoProgress("Generating Packaging Product Image…");
-        try { sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale })); }
-        catch (error) { throw productPhotoStageError("Packaging Product Image", error); }
-        let sleeveImage: HTMLImageElement;
-        let packagingPNG: Blob;
-        try {
-          sleeveImage = await loadStudioImage(sleeveUrl);
-          packagingPNG = await renderPackagingProductImage(sleeveImage);
-        }
-        catch (error) { throw productPhotoStageError("Packaging Product Image", error); }
-        const slug = productPhotoSlug();
-        downloadPNGBlob(packagingPNG, `snapink-${variant}-${slug}-packaging.png`);
-        return;
-      }
-
-      const entries: { filename: string; blob: Blob }[] = [];
-      setProductPhotoProgress("Generating On-Hat Product Image (1 of 3)…");
-      try {
-        sleeveUrl = URL.createObjectURL(await renderStudioPNGBlob({ sleeveOnly: true, scale: REAR_PRODUCT_PHOTO.scale }));
-        const sleeveImage = await loadStudioImage(sleeveUrl);
-        entries.push({ filename: variant === "billboard" ? "SnapInk_On_Hat.png" : "SnapInk_Standard_On_Hat.png", blob: await renderRearProductPhoto(sleeveImage, variant) });
-
-        setProductPhotoProgress("Generating Packaging Product Image (2 of 3)…");
-        entries.push({ filename: variant === "billboard" ? "SnapInk_Packaging.png" : "SnapInk_Standard_Packaging.png", blob: await renderPackagingProductImage(sleeveImage) });
-      } catch (error) {
-        throw productPhotoStageError(entries.length === 0 ? "On-Hat Product Image" : "Packaging Product Image", error);
-      }
-      setProductPhotoProgress("Generating On-Desk Product Image (3 of 3)…");
-      try { entries.push({ filename: variant === "billboard" ? "SnapInk_On_Desk.png" : "SnapInk_Standard_On_Desk.png", blob: await renderDeskProductPhoto(variant) }); }
-      catch (error) { throw productPhotoStageError("On-Desk Product Image", error); }
-
-      setProductPhotoProgress("Packaging all three PNGs into a ZIP…");
-      let zip: Blob;
-      try { zip = await createProductPhotoZip(entries); }
-      catch (error) { throw new Error(`Could not package the three product images into a ZIP: ${error instanceof Error ? error.message : String(error)}`); }
-      setGeneratedShopImages({onHat:entries[0].blob,packaging:entries[1].blob,onDesk:entries[2].blob});
-      setGeneratedShopImageSignature(shopImageDesignSignature());
-      downloadProductPhotoZip(zip, variant === "billboard" ? "SnapInk_Product_Images.zip" : "SnapInk_Standard_Product_Images.zip");
+      setGeneratedPhotoEntries(entries);setGeneratedShopImages(Object.fromEntries(entries.map(x=>[x.key,x.blob])));
+      setShopImageSelection(entries.map(x=>x.key));setGeneratedShopImageSignature(shopImageDesignSignature());
+      if(entries.length===1)downloadPNGBlob(entries[0].blob,entries[0].filename);
+      else {const zip=await createProductPhotoZip(entries);downloadProductPhotoZip(zip,`snapink-${variant}-${slug}-product-images.zip`);}
     } catch (error) {
       console.error("SnapInk product image could not be generated.", error);
       alert(error instanceof Error ? error.message : "The product image could not be generated. Please try again.");
@@ -2120,7 +2114,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     }
   }
   async function handleStudioAdminAccess() {
-    if (!generatedShopImages) { alert("Generate all three product images first, then click Add to Shop."); return; }
+    if (!generatedShopImages) { alert("Generate product images first, then click Add to Shop."); return; }
     const token=window.prompt("Administrator token")||"";if(!token)return;
     try {
       const response=await fetch("/api/admin/studio-shop-product",{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
@@ -2130,8 +2124,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
   function handleAddToShop() {
     if (!studioAdminToken) return;
-    if (!generatedShopImages) { alert("Generate all three product images first, then click Add to Shop."); return; }
-    if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null); alert("The design changed after these images were generated. Generate all three product images again before publishing."); return; }
+    if (!generatedShopImages) { alert("Generate product images first, then click Add to Shop."); return; }
+    if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null);setGeneratedPhotoEntries([]); alert("The design changed after these images were generated. Generate the product images again before publishing."); return; }
     setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setApproveExtendedArtwork(false);setShowPublishProduct(true);
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -2139,7 +2133,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (artworkIsExtended && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Extended artwork needs explicit admin pricing approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
-    form.set("onHat",generatedShopImages.onHat,"on-hat.png");form.set("packaging",generatedShopImages.packaging,"packaging.png");form.set("onDesk",generatedShopImages.onDesk,"on-desk.png");
+    for(const key of shopImageSelection){const entry=generatedPhotoEntries.find(x=>x.key===key);if(entry)form.append("galleryImages",entry.blob,entry.filename);}
     form.set("extendedArtwork", artworkIsExtended ? "true" : "false");form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
     try {
       const response=await fetch("/api/admin/studio-shop-product",{method:"POST",headers:{Authorization:`Bearer ${studioAdminToken}`},body:form});const result=await response.json().catch(()=>null);
@@ -3490,22 +3484,20 @@ const SnapInkSleeveCustomizer = forwardRef<
                 Download PNG preview
               </button>
               {enableProductPhotoGeneration && <>
-                <label className="block text-xs text-neutral-400">Product image option
-                  <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
-                    <option value="all">All 3 Product Images (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
-                  </select>
-                </label>
+                <fieldset className="space-y-1"><legend className="text-xs text-neutral-400">Product images</legend>{productPhotoOptions.map(option=><label key={option.key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={productPhotoChoice.includes(option.key)} onChange={e=>{const next=e.target.checked?[...productPhotoChoice,option.key]:productPhotoChoice.filter(x=>x!==option.key);setProductPhotoChoice(next);localStorage.setItem("snapink.productPhotoSelections.v1",JSON.stringify(next));}} />{option.label}</label>)}</fieldset>
                 <button
                   type="button"
                   onClick={handleGenerateProductImage}
-                  disabled={isGeneratingProductImage}
+                  disabled={isGeneratingProductImage||productPhotoChoice.length===0}
                   title="Generate the selected product image."
                   className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
                 </button>
                 {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-                <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style · Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
+                <div className="space-y-2 rounded-lg border border-neutral-700 p-2"><label className="text-xs">Lifestyle preview <select value={lifestylePreview} onChange={e=>setLifestylePreview(e.target.value as typeof lifestylePreview)} className="ml-2 rounded bg-neutral-800 p-1"><option value="maleLifestyle">Male</option><option value="femaleLifestyle">Female</option></select></label><img className="w-full rounded" src={lifestyleLivePreview||`/images/product_images/${lifestylePreview==="maleLifestyle"?"male_master.png":"female_master.png"}`} alt={`${lifestylePreview} lifestyle preview`} /><div className="grid grid-cols-2 gap-2">{(["x","y","width","height","rotation","perspective"] as const).map(k=><label key={k} className="text-xs capitalize">{k}<input type="number" value={lifestyleCalibration[k]??0} onChange={e=>{const v={...lifestyleCalibration,[k]:Number(e.target.value)};setLifestyleCalibration(v);localStorage.setItem("snapink.lifestyleCalibration.v1",JSON.stringify(v));}} className="mt-1 w-full rounded bg-neutral-800 px-2 py-1" /></label>)}</div><p className="text-xs text-neutral-500">Shared calibration applies to both masters.</p></div>
+                {generatedPhotoEntries.map(entry=><div key={entry.key} className="rounded border border-neutral-700 p-2"><img className="w-full rounded" src={generatedPreviewUrls.find(item=>item.key===entry.key)?.url} alt={entry.label} /><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></div>)}
+                <p className="text-xs text-neutral-400">Choose any image combination. Multiple images download as a ZIP.</p>
                 <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
               </>}
 
@@ -3779,22 +3771,20 @@ const SnapInkSleeveCustomizer = forwardRef<
               Download PNG preview
             </button>
             {enableProductPhotoGeneration && <>
-              <label className="block text-xs text-neutral-400">Product image option
-                <select aria-label="Product image option" className="mt-1 w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100" value={productPhotoChoice} onChange={(event) => setProductPhotoChoice(event.target.value as typeof productPhotoChoice)}>
-                  <option value="all">All 3 Product Images (ZIP)</option><option value="rear">On-Hat Product Image</option><option value="packaging">Packaging Product Image</option><option value="desk">On-Desk Product Image</option>
-                </select>
-              </label>
+              <fieldset className="space-y-1"><legend className="text-xs text-neutral-400">Product images</legend>{productPhotoOptions.map(option=><label key={option.key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={productPhotoChoice.includes(option.key)} onChange={e=>{const next=e.target.checked?[...productPhotoChoice,option.key]:productPhotoChoice.filter(x=>x!==option.key);setProductPhotoChoice(next);localStorage.setItem("snapink.productPhotoSelections.v1",JSON.stringify(next));}} />{option.label}</label>)}</fieldset>
               <button
                 type="button"
                 onClick={handleGenerateProductImage}
-                disabled={isGeneratingProductImage}
+                disabled={isGeneratingProductImage||productPhotoChoice.length===0}
                 title="Generate the selected product image."
                 className="w-full rounded-xl border border-si-accent px-4 py-3 font-black text-si-accent hover:bg-si-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGeneratingProductImage ? "Generating Product Image…" : "Generate Product Image"}
               </button>
               {isGeneratingProductImage && productPhotoProgress && <p role="status" aria-live="polite" className="text-xs text-neutral-300">{productPhotoProgress}</p>}
-              <p className="text-xs text-neutral-400">{variant === "standard" ? "Standard" : "Billboard"} style · Downloads {productPhotoChoice === "desk" ? "the full-resolution desk product image PNG." : productPhotoChoice === "rear" ? "the On-Hat product image PNG." : productPhotoChoice === "packaging" ? "the Packaging product image PNG." : "all three product images in one ZIP."}</p>
+              <div className="space-y-2 rounded-lg border border-neutral-700 p-2"><label className="text-xs">Lifestyle preview <select value={lifestylePreview} onChange={e=>setLifestylePreview(e.target.value as typeof lifestylePreview)} className="ml-2 rounded bg-neutral-800 p-1"><option value="maleLifestyle">Male</option><option value="femaleLifestyle">Female</option></select></label><img className="w-full rounded" src={lifestyleLivePreview||`/images/product_images/${lifestylePreview==="maleLifestyle"?"male_master.png":"female_master.png"}`} alt={`${lifestylePreview} lifestyle preview`} /><div className="grid grid-cols-2 gap-2">{(["x","y","width","height","rotation","perspective"] as const).map(k=><label key={k} className="text-xs capitalize">{k}<input type="number" value={lifestyleCalibration[k]??0} onChange={e=>{const v={...lifestyleCalibration,[k]:Number(e.target.value)};setLifestyleCalibration(v);localStorage.setItem("snapink.lifestyleCalibration.v1",JSON.stringify(v));}} className="mt-1 w-full rounded bg-neutral-800 px-2 py-1" /></label>)}</div><p className="text-xs text-neutral-500">Shared calibration applies to both masters.</p></div>
+              {generatedPhotoEntries.map(entry=><div key={entry.key} className="rounded border border-neutral-700 p-2"><img className="w-full rounded" src={generatedPreviewUrls.find(item=>item.key===entry.key)?.url} alt={entry.label} /><label className="flex items-center gap-2 py-1 text-xs"><input type="checkbox" checked={shopImageSelection.includes(entry.key)} onChange={e=>setShopImageSelection(e.target.checked?[...shopImageSelection,entry.key]:shopImageSelection.filter(x=>x!==entry.key))} />Include in shop gallery</label><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></div>)}
+              <p className="text-xs text-neutral-400">Choose any image combination. Multiple images download as a ZIP.</p>
               <button type="button" onClick={studioAdminToken?handleAddToShop:handleStudioAdminAccess} disabled={isGeneratingProductImage || publishingProduct} className="w-full rounded-xl bg-si-accent px-4 py-3 font-black text-neutral-950 hover:bg-si-hover disabled:opacity-50">{studioAdminToken?"ADD TO SHOP":"ADMIN ACCESS"}</button>
             </>}
 
@@ -3873,7 +3863,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     )}
       {showPublishProduct && <div role="dialog" aria-modal="true" aria-label="Add product to shop" className="fixed inset-0 z-[10000] grid place-items-center bg-black/70 p-4" onClick={(event)=>{if(event.target===event.currentTarget)setShowPublishProduct(false);}}>
         <form onSubmit={handlePublishProduct} className="w-full max-w-lg space-y-4 rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-neutral-100 shadow-2xl">
-          <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Three generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">×</button></div>
+          <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Selected generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">×</button></div>
           <label className="block text-sm">Product Name<input required maxLength={100} value={publishProductName} onChange={(event)=>setPublishProductName(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <label className="block text-sm">Short Shop card description (optional)<textarea maxLength={240} value={publishProductCardDescription} onChange={(event)=>setPublishProductCardDescription(event.target.value)} placeholder={`${publishProductName || "This design"} adds a distinctive, interchangeable detail to your compatible snapback.`} rows={2} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <label className="block text-sm">Full product description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder={`Make the ${publishProductName || "design"} your own with a SnapInk sleeve made for compatible snapback closures. Sleeve only; hat sold separately.`} rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
