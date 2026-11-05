@@ -23,7 +23,10 @@
 
 /* Product details: readable Markdown blocks and a restrained responsive title. */
 .shop-product-info h1{max-width:18ch;font-size:clamp(2rem,3.6vw,2.85rem);line-height:1.08;letter-spacing:-.04em;overflow-wrap:anywhere}
-.shop-shipping-message{display:flex;align-items:center;gap:8px;margin:8px 0 14px;color:var(--shop-gold);font-size:13px;font-weight:800;line-height:1.4}.shop-shipping-message svg{width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}
+.shop-product-info .shop-price{margin-bottom:6px}
+.shop-product-info .shop-shipping-message{position:static!important;display:flex!important;flex-direction:row;align-items:center;gap:8px;width:max-content;max-width:100%;margin:0 0 8px;color:var(--shop-gold)!important;font-size:13px;font-weight:800;line-height:1.4}
+.shop-product-info .shop-shipping-message>svg{position:static!important;display:block!important;box-sizing:border-box;width:20px!important;height:20px!important;min-width:20px;max-width:20px;min-height:20px;max-height:20px;flex:0 0 20px;color:var(--shop-gold)!important;fill:none!important;stroke:var(--shop-gold)!important;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}
+.shop-product-info .shop-sleeve-only-note{position:static;margin:0 0 18px}
 .shop-product-info .shop-description{max-width:62ch}
 .shop-product-info .shop-description p{margin:0 0 1em}
 .shop-product-info .shop-description p:last-child{margin-bottom:0}
