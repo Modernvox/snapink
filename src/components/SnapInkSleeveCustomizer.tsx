@@ -1711,6 +1711,14 @@ const SnapInkSleeveCustomizer = forwardRef<
         addFilterPrimitive("feComposite", {
           in: "SourceGraphic", in2: "embossBevelBand", operator: "in", result: "embossBevelBase",
         });
+        // Tint only the narrow bevel surface so its white highlight has tonal
+        // separation from the solid front face at the final sleeve size.
+        addFilterPrimitive("feFlood", {
+          "flood-color": "#a8a8a8", "flood-opacity": "0.22", result: "embossBevelToneColor",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossBevelToneColor", in2: "embossBevelBand", operator: "in", result: "embossBevelTone",
+        });
         addFilterPrimitive("feOffset", {
           in: "SourceAlpha", dx: String(edgeX), dy: String(edgeY), result: "embossUpperLeftOffset",
         });
@@ -1730,13 +1738,13 @@ const SnapInkSleeveCustomizer = forwardRef<
           in: "embossBevelBand", in2: "embossLowerRightOffset", operator: "out", result: "embossLowerRightEdge",
         });
         addFilterPrimitive("feFlood", {
-          "flood-color": "#000000", "flood-opacity": "0.12", result: "embossLowerRightColor",
+          "flood-color": "#000000", "flood-opacity": "0.18", result: "embossLowerRightColor",
         });
         addFilterPrimitive("feComposite", {
           in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossBevelShade",
         });
         const finalMerge = addFilterPrimitive("feMerge", {});
-        for (const input of ["embossBevelBase", "embossFrontFace", "embossBevelShade", "embossBevelHighlight"]) {
+        for (const input of ["embossBevelBase", "embossBevelTone", "embossFrontFace", "embossBevelShade", "embossBevelHighlight"]) {
           const node = document.createElementNS("http://www.w3.org/2000/svg", "feMergeNode");
           node.setAttribute("in", input);
           finalMerge.appendChild(node);
