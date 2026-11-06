@@ -1654,13 +1654,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
-    // On-Desk maps the vector artwork through a perspective warp into the final
-    // photo. Rasterize embossed vectors above their destination pixel density
-    // so thin counters and bevel highlights survive that warp. Flat artwork
-    // keeps its existing raster path and appearance.
-    const artworkRasterScale = styleMode === "emboss" ? 2 : 1;
-    exportSvg.setAttribute("width", String(viewW * artworkRasterScale));
-    exportSvg.setAttribute("height", String((viewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * artworkRasterScale));
+    exportSvg.setAttribute("width", String(viewW));
+    exportSvg.setAttribute("height", String(viewH + topExtensionSvgUnits + bottomExtensionSvgUnits));
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
         const href = image.getAttribute("href");
@@ -1838,8 +1833,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
-    exportSvg.setAttribute("width", String(viewW));
-    exportSvg.setAttribute("height", String(viewH + topExtensionSvgUnits + bottomExtensionSvgUnits));
+    // Rasterize the desk-only embossed vector source above destination density
+    // before its perspective warp. Flat artwork keeps its original 1x path.
+    const artworkRasterScale = styleMode === "emboss" ? 2 : 1;
+    exportSvg.setAttribute("width", String(viewW * artworkRasterScale));
+    exportSvg.setAttribute("height", String((viewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * artworkRasterScale));
     if (styleMode === "emboss") {
       // Production relief is 0.8 mm; the generic Studio preview extrusion is
       // intentionally deeper. Thin only the copied sidewall layers for desk photos.
