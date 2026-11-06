@@ -2117,7 +2117,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   async function renderLifestyleProductPhoto(key:"maleLifestyle"|"femaleLifestyle", artworkImage:HTMLImageElement) {
-    const master=await loadStudioImage(`/images/product_images/${key==="maleLifestyle"?"male_master.png":"female_master.png"}`);
+    const master=await loadStudioImage(`/images/product_images/${key==="maleLifestyle"?"male_master_lifestyle.png":"female_master_lifestyle.png"}`);
     if(master.naturalWidth!==1448||master.naturalHeight!==1086) throw new Error("The approved lifestyle master must remain 4:3.");
     const canvas=document.createElement("canvas");canvas.width=master.naturalWidth;canvas.height=master.naturalHeight;
     const ctx=canvas.getContext("2d");if(!ctx)throw new Error("The lifestyle image canvas is unavailable.");
