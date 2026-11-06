@@ -118,13 +118,21 @@ def main():
         vector_data=args.vector_data, output=args.passes_dir / "scene.jpg", artwork=args.artwork))
     artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box)
     edge_bevel = artwork.modifiers.new("Subtle on-hat TPU edge catch", "BEVEL")
-    edge_bevel.width = 0.00012
-    # Keep the approved relief and footprint while giving the narrow TPU edge
-    # catch enough segments to shade cleanly at the final product-image scale.
+    # Relief remains 0.8 mm and the base contour remains the source artwork
+    # silhouette. A slightly broader micro-bevel resolves as a visible edge
+    # transition in the final master without changing the artwork placement.
+    edge_bevel.width = 0.00018
     edge_bevel.segments = 3
     edge_bevel.limit_method = "ANGLE"
     edge_bevel.angle_limit = math.radians(30)
     edge_bevel.harden_normals = True
+    # The raised top is triangulated for exact contour coverage. Reweight its
+    # smooth vertex normals after beveling so triangulation edges do not shade
+    # across the letter face as soft diagonal bands.
+    face_normals = artwork.modifiers.new("Stable embossed face normals", "WEIGHTED_NORMAL")
+    face_normals.keep_sharp = True
+    face_normals.weight = 50
+    face_normals.use_face_influence = True
     bsdf = artwork.data.materials[0].node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Roughness"].default_value = 0.46
     coat = bsdf.inputs.get("Coat Weight")
@@ -133,8 +141,10 @@ def main():
 
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
-    scene.cycles.samples = 96
-    scene.cycles.use_denoising = True
+    # Preserve narrow bevel transitions directly; the previous denoising pass
+    # softened those details at the small final artwork footprint.
+    scene.cycles.samples = 128
+    scene.cycles.use_denoising = False
     scene.cycles.device = "CPU"
     render_device, gpu_warning = "CPU", None
     render_mode = settings["renderMode"]
@@ -198,6 +208,12 @@ def main():
     upper_left_fill = Vector((-0.046, -0.018, 0.014))
     pipeline.make_area("On-Hat upper-left edge fill", target + upper_left_fill, target,
                        6.5, 0.014, (1.0, 0.97, 0.92), False)
+    # Low-angle, small-source light catches the vertical TPU sidewalls while
+    # adding little illumination to the horizontal letter faces. The final
+    # difference composite cancels its contribution to the unchanged sleeve.
+    sidewall_key = Vector((-0.052, -0.024, 0.008))
+    pipeline.make_area("On-Hat restrained sidewall key", target + sidewall_key, target,
+                       3.0, 0.006, (1.0, 0.98, 0.94), False)
     pipeline.make_area("Locked cool fill", target + Vector(lights["fill"]["relativePositionM"]), target,
                        lights["fill"]["power"], lights["fill"]["sizeM"], tuple(lights["fill"]["color"]), False)
     pipeline.make_area("Locked grazing edge", target + Vector(lights["grazing"]["relativePositionM"]), target,
