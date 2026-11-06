@@ -186,8 +186,11 @@ def composite(reference: dict, args) -> dict:
     base_linear = srgb_to_linear(base.astype(np.float32) / 255.0)
     with_linear = srgb_to_linear(with_art.astype(np.float32) / 255.0)
     delta = with_linear - base_linear
+    # The lighting pass is rendered well above the final pixel footprint, then
+    # perspective-mapped onto the native master. Lanczos resampling retains
+    # narrow bevel highlights and contact shadows during this downscale.
     mapped_delta = cv2.warpPerspective(delta, render_to_plate, (width, height),
-                                       flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
+                                       flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_CONSTANT,
                                        borderValue=(0, 0, 0))
     master_linear = srgb_to_linear(master.astype(np.float32) / 255.0)
     # Apply the physical mesh's rendered color and light difference directly.

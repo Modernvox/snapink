@@ -119,7 +119,9 @@ def main():
     artwork, artwork_info = pipeline.raised_artwork(sleeve, args.artwork, vector_path, box)
     edge_bevel = artwork.modifiers.new("Subtle on-hat TPU edge catch", "BEVEL")
     edge_bevel.width = 0.00012
-    edge_bevel.segments = 2
+    # Keep the approved relief and footprint while giving the narrow TPU edge
+    # catch enough segments to shade cleanly at the final product-image scale.
+    edge_bevel.segments = 3
     edge_bevel.limit_method = "ANGLE"
     edge_bevel.angle_limit = math.radians(30)
     edge_bevel.harden_normals = True
@@ -139,7 +141,11 @@ def main():
     render_engine = "CYCLES"
     if render_mode == "fast":
         scene.render.engine = "BLENDER_EEVEE_NEXT"
-        scene.eevee.taa_render_samples = 8
+        # Eight temporal samples leave visible edge breakup on small, high
+        # contrast letters. This scene renders only the artwork passes, so a
+        # modest sample increase improves bevel and shadow stability without
+        # increasing the exported product image dimensions.
+        scene.eevee.taa_render_samples = 32
         scene.eevee.use_gtao = True
         scene.eevee.gtao_distance = 0.002
         scene.eevee.gtao_quality = 1.0
