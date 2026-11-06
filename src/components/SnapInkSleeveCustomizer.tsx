@@ -1682,94 +1682,20 @@ const SnapInkSleeveCustomizer = forwardRef<
         if (child !== rootDefs && child !== artworkClip) child.remove();
       }
       artworkClip.querySelectorAll("[data-emboss-extrusion-step], [data-preview-only]").forEach((node) => node.remove());
-      // Keep the SVG's original face geometry and fill, while bypassing filters
-      // that are reserved for the sidewall/bevel pass.
-      artworkClip.querySelectorAll("[filter]").forEach((node) => node.removeAttribute("filter"));
-    }
-    if (onHatSvgRaster && styleMode === "emboss") {
-      // Match the subtler sidewall depth used by On-Desk, only for this cloned
-      // On-Hat export. Keep the offset directional so the lettering still has
-      // a visible raised edge instead of a diffuse drop shadow.
-      for (const layer of Array.from(exportSvg.querySelectorAll<SVGElement>("[data-emboss-extrusion-step]"))) {
-        const transform = layer.getAttribute("transform") || "";
-        layer.setAttribute("transform", transform.replace(
-          /translate\(\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*[, ]\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*\)/i,
-          (_match, x: string, y: string) => `translate(${Number(x) * 0.35} ${Number(y) * 0.35})`,
-        ));
-        const opacity = Number(layer.getAttribute("opacity") ?? 1);
-        layer.setAttribute("opacity", String(opacity * 0.85));
+      // Preserve the source face and alpha exactly. The On-Hat image clone
+      // omits every emboss filter and CSS filter; relief remains in Studio.
+      for (const node of [artworkClip, ...Array.from(artworkClip.querySelectorAll<SVGElement>("*"))]) {
+        node.removeAttribute("filter");
+        node.style.removeProperty("filter");
+        if (!node.style.length) node.removeAttribute("style");
       }
-      const highlightFilter = exportSvg.querySelector(`#${embossFaceHighlightId}`);
-      const highlightOffset = highlightFilter?.querySelector("feOffset");
-      if (highlightFilter && highlightOffset) {
-        const edgeX = Number(highlightOffset.getAttribute("dx") || 0) * 1.5;
-        const edgeY = Number(highlightOffset.getAttribute("dy") || 0) * 1.5;
-        const highlightOpacity = "0.76";
-        const bevelRadius = STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.18;
-        const addFilterPrimitive = (tag: string, attributes: Record<string, string>) => {
-          const primitive = document.createElementNS("http://www.w3.org/2000/svg", tag);
-          for (const [name, value] of Object.entries(attributes)) primitive.setAttribute(name, value);
-          highlightFilter.appendChild(primitive);
-          return primitive;
-        };
-        // Replace the former offset-shadow filter with a narrow bevel band
-        // outside the original alpha. Expansion and subtraction follow the
-        // exact glyph contours, including counters and interior cutouts.
-        highlightFilter.replaceChildren();
-        addFilterPrimitive("feMorphology", {
-          in: "SourceAlpha", operator: "dilate", radius: String(bevelRadius), result: "embossOuterAlpha",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossOuterAlpha", in2: "SourceAlpha", operator: "out", result: "embossBevelBand",
-        });
-        // Tint only the narrow bevel surface so its white highlight has tonal
-        // separation from the untouched source face at the final sleeve size.
-        addFilterPrimitive("feFlood", {
-          "flood-color": "#d0d0d0", "flood-opacity": "0.72", result: "embossBevelBaseColor",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossBevelBaseColor", in2: "embossBevelBand", operator: "in", result: "embossBevelBase",
-        });
-        addFilterPrimitive("feFlood", {
-          "flood-color": "#a8a8a8", "flood-opacity": "0.22", result: "embossBevelToneColor",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossBevelToneColor", in2: "embossBevelBand", operator: "in", result: "embossBevelTone",
-        });
-        addFilterPrimitive("feOffset", {
-          in: "SourceAlpha", dx: String(edgeX), dy: String(edgeY), result: "embossUpperLeftOffset",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossBevelBand", in2: "embossUpperLeftOffset", operator: "out", result: "embossUpperLeftEdge",
-        });
-        addFilterPrimitive("feFlood", {
-          "flood-color": "#ffffff", "flood-opacity": highlightOpacity, result: "embossHighlightColor",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossHighlightColor", in2: "embossUpperLeftEdge", operator: "in", result: "embossBevelHighlight",
-        });
-        addFilterPrimitive("feOffset", {
-          in: "SourceAlpha", dx: String(-edgeX), dy: String(-edgeY), result: "embossLowerRightOffset",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossBevelBand", in2: "embossLowerRightOffset", operator: "out", result: "embossLowerRightEdge",
-        });
-        addFilterPrimitive("feFlood", {
-          "flood-color": "#000000", "flood-opacity": "0.18", result: "embossLowerRightColor",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossBevelShade",
-        });
-        const finalMerge = addFilterPrimitive("feMerge", {});
-        // The On-Hat base contains only bevel shading; its original white face
-        // is rendered separately without this filter and composited afterward.
-        const mergedLayers = ["embossBevelBase", "embossBevelTone", "embossBevelShade", "embossBevelHighlight"];
-        for (const input of mergedLayers) {
-          const node = document.createElementNS("http://www.w3.org/2000/svg", "feMergeNode");
-          node.setAttribute("in", input);
-          finalMerge.appendChild(node);
-        }
-      }
+      exportSvg.querySelector(`#${embossFaceHighlightId}`)?.remove();
+    } else if (onHatSvgRaster && styleMode === "emboss") {
+      // The generated On-Hat base is just the unchanged sleeve. Draw the raw
+      // artwork face separately so extrusion, bevel, and shadow layers cannot
+      // add halos around its original alpha boundary.
+      exportSvg.querySelector('[data-artwork-clip="true"]')?.remove();
+      exportSvg.querySelector(`#${embossFaceHighlightId}`)?.remove();
     }
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
