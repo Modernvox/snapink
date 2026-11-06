@@ -15,6 +15,7 @@ import {
   ARTWORK_VERTICAL_POSITION_MIN,
   BRANDING_EDGE_CLEARANCE_MM,
   MAX_BOTTOM_ARTWORK_EXTENSION_MM,
+  MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
   MAX_TOP_ARTWORK_EXTENSION_MM,
   GEOMETRY_VERSION,
   POSITIONING_VERSION,
@@ -146,6 +147,8 @@ export type SleeveDraft = {
   artworkWidthMm: number;
   artworkHeightMm: number;
   artworkExtensionMm: number;
+  artworkTopExtensionMm?: number;
+  artworkBottomExtensionMm?: number;
   extendedArtwork: boolean;
   hasCustomArtwork: boolean;
 };
@@ -468,7 +471,8 @@ function drawStudioComposition(
   preserveDesktopGrooveAnchor: boolean,
   lifestyleBackground: HTMLImageElement | null = null,
   stageVerticalOffset = 0,
-  hasExtendedArtworkMargin = false
+  hasExtendedArtworkMargin = false,
+  topArtworkExtensionMm = MAX_TOP_ARTWORK_EXTENSION_MM
 ) {
   if (!ghostHat) {
     context.drawImage(sleeve, 0, 0, canvas.width, canvas.height);
@@ -492,7 +496,7 @@ function drawStudioComposition(
   context.save();
   context.translate(sleeveCenterX + sleeveWidth * (sleeveGrooveFraction - 0.5), sleeveCenterY);
   context.rotate(sleeveRotationDeg * Math.PI / 180);
-  const topExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * MAX_TOP_ARTWORK_EXTENSION_MM / overallLengthMm : 0;
+  const topExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * topArtworkExtensionMm / overallLengthMm : 0;
   const bottomExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * MAX_BOTTOM_ARTWORK_EXTENSION_MM / overallLengthMm : 0;
   context.drawImage(
     sleeve,
@@ -1032,7 +1036,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     (point[1] - sleevePhoto.crop.y) * photoScale * photoImageScaleY,
   ] as const;
   const photoFacePoints = sleevePhoto.face.map(photoPoint);
-  const photoFaceExtensionRatio = MAX_TOP_ARTWORK_EXTENSION_MM / (bounds.maxY - bounds.minY);
+  const photoFaceExtensionRatio = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM / (bounds.maxY - bounds.minY);
   const extendedPhotoTopLeft: [number, number] = [
     photoFacePoints[0][0] + (photoFacePoints[0][0] - photoFacePoints[3][0]) * photoFaceExtensionRatio,
     photoFacePoints[0][1] + (photoFacePoints[0][1] - photoFacePoints[3][1]) * photoFaceExtensionRatio,
@@ -1344,7 +1348,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     posY,
     textArtworkHeightMmScaled,
     BRANDING_EDGE_CLEARANCE_MM,
-    MAX_TOP_ARTWORK_EXTENSION_MM,
+    MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
     MAX_BOTTOM_ARTWORK_EXTENSION_MM
   );
   const textCenterCanvasY = ((bounds.maxY - textCenterYmm) / (bounds.maxY - bounds.minY)) * viewH;
@@ -1354,7 +1358,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoPosY,
     logoArtworkHeightMm,
     BRANDING_EDGE_CLEARANCE_MM,
-    MAX_TOP_ARTWORK_EXTENSION_MM,
+    MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
     MAX_BOTTOM_ARTWORK_EXTENSION_MM
   );
   // All previews and exports use the same CAD-referenced artwork position.
@@ -1393,7 +1397,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoDataUrl ? logoPosY : posY,
     logoDataUrl ? productionLogoHeightMm : productionTextHeightMm,
     BRANDING_EDGE_CLEARANCE_MM,
-    MAX_TOP_ARTWORK_EXTENSION_MM,
+    MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
     MAX_BOTTOM_ARTWORK_EXTENSION_MM
   );
   const selectedArtworkWidthMm = logoDataUrl
@@ -1406,16 +1410,20 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoDataUrl ? logoAlphaProfile : undefined
   );
   const artworkExtensionMm = artworkStatus.extensionMm;
-  const artworkExceedsAllowedExtension = artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001
+  const artworkExceedsAllowedExtension = artworkStatus.topExtensionMm > MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + 0.001
     || artworkStatus.bottomExtensionMm > MAX_BOTTOM_ARTWORK_EXTENSION_MM + 0.001;
-  const artworkIsExtended = artworkStatus.topExtensionMm > 0.001 || artworkStatus.bottomExtensionMm > 0.001;
+  // Keep the existing premium review for previously supported extensions.
+  // New top-only artwork beyond 0.5 in is an experiment and does not become
+  // premium-priced just because the Studio placement range was expanded.
+  const artworkRequiresPremiumPricing = artworkStatus.bottomExtensionMm > 0.001
+    || (artworkStatus.topExtensionMm > 0.001 && artworkStatus.topExtensionMm <= MAX_TOP_ARTWORK_EXTENSION_MM + 0.001);
   const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension;
   const artworkInvalidBoundary = artworkStatus.crossesLeftEdge ? "left edge clearance"
     : artworkStatus.crossesRightEdge ? "right edge clearance"
       : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
         : artworkStatus.violatesTopClearance ? "top edge clearance"
           : artworkStatus.violatesBottomClearance ? "bottom edge clearance"
-            : artworkStatus.topExtensionMm > MAX_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "approved top production boundary"
+            : artworkStatus.topExtensionMm > MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "Studio top artwork boundary (2 in)"
               : "approved bottom production boundary";
   function artworkPointInCadCanvas(clientX: number, clientY: number) {
     const svg = svgRef.current;
@@ -1456,11 +1464,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     const baseRange = artworkVerticalCenterRangeMm(variant, renderGeometrySize, logoArtworkHeightMm, BRANDING_EDGE_CLEARANCE_MM);
     const extensionRange = artworkVerticalCenterRangeMm(
       variant, renderGeometrySize, logoArtworkHeightMm, BRANDING_EDGE_CLEARANCE_MM,
-      MAX_TOP_ARTWORK_EXTENSION_MM, MAX_BOTTOM_ARTWORK_EXTENSION_MM
+      MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM, MAX_BOTTOM_ARTWORK_EXTENSION_MM
     );
     let nextPosition = 50;
     if (targetCenterYmm > baseRange.maxCenterY && extensionRange.maxCenterY > baseRange.maxCenterY) {
-      nextPosition = -100 * (targetCenterYmm - baseRange.maxCenterY) / (extensionRange.maxCenterY - baseRange.maxCenterY);
+      nextPosition = ARTWORK_VERTICAL_POSITION_MIN * (targetCenterYmm - baseRange.maxCenterY) / (extensionRange.maxCenterY - baseRange.maxCenterY);
     } else if (targetCenterYmm < baseRange.minCenterY && baseRange.minCenterY > extensionRange.minCenterY) {
       nextPosition = 100 + 100 * (baseRange.minCenterY - targetCenterYmm) / (baseRange.minCenterY - extensionRange.minCenterY);
     } else if (baseRange.maxCenterY > baseRange.minCenterY) {
@@ -1519,7 +1527,9 @@ const SnapInkSleeveCustomizer = forwardRef<
       artworkWidthMm: selectedArtworkWidthMm,
       artworkHeightMm: selectedArtworkHeightMm,
       artworkExtensionMm,
-      extendedArtwork: artworkIsExtended,
+      artworkTopExtensionMm: artworkStatus.topExtensionMm,
+      artworkBottomExtensionMm: artworkStatus.bottomExtensionMm,
+      extendedArtwork: artworkRequiresPremiumPricing,
       hasCustomArtwork: Boolean(text.trim() || logoDataUrl),
     });
   }, [
@@ -2376,7 +2386,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       const href = image.getAttribute("href");
       if (href) image.setAttribute("href", await resolveDataUrl(href));
     }
-    const previewTopPadding = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const previewTopPadding = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const previewBottomPadding = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     previewSvg.setAttribute("viewBox", `0 ${-previewTopPadding} ${viewW} ${viewH + previewTopPadding + previewBottomPadding}`);
     previewSvg.setAttribute("width", String(viewW));
@@ -2395,7 +2405,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     const artworkClip = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-clip="true"]');
     artworkOverlay?.removeAttribute("transform");
     artworkClip?.setAttribute("clip-path", `url(#${surfaceClipId}-printable-cad)`);
-    const productionTopPadding = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const productionTopPadding = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const productionBottomPadding = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     artworkSvgNode.setAttribute("viewBox", `0 ${-productionTopPadding} ${viewW} ${viewH + productionTopPadding + productionBottomPadding}`);
     artworkSvgNode.setAttribute("width", String(viewW));
@@ -2445,7 +2455,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         !isMobilePreview,
         lifestyleImage
         ,0,
-        true
+        true,
+        MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM
       );
       const previewBlob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("Could not encode the design preview.")),
@@ -2842,7 +2853,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   );
 
   const extendedArtworkNotice = (idSuffix: string) => {
-    const visible = artworkIsExtended && !artworkInvalid;
+    const visible = artworkRequiresPremiumPricing && !artworkInvalid;
     const infoId = `snapink-extended-artwork-info-${uid}-${idSuffix}`;
     const currentExtendedPrice = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
       .format((sleeveSize <= 2 ? 2499 : 2999) / 100);
@@ -2924,7 +2935,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
         {logoDataUrl && <>
           <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" showValue={false} />
-          <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>
+          <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
           {extendedArtworkNotice("toolbar")}
           <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" showValue={false} />
@@ -3133,7 +3144,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
           <path id={pathId} d={arcPath} />
           <clipPath id={`${surfaceClipId}-printable-cad`} clipPathUnits="userSpaceOnUse">
-            <path d={`${brandingSurfacePath(variant, renderGeometrySize, viewW, viewH, MAX_TOP_ARTWORK_EXTENSION_MM, MAX_BOTTOM_ARTWORK_EXTENSION_MM)} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
+            <path d={`${brandingSurfacePath(variant, renderGeometrySize, viewW, viewH, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM, MAX_BOTTOM_ARTWORK_EXTENSION_MM)} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
           </clipPath>
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
             <path d={extendedPhotoArtworkClipPath} />
@@ -3595,8 +3606,8 @@ const SnapInkSleeveCustomizer = forwardRef<
                 />
                 <Range
                   label="Text vertical position"
-                  min={0}
-                  max={100}
+                  min={ARTWORK_VERTICAL_POSITION_MIN}
+                  max={ARTWORK_VERTICAL_POSITION_MAX}
                   step={0.5}
                   value={posY}
                   setValue={setPosY}
@@ -3613,7 +3624,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 suffix="%"
               />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
-              {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
+              {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
               {extendedArtworkNotice("mobile")}
 
@@ -3895,8 +3906,8 @@ const SnapInkSleeveCustomizer = forwardRef<
               />
               <Range
                 label="Text vertical position"
-                min={0}
-                max={100}
+                min={ARTWORK_VERTICAL_POSITION_MIN}
+                max={ARTWORK_VERTICAL_POSITION_MAX}
                 step={0.5}
                 value={posY}
                 setValue={setPosY}
@@ -3913,7 +3924,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               suffix="%"
             />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
-            {logoDataUrl && <p className="text-xs text-neutral-500">Left moves artwork up; right moves it down.</p>}
+            {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
             {extendedArtworkNotice("desktop")}
 

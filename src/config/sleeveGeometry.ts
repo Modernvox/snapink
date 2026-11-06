@@ -42,15 +42,18 @@ export const BRANDING_GROOVE_X_MM = BRANDING_ENTRY_X_MM - 6.35;
 export const BRANDING_GROOVE_WIDTH_MM = 0.8;
 export const BRANDING_GROOVE_DEPTH_MM = 0.25;
 export const BRANDING_EDGE_CLEARANCE_MM = 1;
-/** Maximum permitted artwork extension beyond either physical sleeve edge. */
+/** Studio-only experimental artwork allowance above the sleeve. */
+export const MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM = 50.8;
+/** Existing top margin retained by product-image export pipelines. */
 export const MAX_TOP_ARTWORK_EXTENSION_MM = 12.7;
+/** Maximum permitted artwork extension below the physical sleeve edge. */
 export const MAX_BOTTOM_ARTWORK_EXTENSION_MM = 12.7;
 /** The production CAD references expose the groove's right edge at -2.8 mm. */
 export const APPROVED_CAD_GROOVE_RIGHT_EDGE_X_MM = -2.8;
 /** Python production insets the CAD-derived branding face by 1.05 mm. */
 export const PRODUCTION_BRANDING_INSET_MM = 1.05;
-/** Artwork slider positions extend one printable travel span beyond either end. */
-export const ARTWORK_VERTICAL_POSITION_MIN = -100;
+/** Position sliders preserve legacy values and allow up to 2 in above the sleeve. */
+export const ARTWORK_VERTICAL_POSITION_MIN = -400;
 export const ARTWORK_VERTICAL_POSITION_MAX = 200;
 export const CAD_BODY_HEIGHT_MM = 3.26;
 export const MINIMUM_CHANNEL_MM = 66.675;
@@ -496,7 +499,7 @@ export function artworkCenterYForPositionMm(
     const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
     const baseTop = baseRange.maxCenterY >= baseRange.minCenterY ? baseRange.maxCenterY : bounds.maxY - halfArtworkHeight;
     const extendedTop = extendedRange.maxCenterY >= extendedRange.minCenterY ? extendedRange.maxCenterY : bounds.maxY + topExtensionMm - halfArtworkHeight;
-    return baseTop + (extendedTop - baseTop) * Math.min(1, Math.max(0, -positionPercent / 100));
+    return baseTop + (extendedTop - baseTop) * Math.min(1, Math.max(0, -positionPercent / Math.abs(ARTWORK_VERTICAL_POSITION_MIN)));
   }
   if (positionPercent > 100 && bottomExtensionMm > 0) {
     const bottomCenter = baseRange.minCenterY >= baseRange.maxCenterY
