@@ -334,11 +334,11 @@ const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
   desktop: { top: 0, bottom: 700 },
   mobile: { top: 24, bottom: 1100 },
 } as const;
-// Calibrated against on_hat_master.png. The groove is the primary anchor;
+// Calibrated against new_on_hat_master.png. The groove is the primary anchor;
 // matching it to the left strap exit and the sleeve's right end to the right
 // strap opening determines a uniform scale.
 const REAR_PRODUCT_PHOTO = {
-  hatSrc: "/images/product_images/on_hat_master.png",
+  hatSrc: "/images/product_images/new_on_hat_master.png",
   width: 1254,
   height: 1254,
   grooveSourceX: 465,
