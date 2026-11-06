@@ -462,6 +462,24 @@ function drawImageContained(
   context.drawImage(image, (width - drawnWidth) / 2, (height - drawnHeight) / 2, drawnWidth, drawnHeight);
 }
 
+function productPhotoLayerMetrics(
+  image: HTMLImageElement,
+  destinationWidth: number,
+  svgHeight: number,
+  topPaddingUnits: number,
+  bottomPaddingUnits: number
+) {
+  const viewBoxHeight = svgHeight + topPaddingUnits + bottomPaddingUnits;
+  const destinationScale = destinationWidth / image.naturalWidth;
+  const destinationUnitsPerSvgUnit = image.naturalHeight / viewBoxHeight * destinationScale;
+  return {
+    imageHeight: image.naturalHeight * destinationScale,
+    topPadding: topPaddingUnits * destinationUnitsPerSvgUnit,
+    bottomPadding: bottomPaddingUnits * destinationUnitsPerSvgUnit,
+    coreHeight: svgHeight * destinationUnitsPerSvgUnit,
+  };
+}
+
 function drawStudioComposition(
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -1685,15 +1703,22 @@ const SnapInkSleeveCustomizer = forwardRef<
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
     if(options.artworkOnly)exportSvg.querySelectorAll('[data-product-image="true"]').forEach(node=>node.remove());
     exportSvg.removeAttribute("style");
-    const topExtensionSvgUnits = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
-    const bottomExtensionSvgUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
-    exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
+    const fixedSleeveLayer = onHatSvgRaster && !options.onHatFaceOnly && !options.artworkOnly;
+    const topExtensionSvgUnits = (fixedSleeveLayer ? MAX_TOP_ARTWORK_EXTENSION_MM : MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const bottomExtensionSvgUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + (fixedSleeveLayer ? 0 : artworkStrokeExtensionMm)) * viewH / (bounds.maxY - bounds.minY);
+    exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
     // For On-Hat, rasterize the SVG at the sleeve's calibrated destination
     // width so canvas composition does not resample the flattened sleeve.
     const svgRasterWidth = onHatSvgRaster ? Math.round(viewW * sleeveScaleRatio * scale) : viewW;
+    const baseTopExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const baseBottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    // Keep the SVG-to-pixel Y scale fixed at the original symmetric half-inch
+    // sleeve frame; expanded artwork adds transparent canvas without changing it.
+    const onHatSvgPixelsPerUnit = (previewViewH + baseTopExtensionSvgUnits + baseBottomExtensionSvgUnits)
+      / (viewH + baseTopExtensionSvgUnits + baseBottomExtensionSvgUnits) * sleeveScaleRatio * scale;
     const svgRasterHeight = onHatSvgRaster
-      ? Math.round((previewViewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * sleeveScaleRatio * scale)
+      ? Math.round((viewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * onHatSvgPixelsPerUnit)
       : viewH + topExtensionSvgUnits + bottomExtensionSvgUnits;
     exportSvg.setAttribute("width", String(svgRasterWidth));
     exportSvg.setAttribute("height", String(svgRasterHeight));
@@ -1704,19 +1729,19 @@ const SnapInkSleeveCustomizer = forwardRef<
       for (const child of Array.from(exportSvg.children)) {
         if (child !== rootDefs && child !== artworkClip) child.remove();
       }
-      artworkClip.querySelectorAll("[data-emboss-extrusion-step], [data-preview-only]").forEach((node) => node.remove());
-      // Preserve the source face and alpha exactly. The On-Hat image clone
-      // omits every emboss filter and CSS filter; relief remains in Studio.
-      for (const node of [artworkClip, ...Array.from(artworkClip.querySelectorAll<SVGElement>("*"))]) {
-        if (node.getAttribute("filter") !== `url(#${artworkStrokeFilterId})`) node.removeAttribute("filter");
-        node.style.removeProperty("filter");
-        if (!node.style.length) node.removeAttribute("style");
+      artworkClip.querySelectorAll("[data-preview-only]").forEach((node) => node.remove());
+      if (styleMode === "emboss") {
+        artworkClip.querySelectorAll("[data-emboss-extrusion-step]").forEach((node) => node.remove());
+        // Keep the On-Hat front face crisp while retaining the solid stroke.
+        for (const node of [artworkClip, ...Array.from(artworkClip.querySelectorAll<SVGElement>("*"))]) {
+          if (node.getAttribute("filter") !== `url(#${artworkStrokeFilterId})`) node.removeAttribute("filter");
+          node.style.removeProperty("filter");
+          if (!node.style.length) node.removeAttribute("style");
+        }
+        exportSvg.querySelector(`#${embossFaceHighlightId}`)?.remove();
       }
-      exportSvg.querySelector(`#${embossFaceHighlightId}`)?.remove();
-    } else if (onHatSvgRaster && styleMode === "emboss") {
-      // The generated On-Hat base is just the unchanged sleeve. Draw the raw
-      // artwork face separately so extrusion, bevel, and shadow layers cannot
-      // add halos around its original alpha boundary.
+    } else if (onHatSvgRaster && !options.artworkOnly) {
+      // Keep the sleeve raster independent from all artwork and its extension.
       exportSvg.querySelector('[data-artwork-clip="true"]')?.remove();
       exportSvg.querySelector(`#${embossFaceHighlightId}`)?.remove();
     }
@@ -1756,7 +1781,9 @@ const SnapInkSleeveCustomizer = forwardRef<
         : Math.round(viewW * sleeveScaleRatio * scale);
       canvas.height = ghostImage
         ? Math.round(canvas.width / stageAspectRatio)
-        : Math.round((previewViewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * sleeveScaleRatio * scale);
+        : onHatSvgRaster
+          ? svgRasterHeight
+          : Math.round((previewViewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * sleeveScaleRatio * scale);
       const context = canvas.getContext("2d");
       if (!context) throw new Error("PNG export canvas is unavailable.");
       const exportCrop = isMobilePreview
@@ -1838,17 +1865,24 @@ const SnapInkSleeveCustomizer = forwardRef<
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   }
 
-  async function renderPackagingProductPhoto(packageImage: HTMLImageElement, sleeveImage: HTMLImageElement) {
+  async function renderPackagingProductPhoto(packageImage: HTMLImageElement, sleeveImage: HTMLImageElement, artworkImage: HTMLImageElement) {
     const { width, height, sleeve, contactShadow } = PACKAGING_PRODUCT_PHOTO;
     if (packageImage.naturalWidth !== width || packageImage.naturalHeight !== height) {
       throw new Error("The approved packaging master has unexpected dimensions.");
     }
     const sleeveWidth = sleeve.width;
-    const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
+    const baseTopPaddingUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const baseBottomPaddingUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const artworkTopPaddingUnits = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const artworkBottomPaddingUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const sleeveLayer = productPhotoLayerMetrics(sleeveImage, sleeveWidth, viewH, baseTopPaddingUnits, baseBottomPaddingUnits);
+    const artworkLayer = productPhotoLayerMetrics(artworkImage, sleeveWidth, viewH, artworkTopPaddingUnits, artworkBottomPaddingUnits);
     const sleeveLeft = Math.round(sleeve.centerX - sleeveWidth / 2);
-    const extensionPixels = sleeveWidth * (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) / overallLengthMm;
-    const sleeveTop = sleeve.topY - extensionPixels;
-    if (sleeveLeft < 0 || sleeveTop < 0 || sleeveLeft + sleeveWidth > width || sleeveTop + sleeveHeight > height) {
+    const sleeveTop = sleeve.topY;
+    const sleeveImageTop = sleeveTop - sleeveLayer.topPadding;
+    const artworkImageTop = sleeveTop - artworkLayer.topPadding;
+    if (sleeveLeft < 0 || sleeveImageTop < 0 || artworkImageTop < 0 || sleeveLeft + sleeveWidth > width
+      || sleeveImageTop + sleeveLayer.imageHeight > height || artworkImageTop + artworkLayer.imageHeight > height) {
       throw new Error("The approved packaging sleeve placement falls outside the package image.");
     }
 
@@ -1868,7 +1902,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
     maskContext.imageSmoothingEnabled = true;
     maskContext.imageSmoothingQuality = "high";
-    maskContext.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    maskContext.drawImage(sleeveImage, sleeveLeft, sleeveImageTop, sleeveWidth, sleeveLayer.imageHeight);
     maskContext.globalCompositeOperation = "source-in";
     maskContext.fillStyle = `rgba(0, 0, 0, ${contactShadow.opacity})`;
     maskContext.fillRect(0, 0, width, height);
@@ -1879,7 +1913,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     context.imageSmoothingQuality = "high";
     context.drawImage(packageImage, 0, 0);
     context.drawImage(shadowCanvas, 0, 0);
-    context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    context.drawImage(sleeveImage, sleeveLeft, sleeveImageTop, sleeveWidth, sleeveLayer.imageHeight);
+    context.drawImage(artworkImage, sleeveLeft, artworkImageTop, sleeveWidth, artworkLayer.imageHeight);
     return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
       (output) => output ? resolve(output) : reject(new Error("Packaging product PNG encoding failed.")),
       "image/png",
@@ -1958,31 +1993,41 @@ const SnapInkSleeveCustomizer = forwardRef<
     // Map its rendered artwork fraction from the visible sleeve face onto the desk face;
     // Calibration 08 contributes perspective only and never normalizes designs to LIFT size.
     const physicalSourceFace = (JSON.parse(svg.getAttribute("data-photo-face-points") || "[]") as [number, number][])
-      .map(([x, y]) => [x * artworkRasterScale, y * artworkRasterScale] as [number, number]);
+      .map(([x, y]) => [x * artworkRasterScale, y * artworkRasterScale + topExtensionSvgUnits * artworkRasterScale] as [number, number]);
     if (physicalSourceFace.length !== 4) throw new Error("The Studio sleeve face geometry is unavailable.");
     const sourceFacePoints: [number, number][] = [
-      [physicalSourceFace[0][0] + (physicalSourceFace[0][0] - physicalSourceFace[3][0]) * photoFaceExtensionRatio, physicalSourceFace[0][1] + (physicalSourceFace[0][1] - physicalSourceFace[3][1]) * photoFaceExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
-      [physicalSourceFace[1][0] + (physicalSourceFace[1][0] - physicalSourceFace[2][0]) * photoFaceExtensionRatio, physicalSourceFace[1][1] + (physicalSourceFace[1][1] - physicalSourceFace[2][1]) * photoFaceExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
-      [physicalSourceFace[2][0] + (physicalSourceFace[2][0] - physicalSourceFace[1][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[2][1] + (physicalSourceFace[2][1] - physicalSourceFace[1][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
-      [physicalSourceFace[3][0] + (physicalSourceFace[3][0] - physicalSourceFace[0][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[3][1] + (physicalSourceFace[3][1] - physicalSourceFace[0][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
+      [physicalSourceFace[0][0] + (physicalSourceFace[0][0] - physicalSourceFace[3][0]) * photoFaceExtensionRatio, physicalSourceFace[0][1] + (physicalSourceFace[0][1] - physicalSourceFace[3][1]) * photoFaceExtensionRatio],
+      [physicalSourceFace[1][0] + (physicalSourceFace[1][0] - physicalSourceFace[2][0]) * photoFaceExtensionRatio, physicalSourceFace[1][1] + (physicalSourceFace[1][1] - physicalSourceFace[2][1]) * photoFaceExtensionRatio],
+      [physicalSourceFace[2][0] + (physicalSourceFace[2][0] - physicalSourceFace[1][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[2][1] + (physicalSourceFace[2][1] - physicalSourceFace[1][1]) * photoFaceBottomExtensionRatio],
+      [physicalSourceFace[3][0] + (physicalSourceFace[3][0] - physicalSourceFace[0][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[3][1] + (physicalSourceFace[3][1] - physicalSourceFace[0][1]) * photoFaceBottomExtensionRatio],
     ];
     const boundsOf = (points: [number, number][]) => ({
       left: Math.min(...points.map(([x]) => x)), right: Math.max(...points.map(([x]) => x)),
       top: Math.min(...points.map(([, y]) => y)), bottom: Math.max(...points.map(([, y]) => y)),
     });
+    const sourceBaseFace = boundsOf(physicalSourceFace);
     const sourceFace = boundsOf(sourceFacePoints);
-    const deskFace = boundsOf([
+    const deskFaceVertices = [
       productPhoto.printableFace.topLeft, productPhoto.printableFace.topRight,
       productPhoto.printableFace.bottomRight, productPhoto.printableFace.bottomLeft,
-    ]);
-    const targetCenterX = deskFace.left + ((minX + maxX) / 2 - sourceFace.left) /
-      (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
-    const targetCenterY = deskFace.top + ((minY + maxY) / 2 - sourceFace.top) /
-      (sourceFace.bottom - sourceFace.top) * (deskFace.bottom - deskFace.top);
-    const targetWidth = artWidth / (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
+    ] as [number, number][];
+    const deskFace = boundsOf(deskFaceVertices);
+    const extendBothEdges = (face: [number, number][]) => [
+      [face[0][0] + (face[0][0] - face[3][0]) * photoFaceExtensionRatio, face[0][1] + (face[0][1] - face[3][1]) * photoFaceExtensionRatio] as [number, number],
+      [face[1][0] + (face[1][0] - face[2][0]) * photoFaceExtensionRatio, face[1][1] + (face[1][1] - face[2][1]) * photoFaceExtensionRatio] as [number, number],
+      [face[2][0] + (face[2][0] - face[1][0]) * photoFaceBottomExtensionRatio, face[2][1] + (face[2][1] - face[1][1]) * photoFaceBottomExtensionRatio] as [number, number],
+      [face[3][0] + (face[3][0] - face[0][0]) * photoFaceBottomExtensionRatio, face[3][1] + (face[3][1] - face[0][1]) * photoFaceBottomExtensionRatio] as [number, number],
+    ];
+    const facePoly = extendBothEdges(deskFaceVertices);
+    const deskArtworkFace = boundsOf(facePoly);
+    const targetCenterX = deskFace.left + ((minX + maxX) / 2 - sourceBaseFace.left) /
+      (sourceBaseFace.right - sourceBaseFace.left) * (deskFace.right - deskFace.left);
+    const targetCenterY = deskArtworkFace.top + ((minY + maxY) / 2 - sourceFace.top) /
+      (sourceFace.bottom - sourceFace.top) * (deskArtworkFace.bottom - deskArtworkFace.top);
+    const targetWidth = artWidth / (sourceBaseFace.right - sourceBaseFace.left) * (deskFace.right - deskFace.left);
     // Apply a uniform scale from sleeve-face width. Independent X/Y normalization would
     // stretch artwork when the source hat photo and the desk photo have different face ratios.
-    const targetHeight = artHeight / (sourceFace.right - sourceFace.left) * (deskFace.right - deskFace.left);
+    const targetHeight = artHeight / (sourceBaseFace.right - sourceBaseFace.left) * (deskFace.right - deskFace.left);
     const target = artworkQuad.map(([x, y]) => [
       targetCenterX + (x - calibration.centerX) * targetWidth / width,
       targetCenterY + (y - calibration.centerY) * targetHeight / height,
@@ -2022,15 +2067,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     const maxTargetX=Math.min(canvas.width-1,Math.ceil(Math.max(...target.map(([x])=>x))));
     const minTargetY=Math.max(0,Math.floor(Math.min(...target.map(([,y])=>y))));
     const maxTargetY=Math.min(canvas.height-1,Math.ceil(Math.max(...target.map(([,y])=>y))));
-    const sourceFaceArray = [sourceFacePoints[0], sourceFacePoints[1], sourceFacePoints[2], sourceFacePoints[3]];
-    const deskFaceVertices = [productPhoto.printableFace.topLeft, productPhoto.printableFace.topRight, productPhoto.printableFace.bottomRight, productPhoto.printableFace.bottomLeft];
-    const extendBothEdges = (face: [number, number][]) => [
-      [face[0][0] + (face[0][0] - face[3][0]) * photoFaceExtensionRatio, face[0][1] + (face[0][1] - face[3][1]) * photoFaceExtensionRatio] as [number, number],
-      [face[1][0] + (face[1][0] - face[2][0]) * photoFaceExtensionRatio, face[1][1] + (face[1][1] - face[2][1]) * photoFaceExtensionRatio] as [number, number],
-      [face[2][0] + (face[2][0] - face[1][0]) * photoFaceBottomExtensionRatio, face[2][1] + (face[2][1] - face[1][1]) * photoFaceBottomExtensionRatio] as [number, number],
-      [face[3][0] + (face[3][0] - face[0][0]) * photoFaceBottomExtensionRatio, face[3][1] + (face[3][1] - face[0][1]) * photoFaceBottomExtensionRatio] as [number, number],
-    ];
-    const facePoly=extendBothEdges(deskFaceVertices);
     const insideFace=(x:number,y:number) => { let inside=false; for(let i=0,j=facePoly.length-1;i<facePoly.length;j=i++) { const [xi,yi]=facePoly[i],[xj,yj]=facePoly[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside; } return inside; };
     // The Studio SVG already applies the selected artwork opacity and carries
     // the embossed face, highlights, and relief layers. Keep the front-face
@@ -2098,7 +2134,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     alphaContext.drawImage(artworkImage,0,0);const alpha=alphaContext.getImageData(0,0,sourceWidth,sourceHeight).data;
     let minY=sourceHeight,maxY=-1;for(let py=0;py<sourceHeight;py++)for(let px=0;px<sourceWidth;px++)if(alpha[(py*sourceWidth+px)*4+3]>0){minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
     if(maxY<minY)throw new Error("The Studio artwork is empty.");
-    const artworkCenterY=(minY+maxY+1)/2,centerRatio=artworkCenterY/sourceHeight;
+    const artworkCenterY=(minY+maxY+1)/2;
+    const sourceTopPaddingUnits=(MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM+artworkStrokeExtensionMm)*viewH/(bounds.maxY-bounds.minY);
+    const sourceBottomPaddingUnits=(MAX_BOTTOM_ARTWORK_EXTENSION_MM+artworkStrokeExtensionMm)*viewH/(bounds.maxY-bounds.minY);
+    const legacyTopPaddingUnits=MAX_TOP_ARTWORK_EXTENSION_MM*viewH/(bounds.maxY-bounds.minY);
+    const legacyBottomPaddingUnits=MAX_BOTTOM_ARTWORK_EXTENSION_MM*viewH/(bounds.maxY-bounds.minY);
+    const sourceSvgUnitsPerPixel=(viewH+sourceTopPaddingUnits+sourceBottomPaddingUnits)/sourceHeight;
+    const artworkCenterInSleeveSvgUnits=artworkCenterY*sourceSvgUnitsPerPixel-sourceTopPaddingUnits;
+    const centerRatio=(artworkCenterInSleeveSvgUnits+legacyTopPaddingUnits)/(viewH+legacyTopPaddingUnits+legacyBottomPaddingUnits);
     const widthScale=w/sourceWidth,heightScale=widthScale;
     const targetHeight=sourceHeight*heightScale;
     const preservedCenterY=y+centerRatio*h;
@@ -2150,16 +2193,21 @@ const SnapInkSleeveCustomizer = forwardRef<
     // same hat opening and artwork scale, with its own CAD groove fraction.
     const grooveFraction = rearPhotoGrooveFraction(productStyle);
     const sleeveWidth = rearPhotoSleeveWidth(productStyle);
-    const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
+    const baseTopPaddingUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const baseBottomPaddingUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const artworkTopPaddingUnits = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const artworkBottomPaddingUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const sleeveLayer = productPhotoLayerMetrics(sleeveImage, sleeveWidth, viewH, baseTopPaddingUnits, baseBottomPaddingUnits);
     const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
-    // The sleeve PNG reserves identical transparent margins above and below;
-    // its midpoint therefore remains the original physical sleeve midpoint.
-    const sleeveTop = Math.round(
-      REAR_PRODUCT_PHOTO.sleeveCenterY - sleeveHeight / 2
+    const sleeveCoreTop = Math.round(
+      REAR_PRODUCT_PHOTO.sleeveCenterY - sleeveLayer.coreHeight / 2
       - (productStyle === "standard" ? 5 : 0)
     );
-    context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
-    if (faceImage) context.drawImage(faceImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    context.drawImage(sleeveImage, sleeveLeft, sleeveCoreTop - sleeveLayer.topPadding, sleeveWidth, sleeveLayer.imageHeight);
+    if (faceImage) {
+      const artworkLayer = productPhotoLayerMetrics(faceImage, sleeveWidth, viewH, artworkTopPaddingUnits, artworkBottomPaddingUnits);
+      context.drawImage(faceImage, sleeveLeft, sleeveCoreTop - artworkLayer.topPadding, sleeveWidth, artworkLayer.imageHeight);
+    }
     // Frame the completed, calibrated hat + sleeve composition as a unit. The
     // square canvas gives the hat consistent Shop sizing without moving or
     // scaling the sleeve independently of the master photograph.
@@ -2177,9 +2225,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     ));
   }
 
-  async function renderPackagingProductImage(sleeveImage: HTMLImageElement) {
+  async function renderPackagingProductImage(sleeveImage: HTMLImageElement, artworkImage: HTMLImageElement) {
     const packageImage = await loadStudioImage(PACKAGING_PRODUCT_PHOTO.packageSrc);
-    return await renderPackagingProductPhoto(packageImage, sleeveImage);
+    return await renderPackagingProductPhoto(packageImage, sleeveImage, artworkImage);
   }
 
   function productPhotoStageError(name: string, error: unknown) {
@@ -2203,11 +2251,12 @@ const SnapInkSleeveCustomizer = forwardRef<
       const needsOtherSleeve=productPhotoChoice.some(key=>key==="packaging"||key==="desk");
       const useOnHatSleeveAsPrimary=needsRear&&!needsOtherSleeve;
       const onHatRasterScale=rearPhotoSvgRasterScale(variant);
+      const productLayerRasterScale=useOnHatSleeveAsPrimary?onHatRasterScale:REAR_PRODUCT_PHOTO.scale;
       let onHatFaceImage: HTMLImageElement | null = null;
       sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({
         sleeveOnly:true,
-        scale:useOnHatSleeveAsPrimary?onHatRasterScale:REAR_PRODUCT_PHOTO.scale,
-        onHatProductPhoto:useOnHatSleeveAsPrimary,
+        scale:productLayerRasterScale,
+        onHatProductPhoto:true,
       }));
       const sleeveImage=await loadStudioImage(sleeveUrl);
       let onHatSleeveImage=sleeveImage;
@@ -2215,21 +2264,21 @@ const SnapInkSleeveCustomizer = forwardRef<
         onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:onHatRasterScale,onHatProductPhoto:true}));
         onHatSleeveImage=await loadStudioImage(onHatSleeveUrl);
       }
-      if (needsRear && styleMode === "emboss") {
+      if (needsRear) {
         onHatFaceUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:onHatRasterScale,onHatProductPhoto:true,onHatFaceOnly:true}));
         onHatFaceImage=await loadStudioImage(onHatFaceUrl);
       }
       const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
       const needsSleeve=productPhotoChoice.some(key=>key==="rear"||key==="packaging"||key==="desk");
       let artworkImage:HTMLImageElement|null=null;
-      if(productPhotoChoice.some(key=>key==="maleLifestyle"||key==="femaleLifestyle")){const artUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:REAR_PRODUCT_PHOTO.scale}));try{artworkImage=await loadStudioImage(artUrl);}finally{URL.revokeObjectURL(artUrl);}}
+      if(productPhotoChoice.some(key=>key==="packaging"||key==="maleLifestyle"||key==="femaleLifestyle")){const artUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,artworkOnly:true,scale:productLayerRasterScale,onHatProductPhoto:true}));try{artworkImage=await loadStudioImage(artUrl);}finally{URL.revokeObjectURL(artUrl);}}
       if(!needsSleeve){URL.revokeObjectURL(sleeveUrl);sleeveUrl=null;}
       const entries:{key:string;label:string;filename:string;blob:Blob}[]=[];
       for(const [i,key] of productPhotoChoice.entries()) {
         setProductPhotoProgress(`Generating ${labels[key]} (${i+1} of ${productPhotoChoice.length})…`);
         let blob:Blob;
         if(key==="rear")blob=await renderRearProductPhoto(onHatSleeveImage,onHatFaceImage,variant);
-        else if(key==="packaging")blob=await renderPackagingProductImage(sleeveImage);
+        else if(key==="packaging"){if(!artworkImage)throw new Error("Studio artwork could not be prepared.");blob=await renderPackagingProductImage(sleeveImage,artworkImage);}
         else if(key==="desk")blob=await renderDeskProductPhoto(variant);
         else {if(!artworkImage)throw new Error("Studio artwork could not be prepared.");blob=await renderLifestyleProductPhoto(key,artworkImage);}
         const imageSlug:Record<ProductPhotoKey,string>={rear:"on-hat",packaging:"packaging",desk:"on-desk",maleLifestyle:"male-lifestyle",femaleLifestyle:"female-lifestyle"};
