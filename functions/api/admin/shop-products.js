@@ -36,7 +36,7 @@ export async function onRequestPatch({request,env}){
   let body;try{body=await request.json()}catch{return json({error:"Invalid product update."},400)}
   if(typeof body.productId!=="string")return json({error:"Choose a valid product."},400);
   try{
-    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt,description,card_description AS cardDescription,artwork_tier AS artworkTier FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt,description,card_description AS cardDescription,artwork_tier AS artworkTier,category_id AS categoryId FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
     if(body.artworkTier!==undefined&&!["standard","premium"].includes(body.artworkTier))return json({error:"Choose Standard or Premium Extended Artwork."},400);
     // Legacy products can retain a previously published image path that no
     // longer meets the current image upload rules. Allow status-only admin
@@ -45,6 +45,11 @@ export async function onRequestPatch({request,env}){
     if(body.imageAlt!==undefined&&(typeof body.imageAlt!=="string"||!body.imageAlt.trim()||body.imageAlt.length>300))return json({error:"Enter descriptive image alt text up to 300 characters."},400);
     const time=now();
     if(body.active!==undefined){if(typeof body.active!=="boolean")return json({error:"Product activation must be true or false."},400);await env.DB.prepare("UPDATE shop_products SET active=?,updated_at=? WHERE product_id=?").bind(body.active?1:0,time,body.productId).run()}
+    if(body.categoryId!==undefined){
+      if(body.categoryId!==null&&typeof body.categoryId!=="string")return json({error:"Choose a valid product category."},400);
+      if(body.categoryId!==null){const category=await env.DB.prepare("SELECT category_id FROM shop_product_categories WHERE category_id=?").bind(body.categoryId).first();if(!category)return json({error:"Shop category not found."},404)}
+      await env.DB.prepare("UPDATE shop_products SET category_id=?,updated_at=? WHERE product_id=?").bind(body.categoryId,time,body.productId).run();
+    }
     if(body.imageUrl!==undefined||body.imageAlt!==undefined){
       await env.DB.prepare("UPDATE shop_products SET image_url=?,image_alt=?,updated_at=? WHERE product_id=?").bind(body.imageUrl??product.imageUrl,body.imageAlt?.trim()??product.imageAlt,time,body.productId).run();
     }

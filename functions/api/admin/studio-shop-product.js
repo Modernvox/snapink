@@ -23,6 +23,7 @@ export async function onRequestPost({request,env}) {
   if(!env.DB||!env.PRIVATE_ASSETS) return json({error:"Shop storage is unavailable. Confirm the shop database and private asset bucket are configured."},503);
   let form; try { form=await request.formData(); } catch { return json({error:"Product details or images are invalid."},400); }
   const name=canonicalShopProductName(form.get("name"));
+  const categoryId=String(form.get("categoryId")||"").trim();
   let cardDescription=cleanCardDescription(form.get("cardDescription"))||defaultCardDescription(name);
   let description=String(form.get("description")||"").trim()||defaultDescription(name);
   const style=String(form.get("style")||""), color=String(form.get("color")||"").trim();
@@ -44,6 +45,9 @@ export async function onRequestPost({request,env}) {
     cardDescription=removeExtendedArtworkCopy(cardDescription);
   }
   if(!name||name.length>100||!safeSlug(name)||cardDescription.length>240||description.length>2000||!['standard','billboard'].includes(style)||!/^#[0-9a-f]{6}$/i.test(color)) return json({error:"Enter a product name and use the current sleeve style and color."},400);
+  if(!categoryId)return json({error:"Choose a product category before publishing."},400);
+  const category=await env.DB.prepare("SELECT category_id FROM shop_product_categories WHERE category_id=? AND active=1").bind(categoryId).first().catch(()=>null);
+  if(!category)return json({error:"Choose an available Shop category."},400);
   const files=form.getAll("galleryImages").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
   const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
@@ -59,7 +63,7 @@ export async function onRequestPost({request,env}) {
     for(let i=0;i<thumbnails.length;i++) await env.PRIVATE_ASSETS.put(thumbnailKeys[i],thumbnails[i].stream(),{httpMetadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} On-Desk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),time,time),
+      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,category_id,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} On-Desk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),categoryId,time,time),
       env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify([0,1,2,3,4,5])),
       env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} SnapInk product image ${i+2}`,label:files[i+1]?.name||`Image ${i+2}`})))),
     ]);

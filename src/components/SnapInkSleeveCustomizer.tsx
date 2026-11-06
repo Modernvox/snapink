@@ -639,10 +639,14 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
   const [publishProductName, setPublishProductName] = useState("");
+  const [shopCategories,setShopCategories]=useState<{categoryId:string;name:string;slug:string}[]>([]);
+  const [shopCategoriesStatus,setShopCategoriesStatus]=useState("");
+  const [publishCategoryId,setPublishCategoryId]=useState("");
   const [publishProductCardDescription, setPublishProductCardDescription] = useState("");
   const [publishProductDescription, setPublishProductDescription] = useState("");
   const [publishArtworkTier, setPublishArtworkTier] = useState<"standard" | "premium">("standard");
   const [approveExtendedArtwork, setApproveExtendedArtwork] = useState(false);
+  useEffect(()=>{let cancelled=false;fetch("/api/shop/categories",{cache:"no-store"}).then(async(response)=>{const data=await response.json().catch(()=>null);if(!response.ok||!Array.isArray(data?.categories))throw new Error(data?.error||"Categories could not be loaded.");if(!cancelled){setShopCategories(data.categories);setShopCategoriesStatus(data.categories.length?"":"No enabled Shop categories are available.");}}).catch((error)=>{if(!cancelled)setShopCategoriesStatus(error instanceof Error?error.message:"Categories could not be loaded.")});return()=>{cancelled=true}},[]);
   const [publishProductStatus, setPublishProductStatus] = useState("");
   const [publishingProduct, setPublishingProduct] = useState(false);
   const [showArtworkTransparencyWarning, setShowArtworkTransparencyWarning] = useState(() => {
@@ -2317,15 +2321,16 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!studioAdminToken) return;
     if (!generatedShopImages) { alert("Generate product images first, then click Add to Shop."); return; }
     if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null);setGeneratedPhotoEntries([]); alert("The design changed after these images were generated. Generate the product images again before publishing."); return; }
-    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setPublishArtworkTier("standard");setApproveExtendedArtwork(false);setShowPublishProduct(true);
+    setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setPublishCategoryId("");setPublishArtworkTier("standard");setApproveExtendedArtwork(false);setShowPublishProduct(true);
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
     if (publishArtworkTier==="premium" && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
+    if(!publishCategoryId){setPublishProductStatus("Choose a product category before publishing.");setPublishingProduct(false);return;}
     const photoOrder:ProductPhotoKey[]=["desk","rear","packaging","maleLifestyle","femaleLifestyle"];
     const orderedPhotoEntries=[...generatedPhotoEntries].sort((a,b)=>photoOrder.indexOf(a.key as ProductPhotoKey)-photoOrder.indexOf(b.key as ProductPhotoKey));
-    const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
+    const form=new FormData();form.set("name",publishProductName);form.set("categoryId",publishCategoryId);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
     for(const entry of orderedPhotoEntries)form.append("galleryImages",entry.blob,entry.filename);
     try {
       const thumbnailFiles=await Promise.all(orderedPhotoEntries.map(async(entry)=>{
@@ -4140,6 +4145,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <form onSubmit={handlePublishProduct} className="w-full max-w-lg space-y-4 rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-neutral-100 shadow-2xl">
           <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Add product to shop</h2><p className="mt-1 text-sm text-neutral-400">Selected generated Studio images will be attached to one listing.</p></div><button type="button" aria-label="Close" onClick={()=>setShowPublishProduct(false)} className="rounded-lg px-3 py-1 text-neutral-300">×</button></div>
           <label className="block text-sm">Product Name<input required maxLength={100} value={publishProductName} onChange={(event)=>setPublishProductName(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
+          <label className="block text-sm">Product Category<select required value={publishCategoryId} onChange={(event)=>setPublishCategoryId(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"><option value="" disabled>{shopCategories.length?"Choose a category":"Categories unavailable"}</option>{shopCategories.map((category)=><option key={category.categoryId} value={category.categoryId}>{category.name}</option>)}</select>{shopCategoriesStatus&&<span role="status" className="mt-1 block text-xs text-amber-300">{shopCategoriesStatus}</span>}</label>
           <label className="block text-sm">Short Shop card description (optional)<textarea maxLength={240} value={publishProductCardDescription} onChange={(event)=>setPublishProductCardDescription(event.target.value)} placeholder={`${publishProductName || "This design"} adds a distinctive, interchangeable detail to your compatible snapback.`} rows={2} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <label className="block text-sm">Full product description (optional)<textarea maxLength={2000} value={publishProductDescription} onChange={(event)=>setPublishProductDescription(event.target.value)} placeholder={`Make the ${publishProductName || "design"} your own with a SnapInk sleeve made for compatible snapback closures. Sleeve only; hat sold separately.`} rows={3} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2" /></label>
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>

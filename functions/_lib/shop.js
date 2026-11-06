@@ -13,6 +13,15 @@ export function parseShopJson(value, fallback) {
   try { return JSON.parse(value); } catch { return fallback; }
 }
 
+export async function readShopCategories(db, { includeInactive = false } = {}) {
+  const rows = await db.prepare(`SELECT category_id AS categoryId,name,slug,sort_order AS sortOrder,active
+    FROM shop_product_categories ${includeInactive ? "" : "WHERE active=1"} ORDER BY sort_order,name`).all();
+  const counts = await db.prepare(`SELECT category_id AS categoryId,COUNT(*) AS productCount
+    FROM shop_products WHERE active=1 AND category_id IS NOT NULL GROUP BY category_id`).all();
+  const countById = new Map((counts.results || []).map((row) => [row.categoryId, Number(row.productCount) || 0]));
+  return (rows.results || []).map((row) => ({...row,active:Boolean(row.active),productCount:countById.get(row.categoryId)||0}));
+}
+
 export function parseShopGallery(value) {
   let gallery = value;
   for (let depth = 0; depth < 2 && typeof gallery === "string"; depth++) {
@@ -25,11 +34,11 @@ export function parseShopGallery(value) {
 export async function readShopProducts(db, { includeInactive = false } = {}) {
   let rows;
   try {
-    rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,card_description AS cardDescription,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,artwork_tier AS artworkTier,production_metadata_json AS productionMetadataJson,active
-      FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
+    rows = await db.prepare(`SELECT product.product_id AS productId,product.slug,product.name,product.description,product.card_description AS cardDescription,product.image_url AS imageUrl,product.image_alt AS imageAlt,product.prices_json AS pricesJson,product.artwork_tier AS artworkTier,product.production_metadata_json AS productionMetadataJson,product.category_id AS categoryId,category.name AS categoryName,category.slug AS categorySlug,product.active
+      FROM shop_products AS product LEFT JOIN shop_product_categories AS category ON category.category_id=product.category_id ${includeInactive ? "" : "WHERE product.active=1"} ORDER BY product.name`).all();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (!/no such column:\s*(?:card_description|artwork_tier|production_metadata_json)/i.test(message)) throw error;
+    if (!/no such (?:column|table):\s*(?:card_description|artwork_tier|production_metadata_json|(?:shop_products\.)?category_id|shop_product_categories)/i.test(message)) throw error;
     rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
       FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
   }
@@ -53,7 +62,7 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
       variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,sleeveImageUrl:variant.sleeveImageUrl,sleeveImageAlt:variant.sleeveImageAlt,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
     }
     const galleryRow = await db.prepare("SELECT gallery_json AS galleryJson FROM shop_product_galleries WHERE product_id=?").bind(row.productId).first().catch(()=>null);
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,gallery:parseShopGallery(galleryRow?.galleryJson),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),variants});
+    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:parseShopGallery(galleryRow?.galleryJson),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),variants});
   }
   return products;
 }
