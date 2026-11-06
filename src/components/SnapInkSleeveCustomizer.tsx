@@ -1654,8 +1654,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
-    exportSvg.setAttribute("width", String(viewW));
-    exportSvg.setAttribute("height", String(viewH + topExtensionSvgUnits + bottomExtensionSvgUnits));
+    // On-Desk maps the vector artwork through a perspective warp into the final
+    // photo. Rasterize embossed vectors above their destination pixel density
+    // so thin counters and bevel highlights survive that warp. Flat artwork
+    // keeps its existing raster path and appearance.
+    const artworkRasterScale = styleMode === "emboss" ? 2 : 1;
+    exportSvg.setAttribute("width", String(viewW * artworkRasterScale));
+    exportSvg.setAttribute("height", String((viewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * artworkRasterScale));
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
         const href = image.getAttribute("href");
@@ -1868,8 +1873,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       await new Promise<void>((resolve, reject) => { source.onload = () => resolve(); source.onerror = () => reject(new Error("Could not render the selected Studio artwork.")); source.src = svgUrl; });
     } finally { URL.revokeObjectURL(svgUrl); }
     const sourceCanvas = document.createElement("canvas");
-    sourceCanvas.width = Math.max(1, Math.round(svg.viewBox.baseVal.width));
-    sourceCanvas.height = Math.max(1, Math.round(svg.viewBox.baseVal.height + topExtensionSvgUnits + bottomExtensionSvgUnits));
+    sourceCanvas.width = Math.max(1, Math.round(svg.viewBox.baseVal.width * artworkRasterScale));
+    sourceCanvas.height = Math.max(1, Math.round((svg.viewBox.baseVal.height + topExtensionSvgUnits + bottomExtensionSvgUnits) * artworkRasterScale));
     const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
     if (!sourceContext) throw new Error("The artwork export canvas is unavailable.");
     sourceContext.drawImage(source, 0, 0, sourceCanvas.width, sourceCanvas.height);
@@ -1889,13 +1894,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     // photoArtworkTransform, responsive preview transforms, and the position controls.
     // Map its rendered artwork fraction from the visible sleeve face onto the desk face;
     // Calibration 08 contributes perspective only and never normalizes designs to LIFT size.
-    const physicalSourceFace = JSON.parse(svg.getAttribute("data-photo-face-points") || "[]") as [number, number][];
+    const physicalSourceFace = (JSON.parse(svg.getAttribute("data-photo-face-points") || "[]") as [number, number][])
+      .map(([x, y]) => [x * artworkRasterScale, y * artworkRasterScale] as [number, number]);
     if (physicalSourceFace.length !== 4) throw new Error("The Studio sleeve face geometry is unavailable.");
     const sourceFacePoints: [number, number][] = [
-      [physicalSourceFace[0][0] + (physicalSourceFace[0][0] - physicalSourceFace[3][0]) * photoFaceExtensionRatio, physicalSourceFace[0][1] + (physicalSourceFace[0][1] - physicalSourceFace[3][1]) * photoFaceExtensionRatio + topExtensionSvgUnits],
-      [physicalSourceFace[1][0] + (physicalSourceFace[1][0] - physicalSourceFace[2][0]) * photoFaceExtensionRatio, physicalSourceFace[1][1] + (physicalSourceFace[1][1] - physicalSourceFace[2][1]) * photoFaceExtensionRatio + topExtensionSvgUnits],
-      [physicalSourceFace[2][0] + (physicalSourceFace[2][0] - physicalSourceFace[1][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[2][1] + (physicalSourceFace[2][1] - physicalSourceFace[1][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits],
-      [physicalSourceFace[3][0] + (physicalSourceFace[3][0] - physicalSourceFace[0][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[3][1] + (physicalSourceFace[3][1] - physicalSourceFace[0][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits],
+      [physicalSourceFace[0][0] + (physicalSourceFace[0][0] - physicalSourceFace[3][0]) * photoFaceExtensionRatio, physicalSourceFace[0][1] + (physicalSourceFace[0][1] - physicalSourceFace[3][1]) * photoFaceExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
+      [physicalSourceFace[1][0] + (physicalSourceFace[1][0] - physicalSourceFace[2][0]) * photoFaceExtensionRatio, physicalSourceFace[1][1] + (physicalSourceFace[1][1] - physicalSourceFace[2][1]) * photoFaceExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
+      [physicalSourceFace[2][0] + (physicalSourceFace[2][0] - physicalSourceFace[1][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[2][1] + (physicalSourceFace[2][1] - physicalSourceFace[1][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
+      [physicalSourceFace[3][0] + (physicalSourceFace[3][0] - physicalSourceFace[0][0]) * photoFaceBottomExtensionRatio, physicalSourceFace[3][1] + (physicalSourceFace[3][1] - physicalSourceFace[0][1]) * photoFaceBottomExtensionRatio + topExtensionSvgUnits * artworkRasterScale],
     ];
     const boundsOf = (points: [number, number][]) => ({
       left: Math.min(...points.map(([x]) => x)), right: Math.max(...points.map(([x]) => x)),
