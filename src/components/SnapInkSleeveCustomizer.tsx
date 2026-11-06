@@ -1640,7 +1640,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean } = {}): Promise<Blob> {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean; onHatFaceOnly?: boolean } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
       throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
@@ -1664,6 +1664,18 @@ const SnapInkSleeveCustomizer = forwardRef<
       : viewH + topExtensionSvgUnits + bottomExtensionSvgUnits;
     exportSvg.setAttribute("width", String(svgRasterWidth));
     exportSvg.setAttribute("height", String(svgRasterHeight));
+    if (options.onHatFaceOnly) {
+      const artworkClip = exportSvg.querySelector<SVGGElement>('[data-artwork-clip="true"]');
+      const rootDefs = exportSvg.querySelector(":scope > defs");
+      if (!artworkClip || !rootDefs) throw new Error("The On-Hat artwork face is unavailable.");
+      for (const child of Array.from(exportSvg.children)) {
+        if (child !== rootDefs && child !== artworkClip) child.remove();
+      }
+      artworkClip.querySelectorAll("[data-emboss-extrusion-step], [data-preview-only]").forEach((node) => node.remove());
+      // Keep the SVG's original face geometry and fill, while bypassing filters
+      // that are reserved for the sidewall/bevel pass.
+      artworkClip.querySelectorAll("[filter]").forEach((node) => node.removeAttribute("filter"));
+    }
     if (onHatSvgRaster && styleMode === "emboss") {
       // Match the subtler sidewall depth used by On-Desk, only for this cloned
       // On-Hat export. Keep the offset directional so the lettering still has
@@ -1739,7 +1751,10 @@ const SnapInkSleeveCustomizer = forwardRef<
           in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossBevelShade",
         });
         const finalMerge = addFilterPrimitive("feMerge", {});
-        for (const input of ["embossBevelBase", "embossBevelTone", "embossBevelShade", "embossBevelHighlight", "SourceGraphic"]) {
+        // The On-Hat base contains only bevel shading; its original white face
+        // is rendered separately without this filter and composited afterward.
+        const mergedLayers = ["embossBevelBase", "embossBevelTone", "embossBevelShade", "embossBevelHighlight"];
+        for (const input of mergedLayers) {
           const node = document.createElementNS("http://www.w3.org/2000/svg", "feMergeNode");
           node.setAttribute("in", input);
           finalMerge.appendChild(node);
@@ -2156,7 +2171,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return rearPhotoSleeveWidth(productStyle) / (viewW * sleeveScaleRatio);
   }
 
-  async function renderRearProductPhoto(sleeveImage: HTMLImageElement, productStyle: SleeveVariant = variant) {
+  async function renderRearProductPhoto(sleeveImage: HTMLImageElement, faceImage: HTMLImageElement | null, productStyle: SleeveVariant = variant) {
     const hatImage = await loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc);
     if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
       throw new Error("The approved rear hat master has unexpected dimensions.");
@@ -2184,6 +2199,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       - (productStyle === "standard" ? 5 : 0)
     );
     context.drawImage(sleeveImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
+    if (faceImage) context.drawImage(faceImage, sleeveLeft, sleeveTop, sleeveWidth, sleeveHeight);
     // Frame the completed, calibrated hat + sleeve composition as a unit. The
     // square canvas gives the hat consistent Shop sizing without moving or
     // scaling the sleeve independently of the master photograph.
@@ -2220,12 +2236,14 @@ const SnapInkSleeveCustomizer = forwardRef<
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
     let onHatSleeveUrl: string | null = null;
+    let onHatFaceUrl: string | null = null;
     try {
       const slug=productPhotoSlug();
       const needsRear=productPhotoChoice.includes("rear");
       const needsOtherSleeve=productPhotoChoice.some(key=>key==="packaging"||key==="desk");
       const useOnHatSleeveAsPrimary=needsRear&&!needsOtherSleeve;
       const onHatRasterScale=rearPhotoSvgRasterScale(variant);
+      let onHatFaceImage: HTMLImageElement | null = null;
       sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({
         sleeveOnly:true,
         scale:useOnHatSleeveAsPrimary?onHatRasterScale:REAR_PRODUCT_PHOTO.scale,
@@ -2237,6 +2255,10 @@ const SnapInkSleeveCustomizer = forwardRef<
         onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:onHatRasterScale,onHatProductPhoto:true}));
         onHatSleeveImage=await loadStudioImage(onHatSleeveUrl);
       }
+      if (needsRear && styleMode === "emboss") {
+        onHatFaceUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:onHatRasterScale,onHatProductPhoto:true,onHatFaceOnly:true}));
+        onHatFaceImage=await loadStudioImage(onHatFaceUrl);
+      }
       const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
       const needsSleeve=productPhotoChoice.some(key=>key==="rear"||key==="packaging"||key==="desk");
       let artworkImage:HTMLImageElement|null=null;
@@ -2246,7 +2268,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       for(const [i,key] of productPhotoChoice.entries()) {
         setProductPhotoProgress(`Generating ${labels[key]} (${i+1} of ${productPhotoChoice.length})…`);
         let blob:Blob;
-        if(key==="rear")blob=await renderRearProductPhoto(onHatSleeveImage,variant);
+        if(key==="rear")blob=await renderRearProductPhoto(onHatSleeveImage,onHatFaceImage,variant);
         else if(key==="packaging")blob=await renderPackagingProductImage(sleeveImage);
         else if(key==="desk")blob=await renderDeskProductPhoto(variant);
         else {if(!artworkImage)throw new Error("Studio artwork could not be prepared.");blob=await renderLifestyleProductPhoto(key,artworkImage);}
@@ -2264,6 +2286,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     } finally {
       if (sleeveUrl) URL.revokeObjectURL(sleeveUrl);
       if (onHatSleeveUrl) URL.revokeObjectURL(onHatSleeveUrl);
+      if (onHatFaceUrl) URL.revokeObjectURL(onHatFaceUrl);
       setIsGeneratingProductImage(false);
       setProductPhotoProgress("");
     }
