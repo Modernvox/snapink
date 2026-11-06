@@ -1676,7 +1676,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           (_match, x: string, y: string) => `translate(${Number(x) * 0.35} ${Number(y) * 0.35})`,
         ));
         const opacity = Number(layer.getAttribute("opacity") ?? 1);
-        layer.setAttribute("opacity", String(opacity * 0.8));
+        layer.setAttribute("opacity", String(opacity * 0.85));
       }
       const highlightFilter = exportSvg.querySelector(`#${embossFaceHighlightId}`);
       const highlightOffset = highlightFilter?.querySelector("feOffset");
@@ -1684,7 +1684,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         highlightOffset.setAttribute("dx", String(Number(highlightOffset.getAttribute("dx") || 0) * 1.5));
         highlightOffset.setAttribute("dy", String(Number(highlightOffset.getAttribute("dy") || 0) * 1.5));
       }
-      highlightFilter?.querySelector("feFlood")?.setAttribute("flood-opacity", "0.7");
+      highlightFilter?.querySelector("feFlood")?.setAttribute("flood-opacity", "0.76");
     }
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
