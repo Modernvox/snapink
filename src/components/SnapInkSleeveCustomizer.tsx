@@ -338,10 +338,6 @@ const REAR_PRODUCT_PHOTO = {
   sleeveCenterY: 716.5,
   scale: 4,
 } as const;
-// The locked On-Hat composition places the sleeve at roughly 512 px wide.
-// Scale 1 renders its source near 2x that destination for antialiasing without
-// the 4x source that would be reduced by more than eight times.
-const ON_HAT_SLEEVE_RASTER_SCALE = 1;
 const BILLBOARD_ON_DESK_PRODUCT_PHOTO = {
   masterSrc: DESK_PRODUCT_PHOTO_CALIBRATION.masterImage,
   width: DESK_PRODUCT_PHOTO_CALIBRATION.masterDimensions.width,
@@ -1660,9 +1656,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
-    // Rasterize the vector sleeve at its actual high-resolution output canvas
-    // size for On-Hat. This avoids rasterizing at 1600 px and then enlarging
-    // that bitmap before the single downsample onto the hat master.
+    // For On-Hat, rasterize the SVG at the sleeve's calibrated destination
+    // width so canvas composition does not resample the flattened sleeve.
     const svgRasterWidth = onHatSvgRaster ? Math.round(viewW * sleeveScaleRatio * scale) : viewW;
     const svgRasterHeight = onHatSvgRaster
       ? Math.round((previewViewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * sleeveScaleRatio * scale)
@@ -2142,6 +2137,25 @@ const SnapInkSleeveCustomizer = forwardRef<
     return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Lifestyle PNG encoding failed.")),"image/png"));
   }
 
+  function rearPhotoGrooveFraction(productStyle: SleeveVariant) {
+    return productStyle === "billboard"
+      ? REAR_PRODUCT_PHOTO.grooveSourceX / REAR_PRODUCT_PHOTO.studioExportWidth
+      : sleeveGrooveFractionFor("standard", previewSleeveSize);
+  }
+
+  function rearPhotoSleeveWidth(productStyle: SleeveVariant) {
+    const grooveFraction = rearPhotoGrooveFraction(productStyle);
+    return Math.round(
+      (REAR_PRODUCT_PHOTO.rightStrapOpeningX - REAR_PRODUCT_PHOTO.leftStrapExitX) / (1 - grooveFraction)
+    );
+  }
+
+  function rearPhotoSvgRasterScale(productStyle: SleeveVariant) {
+    // Match the SVG raster width to the existing canvas destination. This
+    // preserves the calibration and removes the intermediate sleeve resize.
+    return rearPhotoSleeveWidth(productStyle) / (viewW * sleeveScaleRatio);
+  }
+
   async function renderRearProductPhoto(sleeveImage: HTMLImageElement, productStyle: SleeveVariant = variant) {
     const hatImage = await loadStudioImage(REAR_PRODUCT_PHOTO.hatSrc);
     if (hatImage.naturalWidth !== REAR_PRODUCT_PHOTO.width || hatImage.naturalHeight !== REAR_PRODUCT_PHOTO.height) {
@@ -2153,20 +2167,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     const context = composition.getContext("2d");
     if (!context) throw new Error("The product-image canvas is unavailable.");
     context.imageSmoothingEnabled = true;
-    // Medium filtering keeps the single 2x embossed sleeve downsample
-    // antialiased without washing out its subpixel bevel edges. Flat exports
-    // retain the existing high-quality resampling.
-    context.imageSmoothingQuality = styleMode === "emboss" ? "medium" : "high";
+    context.imageSmoothingQuality = "high";
     context.drawImage(hatImage, 0, 0);
 
     // Keep Billboard's approved rear-photo datum untouched. Standard shares the
     // same hat opening and artwork scale, with its own CAD groove fraction.
-    const grooveFraction = productStyle === "billboard"
-      ? REAR_PRODUCT_PHOTO.grooveSourceX / REAR_PRODUCT_PHOTO.studioExportWidth
-      : sleeveGrooveFractionFor("standard", previewSleeveSize);
-    const sleeveWidth = Math.round(
-      (REAR_PRODUCT_PHOTO.rightStrapOpeningX - REAR_PRODUCT_PHOTO.leftStrapExitX) / (1 - grooveFraction)
-    );
+    const grooveFraction = rearPhotoGrooveFraction(productStyle);
+    const sleeveWidth = rearPhotoSleeveWidth(productStyle);
     const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
     const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
     const extensionPixels = sleeveWidth * MAX_TOP_ARTWORK_EXTENSION_MM / overallLengthMm;
@@ -2218,15 +2225,16 @@ const SnapInkSleeveCustomizer = forwardRef<
       const needsRear=productPhotoChoice.includes("rear");
       const needsOtherSleeve=productPhotoChoice.some(key=>key==="packaging"||key==="desk");
       const useOnHatSleeveAsPrimary=needsRear&&!needsOtherSleeve;
+      const onHatRasterScale=rearPhotoSvgRasterScale(variant);
       sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({
         sleeveOnly:true,
-        scale:useOnHatSleeveAsPrimary?ON_HAT_SLEEVE_RASTER_SCALE:REAR_PRODUCT_PHOTO.scale,
+        scale:useOnHatSleeveAsPrimary?onHatRasterScale:REAR_PRODUCT_PHOTO.scale,
         onHatProductPhoto:useOnHatSleeveAsPrimary,
       }));
       const sleeveImage=await loadStudioImage(sleeveUrl);
       let onHatSleeveImage=sleeveImage;
       if(needsRear&&!useOnHatSleeveAsPrimary){
-        onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:ON_HAT_SLEEVE_RASTER_SCALE,onHatProductPhoto:true}));
+        onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:onHatRasterScale,onHatProductPhoto:true}));
         onHatSleeveImage=await loadStudioImage(onHatSleeveUrl);
       }
       const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
