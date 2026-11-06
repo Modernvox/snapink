@@ -5,8 +5,8 @@ const POSITIONING_VERSION = "cad-flap-valley-to-right-edge-v1";
 const STUDIO_ARTWORK_VERTICAL_POSITION_MIN = -400;
 
 export function validDraft(draft) {
-  if (!draft || typeof draft !== "object" || Array.isArray(draft) || Object.keys(draft).length > 40) return false;
-  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkHeightScale","logoOpacity","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork"]);
+  if (!draft || typeof draft !== "object" || Array.isArray(draft) || Object.keys(draft).length > 48) return false;
+  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkHeightScale","logoOpacity","artworkStrokeEnabled","artworkStrokeWidthMm","artworkStrokeColor","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork"]);
   if (Object.keys(draft).some((key) => !allowed.has(key))) return false;
   if (draft.productionGeometryVersion !== GEOMETRY_VERSION || draft.positioningVersion !== POSITIONING_VERSION) return false;
   if (typeof draft.hasCustomArtwork !== "boolean" || !Number.isFinite(draft.brandingCenterXmm) || !Number.isFinite(draft.artworkCenterXmm) || (draft.artworkCenterYmm != null && !Number.isFinite(draft.artworkCenterYmm))) return false;
@@ -40,6 +40,10 @@ export function validDraft(draft) {
     || typeof draft.extendedArtwork !== "boolean" || draft.extendedArtwork !== requiresPremiumArtwork)) return false;
   if (!Number.isFinite(draft.strokeWidth) || draft.strokeWidth < 0 || draft.strokeWidth > 40 || !["emboss","flat"].includes(draft.styleMode) || !["start","center","end"].includes(draft.align) || draft.bgType !== "vector") return false;
   for (const color of [draft.fill,draft.stroke,draft.backgroundColor]) if (typeof color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(color)) return false;
+  if (draft.artworkStrokeEnabled != null && typeof draft.artworkStrokeEnabled !== "boolean") return false;
+  if (draft.artworkStrokeWidthMm != null && (!Number.isFinite(draft.artworkStrokeWidthMm) || draft.artworkStrokeWidthMm < 0.25 || draft.artworkStrokeWidthMm > 5)) return false;
+  if (draft.artworkStrokeColor != null && (typeof draft.artworkStrokeColor !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(draft.artworkStrokeColor))) return false;
+  if (draft.artworkStrokeEnabled && (!Number.isFinite(draft.artworkStrokeWidthMm) || draft.artworkStrokeWidthMm < 0.25 || draft.artworkStrokeWidthMm > 5 || typeof draft.artworkStrokeColor !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(draft.artworkStrokeColor))) return false;
   if (draft.hasCustomArtwork !== Boolean(draft.text.trim() || draft.logoName)) return false;
   return draft.logoName == null || (typeof draft.logoName === "string" && draft.logoName.length <= 180);
 }

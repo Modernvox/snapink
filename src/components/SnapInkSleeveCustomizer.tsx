@@ -149,6 +149,9 @@ export type SleeveDraft = {
   artworkExtensionMm: number;
   artworkTopExtensionMm?: number;
   artworkBottomExtensionMm?: number;
+  artworkStrokeEnabled?: boolean;
+  artworkStrokeWidthMm?: number;
+  artworkStrokeColor?: string;
   extendedArtwork: boolean;
   hasCustomArtwork: boolean;
 };
@@ -229,6 +232,7 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   | "tracking" | "lineHeight" | "fill" | "stroke" | "strokeWidth"
   | "styleMode" | "arc" | "posX" | "posY" | "logoPosY" | "align" | "safeMargin"
   | "bgType" | "backgroundColor" | "logoX" | "logoY" | "logoScale" | "logoOpacity"
+  | "artworkStrokeEnabled" | "artworkStrokeWidthMm" | "artworkStrokeColor"
 > = {
   size: 2,
   variant: "billboard",
@@ -259,6 +263,9 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
   logoY: 50,
   logoScale: STUDIO_DEFAULT_ARTWORK_SCALE_PERCENT,
   logoOpacity: 100,
+  artworkStrokeEnabled: false,
+  artworkStrokeWidthMm: 1.5,
+  artworkStrokeColor: "#000000",
 };
 
 // ---------- Color Swatches ----------
@@ -472,7 +479,8 @@ function drawStudioComposition(
   lifestyleBackground: HTMLImageElement | null = null,
   stageVerticalOffset = 0,
   hasExtendedArtworkMargin = false,
-  topArtworkExtensionMm = MAX_TOP_ARTWORK_EXTENSION_MM
+  topArtworkExtensionMm = MAX_TOP_ARTWORK_EXTENSION_MM,
+  bottomArtworkExtensionMm = MAX_BOTTOM_ARTWORK_EXTENSION_MM
 ) {
   if (!ghostHat) {
     context.drawImage(sleeve, 0, 0, canvas.width, canvas.height);
@@ -497,7 +505,7 @@ function drawStudioComposition(
   context.translate(sleeveCenterX + sleeveWidth * (sleeveGrooveFraction - 0.5), sleeveCenterY);
   context.rotate(sleeveRotationDeg * Math.PI / 180);
   const topExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * topArtworkExtensionMm / overallLengthMm : 0;
-  const bottomExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * MAX_BOTTOM_ARTWORK_EXTENSION_MM / overallLengthMm : 0;
+  const bottomExtensionPixels = hasExtendedArtworkMargin ? sleeveWidth * bottomArtworkExtensionMm / overallLengthMm : 0;
   context.drawImage(
     sleeve,
     preserveDesktopGrooveAnchor ? -sleeveWidth * sleeveGrooveFraction : -sleeveWidth / 2,
@@ -646,6 +654,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [logoScale, setLogoScale] = useState(initial.logoScale ?? OFFICIAL_STUDIO_DEFAULTS.logoScale);
   const [artworkHeightScale, setArtworkHeightScale] = useState(initial.artworkHeightScale ?? 100);
   const [logoOpacity, setLogoOpacity] = useState(initial.logoOpacity ?? OFFICIAL_STUDIO_DEFAULTS.logoOpacity);
+  const [artworkStrokeEnabled, setArtworkStrokeEnabled] = useState(initial.artworkStrokeEnabled ?? OFFICIAL_STUDIO_DEFAULTS.artworkStrokeEnabled);
+  const [artworkStrokeWidthMm, setArtworkStrokeWidthMm] = useState(initial.artworkStrokeWidthMm ?? OFFICIAL_STUDIO_DEFAULTS.artworkStrokeWidthMm);
+  const [artworkStrokeColor, setArtworkStrokeColor] = useState(initial.artworkStrokeColor ?? OFFICIAL_STUDIO_DEFAULTS.artworkStrokeColor);
   const [variant, setVariant] = useState<SleeveVariant>(initial.variant ?? OFFICIAL_STUDIO_DEFAULTS.variant);
 
   // Mobile accordion
@@ -868,6 +879,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     setLogoInputVersion((version) => version + 1);
     setLogoScale(OFFICIAL_STUDIO_DEFAULTS.logoScale);
     setLogoOpacity(OFFICIAL_STUDIO_DEFAULTS.logoOpacity);
+    setArtworkStrokeEnabled(OFFICIAL_STUDIO_DEFAULTS.artworkStrokeEnabled);
+    setArtworkStrokeWidthMm(OFFICIAL_STUDIO_DEFAULTS.artworkStrokeWidthMm);
+    setArtworkStrokeColor(OFFICIAL_STUDIO_DEFAULTS.artworkStrokeColor);
     setVariant(OFFICIAL_STUDIO_DEFAULTS.variant);
     setSleeveSize(OFFICIAL_STUDIO_DEFAULTS.size);
     setGhostHat(true);
@@ -1036,7 +1050,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     (point[1] - sleevePhoto.crop.y) * photoScale * photoImageScaleY,
   ] as const;
   const photoFacePoints = sleevePhoto.face.map(photoPoint);
-  const photoFaceExtensionRatio = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM / (bounds.maxY - bounds.minY);
+  const artworkStrokeExtensionMm = artworkStrokeEnabled ? artworkStrokeWidthMm : 0;
+  const photoFaceExtensionRatio = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) / (bounds.maxY - bounds.minY);
   const extendedPhotoTopLeft: [number, number] = [
     photoFacePoints[0][0] + (photoFacePoints[0][0] - photoFacePoints[3][0]) * photoFaceExtensionRatio,
     photoFacePoints[0][1] + (photoFacePoints[0][1] - photoFacePoints[3][1]) * photoFaceExtensionRatio,
@@ -1045,7 +1060,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     photoFacePoints[1][0] + (photoFacePoints[1][0] - photoFacePoints[2][0]) * photoFaceExtensionRatio,
     photoFacePoints[1][1] + (photoFacePoints[1][1] - photoFacePoints[2][1]) * photoFaceExtensionRatio,
   ];
-  const photoFaceBottomExtensionRatio = MAX_BOTTOM_ARTWORK_EXTENSION_MM / (bounds.maxY - bounds.minY);
+  const photoFaceBottomExtensionRatio = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) / (bounds.maxY - bounds.minY);
   const extendedPhotoBottomRight: [number, number] = [
     photoFacePoints[2][0] + (photoFacePoints[2][0] - photoFacePoints[1][0]) * photoFaceBottomExtensionRatio,
     photoFacePoints[2][1] + (photoFacePoints[2][1] - photoFacePoints[1][1]) * photoFaceBottomExtensionRatio,
@@ -1154,6 +1169,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const pathId = `text-arc-path-${uid}`;
   const surfaceClipId = `printable-surface-${uid}`;
   const embossFaceHighlightId = `emboss-face-highlight-${uid}`;
+  const artworkStrokeFilterId = `artwork-stroke-${uid}`;
   const grooveCutoutPath = useMemo(
     () => nonPrintableGroovePath(variant, renderGeometrySize, viewW, viewH),
     [variant, renderGeometrySize, viewH]
@@ -1364,6 +1380,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // All previews and exports use the same CAD-referenced artwork position.
   const logoCenterYmm = logoPositionCenterYmm;
   const svgUnitsPerMm = viewW / overallLengthMm;
+  const artworkStrokeRadiusSvg = artworkStrokeExtensionMm * svgUnitsPerMm;
   const embossedExtrusionX = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.32;
   const embossedExtrusionY = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_MM * svgUnitsPerMm * 0.72;
   const visibleLogoWidthSvg = logoHeightMm * logoAspectRatio * svgUnitsPerMm;
@@ -1519,6 +1536,9 @@ const SnapInkSleeveCustomizer = forwardRef<
       logoScale,
       artworkHeightScale,
       logoOpacity,
+      artworkStrokeEnabled,
+      artworkStrokeWidthMm,
+      artworkStrokeColor,
       productionGeometryVersion: GEOMETRY_VERSION,
       positioningVersion: POSITIONING_VERSION,
       brandingCenterXmm: productionBrandingRegion.centerXmm,
@@ -1555,6 +1575,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     logoScale,
     artworkHeightScale,
     logoOpacity,
+    artworkStrokeEnabled,
+    artworkStrokeWidthMm,
+    artworkStrokeColor,
     sleeveSize,
     variant,
     onChange,
@@ -1662,8 +1685,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
     if(options.artworkOnly)exportSvg.querySelectorAll('[data-product-image="true"]').forEach(node=>node.remove());
     exportSvg.removeAttribute("style");
-    const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
-    const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const topExtensionSvgUnits = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const bottomExtensionSvgUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
     // For On-Hat, rasterize the SVG at the sleeve's calibrated destination
@@ -1685,7 +1708,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       // Preserve the source face and alpha exactly. The On-Hat image clone
       // omits every emboss filter and CSS filter; relief remains in Studio.
       for (const node of [artworkClip, ...Array.from(artworkClip.querySelectorAll<SVGElement>("*"))]) {
-        node.removeAttribute("filter");
+        if (node.getAttribute("filter") !== `url(#${artworkStrokeFilterId})`) node.removeAttribute("filter");
         node.style.removeProperty("filter");
         if (!node.style.length) node.removeAttribute("style");
       }
@@ -1774,7 +1797,9 @@ const SnapInkSleeveCustomizer = forwardRef<
         !isMobilePreview,
         lifestyleImage,
         stageVerticalOffset,
-        true
+        true,
+        MAX_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+        MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm
       );
       let outputCanvas = canvas;
       if (ghostImage) {
@@ -1821,7 +1846,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     const sleeveWidth = sleeve.width;
     const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
     const sleeveLeft = Math.round(sleeve.centerX - sleeveWidth / 2);
-    const extensionPixels = sleeveWidth * MAX_TOP_ARTWORK_EXTENSION_MM / overallLengthMm;
+    const extensionPixels = sleeveWidth * (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) / overallLengthMm;
     const sleeveTop = sleeve.topY - extensionPixels;
     if (sleeveLeft < 0 || sleeveTop < 0 || sleeveLeft + sleeveWidth > width || sleeveTop + sleeveHeight > height) {
       throw new Error("The approved packaging sleeve placement falls outside the package image.");
@@ -1870,8 +1895,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const { width, height, artworkQuad } = calibration;
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"], [data-product-image="true"], line').forEach((node) => node.remove());
-    const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
-    const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const topExtensionSvgUnits = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const bottomExtensionSvgUnits = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
     // Rasterize the desk-only embossed vector source above destination density
     // before its perspective warp. Flat artwork keeps its original 1x path.
@@ -2052,7 +2077,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function shopImageDesignSignature() {
-    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,sleeveSize,lifestyleCalibration});
+    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor,sleeveSize,lifestyleCalibration});
   }
 
   async function renderLifestyleProductPhoto(key:"maleLifestyle"|"femaleLifestyle", artworkImage:HTMLImageElement) {
@@ -2127,7 +2152,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     const sleeveWidth = rearPhotoSleeveWidth(productStyle);
     const sleeveHeight = Math.round(sleeveWidth * sleeveImage.naturalHeight / sleeveImage.naturalWidth);
     const sleeveLeft = Math.round(REAR_PRODUCT_PHOTO.leftStrapExitX - grooveFraction * sleeveWidth);
-    const extensionPixels = sleeveWidth * MAX_TOP_ARTWORK_EXTENSION_MM / overallLengthMm;
     // The sleeve PNG reserves identical transparent margins above and below;
     // its midpoint therefore remains the original physical sleeve midpoint.
     const sleeveTop = Math.round(
@@ -2260,6 +2284,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       }));
       for(const thumbnail of thumbnailFiles)form.append("galleryThumbnails",thumbnail.blob,thumbnail.name);
     } catch { /* Keep publishing functional when a browser cannot create WebP thumbnails. */ }
+    form.set("artworkStrokeEnabled",String(artworkStrokeEnabled));form.set("artworkStrokeWidthMm",String(artworkStrokeWidthMm));form.set("artworkStrokeColor",artworkStrokeColor);
     form.set("artworkTier",publishArtworkTier);form.set("artworkExtensionMm",String(artworkExtensionMm));form.set("artworkTopExtensionMm",String(artworkStatus.topExtensionMm));form.set("artworkBottomExtensionMm",String(artworkStatus.bottomExtensionMm));form.set("artworkWidthMm",String(selectedArtworkWidthMm));form.set("artworkHeightMm",String(selectedArtworkHeightMm));form.set("artworkHeightScale",String(artworkHeightScale));form.set("artworkCenterXmm",String(productionDraftPosition.centerXmm));form.set("artworkCenterYmm",String(productionCenterYmm));form.set("approveExtendedArtwork",approveExtendedArtwork ? "true" : "false");
     try {
       const response=await fetch("/api/admin/studio-shop-product",{method:"POST",headers:{Authorization:`Bearer ${studioAdminToken}`},body:form});const result=await response.json().catch(()=>null);
@@ -2312,8 +2337,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       const href = image.getAttribute("href");
       if (href) image.setAttribute("href", await resolveDataUrl(href));
     }
-    const previewTopPadding = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
-    const previewBottomPadding = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const previewTopPadding = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const previewBottomPadding = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
     previewSvg.setAttribute("viewBox", `0 ${-previewTopPadding} ${viewW} ${viewH + previewTopPadding + previewBottomPadding}`);
     previewSvg.setAttribute("width", String(viewW));
     previewSvg.setAttribute("height", String(viewH + previewTopPadding + previewBottomPadding));
@@ -2331,8 +2356,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const artworkClip = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-clip="true"]');
     artworkOverlay?.removeAttribute("transform");
     artworkClip?.setAttribute("clip-path", `url(#${surfaceClipId}-printable-cad)`);
-    const productionTopPadding = MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
-    const productionBottomPadding = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
+    const productionTopPadding = (MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
+    const productionBottomPadding = (MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) * viewH / (bounds.maxY - bounds.minY);
     artworkSvgNode.setAttribute("viewBox", `0 ${-productionTopPadding} ${viewW} ${viewH + productionTopPadding + productionBottomPadding}`);
     artworkSvgNode.setAttribute("width", String(viewW));
     artworkSvgNode.setAttribute("height", String(viewH + productionTopPadding + productionBottomPadding));
@@ -2362,7 +2387,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         : Math.round(viewW * sleeveScaleRatio * previewScale);
       canvas.height = ghostHat
         ? Math.round(canvas.width / stageAspectRatio)
-        : Math.round(previewViewH * sleeveScaleRatio * previewScale);
+        : Math.round((previewViewH + previewTopPadding + previewBottomPadding) * sleeveScaleRatio * previewScale);
       const context = canvas.getContext("2d");
       if (!context) throw new Error("Preview rendering is unavailable.");
       drawStudioComposition(
@@ -2382,7 +2407,8 @@ const SnapInkSleeveCustomizer = forwardRef<
         lifestyleImage
         ,0,
         true,
-        MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM
+        MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+        MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm
       );
       const previewBlob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
         (output) => output ? resolve(output) : reject(new Error("Could not encode the design preview.")),
@@ -2433,6 +2459,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     currentHatTemplate, currentHatProfile, cameraZoom, sleeveGrooveFraction,
     stageComposition.rotationDeg, stageAspectRatio, isMobilePreview,
     logoNeedsRemoval, logoDataUrl, logoSourceFile, text,
+    artworkStrokeEnabled, artworkStrokeWidthMm, artworkStrokeColor,
   ]);
 
   const textAnchor =
@@ -2699,6 +2726,34 @@ const SnapInkSleeveCustomizer = forwardRef<
         </fieldset>
       ))}
     </div>
+  );
+
+  const artworkStrokeControls = (instance: "mobile" | "desktop") => (
+    <fieldset className="space-y-2 rounded border border-neutral-700 p-3" aria-label="Artwork Stroke">
+      <label className="flex items-center gap-2 text-sm font-medium text-neutral-200">
+        <input
+          type="checkbox"
+          checked={artworkStrokeEnabled}
+          onChange={(event) => setArtworkStrokeEnabled(event.target.checked)}
+          aria-label="Enable Artwork Stroke"
+        />
+        Artwork Stroke
+      </label>
+      {artworkStrokeEnabled && <>
+        <Range label="Stroke thickness" min={0.25} max={5} step={0.25} value={artworkStrokeWidthMm} setValue={setArtworkStrokeWidthMm} suffix="mm" />
+        <label className="flex items-center justify-between gap-3 text-sm text-neutral-300">
+          <span>Stroke color</span>
+          <input
+            type="color"
+            value={artworkStrokeColor}
+            onChange={(event) => setArtworkStrokeColor(event.target.value)}
+            aria-label="Artwork stroke color"
+            className="h-9 w-12 cursor-pointer rounded border border-neutral-600 bg-transparent"
+          />
+        </label>
+      </>}
+      <span className="sr-only">{instance === "mobile" ? "Mobile artwork stroke controls" : "Desktop artwork stroke controls"}</span>
+    </fieldset>
   );
 
   const hatColorSelector = (instance: "mobile" | "desktop") => (
@@ -3052,6 +3107,20 @@ const SnapInkSleeveCustomizer = forwardRef<
         }}
       >
         <defs>
+          {artworkStrokeEnabled && artworkStrokeRadiusSvg > 0 && <filter
+            id={artworkStrokeFilterId}
+            x="-100%"
+            y="-100%"
+            width="300%"
+            height="300%"
+            colorInterpolationFilters="sRGB"
+            primitiveUnits="userSpaceOnUse"
+          >
+            <feMorphology in="SourceAlpha" operator="dilate" radius={artworkStrokeRadiusSvg} result="expandedArtworkAlpha" />
+            <feComposite in="expandedArtworkAlpha" in2="SourceAlpha" operator="out" result="outerArtworkStroke" />
+            <feFlood floodColor={artworkStrokeColor} result="artworkStrokeColor" />
+            <feComposite in="artworkStrokeColor" in2="outerArtworkStroke" operator="in" />
+          </filter>}
           <filter id={embossFaceHighlightId} x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
             <feOffset
               in="SourceAlpha"
@@ -3070,7 +3139,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
           <path id={pathId} d={arcPath} />
           <clipPath id={`${surfaceClipId}-printable-cad`} clipPathUnits="userSpaceOnUse">
-            <path d={`${brandingSurfacePath(variant, renderGeometrySize, viewW, viewH, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM, MAX_BOTTOM_ARTWORK_EXTENSION_MM)} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
+            <path d={`${brandingSurfacePath(variant, renderGeometrySize, viewW, viewH, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm, MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm)} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
           </clipPath>
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
             <path d={extendedPhotoArtworkClipPath} />
@@ -3158,6 +3227,18 @@ const SnapInkSleeveCustomizer = forwardRef<
                 />
               );
             })}
+            {artworkStrokeEnabled && <image
+              href={logoDataUrl}
+              x={logoImageX}
+              y={logoImageY}
+              width={logoImageWidthSvg}
+              height={logoImageHeightSvg}
+              preserveAspectRatio="xMidYMid meet"
+              filter={`url(#${artworkStrokeFilterId})`}
+              opacity={logoOpacity / 100}
+              data-artwork-stroke-layer="true"
+              aria-hidden="true"
+            />}
             <image
               href={logoDataUrl}
               x={logoImageX}
@@ -3247,6 +3328,18 @@ const SnapInkSleeveCustomizer = forwardRef<
             </g>
           );
         })}
+
+        {Boolean(text) && artworkStrokeEnabled && <g
+          filter={`url(#${artworkStrokeFilterId})`}
+          data-artwork-stroke-layer="true"
+          aria-hidden="true"
+        >
+          <g transform={isMobilePreview && ghostHat && !fixedProductConfiguration
+            ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
+            : undefined}>
+            {renderStudioText()}
+          </g>
+        </g>}
 
         {Boolean(text) && (
           <g filter={styleMode === "emboss" ? `url(#${embossFaceHighlightId})` : undefined}>
@@ -3550,6 +3643,7 @@ const SnapInkSleeveCustomizer = forwardRef<
                 suffix="%"
               />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
+              {(logoDataUrl || text.trim()) && artworkStrokeControls("mobile")}
               {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
               {extendedArtworkNotice("mobile")}
@@ -3850,6 +3944,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               suffix="%"
             />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
+              {(logoDataUrl || text.trim()) && artworkStrokeControls("desktop")}
             {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
             {extendedArtworkNotice("desktop")}
