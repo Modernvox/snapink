@@ -1696,23 +1696,23 @@ const SnapInkSleeveCustomizer = forwardRef<
           return primitive;
         };
         // Replace the former offset-shadow filter with a narrow bevel band
-        // extracted from the source alpha. Erosion and subtraction follow the
+        // outside the original alpha. Expansion and subtraction follow the
         // exact glyph contours, including counters and interior cutouts.
         highlightFilter.replaceChildren();
         addFilterPrimitive("feMorphology", {
-          in: "SourceAlpha", operator: "erode", radius: String(bevelRadius), result: "embossInsetAlpha",
+          in: "SourceAlpha", operator: "dilate", radius: String(bevelRadius), result: "embossOuterAlpha",
         });
         addFilterPrimitive("feComposite", {
-          in: "SourceGraphic", in2: "embossInsetAlpha", operator: "in", result: "embossFrontFace",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "SourceAlpha", in2: "embossInsetAlpha", operator: "out", result: "embossBevelBand",
-        });
-        addFilterPrimitive("feComposite", {
-          in: "SourceGraphic", in2: "embossBevelBand", operator: "in", result: "embossBevelBase",
+          in: "embossOuterAlpha", in2: "SourceAlpha", operator: "out", result: "embossBevelBand",
         });
         // Tint only the narrow bevel surface so its white highlight has tonal
-        // separation from the solid front face at the final sleeve size.
+        // separation from the untouched source face at the final sleeve size.
+        addFilterPrimitive("feFlood", {
+          "flood-color": "#d0d0d0", "flood-opacity": "0.72", result: "embossBevelBaseColor",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossBevelBaseColor", in2: "embossBevelBand", operator: "in", result: "embossBevelBase",
+        });
         addFilterPrimitive("feFlood", {
           "flood-color": "#a8a8a8", "flood-opacity": "0.22", result: "embossBevelToneColor",
         });
@@ -1744,7 +1744,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossBevelShade",
         });
         const finalMerge = addFilterPrimitive("feMerge", {});
-        for (const input of ["embossBevelBase", "embossBevelTone", "embossFrontFace", "embossBevelShade", "embossBevelHighlight"]) {
+        for (const input of ["embossBevelBase", "embossBevelTone", "embossBevelShade", "embossBevelHighlight", "SourceGraphic"]) {
           const node = document.createElementNS("http://www.w3.org/2000/svg", "feMergeNode");
           node.setAttribute("in", input);
           finalMerge.appendChild(node);
@@ -2153,7 +2153,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     const context = composition.getContext("2d");
     if (!context) throw new Error("The product-image canvas is unavailable.");
     context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
+    // Medium filtering keeps the single 2x embossed sleeve downsample
+    // antialiased without washing out its subpixel bevel edges. Flat exports
+    // retain the existing high-quality resampling.
+    context.imageSmoothingQuality = styleMode === "emboss" ? "medium" : "high";
     context.drawImage(hatImage, 0, 0);
 
     // Keep Billboard's approved rear-photo datum untouched. Standard shares the
