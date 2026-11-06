@@ -2323,10 +2323,12 @@ const SnapInkSleeveCustomizer = forwardRef<
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
     if (publishArtworkTier==="premium" && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
+    const photoOrder:ProductPhotoKey[]=["desk","rear","packaging","maleLifestyle","femaleLifestyle"];
+    const orderedPhotoEntries=[...generatedPhotoEntries].sort((a,b)=>photoOrder.indexOf(a.key as ProductPhotoKey)-photoOrder.indexOf(b.key as ProductPhotoKey));
     const form=new FormData();form.set("name",publishProductName);form.set("cardDescription",publishProductCardDescription);form.set("description",publishProductDescription);form.set("style",variant);form.set("color",backgroundColor);
-    for(const entry of generatedPhotoEntries)form.append("galleryImages",entry.blob,entry.filename);
+    for(const entry of orderedPhotoEntries)form.append("galleryImages",entry.blob,entry.filename);
     try {
-      const thumbnailFiles=await Promise.all(generatedPhotoEntries.map(async(entry)=>{
+      const thumbnailFiles=await Promise.all(orderedPhotoEntries.map(async(entry)=>{
         const bitmap=await createImageBitmap(entry.blob),scale=Math.min(1,480/bitmap.width),canvas=document.createElement("canvas");
         canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
         const context=canvas.getContext("2d");if(!context){bitmap.close();throw new Error("Thumbnail canvas is unavailable.")}

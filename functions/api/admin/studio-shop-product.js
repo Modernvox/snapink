@@ -6,6 +6,12 @@ const defaultCardDescription = (name) => `${name} is a premium swappable snapbac
 const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
 const cleanCardDescription = (value) => String(value||"").replace(/!\[([^\]]*)\]\([^)]+\)/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/<[^>]*>/g,"").replace(/^\s*(?:[-*+]|\d+\.)\s+/gm,"").replace(/[`*_~>#]/g,"").replace(/[\r\n\t]+/g," ").replace(/\s+/g," ").trim();
 const safeSlug = (name) => name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,70).replace(/-+$/g,"");
+const productImageOrder = ["on-desk", "on-hat", "packaging", "male-lifestyle", "female-lifestyle"];
+const productImageRank = (file) => {
+  const filename = String(file?.name || "").toLowerCase().replace(/_/g,"-");
+  const index = productImageOrder.findIndex((type) => filename.includes(type));
+  return index < 0 ? productImageOrder.length : index;
+};
 
 export async function onRequestGet({request,env}) {
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN))return json({error:"Unauthorized"},401);
@@ -38,9 +44,9 @@ export async function onRequestPost({request,env}) {
     cardDescription=removeExtendedArtworkCopy(cardDescription);
   }
   if(!name||name.length>100||!safeSlug(name)||cardDescription.length>240||description.length>2000||!['standard','billboard'].includes(style)||!/^#[0-9a-f]{6}$/i.test(color)) return json({error:"Enter a product name and use the current sleeve style and color."},400);
-  const files=form.getAll("galleryImages").filter(file=>file instanceof File);
+  const files=form.getAll("galleryImages").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
-  const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File);
+  const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(thumbnails.length&& (thumbnails.length!==files.length||thumbnails.some(file=>file.type!=="image/webp"||file.size<100||file.size>2*1024*1024)))return json({error:"Product image thumbnails are invalid."},400);
   const slug=safeSlug(name);
   const standardPrices=await readStandardShopPrices(env.DB);
@@ -53,7 +59,7 @@ export async function onRequestPost({request,env}) {
     for(let i=0;i<thumbnails.length;i++) await env.PRIVATE_ASSETS.put(thumbnailKeys[i],thumbnails[i].stream(),{httpMetadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} custom SnapInk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),time,time),
+      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} On-Desk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),time,time),
       env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify([0,1,2,3,4,5])),
       env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} SnapInk product image ${i+2}`,label:files[i+1]?.name||`Image ${i+2}`})))),
     ]);
