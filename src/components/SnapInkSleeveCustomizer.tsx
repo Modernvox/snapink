@@ -2148,7 +2148,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const preservedCenterY=y+centerRatio*h+maleArtworkVerticalOffset;
     const targetTop=preservedCenterY-artworkCenterY*heightScale;
     const angle=(Number(c.rotation)||0)*Math.PI/180,inset=w*Math.max(-0.8,Math.min(0.8,Number(c.perspective)||0))/200;
-    const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),preservedCenterY+px*Math.sin(angle)+py*Math.cos(angle)];
+    const femaleArtworkVerticalOffset=key==="femaleLifestyle"?-20:0;
+    const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),preservedCenterY+femaleArtworkVerticalOffset+px*Math.sin(angle)+py*Math.cos(angle)];
     const target=[rotatePoint(-w/2+inset,targetTop-preservedCenterY),rotatePoint(w/2-inset,targetTop-preservedCenterY),rotatePoint(w/2,targetTop+targetHeight-preservedCenterY),rotatePoint(-w/2,targetTop+targetHeight-preservedCenterY)];
     const source:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[sourceWidth,0],[sourceWidth,sourceHeight],[0,sourceHeight]];
     const drawTriangle=(ids:[number,number,number])=>{const [i0,i1,i2]=ids,[sx0,sy0]=source[i0],[sx1,sy1]=source[i1],[sx2,sy2]=source[i2],[dx0,dy0]=target[i0],[dx1,dy1]=target[i1],[dx2,dy2]=target[i2];const det=sx0*(sy1-sy2)+sx1*(sy2-sy0)+sx2*(sy0-sy1);if(!det)return;const a=(dx0*(sy1-sy2)+dx1*(sy2-sy0)+dx2*(sy0-sy1))/det,cx=(dx0*(sx2-sx1)+dx1*(sx0-sx2)+dx2*(sx1-sx0))/det,e=(dx0*(sx1*sy2-sx2*sy1)+dx1*(sx2*sy0-sx0*sy2)+dx2*(sx0*sy1-sx1*sy0))/det,b=(dy0*(sy1-sy2)+dy1*(sy2-sy0)+dy2*(sy0-sy1))/det,d=(dy0*(sx2-sx1)+dy1*(sx0-sx2)+dy2*(sx1-sx0))/det,f=(dy0*(sx1*sy2-sx2*sy1)+dy1*(sx2*sy0-sx0*sy2)+dy2*(sx0*sy1-sx1*sy0))/det;ctx.save();ctx.beginPath();ctx.moveTo(dx0,dy0);ctx.lineTo(dx1,dy1);ctx.lineTo(dx2,dy2);ctx.closePath();ctx.clip();ctx.transform(a,b,cx,d,e,f);ctx.drawImage(artworkImage,0,0);ctx.restore();};
