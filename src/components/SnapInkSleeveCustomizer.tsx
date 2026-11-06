@@ -334,18 +334,18 @@ const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
   desktop: { top: 0, bottom: 700 },
   mobile: { top: 24, bottom: 1100 },
 } as const;
-// Calibrated against snapink_billboard_blank_rear_test_v5.png. The groove is
-// the primary anchor; matching it to the left strap exit and the sleeve's
-// right end to the right strap opening determines a uniform scale.
+// Calibrated against new_on_hat_master.png. The groove is the primary anchor;
+// matching it to the left strap exit and the sleeve's right end to the right
+// strap opening determines a uniform scale.
 const REAR_PRODUCT_PHOTO = {
-  hatSrc: "/images/product_images/snapink_hat_rear_master.webp",
-  width: 911,
-  height: 1024,
+  hatSrc: "/images/product_images/new_on_hat_master.png",
+  width: 1254,
+  height: 1254,
   grooveSourceX: 465,
   studioExportWidth: 4222,
-  leftStrapExitX: 260,
-  rightStrapOpeningX: 716,
-  sleeveCenterY: 716.5,
+  leftStrapExitX: 350,
+  rightStrapOpeningX: 900,
+  sleeveCenterY: 864,
   scale: 4,
 } as const;
 const BILLBOARD_ON_DESK_PRODUCT_PHOTO = {
@@ -2217,9 +2217,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     canvas.height = 1024;
     const framedContext = canvas.getContext("2d");
     if (!framedContext) throw new Error("The product-image canvas is unavailable.");
+    framedContext.imageSmoothingEnabled = true;
+    framedContext.imageSmoothingQuality = "high";
     framedContext.fillStyle = "#ffffff";
     framedContext.fillRect(0, 0, canvas.width, canvas.height);
-    framedContext.drawImage(composition, (canvas.width - composition.width) / 2, 0);
+    framedContext.drawImage(composition, 0, 0, canvas.width, canvas.height);
     return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
       (output) => output ? resolve(output) : reject(new Error("Product image PNG encoding failed.")),
       "image/png"
