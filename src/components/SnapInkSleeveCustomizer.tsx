@@ -2144,11 +2144,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     const centerRatio=(artworkCenterInSleeveSvgUnits+legacyTopPaddingUnits)/(viewH+legacyTopPaddingUnits+legacyBottomPaddingUnits);
     const widthScale=w/sourceWidth,heightScale=widthScale;
     const targetHeight=sourceHeight*heightScale;
-    const maleArtworkVerticalOffset=key==="maleLifestyle"?-20:0;
+    const maleArtworkVerticalOffset=key==="maleLifestyle"?-13:0;
     const preservedCenterY=y+centerRatio*h+maleArtworkVerticalOffset;
     const targetTop=preservedCenterY-artworkCenterY*heightScale;
     const angle=(Number(c.rotation)||0)*Math.PI/180,inset=w*Math.max(-0.8,Math.min(0.8,Number(c.perspective)||0))/200;
-    const femaleArtworkVerticalOffset=key==="femaleLifestyle"?-20:0;
+    const femaleArtworkVerticalOffset=key==="femaleLifestyle"?-13:0;
     const rotatePoint=(px:number,py:number):[number,number]=>[x+w/2+px*Math.cos(angle)-py*Math.sin(angle),preservedCenterY+femaleArtworkVerticalOffset+px*Math.sin(angle)+py*Math.cos(angle)];
     const target=[rotatePoint(-w/2+inset,targetTop-preservedCenterY),rotatePoint(w/2-inset,targetTop-preservedCenterY),rotatePoint(w/2,targetTop+targetHeight-preservedCenterY),rotatePoint(-w/2,targetTop+targetHeight-preservedCenterY)];
     const source:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[sourceWidth,0],[sourceWidth,sourceHeight],[0,sourceHeight]];
