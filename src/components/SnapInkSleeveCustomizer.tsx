@@ -1640,12 +1640,13 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number } = {}): Promise<Blob> {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
       throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
     const svg = svgRef.current;
     if (!svg) throw new Error("The Studio sleeve preview is unavailable.");
+    const scale = options.scale ?? exportScale;
 
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
@@ -1654,8 +1655,37 @@ const SnapInkSleeveCustomizer = forwardRef<
     const topExtensionSvgUnits = MAX_TOP_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     const bottomExtensionSvgUnits = MAX_BOTTOM_ARTWORK_EXTENSION_MM * viewH / (bounds.maxY - bounds.minY);
     exportSvg.setAttribute("viewBox", `0 ${-topExtensionSvgUnits} ${viewW} ${viewH + topExtensionSvgUnits + bottomExtensionSvgUnits}`);
-    exportSvg.setAttribute("width", String(viewW));
-    exportSvg.setAttribute("height", String(viewH + topExtensionSvgUnits + bottomExtensionSvgUnits));
+    const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
+    // Rasterize the vector sleeve at its actual high-resolution output canvas
+    // size for On-Hat. This avoids rasterizing at 1600 px and then enlarging
+    // that bitmap before the single downsample onto the hat master.
+    const svgRasterWidth = onHatSvgRaster ? Math.round(viewW * sleeveScaleRatio * scale) : viewW;
+    const svgRasterHeight = onHatSvgRaster
+      ? Math.round((previewViewH + topExtensionSvgUnits + bottomExtensionSvgUnits) * sleeveScaleRatio * scale)
+      : viewH + topExtensionSvgUnits + bottomExtensionSvgUnits;
+    exportSvg.setAttribute("width", String(svgRasterWidth));
+    exportSvg.setAttribute("height", String(svgRasterHeight));
+    if (onHatSvgRaster && styleMode === "emboss") {
+      // Match the subtler sidewall depth used by On-Desk, only for this cloned
+      // On-Hat export. Keep the offset directional so the lettering still has
+      // a visible raised edge instead of a diffuse drop shadow.
+      for (const layer of Array.from(exportSvg.querySelectorAll<SVGElement>("[data-emboss-extrusion-step]"))) {
+        const transform = layer.getAttribute("transform") || "";
+        layer.setAttribute("transform", transform.replace(
+          /translate\(\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*[, ]\s*(-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*\)/i,
+          (_match, x: string, y: string) => `translate(${Number(x) * 0.35} ${Number(y) * 0.35})`,
+        ));
+        const opacity = Number(layer.getAttribute("opacity") ?? 1);
+        layer.setAttribute("opacity", String(opacity * 0.8));
+      }
+      const highlightFilter = exportSvg.querySelector(`#${embossFaceHighlightId}`);
+      const highlightOffset = highlightFilter?.querySelector("feOffset");
+      if (highlightOffset) {
+        highlightOffset.setAttribute("dx", String(Number(highlightOffset.getAttribute("dx") || 0) * 1.5));
+        highlightOffset.setAttribute("dy", String(Number(highlightOffset.getAttribute("dy") || 0) * 1.5));
+      }
+      highlightFilter?.querySelector("feFlood")?.setAttribute("flood-opacity", "0.7");
+    }
     try {
       for (const image of Array.from(exportSvg.querySelectorAll("image"))) {
         const href = image.getAttribute("href");
@@ -1686,7 +1716,6 @@ const SnapInkSleeveCustomizer = forwardRef<
       const lifestyleImage = ghostImage && isCityLifestylePreview
         ? await loadStudioImage(lifestyleBackgroundPath)
         : null;
-      const scale = options.scale ?? exportScale;
       const canvas = document.createElement("canvas");
       canvas.width = ghostImage
         ? Math.round(viewW * scale)
@@ -2115,10 +2144,19 @@ const SnapInkSleeveCustomizer = forwardRef<
     }
     setIsGeneratingProductImage(true);
     let sleeveUrl: string | null = null;
+    let onHatSleeveUrl: string | null = null;
     try {
       const slug=productPhotoSlug();
-      sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale}));
+      const needsRear=productPhotoChoice.includes("rear");
+      const needsOtherSleeve=productPhotoChoice.some(key=>key==="packaging"||key==="desk");
+      const useOnHatSleeveAsPrimary=needsRear&&!needsOtherSleeve;
+      sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale,onHatProductPhoto:useOnHatSleeveAsPrimary}));
       const sleeveImage=await loadStudioImage(sleeveUrl);
+      let onHatSleeveImage=sleeveImage;
+      if(needsRear&&!useOnHatSleeveAsPrimary){
+        onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale,onHatProductPhoto:true}));
+        onHatSleeveImage=await loadStudioImage(onHatSleeveUrl);
+      }
       const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
       const needsSleeve=productPhotoChoice.some(key=>key==="rear"||key==="packaging"||key==="desk");
       let artworkImage:HTMLImageElement|null=null;
@@ -2128,7 +2166,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       for(const [i,key] of productPhotoChoice.entries()) {
         setProductPhotoProgress(`Generating ${labels[key]} (${i+1} of ${productPhotoChoice.length})…`);
         let blob:Blob;
-        if(key==="rear")blob=await renderRearProductPhoto(sleeveImage,variant);
+        if(key==="rear")blob=await renderRearProductPhoto(onHatSleeveImage,variant);
         else if(key==="packaging")blob=await renderPackagingProductImage(sleeveImage);
         else if(key==="desk")blob=await renderDeskProductPhoto(variant);
         else {if(!artworkImage)throw new Error("Studio artwork could not be prepared.");blob=await renderLifestyleProductPhoto(key,artworkImage);}
@@ -2145,6 +2183,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       alert(error instanceof Error ? error.message : "The product image could not be generated. Please try again.");
     } finally {
       if (sleeveUrl) URL.revokeObjectURL(sleeveUrl);
+      if (onHatSleeveUrl) URL.revokeObjectURL(onHatSleeveUrl);
       setIsGeneratingProductImage(false);
       setProductPhotoProgress("");
     }
