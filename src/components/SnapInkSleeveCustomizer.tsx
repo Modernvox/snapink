@@ -338,6 +338,10 @@ const REAR_PRODUCT_PHOTO = {
   sleeveCenterY: 716.5,
   scale: 4,
 } as const;
+// The locked On-Hat composition places the sleeve at roughly 512 px wide.
+// Scale 1 renders its source near 2x that destination for antialiasing without
+// the 4x source that would be reduced by more than eight times.
+const ON_HAT_SLEEVE_RASTER_SCALE = 1;
 const BILLBOARD_ON_DESK_PRODUCT_PHOTO = {
   masterSrc: DESK_PRODUCT_PHOTO_CALIBRATION.masterImage,
   width: DESK_PRODUCT_PHOTO_CALIBRATION.masterDimensions.width,
@@ -2203,11 +2207,15 @@ const SnapInkSleeveCustomizer = forwardRef<
       const needsRear=productPhotoChoice.includes("rear");
       const needsOtherSleeve=productPhotoChoice.some(key=>key==="packaging"||key==="desk");
       const useOnHatSleeveAsPrimary=needsRear&&!needsOtherSleeve;
-      sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale,onHatProductPhoto:useOnHatSleeveAsPrimary}));
+      sleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({
+        sleeveOnly:true,
+        scale:useOnHatSleeveAsPrimary?ON_HAT_SLEEVE_RASTER_SCALE:REAR_PRODUCT_PHOTO.scale,
+        onHatProductPhoto:useOnHatSleeveAsPrimary,
+      }));
       const sleeveImage=await loadStudioImage(sleeveUrl);
       let onHatSleeveImage=sleeveImage;
       if(needsRear&&!useOnHatSleeveAsPrimary){
-        onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:REAR_PRODUCT_PHOTO.scale,onHatProductPhoto:true}));
+        onHatSleeveUrl=URL.createObjectURL(await renderStudioPNGBlob({sleeveOnly:true,scale:ON_HAT_SLEEVE_RASTER_SCALE,onHatProductPhoto:true}));
         onHatSleeveImage=await loadStudioImage(onHatSleeveUrl);
       }
       const labels=Object.fromEntries(productPhotoOptions.map(x=>[x.key,x.label]));
