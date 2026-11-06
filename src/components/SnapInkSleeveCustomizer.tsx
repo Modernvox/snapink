@@ -1680,33 +1680,59 @@ const SnapInkSleeveCustomizer = forwardRef<
       }
       const highlightFilter = exportSvg.querySelector(`#${embossFaceHighlightId}`);
       const highlightOffset = highlightFilter?.querySelector("feOffset");
-      if (highlightOffset) {
-        highlightOffset.setAttribute("dx", String(Number(highlightOffset.getAttribute("dx") || 0) * 1.5));
-        highlightOffset.setAttribute("dy", String(Number(highlightOffset.getAttribute("dy") || 0) * 1.5));
-      }
-      highlightFilter?.querySelector("feFlood")?.setAttribute("flood-opacity", "0.76");
-      const faceMerge = highlightFilter?.querySelector("feMerge");
-      if (highlightFilter && highlightOffset && faceMerge) {
-        const edgeX = Number(highlightOffset.getAttribute("dx") || 0) * 0.65;
-        const edgeY = Number(highlightOffset.getAttribute("dy") || 0) * 0.65;
-        const filterPrimitive = (tag: string, attributes: Record<string, string>) => {
+      if (highlightFilter && highlightOffset) {
+        const edgeX = Number(highlightOffset.getAttribute("dx") || 0) * 1.5;
+        const edgeY = Number(highlightOffset.getAttribute("dy") || 0) * 1.5;
+        const highlightOpacity = "0.76";
+        const bevelRadius = STUDIO_EMBOSSED_PREVIEW_RELIEF_MM * svgUnitsPerMm * 0.18;
+        const addFilterPrimitive = (tag: string, attributes: Record<string, string>) => {
           const primitive = document.createElementNS("http://www.w3.org/2000/svg", tag);
           for (const [name, value] of Object.entries(attributes)) primitive.setAttribute(name, value);
           highlightFilter.appendChild(primitive);
           return primitive;
         };
-        // A tiny offset silhouette behind the face gives a crisp contact edge;
-        // a separate inset band shades only the opposite, lower-right contour.
-        faceMerge.remove();
-        filterPrimitive("feOffset", { in: "SourceAlpha", dx: String(edgeX), dy: String(edgeY), result: "embossContactOffset" });
-        filterPrimitive("feFlood", { "flood-color": "#000000", "flood-opacity": "0.13", result: "embossContactColor" });
-        filterPrimitive("feComposite", { in: "embossContactColor", in2: "embossContactOffset", operator: "in", result: "embossContactShadow" });
-        filterPrimitive("feOffset", { in: "SourceAlpha", dx: String(-edgeX), dy: String(-edgeY), result: "embossLowerRightOffset" });
-        filterPrimitive("feComposite", { in: "SourceAlpha", in2: "embossLowerRightOffset", operator: "out", result: "embossLowerRightEdge" });
-        filterPrimitive("feFlood", { "flood-color": "#000000", "flood-opacity": "0.12", result: "embossLowerRightColor" });
-        filterPrimitive("feComposite", { in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossLowerRightShade" });
-        const finalMerge = filterPrimitive("feMerge", {});
-        for (const input of ["embossContactShadow", "SourceGraphic", "embossLowerRightShade", "embossHighlight"]) {
+        // Replace the former offset-shadow filter with a narrow bevel band
+        // extracted from the source alpha. Erosion and subtraction follow the
+        // exact glyph contours, including counters and interior cutouts.
+        highlightFilter.replaceChildren();
+        addFilterPrimitive("feMorphology", {
+          in: "SourceAlpha", operator: "erode", radius: String(bevelRadius), result: "embossInsetAlpha",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "SourceGraphic", in2: "embossInsetAlpha", operator: "in", result: "embossFrontFace",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "SourceAlpha", in2: "embossInsetAlpha", operator: "out", result: "embossBevelBand",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "SourceGraphic", in2: "embossBevelBand", operator: "in", result: "embossBevelBase",
+        });
+        addFilterPrimitive("feOffset", {
+          in: "SourceAlpha", dx: String(edgeX), dy: String(edgeY), result: "embossUpperLeftOffset",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossBevelBand", in2: "embossUpperLeftOffset", operator: "out", result: "embossUpperLeftEdge",
+        });
+        addFilterPrimitive("feFlood", {
+          "flood-color": "#ffffff", "flood-opacity": highlightOpacity, result: "embossHighlightColor",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossHighlightColor", in2: "embossUpperLeftEdge", operator: "in", result: "embossBevelHighlight",
+        });
+        addFilterPrimitive("feOffset", {
+          in: "SourceAlpha", dx: String(-edgeX), dy: String(-edgeY), result: "embossLowerRightOffset",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossBevelBand", in2: "embossLowerRightOffset", operator: "out", result: "embossLowerRightEdge",
+        });
+        addFilterPrimitive("feFlood", {
+          "flood-color": "#000000", "flood-opacity": "0.12", result: "embossLowerRightColor",
+        });
+        addFilterPrimitive("feComposite", {
+          in: "embossLowerRightColor", in2: "embossLowerRightEdge", operator: "in", result: "embossBevelShade",
+        });
+        const finalMerge = addFilterPrimitive("feMerge", {});
+        for (const input of ["embossBevelBase", "embossFrontFace", "embossBevelShade", "embossBevelHighlight"]) {
           const node = document.createElementNS("http://www.w3.org/2000/svg", "feMergeNode");
           node.setAttribute("in", input);
           finalMerge.appendChild(node);
