@@ -338,7 +338,7 @@ const STUDIO_PNG_EXPORT_CROP_NATURAL_PX = {
 // the primary anchor; matching it to the left strap exit and the sleeve's
 // right end to the right strap opening determines a uniform scale.
 const REAR_PRODUCT_PHOTO = {
-  hatSrc: "/images/product_images/new_on_hat_master.png",
+  hatSrc: "/images/product_images/snapink_hat_rear_master.webp",
   width: 911,
   height: 1024,
   grooveSourceX: 465,
