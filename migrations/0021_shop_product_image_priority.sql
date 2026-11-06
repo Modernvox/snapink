@@ -1,6 +1,8 @@
 -- Put identifiable Studio On-Desk images first for existing products while
 -- retaining all image URLs, image files, and product identifiers.
-CREATE TEMP TABLE studio_product_image_priority_stage AS
+-- D1 blocks TEMP schema objects, so use a migration-scoped regular table and
+-- remove it before this migration completes.
+CREATE TABLE studio_product_image_priority_stage AS
 SELECT product.product_id,
        product.image_url AS previous_image_url,
        product.image_alt AS previous_image_alt,
