@@ -93,8 +93,8 @@ export function customerShopDescription(value, artworkTier = "standard") {
 }
 
 export function publicShopProduct(product) {
-  const {productionMetadata,artworkTier,...publicProduct}=product;
-  return {...publicProduct,description:customerShopDescription(product.description,product.artworkTier),cardDescription:customerShopDescription(product.cardDescription,product.artworkTier),variants:product.variants.filter((variant) => variant.active && variant.availableSizes.length).map(({inventory,...variant})=>variant)};
+  const {productionMetadata,...publicProduct}=product;
+  return {...publicProduct,artworkTier:product.artworkTier,description:customerShopDescription(product.description,product.artworkTier),cardDescription:customerShopDescription(product.cardDescription,product.artworkTier),variants:product.variants.filter((variant) => variant.active && variant.availableSizes.length).map(({inventory,...variant})=>variant)};
 }
 
 export function checkoutUnavailable(env) {
