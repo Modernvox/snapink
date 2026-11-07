@@ -1443,6 +1443,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     ? productionLogoBaseHeightMm * logoAspectRatio
     : productionTextWidthMm;
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
+  const premiumArtworkHeightInvalid = selectedArtworkHeightMm > 50.8;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
     selectedArtworkWidthMm, selectedArtworkHeightMm, undefined,
@@ -2325,6 +2326,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
+    if (publishArtworkTier === "premium" && premiumArtworkHeightInvalid) { setPublishProductStatus("Premium Extended Artwork must be 50.8 mm (2 in) or less in total height."); return; }
     if (publishArtworkTier==="premium" && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     if(!publishCategoryId){setPublishProductStatus("Choose a product category before publishing.");setPublishingProduct(false);return;}
@@ -4151,9 +4153,9 @@ const SnapInkSleeveCustomizer = forwardRef<
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={publishArtworkTier==="premium"} onChange={(event)=>{setPublishArtworkTier(event.target.checked?"premium":"standard");setApproveExtendedArtwork(false);}} /><span>Premium Extended Artwork</span></label>
           <p className="text-xs text-neutral-400">{publishArtworkTier==="premium" ? "Premium design prices: sizes 0–2 $24.99 | sizes 3–5 $29.99" : "Standard pricing uses the current Shop schedule."}</p>
-          {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p><label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
+          {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p>{premiumArtworkHeightInvalid&&<p role="alert">Total artwork height is {selectedArtworkHeightMm.toFixed(2)} mm. Premium artwork must be 50.8 mm (2 in) or less.</p>}<label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(publishArtworkTier==="premium"&&(!approveExtendedArtwork||artworkInvalid))} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(publishArtworkTier==="premium"&&(!approveExtendedArtwork||artworkInvalid||premiumArtworkHeightInvalid))} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
       </div>}
     </>
