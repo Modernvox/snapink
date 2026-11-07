@@ -142,8 +142,8 @@
   }
 
   .snapink-logo-lockup {
-    width: min(clamp(118px, 36vw, 160px), 144px) !important;
-    max-width: 144px !important;
+    width: min(clamp(100px, 30.6vw, 136px), 122px) !important;
+    max-width: 122px !important;
     align-items: flex-start !important;
     justify-content: center !important;
     gap: 0 !important;
@@ -189,7 +189,7 @@
   .snapink-mobile-header__logo {
     display: block;
     flex: 0 1 auto;
-    width: min(clamp(118px, 36vw, 160px), 144px);
+    width: min(clamp(100px, 30.6vw, 136px), 122px);
     max-height: none;
     object-fit: contain;
     object-position: left center;
