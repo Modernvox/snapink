@@ -81,4 +81,16 @@
 .shop-category-button[aria-pressed="true"]{border-color:var(--shop-gold);background:var(--shop-gold);color:#111}
 .shop-category-count{display:inline-grid;min-width:20px;height:20px;padding:0 5px;place-items:center;border-radius:999px;background:#ffffff18;color:inherit;font-size:11px;font-weight:800}
 @media(max-width:700px){.shop-category-nav{margin:0 -4px 18px;padding:4px 4px 10px}.shop-category-button{min-height:40px;padding:7px 11px;font-size:12px}}
+
+@media(max-width:800px){
+  .shop-product-card>a{display:flex;height:100%;flex-direction:column}
+  .shop-product-card img{aspect-ratio:1.6/1;object-fit:contain;padding:2px}
+  .shop-product-card-body{gap:5px;padding:8px}
+  .shop-product-card h3{display:-webkit-box;min-height:2.35em;max-height:2.35em;overflow:hidden;font-size:14px;line-height:1.15;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2}
+  .shop-product-card p{min-height:2.8em;max-height:2.8em;margin:0;font-size:11px;line-height:1.4}
+  .shop-starting{margin:auto 0 0;padding-top:4px;font-size:12px}
+  .shop-color-chip{font-size:10px}
+  .shop-view-button{min-height:36px;margin-top:2px;font-size:10px}
+}
 .shop-product-card h3{display:block;overflow:visible;min-height:0;-webkit-line-clamp:unset;line-clamp:unset;line-height:1.2;overflow-wrap:anywhere}
+@media(max-width:800px){.shop-product-card h3{display:-webkit-box;min-height:2.35em;max-height:2.35em;overflow:hidden;line-height:1.15;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2}}

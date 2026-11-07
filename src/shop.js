@@ -38,7 +38,7 @@ function renderProducts(){
     const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} details`);
     const image=document.createElement("img");applyShopProductThumbnail(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width||=1536;image.height||=1024;image.loading="lazy";image.decoding="async";
     const body=document.createElement("div");body.className="shop-product-card-body";
-    const name=document.createElement("h3");name.textContent=product.name;
+    const name=document.createElement("h3"),designName=String(product.name||"").split(/\s+Swappable\b/i)[0].trim();name.textContent=designName||product.name;
     const desc=document.createElement("p");desc.textContent=product.cardDescription||product.description;
     const price=document.createElement("strong");price.className="shop-starting";price.textContent=`Starting at ${usd(Math.min(...product.prices))}`;
     const color=document.createElement("span");color.className="shop-color-chip";const dot=document.createElement("i");dot.className="shop-color-dot";dot.setAttribute("aria-hidden","true");color.append(dot,document.createTextNode(variant.name));
