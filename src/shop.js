@@ -38,12 +38,13 @@ function renderProducts(){
     const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} details`);
     const image=document.createElement("img");applyShopProductThumbnail(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width||=1536;image.height||=1024;image.loading="lazy";image.decoding="async";
     const body=document.createElement("div");body.className="shop-product-card-body";
-    const name=document.createElement("h3"),designName=String(product.name||"").split(/\s+Swappable\b/i)[0].trim();name.textContent=designName||product.name;
+    const name=document.createElement("h3"),designName=String(product.name||"").replace(/\s+Swappable\b[\s\S]*$/i,"").replace(/[\s–—\-|:·]+$/u,"").trim();name.textContent=designName||product.name;
     const desc=document.createElement("p");desc.textContent=product.cardDescription||product.description;
     const price=document.createElement("strong");price.className="shop-starting";price.textContent=`Starting at ${usd(Math.min(...product.prices))}`;
+    let priceDisplay=price;if(product.artworkTier==="premium"){const priceRow=document.createElement("div");priceRow.className="shop-card-price-row";const extendedLabel=document.createElement("span");extendedLabel.className="shop-card-extended-label";extendedLabel.textContent="EXTENDED ARTWORK";priceRow.append(price,extendedLabel);priceDisplay=priceRow}
     const color=document.createElement("span");color.className="shop-color-chip";const dot=document.createElement("i");dot.className="shop-color-dot";dot.setAttribute("aria-hidden","true");color.append(dot,document.createTextNode(variant.name));
     const button=document.createElement("span");button.className="shop-view-button";button.textContent="VIEW DETAILS";
-    body.append(name,desc,price,color,button);link.append(image,body);card.append(link);root.append(card);
+    body.append(name,desc,priceDisplay,color,button);link.append(image,body);card.append(link);root.append(card);
   }
   if(!root.children.length){const empty=document.createElement("p");empty.className="shop-loading";empty.textContent=selectedCategory?"No designs are available in this category yet.":"There are no exclusive designs available at this time.";root.append(empty)}
 }
