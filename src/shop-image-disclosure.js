@@ -16,7 +16,7 @@ export function createProductPreviewDisclosure(className = "shop-preview-disclos
   const label = document.createElement("strong");
   label.textContent = "PRODUCT PREVIEW";
   const copy = document.createElement("span");
-  copy.textContent = "Actual sleeve features raised 3D-printed lettering and artwork.";
+  copy.textContent = "Actual sleeve has raised 3D lettering & artwork.";
   note.append(label, copy);
   return note;
 }

@@ -37,8 +37,8 @@ function createShippingMessage(){
 }
 function openLightbox(src,alt,label,showPreviewDisclosure=false){
   let dialog=document.querySelector(".shop-size-lightbox");
-  if(!dialog){dialog=document.createElement("dialog");dialog.className="shop-size-lightbox";dialog.innerHTML='<button type="button" class="shop-lightbox-close" aria-label="Close enlarged image">×</button><img class="shop-lightbox-image"><p class="shop-lightbox-caption"></p>';document.body.append(dialog);dialog.querySelector(".shop-lightbox-close").addEventListener("click",()=>dialog.close());dialog.addEventListener("click",(event)=>{if(event.target===dialog)dialog.close()})}
-  let disclosure=dialog.querySelector(".shop-preview-disclosure");if(showPreviewDisclosure&&!disclosure){disclosure=createProductPreviewDisclosure();dialog.insertBefore(disclosure,dialog.querySelector(".shop-lightbox-caption"))}else if(!showPreviewDisclosure)disclosure?.remove();
+  if(!dialog){dialog=document.createElement("dialog");dialog.className="shop-size-lightbox";dialog.innerHTML='<button type="button" class="shop-lightbox-close" aria-label="Close enlarged image">×</button><div class="shop-lightbox-image-frame"><img class="shop-lightbox-image"></div><p class="shop-lightbox-caption"></p>';document.body.append(dialog);dialog.querySelector(".shop-lightbox-close").addEventListener("click",()=>dialog.close());dialog.addEventListener("click",(event)=>{if(event.target===dialog)dialog.close()})}
+  const imageFrame=dialog.querySelector(".shop-lightbox-image-frame");let disclosure=imageFrame.querySelector(".shop-preview-disclosure");if(showPreviewDisclosure&&!disclosure){disclosure=createProductPreviewDisclosure();imageFrame.append(disclosure)}else if(!showPreviewDisclosure)disclosure?.remove();
   const image=dialog.querySelector("img");applySiteImageRendition(image,src,"100vw");image.alt=alt;dialog.querySelector(".shop-lightbox-caption").textContent=label;dialog.showModal();
 }
 async function loadShopProduct(){
