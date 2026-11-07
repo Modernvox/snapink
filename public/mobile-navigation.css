@@ -144,6 +144,14 @@
   .snapink-logo-lockup {
     width: min(clamp(118px, 36vw, 160px), 144px) !important;
     max-width: 144px !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  .snapink-brand-tagline,
+  .snapink-made-in-usa {
+    display: none !important;
   }
 
   .snapink-launch-announcement {
@@ -159,7 +167,7 @@
     box-sizing: border-box;
     position: relative;
     z-index: 1;
-    height: 68px;
+    height: 58px;
     border-bottom: 1px solid rgba(255, 255, 255, .1);
     background: rgba(12, 12, 12, .97);
     -webkit-backdrop-filter: blur(18px);
@@ -175,7 +183,7 @@
     justify-content: space-between;
     gap: 16px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .snapink-mobile-header__logo {
@@ -189,9 +197,9 @@
 
   .snapink-mobile-header__toggle {
     display: inline-flex;
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
