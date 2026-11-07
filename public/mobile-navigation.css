@@ -77,6 +77,34 @@
   border-radius: 1px;
 }
 
+@media (min-width: 769px) {
+  .snapink-logo-lockup {
+    display: grid !important;
+    width: max-content !important;
+    grid-template-columns: clamp(118px, 14vw, 166px) max-content;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 4px !important;
+    justify-content: start;
+  }
+
+  .snapink-logo-lockup > img {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .snapink-logo-lockup > .snapink-brand-tagline {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .snapink-logo-lockup > .snapink-made-in-usa {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+}
+
 .snapink-logo-lockup > img {
   display: block !important;
   width: 100% !important;
