@@ -1,17 +1,12 @@
 import { bearer, json, now } from "../../_lib/orders.js";
-import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy } from "../../_lib/shop.js";
+import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy, shopProductImageRank, shopProductImageType } from "../../_lib/shop.js";
 import { canonicalShopProductName } from "../../_lib/shop-product-name.js";
 
 const defaultCardDescription = (name) => `${name} is a premium swappable snapback hat strap featuring custom artwork on a SnapInk Sleeve™.`;
 const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
 const cleanCardDescription = (value) => String(value||"").replace(/!\[([^\]]*)\]\([^)]+\)/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/<[^>]*>/g,"").replace(/^\s*(?:[-*+]|\d+\.)\s+/gm,"").replace(/[`*_~>#]/g,"").replace(/[\r\n\t]+/g," ").replace(/\s+/g," ").trim();
 const safeSlug = (name) => name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,70).replace(/-+$/g,"");
-const productImageOrder = ["on-desk", "on-hat", "packaging", "male-lifestyle", "female-lifestyle"];
-const productImageRank = (file) => {
-  const filename = String(file?.name || "").toLowerCase().replace(/_/g,"-");
-  const index = productImageOrder.findIndex((type) => filename.includes(type));
-  return index < 0 ? productImageOrder.length : index;
-};
+const productImageTypeLabel = (file) => ({"on-hat":"On-Hat Product Image","on-desk":"On-Desk Product Image","female-lifestyle":"Female Lifestyle Image","male-lifestyle":"Male Lifestyle Image",packaging:"Packaging Image"}[shopProductImageType(file)]||"Product Image");
 
 export async function onRequestGet({request,env}) {
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN))return json({error:"Unauthorized"},401);
@@ -48,9 +43,9 @@ export async function onRequestPost({request,env}) {
   if(!categoryId)return json({error:"Choose a product category before publishing."},400);
   const category=await env.DB.prepare("SELECT category_id FROM shop_product_categories WHERE category_id=? AND active=1").bind(categoryId).first().catch(()=>null);
   if(!category)return json({error:"Choose an available Shop category."},400);
-  const files=form.getAll("galleryImages").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
+  const files=form.getAll("galleryImages").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>shopProductImageRank(a.file)-shopProductImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
-  const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>productImageRank(a.file)-productImageRank(b.file)||a.index-b.index).map(({file})=>file);
+  const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>shopProductImageRank(a.file)-shopProductImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(thumbnails.length&& (thumbnails.length!==files.length||thumbnails.some(file=>file.type!=="image/webp"||file.size<100||file.size>2*1024*1024)))return json({error:"Product image thumbnails are invalid."},400);
   const slug=safeSlug(name);
   const standardPrices=await readStandardShopPrices(env.DB);
@@ -63,9 +58,9 @@ export async function onRequestPost({request,env}) {
     for(let i=0;i<thumbnails.length;i++) await env.PRIVATE_ASSETS.put(thumbnailKeys[i],thumbnails[i].stream(),{httpMetadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,category_id,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} On-Desk product image`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),categoryId,time,time),
+      env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,category_id,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} ${productImageTypeLabel(files[0])}`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),categoryId,time,time),
       env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify([0,1,2,3,4,5])),
-      env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} SnapInk product image ${i+2}`,label:files[i+1]?.name||`Image ${i+2}`})))),
+      env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} ${productImageTypeLabel(files[i+1])}`,label:files[i+1]?.name||`Image ${i+2}`})))),
     ]);
     return json({ok:true,product:{productId,slug,url:`/shop/${slug}`}} ,201);
   } catch(error) {

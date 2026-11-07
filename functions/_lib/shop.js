@@ -2,6 +2,22 @@ import { json } from "./orders.js";
 
 export const DEFAULT_STANDARD_SHOP_PRICES = [1599,1599,1599,1599,1899,1899];
 export const PREMIUM_EXTENDED_SHOP_PRICES = [2499,2499,2499,2999,2999,2999];
+export const SHOP_PRODUCT_IMAGE_ORDER = ["on-hat","on-desk","female-lifestyle","male-lifestyle","packaging"];
+
+export function shopProductImageType(image) {
+  const identity = [image?.name,image?.label,image?.alt,image?.url].filter(Boolean).join(" ").toLowerCase().replace(/[_\s]+/g,"-");
+  if (identity.includes("on-hat")) return "on-hat";
+  if (identity.includes("on-desk")) return "on-desk";
+  if (identity.includes("female-lifestyle")) return "female-lifestyle";
+  if (identity.includes("male-lifestyle")) return "male-lifestyle";
+  if (identity.includes("packaging")) return "packaging";
+  return "other";
+}
+
+export function shopProductImageRank(image) {
+  const rank = SHOP_PRODUCT_IMAGE_ORDER.indexOf(shopProductImageType(image));
+  return rank < 0 ? SHOP_PRODUCT_IMAGE_ORDER.length : rank;
+}
 
 export async function readStandardShopPrices(db, excludeProductId = "") {
   const row = await db.prepare("SELECT prices_json AS pricesJson FROM shop_products WHERE artwork_tier='standard' AND product_id<>? ORDER BY active DESC,created_at LIMIT 1").bind(excludeProductId).first().catch(()=>null);
@@ -62,7 +78,10 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
       variants.push({ variantId:variant.variantId,name:variant.name,sleeveColor:variant.sleeveColor,artworkColor:variant.artworkColor,sleeveImageUrl:variant.sleeveImageUrl,sleeveImageAlt:variant.sleeveImageAlt,active:Boolean(variant.active),availableSizes,inventory:inventoryResult.results || [] });
     }
     const galleryRow = await db.prepare("SELECT gallery_json AS galleryJson FROM shop_product_galleries WHERE product_id=?").bind(row.productId).first().catch(()=>null);
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:row.imageUrl,imageAlt:row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:parseShopGallery(galleryRow?.galleryJson),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),variants});
+    const images = [{url:row.imageUrl,alt:row.imageAlt,label:row.imageAlt,sequence:0},...parseShopGallery(galleryRow?.galleryJson).map((image,index)=>({...image,sequence:index+1}))]
+      .sort((a,b)=>shopProductImageRank(a)-shopProductImageRank(b)||a.sequence-b.sequence);
+    const primaryImage = images[0] || {url:row.imageUrl,alt:row.imageAlt};
+    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:primaryImage.url,imageAlt:primaryImage.alt||row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:images.slice(1).map(({sequence,...image})=>image),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),variants});
   }
   return products;
 }
