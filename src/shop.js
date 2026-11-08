@@ -55,6 +55,7 @@ async function loadShopPage(){
     const response=await fetch("/api/shop/products",{cache:"no-store"}),data=await response.json().catch(()=>null);
     if(!response.ok||!Array.isArray(data?.products))throw new Error(data?.error||"Shop products are temporarily unavailable.");
     allProducts=data.products;categories=Array.isArray(data.categories)?data.categories:[];mountShopCart(allProducts);setCategoryFromUrl();renderCategoryNav();renderProducts();
+    const url=new URL(location.href);if(url.searchParams.get("bag")==="open"){url.searchParams.delete("bag");history.replaceState({},"",`${url.pathname}${url.search}${url.hash}`);document.querySelector("#shop-cart-dialog")?.showModal()}
     document.head.querySelector('script[data-shop-jsonld="true"]')?.remove();const script=document.createElement("script");script.type="application/ld+json";script.dataset.shopJsonld="true";script.textContent=JSON.stringify(jsonLd(allProducts));document.head.append(script);
   }catch(cause){root.replaceChildren();const message=document.createElement("p");message.className="shop-error";message.textContent=cause instanceof Error?cause.message:"Shop products could not be loaded.";root.append(message);error.textContent="If this continues, please contact SnapInk for help."}
 }

@@ -97,12 +97,13 @@
     shell.innerHTML = `
       <header class="snapink-mobile-header">
         <div class="snapink-mobile-header__row">
-          <a href="/" aria-label="SnapInk home">
-            <img class="snapink-mobile-header__logo" src="/images/logos/snapink-header-logo.png" alt="SnapInk" width="2172" height="242" />
-          </a>
           <button class="snapink-mobile-header__toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="snapink-mobile-panel">
             <span></span><span></span><span></span>
           </button>
+          <a href="/" aria-label="SnapInk home">
+            <img class="snapink-mobile-header__logo" src="/images/logos/snapink-header-logo.png" alt="SnapInk" width="2172" height="242" />
+          </a>
+          <a class="snapink-mobile-header__bag" href="/shop?bag=open" aria-label="Open shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span class="snapink-mobile-header__bag-count" aria-live="polite">0</span></a>
         </div>
       </header>
       <nav class="snapink-mobile-panel" id="snapink-mobile-panel" aria-label="Mobile navigation" aria-hidden="true" inert>
@@ -120,6 +121,17 @@
     syncHeaderLogoLockups();
 
     const toggle = shell.querySelector(".snapink-mobile-header__toggle");
+    const bagCount = shell.querySelector(".snapink-mobile-header__bag-count");
+    const syncBagCount = () => {
+      try {
+        const cart = JSON.parse(localStorage.getItem("snapink-exclusive-shop-cart") || "[]");
+        const count = Array.isArray(cart) ? cart.reduce((sum, item) => sum + (Number.isInteger(Number(item?.quantity)) && Number(item.quantity) > 0 ? Number(item.quantity) : 0), 0) : 0;
+        bagCount.textContent = count > 99 ? "99+" : String(count);
+        bagCount.hidden = count < 1;
+      } catch { bagCount.hidden = true; }
+    };
+    syncBagCount();
+    window.addEventListener("storage", (event) => { if (event.key === "snapink-exclusive-shop-cart") syncBagCount(); });
     const panel = shell.querySelector(".snapink-mobile-panel");
     const setOpen = (open) => {
       shell.dataset.open = String(open);
