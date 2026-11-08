@@ -163,10 +163,6 @@
   .hero-copy{z-index:2}
 }
 @media(max-width:800px){.hero-desktop-video{display:none}}
-@media(max-width:800px) and (prefers-reduced-motion:reduce){
-  .hero-mobile-video{display:none}
-  .hero-mobile-poster{display:block}
-}
 </style>
 <style>
   #shop.one-hat-promo-section{padding:clamp(32px,5vw,64px) 0;background:#0b0b0d;color:#fff}
@@ -188,17 +184,20 @@
 <body>
   <header class="header"><div class="wrap nav"><a class="brand" href="/" aria-label="SnapInk home"><img src="/images/logos/snapink-header-logo.png" alt="SnapInk" width="2172" height="242" /></a><nav class="links" aria-label="Main navigation"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Studio</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav><button class="menu" aria-expanded="false" aria-controls="mobile-menu">Menu</button></div><nav class="mobile-menu wrap" id="mobile-menu"><a href="#how">How it works</a><a href="#customization">Customization</a><a href="/customize.html">Design Your Sleeve</a><a href="/fit-guide.html">Will It Fit?</a><a href="/pilot.html">Pilot partners</a><a href="/wholesale-info.html">Wholesale</a><a href="/partner-portal.html">Partner portal</a></nav></header>
   <main>
-    <section class="hero"><video class="hero-desktop-video" width="1920" height="1080" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp" aria-hidden="true"><source data-src="/videos/desktop_hero_video.mp4" type="video/mp4" /></video><div class="hero-mobile-media"><video class="hero-mobile-video" width="720" height="1280" autoplay muted loop playsinline webkit-playsinline preload="none" poster="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp" aria-label="SnapInk sleeve demonstration showing sleeves being installed on compatible snapback hats"><source data-src="/videos/mobile_hero_video.mp4" type="video/mp4" /></video><img class="hero-mobile-poster" src="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp" width="1536" height="1024" alt="Three snapback hats with premium swappable snapback hat strap designs" decoding="async"  srcset="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-480.webp 480w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-960.webp 960w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp 1440w"  sizes="(max-width: 700px) 100vw, 50vw"  loading="eager" fetchpriority="high" /></div><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Premium Swappable Snapback Hat Straps</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the back of your snapback with premium, swappable SnapInk Sleeves™. Slide over your existing strap, snap into place, and switch designs without switching hats.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
+    <section class="hero"><video class="hero-desktop-video" width="1440" height="1080" autoplay muted loop playsinline webkit-playsinline preload="metadata" poster="/images/optimized/images-website-images-desktop-hero-png-010a018ba937-1440.webp" aria-hidden="true"><source data-src="/videos/snapink-hero-desktop.mp4" type="video/mp4" /></video><div class="hero-mobile-media"><video class="hero-mobile-video" width="1080" height="1920" autoplay muted loop playsinline webkit-playsinline preload="metadata" poster="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp" aria-label="SnapInk sleeve demonstration showing sleeves being installed on compatible snapback hats"><source data-src="/videos/snapink-hero-mobile.mp4" type="video/mp4" /></video><img class="hero-mobile-poster" src="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp" width="1536" height="1024" alt="Three snapback hats with premium swappable snapback hat strap designs" decoding="async"  srcset="/images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-480.webp 480w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-960.webp 960w, /images/optimized/images-website-images-mobile-hero-png-fd8a01e6a63b-1440.webp 1440w"  sizes="(max-width: 700px) 100vw, 50vw"  loading="eager" fetchpriority="high" /></div><p class="hero-image-slogan"><span class="hero-slogan-desktop">Slide On. Snap In. Stand Out.</span></p><p class="hero-image-caption">ONE HAT. ENDLESS POSSIBILITIES.</p><div class="wrap"><div class="hero-copy"><div class="eyebrow">Premium Swappable Snapback Hat Straps</div><h1>Your Hat.<br>Your Statement.</h1><span class="patent-pending">Patent Pending</span><p>Transform the back of your snapback with premium, swappable SnapInk Sleeves™. Slide over your existing strap, snap into place, and switch designs without switching hats.</p><div class="actions"><a class="button primary" href="/customize.html">Explore SnapInk Studio</a><a class="button pilot-hero-button" href="/pilot.html">Become a Pilot Partner</a></div></div></div></section>
     <script>
       (() => {
         const video = document.querySelector('.hero-mobile-video');
         const source = video?.querySelector('source[data-src]');
         if (!video || !source || !window.matchMedia) return;
         const mobile = window.matchMedia('(max-width: 800px)');
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         const syncPlayback = () => {
-          if (!mobile.matches || reducedMotion.matches) {
+          if (!mobile.matches) {
             video.pause();
+            if (source.hasAttribute('src')) {
+              source.removeAttribute('src');
+              video.load();
+            }
             return;
           }
           if (!source.src) {
@@ -210,7 +209,6 @@
         };
         syncPlayback();
         mobile.addEventListener?.('change', syncPlayback);
-        reducedMotion.addEventListener?.('change', syncPlayback);
       })();
     </script>
     <script>
@@ -222,6 +220,10 @@
         const syncPlayback = () => {
           if (!desktop.matches) {
             video.pause();
+            if (source.hasAttribute('src')) {
+              source.removeAttribute('src');
+              video.load();
+            }
             return;
           }
           if (!source.src) {
