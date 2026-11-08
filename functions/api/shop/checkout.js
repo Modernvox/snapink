@@ -1,7 +1,7 @@
 import { json, now, randomId } from "../../_lib/orders.js";
 import { calculateShopCartPricing, RETAIL_MAX_QUANTITY } from "../../_lib/retail-pricing.mjs";
 import { EmailDeliveryError, enforcePublicFormRateLimit, sendSnapInkEmail } from "../../_lib/snapink-email.js";
-import { readShopProducts, checkoutUnavailable } from "../../_lib/shop.js";
+import { readShopProducts, checkoutUnavailable, shopCheckoutProductError } from "../../_lib/shop.js";
 import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
 import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-methods.js";
 
@@ -59,8 +59,9 @@ export async function onRequestPost({ request, env }) {
     const normalizedMap = new Map();
     for (const line of body.items) {
       const product = productsById.get(line.productId);
+      const productReadinessError = shopCheckoutProductError(product);
       const variant = product?.variants.find((entry) => entry.variantId === line.variantId && entry.active);
-      if (!product || !variant || !variant.availableSizes.includes(line.size)) return json({ error: "One of the selected products, colors, or sizes is no longer available." }, 409);
+      if (productReadinessError || !variant || !variant.availableSizes.includes(line.size)) return json({ error: productReadinessError || "One of the selected product variants or sizes is no longer available." }, 409);
       const key = `${line.productId}:${line.variantId}:${line.size}`;
       const existing = normalizedMap.get(key);
       if (existing) existing.quantity += line.quantity;

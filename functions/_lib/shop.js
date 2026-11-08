@@ -1,4 +1,5 @@
 import { json } from "./orders.js";
+export { SHOP_SIZE_IDS, shopCheckoutProductError } from "./shop-checkout-validation.mjs";
 
 export const DEFAULT_STANDARD_SHOP_PRICES = [1599,1599,1599,1599,1899,1899];
 export const PREMIUM_EXTENDED_SHOP_PRICES = [2499,2499,2499,2999,2999,2999];

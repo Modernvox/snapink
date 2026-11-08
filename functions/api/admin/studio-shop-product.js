@@ -1,5 +1,5 @@
 import { bearer, json, now } from "../../_lib/orders.js";
-import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy, shopProductImageRank, shopProductImageType } from "../../_lib/shop.js";
+import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy, SHOP_SIZE_IDS, shopCheckoutProductError, shopProductImageRank, shopProductImageType } from "../../_lib/shop.js";
 import { canonicalShopProductName } from "../../_lib/shop-product-name.js";
 
 const defaultCardDescription = (name) => `${name} is a premium swappable snapback hat strap featuring custom artwork on a SnapInk Sleeve™.`;
@@ -50,6 +50,8 @@ export async function onRequestPost({request,env}) {
   const slug=safeSlug(name);
   const standardPrices=await readStandardShopPrices(env.DB);
   const prices=premiumArtwork?PREMIUM_EXTENDED_SHOP_PRICES:standardPrices;
+  const checkoutReadinessError=shopCheckoutProductError({productId:"studio-publish-validation",active:true,prices,variants:[{variantId:"studio",active:true,availableSizes:SHOP_SIZE_IDS}]},{requireEverySize:true});
+  if(checkoutReadinessError)return json({error:`Product cannot be published yet: ${checkoutReadinessError}`},400);
   const existing=await env.DB.prepare("SELECT product_id AS productId,slug FROM shop_products WHERE slug=?").bind(slug).first();
   if(existing)return json({ok:true,duplicate:true,product:{productId:existing.productId,slug:existing.slug,url:`/shop/${existing.slug}`}});
   const productId=`studio-${crypto.randomUUID()}`, time=now(), objectKeys=files.map((_,i)=>`shop-products/${productId}/${i+1}.png`),thumbnailKeys=thumbnails.map((_,i)=>`shop-products/${productId}/${i+1}-thumb.webp`),storedKeys=[...objectKeys,...thumbnailKeys];
@@ -59,7 +61,7 @@ export async function onRequestPost({request,env}) {
     const urls=objectKeys.map(key=>`/api/shop/product-image?key=${encodeURIComponent(key)}`);
     await env.DB.batch([
       env.DB.prepare("INSERT INTO shop_products(product_id,slug,name,description,card_description,image_url,image_alt,prices_json,artwork_tier,production_metadata_json,category_id,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,1,?,?)").bind(productId,slug,name,description,cardDescription,urls[0],`${name} ${productImageTypeLabel(files[0])}`,JSON.stringify(prices),artworkTier,JSON.stringify(productionMetadata),categoryId,time,time),
-      env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify([0,1,2,3,4,5])),
+      env.DB.prepare("INSERT INTO shop_product_variants(product_id,variant_id,variant_name,sleeve_color,artwork_color,available_sizes_json,active) VALUES(?,?,?,?,?,?,1)").bind(productId,"studio",`${style === "billboard" ? "Billboard" : "Standard"} custom design`,color, "Custom",JSON.stringify(SHOP_SIZE_IDS)),
       env.DB.prepare("INSERT INTO shop_product_galleries(product_id,gallery_json) VALUES(?,?)").bind(productId,JSON.stringify(urls.slice(1).map((url,i)=>({url,alt:`${name} ${productImageTypeLabel(files[i+1])}`,label:files[i+1]?.name||`Image ${i+2}`})))),
     ]);
     return json({ok:true,product:{productId,slug,url:`/shop/${slug}`}} ,201);

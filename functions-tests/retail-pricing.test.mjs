@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { calculateRetailPricing, calculateShopCartPricing } from "../functions/_lib/retail-pricing.mjs";
+import { SHOP_SIZE_IDS, shopCheckoutProductError } from "../functions/_lib/shop-checkout-validation.mjs";
 
 test("retail price and flat shipping for sizes 0 through 3", () => {
   for (let size = 0; size <= 3; size++) {
@@ -58,6 +59,25 @@ test("active D1 catalog maps Studio product IDs and preserves approved premium p
     assert.equal(calculateShopCartPricing([{productId:"studio-apex-uuid",variantId:"studio",size,quantity:1}],products).items[0].unitPriceCents, size <= 3 ? 1599 : 1899);
     assert.equal(calculateShopCartPricing([{productId:"studio-premium-uuid",variantId:"studio",size,quantity:1}],products).items[0].unitPriceCents, size <= 2 ? 2499 : 2999);
   }
+});
+
+test("Studio-published Standard and Billboard products meet the shared checkout contract", () => {
+  const product = {
+    productId: "studio-angel-uuid", active: true, artworkTier: "standard",
+    prices: [1599,1599,1599,1599,1899,1899],
+    variants: [{ variantId: "studio", active: true, availableSizes: SHOP_SIZE_IDS }],
+  };
+  assert.equal(shopCheckoutProductError(product, { requireEverySize: true }), "");
+  for (const size of SHOP_SIZE_IDS) {
+    assert.equal(calculateShopCartPricing([{ productId: product.productId, variantId: "studio", size, quantity: 1 }], new Map([[product.productId, product]])).items[0].size, size);
+  }
+});
+
+test("Studio publication readiness rejects missing trusted prices, sizes, or inactive products", () => {
+  const base = { productId: "studio-test", active: true, prices: [1599,1599,1599,1599,1899,1899], variants: [{ variantId: "studio", active: true, availableSizes: SHOP_SIZE_IDS }] };
+  assert.match(shopCheckoutProductError({ ...base, prices: [1599] }, { requireEverySize: true }), /valid trusted price/);
+  assert.match(shopCheckoutProductError({ ...base, variants: [{ ...base.variants[0], availableSizes: [0,1,2,3,4] }] }, { requireEverySize: true }), /all six checkout sizes/);
+  assert.match(shopCheckoutProductError({ ...base, active: false }), /must be active/);
 });
 
 test("shop shipping threshold is checked after the mixed-cart discount and is strictly over $36", () => {

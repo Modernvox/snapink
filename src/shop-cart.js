@@ -9,7 +9,16 @@ const integerField=(value)=>typeof value==="number"?value:typeof value==="string
 export function mountShopCart(products){
   const productMap=new Map(products.map((product)=>[product.productId,product]));
   const productBySlug=new Map(products.filter((product)=>typeof product.slug==="string").map((product)=>[product.slug.toLowerCase(),product]));
-  const safeCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart.flatMap((item)=>{const size=integerField(item?.size),quantity=integerField(item?.quantity);if(!item||typeof item.productId!=="string"||typeof item.variantId!=="string"||!Number.isInteger(size)||size<0||size>5||!Number.isInteger(quantity)||quantity<1||quantity>100)return[];const product=productMap.get(item.productId)||productBySlug.get(item.productId.toLowerCase());return[{...item,productId:product?.productId||item.productId,size,quantity}]}):[]}catch{return[]}};
+  const readStoredCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart:[]}catch{return[]}};
+  const safeCart=()=>readStoredCart().flatMap((item)=>{
+    const size=integerField(item?.size),quantity=integerField(item?.quantity);
+    if(!item||typeof item.productId!=="string"||typeof item.variantId!=="string"||!Number.isInteger(size)||size<0||size>5||!Number.isInteger(quantity)||quantity<1||quantity>100)return[];
+    const product=productMap.get(item.productId)||productBySlug.get(item.productId.toLowerCase());
+    const variant=product?.variants?.find((entry)=>entry.variantId===item.variantId&&entry.active);
+    if(!product?.active||!variant||!variant.availableSizes.includes(size)||!Array.isArray(product.prices)||product.prices.length!==6||!Number.isSafeInteger(product.prices[size])||product.prices[size]<1)return[];
+    return[{...item,productId:product.productId,size,quantity}];
+  });
+  let unavailableSavedItems=Math.max(0,readStoredCart().length-safeCart().length);
   localStorage.setItem(STORAGE_KEY,JSON.stringify(safeCart()));
   let trigger=document.querySelector(".shop-cart-trigger");
   if(!trigger){
@@ -32,6 +41,7 @@ export function mountShopCart(products){
     const count=cart.reduce((sum,item)=>sum+item.quantity,0);
     document.querySelectorAll(".shop-cart-count").forEach((node)=>node.textContent=String(count));
     const lines=dialog.querySelector(".shop-cart-lines"),totals=dialog.querySelector(".shop-totals");lines.replaceChildren();totals.replaceChildren();
+    if(unavailableSavedItems){const message=dialog.querySelector(".shop-cart-message");message.className="shop-cart-message";message.textContent=`${unavailableSavedItems} saved ${unavailableSavedItems===1?"item was":"items were"} removed because the active Shop catalog no longer offers them.`;unavailableSavedItems=0}
     if(!cart.length){lines.textContent="Your bag is empty.";dialog.querySelector(".shop-checkout-actions").hidden=true;return}
     dialog.querySelector(".shop-checkout-actions").hidden=false;
     cart.forEach((item,index)=>{

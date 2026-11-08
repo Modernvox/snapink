@@ -11,7 +11,9 @@ export function calculateShopCartPricing(items, products) {
   const normalized = items.map((item) => {
     const product = Array.isArray(products) ? products.find((entry) => entry?.productId === item.productId) : products instanceof Map ? products.get(item.productId) : Object.hasOwn(products,item.productId) ? products[item.productId] : null;
     const size = Number(item.size), count = Number(item.quantity);
-    if (!product || !Number.isInteger(size) || size < 0 || size > 5 || !Array.isArray(product.prices) || product.prices.length !== 6 || !Number.isSafeInteger(product.prices[size]) || product.prices[size] < 1) throw new RangeError("Choose a valid exclusive product and size.");
+    if (!product) throw new RangeError("This Shop product is not in the active catalog.");
+    if (!Number.isInteger(size) || size < 0 || size > 5) throw new RangeError("Choose a valid Shop size from 0 through 5.");
+    if (!Array.isArray(product.prices) || product.prices.length !== 6 || !Number.isSafeInteger(product.prices[size]) || product.prices[size] < 1) throw new RangeError("Trusted Shop pricing is unavailable for this product and size.");
     if (!Number.isInteger(count) || count < 1 || count > RETAIL_MAX_QUANTITY) throw new RangeError(`Quantity must be between 1 and ${RETAIL_MAX_QUANTITY} per line.`);
     quantity += count;
     const unitPriceCents = product.prices[size];
