@@ -132,6 +132,8 @@
   }
 
   .snapink-mobile-shell {
+    --si-accent: var(--si-gold);
+    --si-hover: var(--si-gold-hover);
     position: sticky;
     top: 34px;
     z-index: 10000;
@@ -395,6 +397,52 @@
 
   .snapink-page--partner-portal input {
     box-sizing: border-box;
+  }
+}
+
+@media (max-width: 768px) {
+  .snapink-mobile-shell .snapink-mobile-header__toggle,
+  .snapink-mobile-shell .snapink-mobile-header__bag {
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent;
+    color: #fff !important;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-header__toggle:hover,
+  .snapink-mobile-shell .snapink-mobile-header__bag:hover,
+  .snapink-mobile-shell .snapink-mobile-header__toggle:active,
+  .snapink-mobile-shell .snapink-mobile-header__bag:active {
+    background: color-mix(in srgb, var(--si-gold) 10%, transparent);
+    color: #fff !important;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-header__toggle:focus-visible,
+  .snapink-mobile-shell .snapink-mobile-header__bag:focus-visible {
+    outline: 2px solid var(--si-gold) !important;
+    outline-offset: 2px;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-header__bag-count {
+    background: var(--si-gold);
+    color: #111;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-panel a[href="/pilot.html"],
+  .snapink-mobile-shell .snapink-mobile-panel a[href="/wholesale"],
+  .snapink-mobile-shell .snapink-mobile-panel a[href="/customize.html"],
+  .snapink-mobile-shell .snapink-mobile-panel a[aria-current="page"] {
+    color: var(--si-gold) !important;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-panel a:hover,
+  .snapink-mobile-shell .snapink-mobile-panel a:focus-visible,
+  .snapink-mobile-shell .snapink-mobile-panel a:active {
+    color: var(--si-gold-hover) !important;
+  }
+
+  .snapink-mobile-shell .snapink-mobile-panel a:focus-visible {
+    outline-color: var(--si-gold) !important;
   }
 }
 
