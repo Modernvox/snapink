@@ -97,17 +97,21 @@
     #customization .direct-printing-image-wrap{display:grid;width:fit-content;max-width:100%;height:auto;min-height:0;aspect-ratio:auto;place-items:center;margin:16px auto;padding:0}
     #customization .direct-printing-image{display:block;width:auto;height:auto;min-width:0;min-height:0;max-width:min(320px,100%);max-height:260px;aspect-ratio:auto;object-fit:contain;object-position:center;margin:0;border:1px solid var(--line);border-radius:10px;background:var(--si-panel)}
     @media(max-width:800px){#customization{padding-block:48px}#customization .method{padding:20px}#customization .direct-printing-image-wrap{margin:14px auto}#customization .direct-printing-image{max-width:100%;max-height:240px}}
-    .lifestyle-ad{padding:clamp(32px,4vw,52px) 0;overflow:hidden;border-top:1px solid color-mix(in srgb,var(--si-accent) 14%,transparent);border-bottom:1px solid color-mix(in srgb,var(--si-accent) 14%,transparent);background:radial-gradient(ellipse at 15% 55%,rgba(216,191,134,.11),transparent 48%),linear-gradient(135deg,#171715,#101010 72%)}
+    .site-band--dark.lifestyle-ad{padding:clamp(32px,4vw,52px) 0;overflow:hidden;border-top:1px solid #e7e7e7;border-bottom:1px solid #e7e7e7;background:#fff;color:#111}
     .lifestyle-ad-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:clamp(24px,3.5vw,48px);align-items:center}
     .lifestyle-ad-visual{display:flex;min-width:0;justify-content:center;margin:0}
-    .lifestyle-ad-image{display:block;width:100%;max-width:none;height:auto;max-height:none;object-fit:contain;object-position:center;border:1px solid color-mix(in srgb,var(--si-accent) 22%,transparent);border-radius:10px;box-shadow:0 20px 52px rgba(0,0,0,.36)}
+    .lifestyle-ad-image{display:block;width:100%;max-width:none;height:auto;max-height:none;object-fit:contain;object-position:center;border:1px solid #e7e7e7;border-radius:10px;box-shadow:0 20px 52px rgba(0,0,0,.36)}
     .lifestyle-ad-copy{min-width:0;max-width:440px}
-    .lifestyle-ad-eyebrow{margin:0;color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.2em}
-    .lifestyle-ad-copy h2{margin:12px 0 18px;font:900 clamp(28px,3vw,40px)/1.03 Manrope,sans-serif;letter-spacing:-.045em}
-    .lifestyle-ad-copy h2 span{color:var(--si-accent)}
-    .lifestyle-ad-copy p{margin:0 0 12px;color:#e0ded7;font-size:clamp(14px,1.05vw,16px);line-height:1.65}
+    .lifestyle-ad-eyebrow{margin:0;color:#80652f;font-size:11px;font-weight:800;letter-spacing:.2em}
+    .lifestyle-ad-copy h2{margin:12px 0 18px;color:#111;font:900 clamp(28px,3vw,40px)/1.03 Manrope,sans-serif;letter-spacing:-.045em}
+    .lifestyle-ad-copy h2 span{color:#111}
+    .lifestyle-ad-copy p{margin:0 0 12px;color:#4b4b4b;font-size:clamp(14px,1.05vw,16px);line-height:1.65}
+    .lifestyle-ad-copy>p:nth-of-type(2){color:#111;font-weight:750}
+    .lifestyle-ad .button.primary{border-color:#d8c49a;background:#d8c49a;color:#111}
+    .lifestyle-ad .button.primary:hover,.lifestyle-ad .button.primary:focus-visible{border-color:#e8d6b2;background:#e8d6b2;color:#111}
+    .lifestyle-ad .button.primary:focus-visible{outline:2px solid #80652f;outline-offset:3px}
     .lifestyle-ad-copy .button{margin-top:8px}
-    @media(max-width:800px){.lifestyle-ad{padding:28px 0}.lifestyle-ad-grid{grid-template-columns:minmax(0,1fr);gap:20px}.lifestyle-ad-visual{order:0}.lifestyle-ad-image{width:100%;max-height:none}.lifestyle-ad-copy{max-width:680px;margin-inline:auto}.lifestyle-ad-copy h2{margin:10px 0 14px;font-size:clamp(27px,7vw,36px)}}
+    @media(max-width:800px){.site-band--dark.lifestyle-ad{padding:28px 0}.lifestyle-ad-grid{grid-template-columns:minmax(0,1fr);gap:20px}.lifestyle-ad-visual{order:0}.lifestyle-ad-image{width:100%;max-height:none}.lifestyle-ad-copy{max-width:680px;margin-inline:auto}.lifestyle-ad-copy h2{margin:10px 0 14px;font-size:clamp(27px,7vw,36px)}}
     .protection-section{background:linear-gradient(135deg,#171715,#101010 68%);border-top:1px solid color-mix(in srgb,var(--si-accent) 14%,transparent);border-bottom:1px solid color-mix(in srgb,var(--si-accent) 14%,transparent)}
     .protection-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1fr);gap:clamp(36px,7vw,96px);align-items:center}
     .protection-visual{margin:0;display:flex;justify-content:center;min-width:0}
