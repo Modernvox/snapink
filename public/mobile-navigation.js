@@ -78,7 +78,7 @@
       { label: "How It Works", href: `${rootPrefix}#how` },
       { label: "Customization", href: `${rootPrefix}#customization` },
       { label: "Fit Guide", href: "/fit-guide.html", key: "/fit-guide.html" },
-      { label: "Studio", href: "/customize.html", key: "/customize.html" },
+      { label: "Design Studio", href: "/customize.html", key: "/customize.html" },
       { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
       { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
       { label: "Contact", href: "/contact.html", key: "/contact.html" },
