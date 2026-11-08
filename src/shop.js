@@ -1,4 +1,4 @@
-import { mountShopCart } from "./shop-cart.js";
+import { mountShopCart } from "./shop-cart.js?v=20261108-d1-cart-ids1";
 import { applyShopProductThumbnail, getSiteImageRendition } from "./utils/imageRenditions.js";
 import { createProductPreviewDisclosure, isGeneratedShopPreview } from "./shop-image-disclosure.js";
 

@@ -49,6 +49,17 @@ test("exclusive shop uses approved size prices and calculates mixed-product disc
   assert.equal(calculateShopCartPricing([{productId:"lift",variantId:"black-white",size:4,quantity:1}],products).items[0].unitPriceCents,1899);
 });
 
+test("active D1 catalog maps Studio product IDs and preserves approved premium prices for sizes 0 through 5", () => {
+  const products = new Map([
+    ["studio-apex-uuid", { productId:"studio-apex-uuid", artworkTier:"standard", prices:[1599,1599,1599,1599,1899,1899] }],
+    ["studio-premium-uuid", { productId:"studio-premium-uuid", artworkTier:"premium", prices:[2499,2499,2499,2999,2999,2999] }],
+  ]);
+  for (let size = 0; size <= 5; size++) {
+    assert.equal(calculateShopCartPricing([{productId:"studio-apex-uuid",variantId:"studio",size,quantity:1}],products).items[0].unitPriceCents, size <= 3 ? 1599 : 1899);
+    assert.equal(calculateShopCartPricing([{productId:"studio-premium-uuid",variantId:"studio",size,quantity:1}],products).items[0].unitPriceCents, size <= 2 ? 2499 : 2999);
+  }
+});
+
 test("shop shipping threshold is checked after the mixed-cart discount and is strictly over $36", () => {
   const products={a:{prices:[400,400,400,400,400,400]},b:{prices:[400,400,400,400,400,400]}};
   const exactly36=calculateShopCartPricing([{productId:"a",size:0,quantity:5},{productId:"b",size:0,quantity:5}],products);

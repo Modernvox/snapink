@@ -4,10 +4,13 @@ import { applySiteImageRendition } from "./utils/imageRenditions.js";
 const STORAGE_KEY="snapink-exclusive-shop-cart";
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
 const integerField=(value)=>typeof value==="number"?value:typeof value==="string"&&value.trim()!==""?Number(value):NaN;
-const safeCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart.flatMap((item)=>{const size=integerField(item?.size),quantity=integerField(item?.quantity);return item&&typeof item.productId==="string"&&typeof item.variantId==="string"&&Number.isInteger(size)&&size>=0&&size<=5&&Number.isInteger(quantity)&&quantity>=1&&quantity<=100?[{...item,size,quantity}]:[]}):[]}catch{return[]}};
+
 
 export function mountShopCart(products){
   const productMap=new Map(products.map((product)=>[product.productId,product]));
+  const productBySlug=new Map(products.filter((product)=>typeof product.slug==="string").map((product)=>[product.slug.toLowerCase(),product]));
+  const safeCart=()=>{try{const cart=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(cart)?cart.flatMap((item)=>{const size=integerField(item?.size),quantity=integerField(item?.quantity);if(!item||typeof item.productId!=="string"||typeof item.variantId!=="string"||!Number.isInteger(size)||size<0||size>5||!Number.isInteger(quantity)||quantity<1||quantity>100)return[];const product=productMap.get(item.productId)||productBySlug.get(item.productId.toLowerCase());return[{...item,productId:product?.productId||item.productId,size,quantity}]}):[]}catch{return[]}};
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(safeCart()));
   let trigger=document.querySelector(".shop-cart-trigger");
   if(!trigger){
     const header=document.querySelector("header");
@@ -51,9 +54,10 @@ export function mountShopCart(products){
     }catch(error){const message=document.createElement("p");message.className="shop-error";message.textContent=error.message;totals.append(message)}
   };
   window.snapInkShopAdd=(productId,variantId,size,quantity=1)=>{
-    const product=productMap.get(productId);if(!product)return;
-    const cart=safeCart(),found=cart.find((item)=>item.productId===productId&&item.variantId===variantId&&item.size===size);
-    if(found)found.quantity=Math.min(100,found.quantity+quantity);else cart.push({productId,variantId,size,quantity});
+    const product=productMap.get(productId)||productBySlug.get(String(productId).toLowerCase());if(!product)return;
+    const variant=product.variants.find((entry)=>entry.variantId===variantId&&entry.active&&entry.availableSizes.includes(size));if(!variant)return;
+    const cart=safeCart(),found=cart.find((item)=>item.productId===product.productId&&item.variantId===variant.variantId&&item.size===size);
+    if(found)found.quantity=Math.min(100,found.quantity+quantity);else cart.push({productId:product.productId,variantId:variant.variantId,size,quantity});
     persist(cart);dialog.showModal();
   };
   dialog.querySelector(".shop-checkout-button").addEventListener("click",async(event)=>{

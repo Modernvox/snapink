@@ -55,9 +55,10 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "This checkout is already being prepared. Refresh your cart in a moment." }, 409);
     }
     const products = await readShopProducts(env.DB);
+    const productsById = new Map(products.filter((product) => product.active).map((product) => [product.productId, product]));
     const normalizedMap = new Map();
     for (const line of body.items) {
-      const product = products.find((entry) => entry.productId === line.productId && entry.active);
+      const product = productsById.get(line.productId);
       const variant = product?.variants.find((entry) => entry.variantId === line.variantId && entry.active);
       if (!product || !variant || !variant.availableSizes.includes(line.size)) return json({ error: "One of the selected products, colors, or sizes is no longer available." }, 409);
       const key = `${line.productId}:${line.variantId}:${line.size}`;
@@ -67,7 +68,7 @@ export async function onRequestPost({ request, env }) {
     }
     const normalized = [...normalizedMap.values()];
     if (normalized.reduce((sum, line) => sum + line.quantity, 0) > RETAIL_MAX_QUANTITY) return json({ error: `Combined cart quantity cannot exceed ${RETAIL_MAX_QUANTITY}.` }, 400);
-    const pricing = calculateShopCartPricing(normalized, products);
+    const pricing = calculateShopCartPricing(normalized, productsById);
     for (const line of pricing.items) {
       const update = await env.DB.prepare("UPDATE shop_inventory SET reserved_quantity=reserved_quantity+?,updated_at=? WHERE product_id=? AND variant_id=? AND size=? AND available_quantity-reserved_quantity>=?")
         .bind(line.quantity, time, line.productId, line.variantId, line.size, line.quantity).run();
