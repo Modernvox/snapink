@@ -36,7 +36,8 @@ export async function onRequestPatch({request,env}){
   let body;try{body=await request.json()}catch{return json({error:"Invalid product update."},400)}
   if(typeof body.productId!=="string")return json({error:"Choose a valid product."},400);
   try{
-    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt,description,card_description AS cardDescription,artwork_tier AS artworkTier,category_id AS categoryId FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    const product=await env.DB.prepare("SELECT product_id AS productId,image_url AS imageUrl,image_alt AS imageAlt,description,card_description AS cardDescription,artwork_tier AS artworkTier,category_id AS categoryId,featured FROM shop_products WHERE product_id=?").bind(body.productId).first();if(!product)return json({error:"Shop product not found."},404);
+    if(body.featured!==undefined&&typeof body.featured!=="boolean")return json({error:"Homepage feature selection must be true or false."},400);
     if(body.artworkTier!==undefined&&!["standard","premium"].includes(body.artworkTier))return json({error:"Choose Standard or Premium Extended Artwork."},400);
     // Legacy products can retain a previously published image path that no
     // longer meets the current image upload rules. Allow status-only admin
@@ -74,6 +75,13 @@ export async function onRequestPatch({request,env}){
     }
     if(body.inventory!==undefined){if(!Array.isArray(body.inventory)||body.inventory.length>6)return json({error:"Inventory updates are invalid."},400);for(const stock of body.inventory){if(typeof stock.variantId!=="string"||!Number.isInteger(stock.size)||stock.size<0||stock.size>5||(stock.quantity!==null&&(!Number.isSafeInteger(stock.quantity)||stock.quantity<0||stock.quantity>100000)))return json({error:"Set a valid inventory quantity for each sleeve size."},400);if(stock.quantity===null)await env.DB.prepare("DELETE FROM shop_inventory WHERE product_id=? AND variant_id=? AND size=?").bind(body.productId,stock.variantId,stock.size).run();else {const result=await env.DB.prepare(`INSERT INTO shop_inventory(product_id,variant_id,size,available_quantity,reserved_quantity,updated_at) VALUES(?,?,?,?,0,?)
           ON CONFLICT(product_id,variant_id,size) DO UPDATE SET available_quantity=excluded.available_quantity,updated_at=excluded.updated_at WHERE shop_inventory.reserved_quantity<=excluded.available_quantity`).bind(body.productId,stock.variantId,stock.size,stock.quantity,time).run();if(!result.meta?.changes)return json({error:`Size ${stock.size} inventory cannot be reduced below the quantity reserved by active checkouts.`},409)}}}
+    if(body.featured!==undefined&&Boolean(product.featured)!==body.featured){
+      if(body.featured){
+        const result=await env.DB.prepare(`UPDATE shop_products SET featured=1,updated_at=? WHERE product_id=? AND featured=0
+          AND (SELECT COUNT(*) FROM shop_products WHERE featured=1)<6`).bind(time,body.productId).run();
+        if(!result.meta?.changes)return json({error:"Six products are already featured. Remove one before featuring another."},409);
+      }else await env.DB.prepare("UPDATE shop_products SET featured=0,updated_at=? WHERE product_id=?").bind(time,body.productId).run();
+    }
     return json({ok:true,products:await readShopProducts(env.DB,{includeInactive:true})});
   }catch(error){console.error("Admin Shop product update failed",error instanceof Error?error.message:"unknown");return json({error:error instanceof Error?error.message:"Could not save the product configuration."},503)}
 }

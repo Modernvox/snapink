@@ -47,18 +47,29 @@ export function parseShopGallery(value) {
   return gallery.filter((image) => image && typeof image === "object" && !Array.isArray(image) && typeof image.url === "string" && image.url.trim());
 }
 
-export async function readShopProducts(db, { includeInactive = false } = {}) {
+export async function readShopProducts(db, { includeInactive = false, productIds = null } = {}) {
+  const selectedIds = Array.isArray(productIds) ? [...new Set(productIds.filter((id) => typeof id === "string" && id))] : null;
+  if (selectedIds && !selectedIds.length) return [];
+  const where = [], bindings = [];
+  if (!includeInactive) where.push("product.active=1");
+  if (selectedIds) { where.push(`product.product_id IN (${selectedIds.map(() => "?").join(",")})`); bindings.push(...selectedIds); }
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
   let rows;
   try {
-    rows = await db.prepare(`SELECT product.product_id AS productId,product.slug,product.name,product.description,product.card_description AS cardDescription,product.image_url AS imageUrl,product.image_alt AS imageAlt,product.prices_json AS pricesJson,product.artwork_tier AS artworkTier,product.production_metadata_json AS productionMetadataJson,product.category_id AS categoryId,category.name AS categoryName,category.slug AS categorySlug,product.active
-      FROM shop_products AS product LEFT JOIN shop_product_categories AS category ON category.category_id=product.category_id ${includeInactive ? "" : "WHERE product.active=1"} ORDER BY product.name`).all();
+    const statement = db.prepare(`SELECT product.product_id AS productId,product.slug,product.name,product.description,product.card_description AS cardDescription,product.image_url AS imageUrl,product.image_alt AS imageAlt,product.prices_json AS pricesJson,product.artwork_tier AS artworkTier,product.production_metadata_json AS productionMetadataJson,product.category_id AS categoryId,category.name AS categoryName,category.slug AS categorySlug,product.active,product.featured
+      FROM shop_products AS product LEFT JOIN shop_product_categories AS category ON category.category_id=product.category_id ${whereSql} ORDER BY product.name`);
+    rows = await (bindings.length ? statement.bind(...bindings) : statement).all();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (!/no such (?:column|table):\s*(?:card_description|artwork_tier|production_metadata_json|(?:shop_products\.)?category_id|shop_product_categories)/i.test(message)) throw error;
-    rows = await db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
-      FROM shop_products ${includeInactive ? "" : "WHERE active=1"} ORDER BY name`).all();
+    if (!/no such (?:column|table):\s*(?:card_description|artwork_tier|production_metadata_json|(?:product\.)?featured|(?:shop_products\.)?category_id|shop_product_categories)/i.test(message)) throw error;
+    const legacyWhere = [];
+    if (!includeInactive) legacyWhere.push("active=1");
+    if (selectedIds) { legacyWhere.push(`product_id IN (${selectedIds.map(() => "?").join(",")})`); }
+    const statement = db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
+      FROM shop_products ${legacyWhere.length ? `WHERE ${legacyWhere.join(" AND ")}` : ""} ORDER BY name`);
+    rows = await (bindings.length ? statement.bind(...bindings) : statement).all();
   }
-  const standardRow = (rows.results || []).find((row) => row.artworkTier === "standard");
+  const standardRow = (rows.results || []).find((row) => row.artworkTier === "standard") || (selectedIds ? await db.prepare(`SELECT prices_json AS pricesJson FROM shop_products WHERE artwork_tier='standard' ${includeInactive ? "" : "AND active=1"} ORDER BY active DESC,created_at LIMIT 1`).first().catch(()=>null) : null);
   const standardPrices = parseShopJson(standardRow?.pricesJson, DEFAULT_STANDARD_SHOP_PRICES);
   const validStandardPrices = Array.isArray(standardPrices) && standardPrices.length === 6 && standardPrices.every((price) => Number.isSafeInteger(price) && price > 0) ? standardPrices : DEFAULT_STANDARD_SHOP_PRICES;
   const products = [];
@@ -81,7 +92,7 @@ export async function readShopProducts(db, { includeInactive = false } = {}) {
     const images = [{url:row.imageUrl,alt:row.imageAlt,label:row.imageAlt,sequence:0},...parseShopGallery(galleryRow?.galleryJson).map((image,index)=>({...image,sequence:index+1}))]
       .sort((a,b)=>shopProductImageRank(a)-shopProductImageRank(b)||a.sequence-b.sequence);
     const primaryImage = images[0] || {url:row.imageUrl,alt:row.imageAlt};
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:primaryImage.url,imageAlt:primaryImage.alt||row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:images.slice(1).map(({sequence,...image})=>image),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),variants});
+    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:primaryImage.url,imageAlt:primaryImage.alt||row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:images.slice(1).map(({sequence,...image})=>image),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),featured:Boolean(row.featured),variants});
   }
   return products;
 }
@@ -112,7 +123,7 @@ export function customerShopDescription(value, artworkTier = "standard") {
 }
 
 export function publicShopProduct(product) {
-  const {productionMetadata,...publicProduct}=product;
+  const {productionMetadata,featured,...publicProduct}=product;
   return {...publicProduct,artworkTier:product.artworkTier,description:customerShopDescription(product.description,product.artworkTier),cardDescription:customerShopDescription(product.cardDescription,product.artworkTier),variants:product.variants.filter((variant) => variant.active && variant.availableSizes.length).map(({inventory,...variant})=>variant)};
 }
 
