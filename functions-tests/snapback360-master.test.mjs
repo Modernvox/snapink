@@ -19,6 +19,7 @@ async function loadModule(entry) {
 test("Snapback 360 master is an independent, source-preserving two-region master", async () => {
   const registry = await loadModule("../src/config/snapback360MasterRegistry.ts");
   const { SNAPBACK360_MASTER, SNAPBACK360_LOGO_LIBRARY } = registry;
+  const customizerImage = await loadModule("../src/utils/snapback360ProductImage.ts");
   assert.equal(SNAPBACK360_MASTER.id, "snapback360-black-trucker");
   assert.equal(SNAPBACK360_MASTER.name, "Snapback 360 — Black Trucker");
   assert.equal(SNAPBACK360_MASTER.type, "combined-front-rear-product-image");
@@ -29,12 +30,29 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   assert.ok(SNAPBACK360_LOGO_LIBRARY.some(({ file }) => file === "svg/apex_logo.svg"));
   assert.ok(SNAPBACK360_LOGO_LIBRARY.some(({ file }) => file === "svg/New_York_logo.svg"));
   assert.ok(SNAPBACK360_LOGO_LIBRARY.some(({ file }) => file === "apex_logo.png"));
+  assert.ok(SNAPBACK360_LOGO_LIBRARY.find(({ file }) => file === "svg/apex_logo.svg"));
+  assert.ok(SNAPBACK360_LOGO_LIBRARY.find(({ file }) => file === "svg/New_York_logo.svg"));
+  for (const entry of SNAPBACK360_LOGO_LIBRARY) {
+    assert.ok(fs.existsSync(new URL(`../public${entry.src}`, import.meta.url)), `logo asset exists: ${entry.file}`);
+  }
 
   const imagePath = new URL(`../public${SNAPBACK360_MASTER.image}`, import.meta.url);
   const image = fs.readFileSync(imagePath);
   const dimensions = [image.readUInt32BE(16), image.readUInt32BE(20)];
   assert.deepEqual(dimensions, [1254, 1254]);
   assert.equal(createHash("sha256").update(image).digest("hex"), SNAPBACK360_MASTER.imageSha256);
+
+  const apex = { src: "/images/logos/svg/apex_logo.svg", label: "APEX" };
+  const ny = { src: "/images/logos/svg/New_York_logo.svg", label: "New York" };
+  const pngBytes = fs.readFileSync(new URL("../public/images/logos/apex_logo.png", import.meta.url));
+  assert.deepEqual([...pngBytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], "uploaded PNG fixture is a real PNG");
+  const upload = { src: `data:image/png;base64,${pngBytes.toString("base64")}`, label: "upload.png" };
+  const resolve = customizerImage.resolveSnapback360ArtworkSelections;
+  assert.deepEqual(resolve(apex, null, false), { front: apex, rear: apex }, "same library logo is inherited for the rear sleeve");
+  assert.deepEqual(resolve(upload, null, false), { front: upload, rear: upload }, "same uploaded PNG is inherited for the rear sleeve");
+  assert.deepEqual(resolve(upload, ny, true), { front: upload, rear: ny }, "uploaded front and library rear");
+  assert.deepEqual(resolve(apex, upload, true), { front: apex, rear: upload }, "library front and uploaded rear");
+  assert.deepEqual(resolve(apex, ny, true), { front: apex, rear: ny }, "different library logos remain independent");
 });
 
 test("Snapback 360 Shop gallery images receive their own type and ordering", async () => {

@@ -1,5 +1,18 @@
 import type { Snapback360Point, Snapback360Quad } from "../config/snapback360MasterRegistry";
 
+export interface Snapback360ArtworkSelection {
+  src: string;
+  label: string;
+}
+
+export function resolveSnapback360ArtworkSelections(
+  front: Snapback360ArtworkSelection | null,
+  rear: Snapback360ArtworkSelection | null,
+  useDifferentRearArtwork: boolean,
+) {
+  return { front, rear: useDifferentRearArtwork ? rear : front };
+}
+
 const pointInPolygon = (x: number, y: number, polygon: Snapback360Quad) => {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
