@@ -13,6 +13,16 @@ export interface Snapback360ArtworkPlacement {
   perspectivePercent: number;
 }
 
+export const SNAPBACK360_REAR_BASELINE_SCALE = 1.45;
+
+export function snapback360RearAdjustmentPercent(effectiveScale: number) {
+  return (effectiveScale / SNAPBACK360_REAR_BASELINE_SCALE - 1) * 100;
+}
+
+export function snapback360EffectiveRearScale(adjustmentPercent: number) {
+  return SNAPBACK360_REAR_BASELINE_SCALE * (1 + adjustmentPercent / 100);
+}
+
 export function resolveSnapback360ArtworkSelections(
   front: Snapback360ArtworkSelection | null,
   rear: Snapback360ArtworkSelection | null,

@@ -73,6 +73,9 @@ import {
   placeSnapback360ArtworkQuad,
   quadMetrics,
   snapback360ArtworkTargetQuad,
+  SNAPBACK360_REAR_BASELINE_SCALE,
+  snapback360EffectiveRearScale,
+  snapback360RearAdjustmentPercent,
   snapback360StudioArtworkExtensionRatios,
   type Snapback360ArtworkPlacement,
 } from "../utils/snapback360ProductImage";
@@ -242,7 +245,7 @@ export type Snapback360DesignPlacements = Record<Snapback360RegionId, Snapback36
 
 const DEFAULT_SNAPBACK360_DESIGN_PLACEMENTS: Snapback360DesignPlacements = {
   front: { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
-  rear: { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
+  rear: { offsetXRatio: 0, offsetYRatio: 0, scale: SNAPBACK360_REAR_BASELINE_SCALE, rotationDeg: 0, perspectivePercent: 0 },
 };
 
 export interface SnapInkSleeveCustomizerProps {
@@ -2634,8 +2637,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       <p className="text-sm font-semibold text-neutral-100">Snapback 360 - Black Trucker</p>
       <label className="flex items-center gap-2 text-sm text-neutral-200"><input type="checkbox" checked={snapback360UseSameRearArtwork} onChange={(event) => setSnapback360UseSameRearArtwork(event.target.checked)} />Use Same Design on Rear Sleeve</label>
       {!snapback360UseSameRearArtwork && <div className="grid grid-cols-[1fr_5rem] items-end gap-2">
-        <label className="block text-xs text-neutral-300">Rear Sleeve Artwork<select value={snapback360RearUpload ? "__upload__" : snapback360RearLogo} onChange={(event) => { if (event.target.value !== "__upload__") { setSnapback360RearLogo(event.target.value); setSnapback360RearUpload(null); } }} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{SNAPBACK360_LOGO_LIBRARY.map((entry) => <option key={entry.file} value={entry.file}>{entry.name}</option>)}{snapback360RearUpload && <option value="__upload__">Uploaded: {snapback360RearUpload.name}</option>}</select></label>
-        <label className="block text-xs text-neutral-400">Upload rear<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const upload = await readSnapback360Upload(file); setSnapback360RearUpload(upload); } catch (error) { alert(error instanceof Error ? error.message : "Rear artwork upload failed."); } }} className="mt-1 block w-full text-[10px]" /></label>
+        <label className="block text-xs text-neutral-300">Rear Sleeve Artwork<select value={snapback360RearUpload ? "__upload__" : snapback360RearLogo} onChange={(event) => { if (event.target.value !== "__upload__") { setSnapback360RearLogo(event.target.value); setSnapback360RearUpload(null); setSnapback360ArtworkPlacements((previous) => ({ ...previous, rear: { ...previous.rear, scale: SNAPBACK360_REAR_BASELINE_SCALE } })); } }} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{SNAPBACK360_LOGO_LIBRARY.map((entry) => <option key={entry.file} value={entry.file}>{entry.name}</option>)}{snapback360RearUpload && <option value="__upload__">Uploaded: {snapback360RearUpload.name}</option>}</select></label>
+        <label className="block text-xs text-neutral-400">Upload rear<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const upload = await readSnapback360Upload(file); setSnapback360RearUpload(upload); setSnapback360ArtworkPlacements((previous) => ({ ...previous, rear: { ...previous.rear, scale: SNAPBACK360_REAR_BASELINE_SCALE } })); } catch (error) { alert(error instanceof Error ? error.message : "Rear artwork upload failed."); } }} className="mt-1 block w-full text-[10px]" /></label>
       </div>}
       <div className="space-y-1 rounded border border-neutral-800 px-2 py-2 text-xs" aria-live="polite">{(["front", "rear"] as const).map((region) => <p key={region} className="flex justify-between"><span>{region === "front" ? "Front Hat Artwork" : "Rear SnapInk Sleeve Artwork"}</span><span className={snapback360CurrentCalibrations?.[region]?.locked ? "text-emerald-300" : "text-amber-300"}>{snapback360CurrentCalibrations?.[region]?.locked ? "Calibration Saved ?" : "Calibration missing"}</span></p>)}</div>
       {snapback360MissingRegions.length > 0 && <p role="alert" className="text-xs text-amber-200">Calibration required: {snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.</p>}
@@ -2646,7 +2649,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </svg></div>
       <div className="flex gap-2">{(["front", "rear"] as const).map((region) => <button key={region} type="button" onClick={() => setSnapback360ActiveRegion(region)} className={`rounded px-3 py-2 text-xs ${active === region ? "bg-si-accent text-neutral-950" : "border border-neutral-700"}`}>{region === "front" ? "Front Hat" : "Rear Sleeve"}</button>)}</div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <label className="text-xs text-neutral-400">Scale {Math.round(placements[active].scale * 100)}%<input type="range" min="25" max="300" value={Math.round(placements[active].scale * 100)} onChange={(event) => setActivePlacement({ scale: Number(event.target.value) / 100 })} className="block w-full" /></label>
+        {active === "rear" ? <label className="text-xs text-neutral-400">Rear Sleeve Scale Adjustment: {Math.round(snapback360RearAdjustmentPercent(placements.rear.scale))}% <span className="block text-[10px] text-neutral-500">({(placements.rear.scale * 100).toFixed(1).replace(/\.0$/, "")}% actual; 145% baseline)</span><input type="range" min="-75" max="150" step="1" value={Math.max(-75, Math.min(150, Math.round(snapback360RearAdjustmentPercent(placements.rear.scale))))} onChange={(event) => setActivePlacement({ scale: snapback360EffectiveRearScale(Number(event.target.value)) })} className="block w-full" /></label> : <label className="text-xs text-neutral-400">Scale {Math.round(placements.front.scale * 100)}%<input type="range" min="25" max="300" value={Math.round(placements.front.scale * 100)} onChange={(event) => setActivePlacement({ scale: Number(event.target.value) / 100 })} className="block w-full" /></label>}
         <label className="text-xs text-neutral-400">Rotation (degrees)<input type="number" min="-180" max="180" step="1" value={placements[active].rotationDeg} onChange={(event) => setActivePlacement({ rotationDeg: Number(event.target.value) || 0 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
         <label className="text-xs text-neutral-400">Horizontal position %<input type="number" step="1" value={Math.round(placements[active].offsetXRatio * 100)} onChange={(event) => setActivePlacement({ offsetXRatio: (Number(event.target.value) || 0) / 100 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
         <label className="text-xs text-neutral-400">Vertical position %<input type="number" step="1" value={Math.round(placements[active].offsetYRatio * 100)} onChange={(event) => setActivePlacement({ offsetYRatio: (Number(event.target.value) || 0) / 100 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>

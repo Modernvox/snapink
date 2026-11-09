@@ -20,6 +20,12 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   const registry = await loadModule("../src/config/snapback360MasterRegistry.ts");
   const { SNAPBACK360_MASTER, SNAPBACK360_LOGO_LIBRARY } = registry;
   const customizerImage = await loadModule("../src/utils/snapback360ProductImage.ts");
+  assert.equal(customizerImage.snapback360EffectiveRearScale(0), 1.45, "new rear artwork starts at the former 145% size");
+  assert.equal(customizerImage.snapback360EffectiveRearScale(10), 1.595, "+10% is relative to the 145% baseline");
+  assert.equal(customizerImage.snapback360EffectiveRearScale(-10), 1.305, "-10% is relative to the 145% baseline");
+  assert.equal(customizerImage.snapback360RearAdjustmentPercent(1.45), 0, "saved legacy 145% scale displays as 0% adjustment");
+  assert.ok(Math.abs(customizerImage.snapback360RearAdjustmentPercent(1) - (-31.0344827586)) < 1e-8,
+    "legacy saved scale values convert to the corresponding relative adjustment");
   assert.equal(SNAPBACK360_MASTER.id, "snapback360-black-trucker");
   assert.equal(SNAPBACK360_MASTER.name, "Snapback 360 — Black Trucker");
   assert.equal(SNAPBACK360_MASTER.type, "combined-front-rear-product-image");
