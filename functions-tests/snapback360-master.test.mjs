@@ -16,9 +16,9 @@ async function loadModule(entry) {
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`);
 }
 
-test("Snapback 360 master is an independent, source-preserving two-region master", async () => {
+test("Snapback 360 hat masters share the black master calibration and source-preserving sleeve mask", async () => {
   const registry = await loadModule("../src/config/snapback360MasterRegistry.ts");
-  const { SNAPBACK360_MASTER, SNAPBACK360_MASTERS, SNAPBACK360_LOGO_LIBRARY } = registry;
+  const { SNAPBACK360_MASTER, SNAPBACK360_MASTERS, SNAPBACK360_CALIBRATION_MASTER_ID, SNAPBACK360_LOGO_LIBRARY } = registry;
   const customizerImage = await loadModule("../src/utils/snapback360ProductImage.ts");
   assert.equal(customizerImage.snapback360EffectiveRearScale(0), 1.45, "new rear artwork starts at the former 145% size");
   assert.equal(customizerImage.snapback360EffectiveRearScale(10), 1.595, "+10% is relative to the 145% baseline");
@@ -29,6 +29,7 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   assert.equal(SNAPBACK360_MASTER.id, "snapback360-black-trucker");
   assert.equal(SNAPBACK360_MASTER.name, "Snapback 360 — Black Trucker");
   assert.equal(SNAPBACK360_MASTER.type, "combined-front-rear-product-image");
+  assert.equal(SNAPBACK360_CALIBRATION_MASTER_ID, SNAPBACK360_MASTER.id);
   assert.notEqual(SNAPBACK360_MASTER.regions.front.calibration.version, SNAPBACK360_MASTER.regions.rear.calibration.version);
   assert.notDeepEqual(SNAPBACK360_MASTER.regions.front.calibration.quadPx, SNAPBACK360_MASTER.regions.rear.calibration.quadPx);
   assert.equal(SNAPBACK360_MASTER.regions.front.calibration.locked, false);
@@ -46,8 +47,15 @@ test("Snapback 360 master is an independent, source-preserving two-region master
     const masterBytes = fs.readFileSync(new URL(`../public${master.image}`, import.meta.url));
     assert.deepEqual([masterBytes.readUInt32BE(16), masterBytes.readUInt32BE(20)], [1254, 1254], `${master.hatColor} master resolution is preserved`);
     assert.equal(createHash("sha256").update(masterBytes).digest("hex"), master.imageSha256, `${master.hatColor} master matches its registered source hash`);
-    assert.notEqual(master.regions.front.calibration.version, master.regions.rear.calibration.version);
-    assert.equal(master.sleeveMask.length, 8, "each master has an explicit rear sleeve mask");
+    assert.equal(master.calibrationGeometryVersion, SNAPBACK360_MASTER.calibrationGeometryVersion, `${master.hatColor} master uses the shared geometry version`);
+    assert.strictEqual(master.sleeveMask, SNAPBACK360_MASTER.sleeveMask, `${master.hatColor} master reuses the exact shared sleeve mask`);
+    if (master.id === SNAPBACK360_CALIBRATION_MASTER_ID) {
+      assert.ok(master.regions.front.calibration && master.regions.rear.calibration, "the black reference owns the only calibration pair");
+    } else {
+      assert.equal(master.regions.front.calibration, undefined, `${master.hatColor} has no separate front calibration`);
+      assert.equal(master.regions.rear.calibration, undefined, `${master.hatColor} has no separate rear calibration`);
+    }
+    assert.equal(master.sleeveMask.length, 8, "the shared rear sleeve mask follows the registered sleeve surface");
     for (const color of sleeveColors.MANUFACTURED_SLEEVE_COLORS) {
       assert.ok(Math.abs(customizerImage.snapback360MaterialIllumination(master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance) - 1) < 1e-10,
         `${master.hatColor} hat supports a neutral ${color.label} sleeve at the registered material baseline`);
