@@ -53,6 +53,38 @@ export function recolorSnapback360Pixels(
   return pixels;
 }
 
+function snapback360SleeveMaskPixels(width: number, height: number, sleeveMask: readonly Snapback360Point[]) {
+  if (sleeveMask.length < 3) throw new Error("Snapback 360 sleeve mask is invalid.");
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = width; maskCanvas.height = height;
+  const maskContext = maskCanvas.getContext("2d", { willReadFrequently: true });
+  if (!maskContext) throw new Error("Snapback 360 sleeve mask canvas is unavailable.");
+  maskContext.fillStyle = "#fff";
+  maskContext.beginPath();
+  maskContext.moveTo(sleeveMask[0][0], sleeveMask[0][1]);
+  for (let index = 1; index < sleeveMask.length; index++) maskContext.lineTo(sleeveMask[index][0], sleeveMask[index][1]);
+  maskContext.closePath(); maskContext.fill();
+  return maskContext.getImageData(0, 0, width, height).data;
+}
+
+export function replaceSnapback360SleevePixels(
+  pixels: Uint8ClampedArray,
+  blackReferencePixels: Uint8ClampedArray,
+  maskPixels: Uint8ClampedArray,
+) {
+  if (pixels.length !== blackReferencePixels.length || pixels.length !== maskPixels.length || pixels.length % 4) {
+    throw new Error("Snapback 360 black sleeve reference or mask is invalid.");
+  }
+  for (let index = 0; index < pixels.length; index += 4) {
+    const coverage = maskPixels[index + 3] / 255;
+    if (!coverage) continue;
+    for (let channel = 0; channel < 3; channel++) {
+      pixels[index + channel] = Math.round(pixels[index + channel] * (1 - coverage) + blackReferencePixels[index + channel] * coverage);
+    }
+  }
+  return pixels;
+}
+
 export function recolorSnapback360Sleeve(
   master: HTMLImageElement,
   targetColor: string,
@@ -68,26 +100,66 @@ export function recolorSnapback360Sleeve(
   if (!context) throw new Error("Snapback 360 sleeve recolor canvas is unavailable.");
   context.drawImage(master, 0, 0);
   const source = context.getImageData(0, 0, canvas.width, canvas.height);
-  const maskCanvas = document.createElement("canvas");
-  maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
-  const maskContext = maskCanvas.getContext("2d", { willReadFrequently: true });
-  if (!maskContext) throw new Error("Snapback 360 sleeve mask canvas is unavailable.");
-  maskContext.fillStyle = "#fff";
-  maskContext.beginPath();
-  maskContext.moveTo(sleeveMask[0][0], sleeveMask[0][1]);
-  for (let index = 1; index < sleeveMask.length; index++) maskContext.lineTo(sleeveMask[index][0], sleeveMask[index][1]);
-  maskContext.closePath(); maskContext.fill();
-  const mask = maskContext.getImageData(0, 0, canvas.width, canvas.height).data;
+  const mask = snapback360SleeveMaskPixels(canvas.width, canvas.height, sleeveMask);
   recolorSnapback360Pixels(source.data, mask, targetColor, baseLuminance);
   context.putImageData(source, 0, 0);
   return canvas;
 }
 
+export function restoreSnapback360BlackSleeve(
+  master: HTMLImageElement,
+  blackReference: HTMLImageElement,
+  sleeveMask: readonly Snapback360Point[],
+) {
+  if (!master.naturalWidth || !master.naturalHeight || master.naturalWidth !== blackReference.naturalWidth || master.naturalHeight !== blackReference.naturalHeight) {
+    throw new Error("Snapback 360 master geometry does not match the original black sleeve reference.");
+  }
+  if (master === blackReference) return master;
+  const canvas = document.createElement("canvas");
+  canvas.width = master.naturalWidth; canvas.height = master.naturalHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  const referenceCanvas = document.createElement("canvas");
+  referenceCanvas.width = canvas.width; referenceCanvas.height = canvas.height;
+  const referenceContext = referenceCanvas.getContext("2d", { willReadFrequently: true });
+  if (!context || !referenceContext) throw new Error("Snapback 360 black sleeve composite canvas is unavailable.");
+  context.drawImage(master, 0, 0);
+  referenceContext.drawImage(blackReference, 0, 0);
+  const source = context.getImageData(0, 0, canvas.width, canvas.height);
+  const reference = referenceContext.getImageData(0, 0, canvas.width, canvas.height).data;
+  const mask = snapback360SleeveMaskPixels(canvas.width, canvas.height, sleeveMask);
+  replaceSnapback360SleevePixels(source.data, reference, mask);
+  context.putImageData(source, 0, 0);
+  return canvas;
+}
+
+export interface Snapback360SleeveColorSelection {
+  hex: string;
+  mask: readonly Snapback360Point[];
+  baseLuminance: number;
+  blackReference: HTMLImageElement;
+}
+
+export function prepareSnapback360SleeveMaster(master: HTMLImageElement, sleeveColor: Snapback360SleeveColorSelection) {
+  return sleeveColor.hex.toLowerCase() === "#000000"
+    ? restoreSnapback360BlackSleeve(master, sleeveColor.blackReference, sleeveColor.mask)
+    : recolorSnapback360Sleeve(master, sleeveColor.hex, sleeveColor.mask, sleeveColor.baseLuminance);
+}
+
 export async function recolorSnapback360MasterPreview(
   master: HTMLImageElement,
-  sleeveColor: { hex: string; mask: readonly Snapback360Point[]; baseLuminance: number },
+  sleeveColor: Snapback360SleeveColorSelection,
 ) {
-  const canvas = recolorSnapback360Sleeve(master, sleeveColor.hex, sleeveColor.mask, sleeveColor.baseLuminance);
+  const canvas = prepareSnapback360SleeveMaster(master, sleeveColor);
+  if (canvas instanceof HTMLImageElement) {
+    const original = document.createElement("canvas");
+    original.width = canvas.naturalWidth; original.height = canvas.naturalHeight;
+    const context = original.getContext("2d");
+    if (!context) throw new Error("Snapback 360 sleeve color preview canvas is unavailable.");
+    context.drawImage(canvas, 0, 0);
+    return await new Promise<Blob>((resolve, reject) => original.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("Snapback 360 sleeve color preview could not be encoded.")), "image/png",
+    ));
+  }
   return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
     (blob) => blob ? resolve(blob) : reject(new Error("Snapback 360 sleeve color preview could not be encoded.")), "image/png",
   ));
@@ -365,7 +437,7 @@ export async function compositeSnapback360ProductImage(
   rearRegion: Snapback360Quad,
   rearStudioArtboard?: { topExtensionRatio: number; bottomExtensionRatio: number },
   placements: { front?: Snapback360ArtworkPlacement; rear?: Snapback360ArtworkPlacement } = {},
-  sleeveColor?: { hex: string; mask: readonly Snapback360Point[]; baseLuminance: number },
+  sleeveColor?: Snapback360SleeveColorSelection,
 ) {
   if (!master.naturalWidth || !master.naturalHeight) throw new Error("Snapback 360 master image could not be loaded.");
   const canvas = document.createElement("canvas");
@@ -374,8 +446,8 @@ export async function compositeSnapback360ProductImage(
   if (!context) throw new Error("Snapback 360 product-image canvas is unavailable.");
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  const recoloredMaster = sleeveColor ? recolorSnapback360Sleeve(master, sleeveColor.hex, sleeveColor.mask, sleeveColor.baseLuminance) : null;
-  context.drawImage(recoloredMaster || master, 0, 0);
+  const sleeveMaster = sleeveColor ? prepareSnapback360SleeveMaster(master, sleeveColor) : master;
+  context.drawImage(sleeveMaster, 0, 0);
   context.drawImage(createArtworkLayer(frontArtwork, frontRegion, canvas.width, canvas.height, placements.front), 0, 0);
   const rearLayer = rearStudioArtboard
     ? createStudioArtworkLayer(rearArtwork, rearRegion, rearStudioArtboard.topExtensionRatio, rearStudioArtboard.bottomExtensionRatio, canvas.width, canvas.height, placements.rear)

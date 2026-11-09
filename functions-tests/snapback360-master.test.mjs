@@ -70,6 +70,12 @@ test("Snapback 360 hat masters share the black master calibration and source-pre
   }
   assert.ok(customizerImage.snapback360MaterialIllumination(0, 0, 0, 0.15) >= 0.9,
     "dark sleeve texture cannot turn a selected white/yellow sleeve gray or brown");
+  const redSleevePixels = new Uint8ClampedArray([190, 8, 28, 255, 24, 12, 9, 255]);
+  const originalBlackSleevePixels = new Uint8ClampedArray([16, 17, 18, 255, 90, 80, 70, 255]);
+  const blackSleeveMask = new Uint8ClampedArray([0, 0, 0, 255, 0, 0, 0, 0]);
+  customizerImage.replaceSnapback360SleevePixels(redSleevePixels, originalBlackSleevePixels, blackSleeveMask);
+  assert.deepEqual([...redSleevePixels], [16, 17, 18, 255, 24, 12, 9, 255],
+    "black selection copies exact reference pixels only under the sleeve mask");
   for (const entry of SNAPBACK360_LOGO_LIBRARY) {
     assert.ok(fs.existsSync(new URL(`../public${entry.src}`, import.meta.url)), `logo asset exists: ${entry.file}`);
   }

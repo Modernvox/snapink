@@ -2404,6 +2404,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (master.naturalWidth !== snapback360ActiveMaster.imageDimensions.width || master.naturalHeight !== snapback360ActiveMaster.imageDimensions.height) {
       throw new Error("Snapback 360 master image dimensions do not match its locked source.");
     }
+    const blackSleeveReference = await loadSnapback360BlackSleeveReference(master);
     const renderStudioArtwork = async (regionName: string, overrideSrc?: string) => {
       let objectUrl: string | null = null;
       try {
@@ -2445,12 +2446,26 @@ const SnapInkSleeveCustomizer = forwardRef<
         snapback360CurrentCalibrations.rear.quadPx,
         rearExtensionRatios,
         snapback360ArtworkPlacements,
-        { hex: backgroundColor, mask: snapback360ActiveMaster.sleeveMask, baseLuminance: snapback360ActiveMaster.sleeveBaseLuminance },
+        { hex: backgroundColor, mask: snapback360ActiveMaster.sleeveMask, baseLuminance: snapback360ActiveMaster.sleeveBaseLuminance, blackReference: blackSleeveReference },
       );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Rear Sleeve Artwork from the finalized Studio design could not be rendered. ${detail}`);
     }
+  }
+
+  async function loadSnapback360BlackSleeveReference(master: HTMLImageElement) {
+    if (backgroundColor.toLowerCase() !== "#000000" || snapback360ActiveMaster.id === SNAPBACK360_MASTER.id) return master;
+    if (snapback360ActiveMaster.imageDimensions.width !== SNAPBACK360_MASTER.imageDimensions.width
+      || snapback360ActiveMaster.imageDimensions.height !== SNAPBACK360_MASTER.imageDimensions.height
+      || snapback360ActiveMaster.calibrationGeometryVersion !== SNAPBACK360_MASTER.calibrationGeometryVersion) {
+      throw new Error("This hat master does not match the original black sleeve pixel geometry.");
+    }
+    const reference = await loadStudioImage(SNAPBACK360_MASTER.image);
+    if (reference.naturalWidth !== master.naturalWidth || reference.naturalHeight !== master.naturalHeight) {
+      throw new Error("Original black sleeve reference dimensions do not match the selected hat master.");
+    }
+    return reference;
   }
 
   useEffect(() => {
@@ -2469,10 +2484,12 @@ const SnapInkSleeveCustomizer = forwardRef<
         if (master.naturalWidth !== snapback360ActiveMaster.imageDimensions.width || master.naturalHeight !== snapback360ActiveMaster.imageDimensions.height) {
           throw new Error("Snapback 360 master image dimensions do not match its locked source.");
         }
+        const blackSleeveReference = await loadSnapback360BlackSleeveReference(master);
         return recolorSnapback360MasterPreview(master, {
           hex: backgroundColor,
           mask: snapback360ActiveMaster.sleeveMask,
           baseLuminance: snapback360ActiveMaster.sleeveBaseLuminance,
+          blackReference: blackSleeveReference,
         });
       };
       void renderPreview().then((blob) => {
