@@ -3,11 +3,12 @@ export { SHOP_SIZE_IDS, shopCheckoutProductError } from "./shop-checkout-validat
 
 export const DEFAULT_STANDARD_SHOP_PRICES = [1599,1599,1599,1599,1899,1899];
 export const PREMIUM_EXTENDED_SHOP_PRICES = [2499,2499,2499,2999,2999,2999];
-export const SHOP_PRODUCT_IMAGE_ORDER = ["on-hat","on-desk","female-lifestyle","male-lifestyle","packaging"];
+export const SHOP_PRODUCT_IMAGE_ORDER = ["on-hat","snapback-360","on-desk","female-lifestyle","male-lifestyle","packaging"];
 
 export function shopProductImageType(image) {
   const identity = [image?.name,image?.label,image?.alt,image?.url].filter(Boolean).join(" ").toLowerCase().replace(/[_\s]+/g,"-");
   if (identity.includes("on-hat")) return "on-hat";
+  if (identity.includes("snapback-360") || identity.includes("snapback360")) return "snapback-360";
   if (identity.includes("on-desk")) return "on-desk";
   if (identity.includes("female-lifestyle")) return "female-lifestyle";
   if (identity.includes("male-lifestyle")) return "male-lifestyle";

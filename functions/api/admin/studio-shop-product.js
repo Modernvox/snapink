@@ -6,7 +6,7 @@ const defaultCardDescription = (name) => `${name} is a premium swappable snapbac
 const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
 const cleanCardDescription = (value) => String(value||"").replace(/!\[([^\]]*)\]\([^)]+\)/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/<[^>]*>/g,"").replace(/^\s*(?:[-*+]|\d+\.)\s+/gm,"").replace(/[`*_~>#]/g,"").replace(/[\r\n\t]+/g," ").replace(/\s+/g," ").trim();
 const safeSlug = (name) => name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,70).replace(/-+$/g,"");
-const productImageTypeLabel = (file) => ({"on-hat":"On-Hat Product Image","on-desk":"On-Desk Product Image","female-lifestyle":"Female Lifestyle Image","male-lifestyle":"Male Lifestyle Image",packaging:"Packaging Image"}[shopProductImageType(file)]||"Product Image");
+const productImageTypeLabel = (file) => ({"on-hat":"On-Hat Product Image","snapback-360":"Snapback 360 Product Image","on-desk":"On-Desk Product Image","female-lifestyle":"Female Lifestyle Image","male-lifestyle":"Male Lifestyle Image",packaging:"Packaging Image"}[shopProductImageType(file)]||"Product Image");
 
 export async function onRequestGet({request,env}) {
   if(!bearer(request,env.ADMIN_REVIEW_TOKEN))return json({error:"Unauthorized"},401);
