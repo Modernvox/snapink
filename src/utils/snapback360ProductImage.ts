@@ -26,7 +26,9 @@ export function snapback360EffectiveRearScale(adjustmentPercent: number) {
 export function snapback360MaterialIllumination(red: number, green: number, blue: number, baseLuminance: number) {
   const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
   const normalizedLight = luminance / baseLuminance;
-  return Math.max(0.74, Math.min(1.15, 0.72 + 0.28 * normalizedLight));
+  // Keep dyed material bright enough that white stays white and yellow stays
+  // yellow while retaining modest source luminance variation for texture.
+  return Math.max(0.9, Math.min(1.15, 0.72 + 0.28 * normalizedLight));
 }
 
 export function recolorSnapback360Pixels(
@@ -79,6 +81,16 @@ export function recolorSnapback360Sleeve(
   recolorSnapback360Pixels(source.data, mask, targetColor, baseLuminance);
   context.putImageData(source, 0, 0);
   return canvas;
+}
+
+export async function recolorSnapback360MasterPreview(
+  master: HTMLImageElement,
+  sleeveColor: { hex: string; mask: readonly Snapback360Point[]; baseLuminance: number },
+) {
+  const canvas = recolorSnapback360Sleeve(master, sleeveColor.hex, sleeveColor.mask, sleeveColor.baseLuminance);
+  return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+    (blob) => blob ? resolve(blob) : reject(new Error("Snapback 360 sleeve color preview could not be encoded.")), "image/png",
+  ));
 }
 
 export function resolveSnapback360ArtworkSelections(

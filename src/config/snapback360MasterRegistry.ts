@@ -33,7 +33,7 @@ export interface ProductImageMaster {
 }
 
 const SNAPBACK360_SHARED_SLEEVE_MASK: readonly Snapback360Point[] =
-  [[722, 552], [729, 549], [1063, 549], [1072, 554], [1073, 635], [1065, 642], [730, 642], [721, 635]];
+  [[716, 554], [726, 551], [1065, 551], [1077, 555], [1077, 644], [1070, 652], [729, 652], [716, 646]];
 
 function createMaster(
   id: string,

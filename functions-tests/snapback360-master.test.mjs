@@ -56,6 +56,8 @@ test("Snapback 360 hat masters share the black master calibration and source-pre
       assert.equal(master.regions.rear.calibration, undefined, `${master.hatColor} has no separate rear calibration`);
     }
     assert.equal(master.sleeveMask.length, 8, "the shared rear sleeve mask follows the registered sleeve surface");
+    assert.deepEqual(master.sleeveMask, [[716, 554], [726, 551], [1065, 551], [1077, 555], [1077, 644], [1070, 652], [729, 652], [716, 646]],
+      "the shared mask covers the full sleeve while staying inside its visible edge");
     for (const color of sleeveColors.MANUFACTURED_SLEEVE_COLORS) {
       assert.ok(Math.abs(customizerImage.snapback360MaterialIllumination(master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance) - 1) < 1e-10,
         `${master.hatColor} hat supports a neutral ${color.label} sleeve at the registered material baseline`);
@@ -66,6 +68,8 @@ test("Snapback 360 hat masters share the black master calibration and source-pre
       assert.deepEqual([...sourcePixels], [...targetRgb, 255, 23, 41, 59, 255], `${master.hatColor} + ${color.label} changes only the masked sleeve pixel`);
     }
   }
+  assert.ok(customizerImage.snapback360MaterialIllumination(0, 0, 0, 0.15) >= 0.9,
+    "dark sleeve texture cannot turn a selected white/yellow sleeve gray or brown");
   for (const entry of SNAPBACK360_LOGO_LIBRARY) {
     assert.ok(fs.existsSync(new URL(`../public${entry.src}`, import.meta.url)), `logo asset exists: ${entry.file}`);
   }
