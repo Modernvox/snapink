@@ -23,6 +23,64 @@ export function snapback360EffectiveRearScale(adjustmentPercent: number) {
   return SNAPBACK360_REAR_BASELINE_SCALE * (1 + adjustmentPercent / 100);
 }
 
+export function snapback360MaterialIllumination(red: number, green: number, blue: number, baseLuminance: number) {
+  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+  const normalizedLight = luminance / baseLuminance;
+  return Math.max(0.74, Math.min(1.15, 0.72 + 0.28 * normalizedLight));
+}
+
+export function recolorSnapback360Pixels(
+  pixels: Uint8ClampedArray,
+  maskPixels: Uint8ClampedArray,
+  targetColor: string,
+  baseLuminance: number,
+) {
+  if (pixels.length !== maskPixels.length || pixels.length % 4 || !/^#[\da-f]{6}$/i.test(targetColor) || !(baseLuminance > 0)) {
+    throw new Error("Snapback 360 pixel mask or color is invalid.");
+  }
+  const target = [1, 3, 5].map((offset) => Number.parseInt(targetColor.slice(offset, offset + 2), 16));
+  for (let index = 0; index < pixels.length; index += 4) {
+    const coverage = maskPixels[index + 3] / 255;
+    if (!coverage) continue;
+    const illumination = snapback360MaterialIllumination(pixels[index], pixels[index + 1], pixels[index + 2], baseLuminance);
+    for (let channel = 0; channel < 3; channel++) {
+      const recolored = Math.max(0, Math.min(255, target[channel] * illumination));
+      pixels[index + channel] = Math.round(pixels[index + channel] * (1 - coverage) + recolored * coverage);
+    }
+  }
+  return pixels;
+}
+
+export function recolorSnapback360Sleeve(
+  master: HTMLImageElement,
+  targetColor: string,
+  sleeveMask: readonly Snapback360Point[],
+  baseLuminance: number,
+) {
+  if (!/^#[\da-f]{6}$/i.test(targetColor) || sleeveMask.length < 3 || !(baseLuminance > 0)) {
+    throw new Error("Snapback 360 sleeve color or mask configuration is invalid.");
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = master.naturalWidth; canvas.height = master.naturalHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("Snapback 360 sleeve recolor canvas is unavailable.");
+  context.drawImage(master, 0, 0);
+  const source = context.getImageData(0, 0, canvas.width, canvas.height);
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+  const maskContext = maskCanvas.getContext("2d", { willReadFrequently: true });
+  if (!maskContext) throw new Error("Snapback 360 sleeve mask canvas is unavailable.");
+  maskContext.fillStyle = "#fff";
+  maskContext.beginPath();
+  maskContext.moveTo(sleeveMask[0][0], sleeveMask[0][1]);
+  for (let index = 1; index < sleeveMask.length; index++) maskContext.lineTo(sleeveMask[index][0], sleeveMask[index][1]);
+  maskContext.closePath(); maskContext.fill();
+  const mask = maskContext.getImageData(0, 0, canvas.width, canvas.height).data;
+  recolorSnapback360Pixels(source.data, mask, targetColor, baseLuminance);
+  context.putImageData(source, 0, 0);
+  return canvas;
+}
+
 export function resolveSnapback360ArtworkSelections(
   front: Snapback360ArtworkSelection | null,
   rear: Snapback360ArtworkSelection | null,
@@ -295,6 +353,7 @@ export async function compositeSnapback360ProductImage(
   rearRegion: Snapback360Quad,
   rearStudioArtboard?: { topExtensionRatio: number; bottomExtensionRatio: number },
   placements: { front?: Snapback360ArtworkPlacement; rear?: Snapback360ArtworkPlacement } = {},
+  sleeveColor?: { hex: string; mask: readonly Snapback360Point[]; baseLuminance: number },
 ) {
   if (!master.naturalWidth || !master.naturalHeight) throw new Error("Snapback 360 master image could not be loaded.");
   const canvas = document.createElement("canvas");
@@ -303,7 +362,8 @@ export async function compositeSnapback360ProductImage(
   if (!context) throw new Error("Snapback 360 product-image canvas is unavailable.");
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.drawImage(master, 0, 0);
+  const recoloredMaster = sleeveColor ? recolorSnapback360Sleeve(master, sleeveColor.hex, sleeveColor.mask, sleeveColor.baseLuminance) : null;
+  context.drawImage(recoloredMaster || master, 0, 0);
   context.drawImage(createArtworkLayer(frontArtwork, frontRegion, canvas.width, canvas.height, placements.front), 0, 0);
   const rearLayer = rearStudioArtboard
     ? createStudioArtworkLayer(rearArtwork, rearRegion, rearStudioArtboard.topExtensionRatio, rearStudioArtboard.bottomExtensionRatio, canvas.width, canvas.height, placements.rear)

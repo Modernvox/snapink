@@ -45,6 +45,7 @@ export async function onRequestPost({request,env}) {
   if(!category)return json({error:"Choose an available Shop category."},400);
   const files=form.getAll("galleryImages").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>shopProductImageRank(a.file)-shopProductImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(!files.length||files.length>5||files.some(file=>file.type!=="image/png"||file.size<100||file.size>18*1024*1024))return json({error:"Select at least one valid generated product image for the gallery."},400);
+  if(files.some(file=>shopProductImageType(file)==="snapback-360"))return json({error:"Snapback 360 publishing is not enabled. Configure complete-hat pricing and fulfillment separately before publishing."},409);
   const thumbnails=form.getAll("galleryThumbnails").filter(file=>file instanceof File).map((file,index)=>({file,index})).sort((a,b)=>shopProductImageRank(a.file)-shopProductImageRank(b.file)||a.index-b.index).map(({file})=>file);
   if(thumbnails.length&& (thumbnails.length!==files.length||thumbnails.some(file=>file.type!=="image/webp"||file.size<100||file.size>2*1024*1024)))return json({error:"Product image thumbnails are invalid."},400);
   const slug=safeSlug(name);

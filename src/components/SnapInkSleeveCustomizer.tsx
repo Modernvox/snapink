@@ -65,6 +65,7 @@ import {
   type Snapback360RegionCalibration,
   type Snapback360RegionId,
 } from "../config/snapback360MasterRegistry";
+import { isManufacturedSleeveColor, MANUFACTURED_SLEEVE_COLORS } from "../config/manufacturedSleeveColors";
 import { createProductPhotoZip } from "../utils/productPhotoZip";
 import {
   compositeSnapback360ProductImage,
@@ -231,6 +232,7 @@ export type SleeveDraft = {
   artworkStrokeWidthMm?: number;
   artworkStrokeColor?: string;
   snapback360ArtworkPlacements?: Snapback360DesignPlacements;
+  snapback360MasterId?: string;
   snapback360UseSameRearArtwork?: boolean;
   snapback360RearArtworkId?: string;
   snapback360RearArtworkName?: string;
@@ -362,10 +364,8 @@ const OFFICIAL_STUDIO_DEFAULTS: Pick<
 
 // ---------- Color Swatches ----------
 const COLOR_SWATCHES = [
-  { label: "Black", value: "#000000" },
+  ...MANUFACTURED_SLEEVE_COLORS.map(({ id, label, hex }) => ({ label: id === "red" ? "Deep Red" : label, value: hex })),
   { label: "Cool Grey", value: "#90999D" },
-  { label: "White", value: "#FFFFFF" },
-  { label: "Deep Red", value: "#D7021C" },
   { label: "Soft Pink", value: "#FFBDD1" },
   { label: "Brown / Tan", value: "#A47C48" },
   { label: "Orange", value: "#FFA11D" },
@@ -700,7 +700,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const productPhotoOptions: {key: ProductPhotoKey; label: string}[] = [{key:"rear",label:"On-Hat Product Image"},{key:"packaging",label:"Packaging Product Image"},{key:"desk",label:"On-Desk Product Image"},{key:"maleLifestyle",label:"Male Lifestyle Image"},{key:"femaleLifestyle",label:"Female Lifestyle Image"},{key:"snapback360",label:"Generate Snapback 360 Product Image"}];
   const [productPhotoChoice, setProductPhotoChoice] = useState<ProductPhotoKey[]>(() => { try { const v=JSON.parse(localStorage.getItem("snapink.productPhotoSelections.v1")||"null"); return Array.isArray(v)?v.filter((x):x is ProductPhotoKey=>["rear","packaging","desk","maleLifestyle","femaleLifestyle","snapback360"].includes(x)): ["rear","packaging","desk"]; } catch { return ["rear","packaging","desk"]; } });
   const [lifestyleCalibration, setLifestyleCalibration] = useState(()=>{const defaults={x:530,y:263,width:370,height:100,rotation:0,perspective:0};try{const saved=JSON.parse(localStorage.getItem("snapink.lifestyleCalibration.v1")||"null");if(!saved||typeof saved!=="object")return defaults;return{x:Number(saved.x??defaults.x),y:Number(saved.y??defaults.y),width:Number(saved.width??defaults.width),height:Number(saved.height??defaults.height),rotation:Number(saved.rotation??defaults.rotation),perspective:Number(saved.perspective??defaults.perspective)};}catch{return defaults;}});
-  const [snapback360MasterId, setSnapback360MasterId] = useState(SNAPBACK360_MASTER.id);
+  const [snapback360MasterId, setSnapback360MasterId] = useState(initial.snapback360MasterId || SNAPBACK360_MASTER.id);
   const [snapback360Calibrations, setSnapback360Calibrations] = useState<Snapback360Calibrations>(readSnapback360Calibrations);
   const [snapback360ArtworkPlacements, setSnapback360ArtworkPlacements] = useState<Snapback360DesignPlacements>(
     () => ({ ...DEFAULT_SNAPBACK360_DESIGN_PLACEMENTS, ...initial.snapback360ArtworkPlacements }),
@@ -728,6 +728,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   useEffect(() => () => { if (snapback360PreviewUrlRef.current) URL.revokeObjectURL(snapback360PreviewUrlRef.current); }, []);
   const [snapback360CalibrationRegion, setSnapback360CalibrationRegion] = useState<Snapback360RegionId | null>(null);
   const [snapback360CalibrationDraft, setSnapback360CalibrationDraft] = useState<Snapback360RegionCalibration | null>(null);
+  const [snapback360CalibrationCopySourceId, setSnapback360CalibrationCopySourceId] = useState(SNAPBACK360_MASTER.id);
+  const [snapback360CopiedCalibrationNeedsPreview, setSnapback360CopiedCalibrationNeedsPreview] = useState(false);
   const snapback360CalibrationDragRef = useRef<null | { pointerId: number; corner: number | null; x: number; y: number }>(null);
   const [snapback360SampleArtwork, setSnapback360SampleArtwork] = useState<{ dataUrl: string; name: string } | null>(null);
   const [snapback360CalibrationPreview, setSnapback360CalibrationPreview] = useState("");
@@ -1700,6 +1702,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       extendedArtwork: artworkRequiresPremiumPricing,
       hasCustomArtwork: Boolean(text.trim() || logoDataUrl),
       snapback360ArtworkPlacements,
+      snapback360MasterId,
       snapback360UseSameRearArtwork,
       snapback360RearArtworkId: snapback360UseSameRearArtwork ? undefined : (snapback360RearUpload ? "uploaded" : snapback360RearLogo || undefined),
       snapback360RearArtworkName: snapback360UseSameRearArtwork ? undefined : snapback360RearUpload?.name,
@@ -1741,6 +1744,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     selectedArtworkHeightMm,
     artworkExtensionMm,
     snapback360ArtworkPlacements,
+    snapback360MasterId,
     snapback360UseSameRearArtwork,
     snapback360RearLogo,
     snapback360RearUpload,
@@ -2290,7 +2294,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     return slug || "custom-design";
   }
 
-  const snapback360CurrentCalibrations = snapback360Calibrations[snapback360MasterId];
+  const snapback360ActiveMaster = SNAPBACK360_MASTERS.find((master) => master.id === snapback360MasterId) || SNAPBACK360_MASTER;
+  const snapback360CurrentCalibrations = snapback360Calibrations[snapback360ActiveMaster.id];
   const snapback360RearLibraryEntry = SNAPBACK360_LOGO_LIBRARY.find((entry) => entry.file === snapback360RearLogo || entry.file === `svg/${snapback360RearLogo}`);
   const snapback360RearArtworkCandidate = snapback360RearUpload
     ? { src: snapback360RearUpload.dataUrl, label: snapback360RearUpload.name }
@@ -2303,7 +2308,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   const snapback360CalibrationIsValid = (calibration?: Snapback360RegionCalibration) => Boolean(
     calibration?.quadPx?.length === 4 && calibration.quadPx.every(([x, y]) =>
       Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 &&
-      x <= SNAPBACK360_MASTER.imageDimensions.width && y <= SNAPBACK360_MASTER.imageDimensions.height),
+      x <= snapback360ActiveMaster.imageDimensions.width && y <= snapback360ActiveMaster.imageDimensions.height),
   );
   const snapback360MissingRegions = (["front", "rear"] as const).filter((region) =>
     !snapback360CurrentCalibrations?.[region]?.locked || !snapback360CalibrationIsValid(snapback360CurrentCalibrations?.[region]),
@@ -2346,6 +2351,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   async function openSnapback360Calibration(region: Snapback360RegionId) {
     if (!(await requestStudioAdminAccessForCalibration())) return;
     setSnapback360CalibrationRegion(region);
+    setSnapback360CopiedCalibrationNeedsPreview(false);
     setSnapback360CalibrationDraft({ ...snapback360CurrentCalibrations[region], locked: false,
       quadPx: snapback360CurrentCalibrations[region].quadPx.map(([x, y]) => [x, y]) as unknown as Snapback360Quad });
     setSnapback360SampleArtwork(null);
@@ -2354,6 +2360,10 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   function saveSnapback360Calibration(lock = false) {
     if (!snapback360CalibrationRegion || !snapback360CalibrationDraft) return;
+    if (lock && snapback360CopiedCalibrationNeedsPreview && !snapback360CalibrationPreview) {
+      alert("Preview the copied calibration on this hat master before locking it.");
+      return;
+    }
     const saved = { ...snapback360CalibrationDraft, locked: lock };
     persistSnapback360Region(snapback360CalibrationRegion, saved);
     setSnapback360CalibrationDraft(saved);
@@ -2362,6 +2372,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       setSnapback360CalibrationDraft(null);
       setSnapback360SampleArtwork(null);
       setSnapback360CalibrationPreview("");
+      setSnapback360CopiedCalibrationNeedsPreview(false);
     }
   }
 
@@ -2373,7 +2384,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   async function previewSnapback360Calibration() {
     if (!snapback360CalibrationRegion || !snapback360CalibrationDraft || !snapback360SampleArtwork) return;
     try {
-      const master = await loadStudioImage(SNAPBACK360_MASTER.image);
+      const master = await loadStudioImage(snapback360ActiveMaster.image);
       const artwork = await loadStudioImage(snapback360SampleArtwork.dataUrl);
       const blob = await compositeSnapback360RegionPreview(master, artwork, snapback360CalibrationDraft.quadPx);
       setSnapback360CalibrationPreview(URL.createObjectURL(blob));
@@ -2384,7 +2395,7 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   async function renderSnapback360ProductImage() {
     if (snapback360MissingRegions.length) {
-      throw new Error(`Snapback 360 calibration is missing: ${snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.`);
+      throw new Error(`Snapback 360 calibration is missing: ${snapback360MissingRegions.map((region) => snapback360ActiveMaster.regions[region].name).join(" and ")}.`);
     }
     if (!snapback360CalibrationIsValid(snapback360CurrentCalibrations.front) || !snapback360CalibrationIsValid(snapback360CurrentCalibrations.rear)) {
       throw new Error("Snapback 360 calibration is outside the master image. Reopen calibration and save valid artwork boundaries.");
@@ -2393,8 +2404,9 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!snapback360UseSameRearArtwork && !snapback360RearArtworkSelection) {
       throw new Error("Choose or upload the different rear sleeve artwork first.");
     }
-    const master = await loadStudioImage(SNAPBACK360_MASTER.image);
-    if (master.naturalWidth !== SNAPBACK360_MASTER.imageDimensions.width || master.naturalHeight !== SNAPBACK360_MASTER.imageDimensions.height) {
+    if (!isManufacturedSleeveColor(backgroundColor)) throw new Error(`Sleeve color ${backgroundColor} is not a current manufactured color. Review this saved design before generating.`);
+    const master = await loadStudioImage(snapback360ActiveMaster.image);
+    if (master.naturalWidth !== snapback360ActiveMaster.imageDimensions.width || master.naturalHeight !== snapback360ActiveMaster.imageDimensions.height) {
       throw new Error("Snapback 360 master image dimensions do not match its locked source.");
     }
     const renderStudioArtwork = async (regionName: string, overrideSrc?: string) => {
@@ -2438,6 +2450,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         snapback360CurrentCalibrations.rear.quadPx,
         rearExtensionRatios,
         snapback360ArtworkPlacements,
+        { hex: backgroundColor, mask: snapback360ActiveMaster.sleeveMask, baseLuminance: snapback360ActiveMaster.sleeveBaseLuminance },
       );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
@@ -2464,7 +2477,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     }, 120);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [productPhotoChoice, snapback360HasStudioArtwork, snapback360MissingRegions.join(","), snapback360UseSameRearArtwork,
-    snapback360RearArtworkSelection?.src, snapback360ArtworkPlacements, snapback360CurrentCalibrations, logoDataUrl, text,
+    snapback360RearArtworkSelection?.src, snapback360ArtworkPlacements, snapback360CurrentCalibrations, snapback360MasterId, backgroundColor, logoDataUrl, text,
     logoScale, logoPosY, fill, variant, previewSleeveSize, artworkStrokeExtensionMm, bounds.maxY, bounds.minY]);
 
   async function previewSnapback360ProductImage() {
@@ -2473,7 +2486,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       return;
     }
     if (snapback360MissingRegions.length) {
-      alert(`Snapback 360 calibration is missing: ${snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.`);
+      alert(`Snapback 360 calibration is missing: ${snapback360MissingRegions.map((region) => snapback360ActiveMaster.regions[region].name).join(" and ")}.`);
       return;
     }
     setIsGeneratingProductImage(true);
@@ -2500,7 +2513,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     const region = snapback360CalibrationRegion;
     const quad = snapback360CalibrationDraft.quadPx;
     const metrics = quadMetrics(quad);
-    const master = SNAPBACK360_MASTER;
+    const master = snapback360ActiveMaster;
     const pointNames = ["Top left", "Top right", "Bottom right", "Bottom left"];
     const pointString = quad.map(([x, y]) => `${x},${y}`).join(" ");
     const eventPoint = (event: React.PointerEvent<SVGSVGElement>): [number, number] => {
@@ -2573,6 +2586,10 @@ const SnapInkSleeveCustomizer = forwardRef<
           </fieldset>)}
         </div>
       </details>
+      <details><summary className="cursor-pointer text-xs text-neutral-300">Copy calibration from another hat master</summary>
+        <div className="mt-2 flex flex-wrap gap-2"><select value={snapback360CalibrationCopySourceId} onChange={(event) => setSnapback360CalibrationCopySourceId(event.target.value)} className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs text-neutral-100">{SNAPBACK360_MASTERS.filter((candidate) => candidate.id !== snapback360MasterId).map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.hatColor === "red" ? "Crimson Red" : candidate.hatColor[0].toUpperCase() + candidate.hatColor.slice(1)}</option>)}</select><button type="button" onClick={() => { const sourceMaster = SNAPBACK360_MASTERS.find((candidate) => candidate.id === snapback360CalibrationCopySourceId); const sourceCalibration = snapback360Calibrations[snapback360CalibrationCopySourceId]?.[region] || sourceMaster?.regions[region].calibration; if (!sourceCalibration) return; setSnapback360CalibrationDraft((current) => current ? { ...current, locked: false, version: master.regions[region].calibration.version, quadPx: sourceCalibration.quadPx.map(([x, y]) => [x, y]) as unknown as Snapback360Quad } : current); setSnapback360CopiedCalibrationNeedsPreview(true); setSnapback360CalibrationPreview(""); }} className="rounded border border-neutral-600 px-2 py-1 text-xs">Copy {master.regions[region].name}</button></div>
+        <p className="mt-1 text-[10px] text-neutral-500">Copied coordinates stay unlocked. Load sample artwork and preview them on this master before locking.</p>
+      </details>
       <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
         <label className="text-xs text-neutral-400">Temporary sample artwork<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { setSnapback360SampleArtwork(await readSnapback360Upload(file)); setSnapback360CalibrationPreview(""); } catch (error) { alert(error instanceof Error ? error.message : "Sample artwork could not be loaded."); } }} className="mt-1 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-neutral-700 file:px-2 file:py-1 file:text-neutral-100" /></label>
         <button type="button" disabled={!snapback360SampleArtwork} onClick={previewSnapback360Calibration} className="rounded border border-neutral-600 px-3 py-2 text-xs disabled:opacity-50">Preview sample</button>
@@ -2581,7 +2598,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       <p className="text-[11px] text-neutral-400">Artwork is fitted proportionally inside this region. Transparent pixels remain transparent; the hat image is unchanged outside the artwork.</p>
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={() => saveSnapback360Calibration(false)} className="rounded border border-si-accent px-3 py-2 text-xs text-si-accent">Save Calibration</button>
-        <button type="button" onClick={() => saveSnapback360Calibration(true)} className="rounded bg-si-accent px-3 py-2 text-xs font-semibold text-neutral-950">Lock Calibration</button>
+        <button type="button" disabled={snapback360CopiedCalibrationNeedsPreview && !snapback360CalibrationPreview} onClick={() => saveSnapback360Calibration(true)} className="rounded bg-si-accent px-3 py-2 text-xs font-semibold text-neutral-950 disabled:opacity-50">Lock Calibration</button>
       </div>
     </section>;
   }
@@ -2603,8 +2620,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     const pointString = placedQuad?.map(([x, y]) => `${x},${y}`).join(" ") || "";
     const eventPoint = (event: React.PointerEvent<SVGSVGElement>): [number, number] => {
       const rect = event.currentTarget.getBoundingClientRect();
-      return [(event.clientX - rect.left) / rect.width * SNAPBACK360_MASTER.imageDimensions.width,
-        (event.clientY - rect.top) / rect.height * SNAPBACK360_MASTER.imageDimensions.height];
+      return [(event.clientX - rect.left) / rect.width * snapback360ActiveMaster.imageDimensions.width,
+        (event.clientY - rect.top) / rect.height * snapback360ActiveMaster.imageDimensions.height];
     };
     const beginPlacement = (event: React.PointerEvent<SVGSVGElement>) => {
       const target = (event.target as SVGElement).closest<SVGElement>("[data-region]");
@@ -2612,7 +2629,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       if (region !== active) setSnapback360ActiveRegion(region);
       const handle = (event.target as SVGElement).closest("[data-resize-handle]");
       const point = eventPoint(event);
-      const q = region === active ? placedQuad : (snapback360CurrentCalibrations?.[region]?.quadPx || SNAPBACK360_MASTER.regions[region].calibration.quadPx);
+      const q = region === active ? placedQuad : (snapback360CurrentCalibrations?.[region]?.quadPx || snapback360ActiveMaster.regions[region].calibration.quadPx);
       const center = q ? quadMetrics(q) : { centerX: point[0], centerY: point[1] };
       snapback360PlacementDragRef.current = { pointerId: event.pointerId, region, mode: handle ? "resize" : "move",
         startX: point[0], startY: point[1], centerX: center.centerX, centerY: center.centerY,
@@ -2624,7 +2641,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       const drag = snapback360PlacementDragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
       const point = eventPoint(event);
-      const regionQuad = snapback360CurrentCalibrations?.[drag.region]?.quadPx || SNAPBACK360_MASTER.regions[drag.region].calibration.quadPx;
+      const regionQuad = snapback360CurrentCalibrations?.[drag.region]?.quadPx || snapback360ActiveMaster.regions[drag.region].calibration.quadPx;
       const dimensions = quadMetrics(regionQuad);
       const next = drag.mode === "move"
         ? { ...drag.initial, offsetXRatio: drag.initial.offsetXRatio + (point[0] - drag.startX) / Math.max(1, dimensions.width), offsetYRatio: drag.initial.offsetYRatio + (point[1] - drag.startY) / Math.max(1, dimensions.height) }
@@ -2634,18 +2651,21 @@ const SnapInkSleeveCustomizer = forwardRef<
     const endPlacement = (event: React.PointerEvent<SVGSVGElement>) => { if (snapback360PlacementDragRef.current?.pointerId === event.pointerId) snapback360PlacementDragRef.current = null; };
     const setActivePlacement = (patch: Partial<Snapback360DesignPlacement>) => setSnapback360ArtworkPlacements((previous) => ({ ...previous, [active]: { ...previous[active], ...patch } }));
     return <section className="space-y-3 rounded-lg border border-neutral-700 bg-neutral-950/70 p-3" aria-label="Snapback 360 product image controls">
-      <p className="text-sm font-semibold text-neutral-100">Snapback 360 - Black Trucker</p>
-      <label className="flex items-center gap-2 text-sm text-neutral-200"><input type="checkbox" checked={snapback360UseSameRearArtwork} onChange={(event) => setSnapback360UseSameRearArtwork(event.target.checked)} />Use Same Design on Rear Sleeve</label>
+      <p className="text-sm font-semibold text-neutral-100">Snapback 360 Product Image</p>
+      <div className="grid grid-cols-2 gap-2"><label className="block text-xs text-neutral-300">Hat Color<select value={snapback360ActiveMaster.hatColor} onChange={(event) => { const master = SNAPBACK360_MASTERS.find((candidate) => candidate.hatColor === event.target.value); if (master) setSnapback360MasterId(master.id); }} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{SNAPBACK360_MASTERS.map((master) => <option key={master.id} value={master.hatColor}>{master.hatColor === "red" ? "Crimson Red" : master.hatColor[0].toUpperCase() + master.hatColor.slice(1)}</option>)}</select></label>
+      <label className="block text-xs text-neutral-300">Sleeve Color<select value={backgroundColor} onChange={(event) => setBackgroundColor(event.target.value)} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{MANUFACTURED_SLEEVE_COLORS.map((color) => <option key={color.id} value={color.hex}>{color.label}</option>)}</select></label></div>
+      {!isManufacturedSleeveColor(backgroundColor) && <p role="alert" className="text-xs text-amber-200">Historical sleeve color {backgroundColor} is unsupported. Review this saved design before generation.</p>}
+      <label className="flex items-center gap-2 text-sm text-neutral-200"><input type="checkbox" checked={!snapback360UseSameRearArtwork} onChange={(event) => setSnapback360UseSameRearArtwork(!event.target.checked)} />Use Different Sleeve Artwork</label>
       {!snapback360UseSameRearArtwork && <div className="grid grid-cols-[1fr_5rem] items-end gap-2">
         <label className="block text-xs text-neutral-300">Rear Sleeve Artwork<select value={snapback360RearUpload ? "__upload__" : snapback360RearLogo} onChange={(event) => { if (event.target.value !== "__upload__") { setSnapback360RearLogo(event.target.value); setSnapback360RearUpload(null); setSnapback360ArtworkPlacements((previous) => ({ ...previous, rear: { ...previous.rear, scale: SNAPBACK360_REAR_BASELINE_SCALE } })); } }} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{SNAPBACK360_LOGO_LIBRARY.map((entry) => <option key={entry.file} value={entry.file}>{entry.name}</option>)}{snapback360RearUpload && <option value="__upload__">Uploaded: {snapback360RearUpload.name}</option>}</select></label>
         <label className="block text-xs text-neutral-400">Upload rear<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const upload = await readSnapback360Upload(file); setSnapback360RearUpload(upload); setSnapback360ArtworkPlacements((previous) => ({ ...previous, rear: { ...previous.rear, scale: SNAPBACK360_REAR_BASELINE_SCALE } })); } catch (error) { alert(error instanceof Error ? error.message : "Rear artwork upload failed."); } }} className="mt-1 block w-full text-[10px]" /></label>
       </div>}
       <div className="space-y-1 rounded border border-neutral-800 px-2 py-2 text-xs" aria-live="polite">{(["front", "rear"] as const).map((region) => <p key={region} className="flex justify-between"><span>{region === "front" ? "Front Hat Artwork" : "Rear SnapInk Sleeve Artwork"}</span><span className={snapback360CurrentCalibrations?.[region]?.locked ? "text-emerald-300" : "text-amber-300"}>{snapback360CurrentCalibrations?.[region]?.locked ? "Calibration Saved ?" : "Calibration missing"}</span></p>)}</div>
-      {snapback360MissingRegions.length > 0 && <p role="alert" className="text-xs text-amber-200">Calibration required: {snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.</p>}
+      {snapback360MissingRegions.length > 0 && <p role="alert" className="text-xs text-amber-200">Calibration required: {snapback360MissingRegions.map((region) => snapback360ActiveMaster.regions[region].name).join(" and ")}.</p>}
       <p className="text-[11px] text-neutral-400">Mockup adjustment only. Studio production dimensions, artwork, and validation remain unchanged. Extended sleeve artwork may extend beyond the strap.</p>
-      <div className="relative mx-auto w-full max-w-[540px] overflow-hidden rounded border border-neutral-700 touch-none"><img src={snapback360EditorPreviewUrl || SNAPBACK360_MASTER.image} alt="Snapback 360 front and rear product preview" className="block h-auto w-full select-none" draggable={false} />
-        <svg viewBox={`0 0 ${SNAPBACK360_MASTER.imageDimensions.width} ${SNAPBACK360_MASTER.imageDimensions.height}`} className="absolute inset-0 h-full w-full touch-none" onPointerDown={beginPlacement} onPointerMove={movePlacement} onPointerUp={endPlacement} onPointerCancel={endPlacement}>
-          {(["front", "rear"] as const).map((region) => { const regionBase = snapback360CurrentCalibrations?.[region]?.quadPx || SNAPBACK360_MASTER.regions[region].calibration.quadPx; const extension = region === "rear" ? snapback360StudioArtworkExtensionRatios(bounds.maxY - bounds.minY, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm, MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) : null; const source = snapback360EditorArtboardsRef.current[region]; const placed = source ? snapback360ArtworkTargetQuad(source, regionBase, placements[region], region === "rear" && extension ? { studioArtboard: extension } : {}) : placeSnapback360ArtworkQuad(regionBase, regionBase, placements[region]); const selected = active === region; return <g key={region} data-region={region} style={{ cursor: "move" }}><polygon points={placed.map(([x, y]) => `${x},${y}`).join(" ")} fill={selected ? "rgba(110,231,183,.18)" : "rgba(255,255,255,.03)"} stroke={selected ? "#6ee7b7" : "rgba(255,255,255,.55)"} strokeWidth={selected ? 4 : 2} strokeDasharray={selected ? undefined : "10 8"} />{selected && placed.map(([x, y], index) => <circle key={index} data-region={region} data-resize-handle={index === 2 ? "corner" : undefined} cx={x} cy={y} r={index === 2 ? 13 : 6} fill={index === 2 ? "#fbbf24" : "#6ee7b7"} stroke="#111827" strokeWidth="3" style={{ pointerEvents: index === 2 ? "auto" : "none" }} />)}</g>; })}
+      <div className="relative mx-auto w-full max-w-[540px] overflow-hidden rounded border border-neutral-700 touch-none"><img src={snapback360EditorPreviewUrl || snapback360ActiveMaster.image} alt="Snapback 360 front and rear product preview" className="block h-auto w-full select-none" draggable={false} />
+        <svg viewBox={`0 0 ${snapback360ActiveMaster.imageDimensions.width} ${snapback360ActiveMaster.imageDimensions.height}`} className="absolute inset-0 h-full w-full touch-none" onPointerDown={beginPlacement} onPointerMove={movePlacement} onPointerUp={endPlacement} onPointerCancel={endPlacement}>
+          {(["front", "rear"] as const).map((region) => { const regionBase = snapback360CurrentCalibrations?.[region]?.quadPx || snapback360ActiveMaster.regions[region].calibration.quadPx; const extension = region === "rear" ? snapback360StudioArtworkExtensionRatios(bounds.maxY - bounds.minY, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm, MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) : null; const source = snapback360EditorArtboardsRef.current[region]; const placed = source ? snapback360ArtworkTargetQuad(source, regionBase, placements[region], region === "rear" && extension ? { studioArtboard: extension } : {}) : placeSnapback360ArtworkQuad(regionBase, regionBase, placements[region]); const selected = active === region; return <g key={region} data-region={region} style={{ cursor: "move" }}><polygon points={placed.map(([x, y]) => `${x},${y}`).join(" ")} fill={selected ? "rgba(110,231,183,.18)" : "rgba(255,255,255,.03)"} stroke={selected ? "#6ee7b7" : "rgba(255,255,255,.55)"} strokeWidth={selected ? 4 : 2} strokeDasharray={selected ? undefined : "10 8"} />{selected && placed.map(([x, y], index) => <circle key={index} data-region={region} data-resize-handle={index === 2 ? "corner" : undefined} cx={x} cy={y} r={index === 2 ? 13 : 6} fill={index === 2 ? "#fbbf24" : "#6ee7b7"} stroke="#111827" strokeWidth="3" style={{ pointerEvents: index === 2 ? "auto" : "none" }} />)}</g>; })}
         </svg></div>
       <div className="flex gap-2">{(["front", "rear"] as const).map((region) => <button key={region} type="button" onClick={() => setSnapback360ActiveRegion(region)} className={`rounded px-3 py-2 text-xs ${active === region ? "bg-si-accent text-neutral-950" : "border border-neutral-700"}`}>{region === "front" ? "Front Hat" : "Rear Sleeve"}</button>)}</div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -2867,6 +2887,10 @@ const SnapInkSleeveCustomizer = forwardRef<
   function handleAddToShop() {
     if (!studioAdminToken) return;
     if (!generatedShopImages) { alert("Generate product images first, then click Add to Shop."); return; }
+    if (generatedPhotoEntries.some((entry) => entry.key === "snapback360")) {
+      alert("Snapback 360 publishing is not enabled yet. Complete-hat pricing and fulfillment must be configured separately from sleeve products before this image can be published.");
+      return;
+    }
     if (generatedShopImageSignature !== shopImageDesignSignature()) { setGeneratedShopImages(null);setGeneratedPhotoEntries([]); alert("The design changed after these images were generated. Generate the product images again before publishing."); return; }
     setPublishProductName(text.trim()||logoName.replace(/\.[^.]+$/, ""));setPublishProductCardDescription("");setPublishProductDescription("");setPublishProductStatus("");setPublishCategoryId("");setPublishArtworkTier("standard");setApproveExtendedArtwork(false);setShowPublishProduct(true);
   }
@@ -3330,7 +3354,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       ]).map((color) => (
         <fieldset className="snapink-color-group" key={color.key} disabled={color.locked}>
           <legend>{color.label}</legend>
-          <ColorSwatchRow value={color.value} onChange={color.onChange} />
+          {color.key === "sleeve" && !isManufacturedSleeveColor(color.value) && <p role="status" className="mb-2 text-xs text-amber-700">Historical sleeve color {color.value} is not currently manufactured. Review this saved design before production.</p>}
+          <ColorSwatchRow value={color.value} onChange={color.onChange} colors={color.key === "sleeve" ? MANUFACTURED_SLEEVE_COLORS : COLOR_SWATCHES} />
         </fieldset>
       ))}
     </div>
@@ -4759,14 +4784,17 @@ function Range({
 function ColorSwatchRow({
   value,
   onChange,
+  colors = COLOR_SWATCHES,
 }: {
   value: string;
   onChange: (v: string) => void;
+  colors?: readonly { id?: string; label: string; hex?: string; value?: string }[];
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {COLOR_SWATCHES.map((c) => {
-        const selected = c.value.toLowerCase() === value.toLowerCase();
+      {colors.map((c) => {
+        const hex = c.hex || c.value || "#000000";
+        const selected = hex.toLowerCase() === value.toLowerCase();
         return (
           <button
             key={c.label}
@@ -4777,7 +4805,7 @@ function ColorSwatchRow({
             className={`w-7 h-7 rounded-full border ${
               selected ? "ring-2 ring-si-accent border-white" : "border-neutral-600"
             }`}
-            style={{ backgroundColor: c.value }}
+            style={{ backgroundColor: hex }}
             title={c.label}
           />
         );

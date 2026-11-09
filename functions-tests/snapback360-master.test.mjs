@@ -18,7 +18,7 @@ async function loadModule(entry) {
 
 test("Snapback 360 master is an independent, source-preserving two-region master", async () => {
   const registry = await loadModule("../src/config/snapback360MasterRegistry.ts");
-  const { SNAPBACK360_MASTER, SNAPBACK360_LOGO_LIBRARY } = registry;
+  const { SNAPBACK360_MASTER, SNAPBACK360_MASTERS, SNAPBACK360_LOGO_LIBRARY } = registry;
   const customizerImage = await loadModule("../src/utils/snapback360ProductImage.ts");
   assert.equal(customizerImage.snapback360EffectiveRearScale(0), 1.45, "new rear artwork starts at the former 145% size");
   assert.equal(customizerImage.snapback360EffectiveRearScale(10), 1.595, "+10% is relative to the 145% baseline");
@@ -38,6 +38,26 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   assert.ok(SNAPBACK360_LOGO_LIBRARY.some(({ file }) => file === "apex_logo.png"));
   assert.ok(SNAPBACK360_LOGO_LIBRARY.find(({ file }) => file === "svg/apex_logo.svg"));
   assert.ok(SNAPBACK360_LOGO_LIBRARY.find(({ file }) => file === "svg/New_York_logo.svg"));
+  assert.equal(SNAPBACK360_MASTERS.length, 4, "the hat catalog has exactly four approved masters");
+  const sleeveColors = await loadModule("../src/config/manufacturedSleeveColors.ts");
+  assert.deepEqual(sleeveColors.MANUFACTURED_SLEEVE_COLORS.map(({ label }) => label), ["Black", "White", "Red", "Yellow"]);
+  assert.equal(SNAPBACK360_MASTERS.length * sleeveColors.MANUFACTURED_SLEEVE_COLORS.length, 16, "four hats and four manufactured sleeve colors yield 16 combinations");
+  for (const master of SNAPBACK360_MASTERS) {
+    const masterBytes = fs.readFileSync(new URL(`../public${master.image}`, import.meta.url));
+    assert.deepEqual([masterBytes.readUInt32BE(16), masterBytes.readUInt32BE(20)], [1254, 1254], `${master.hatColor} master resolution is preserved`);
+    assert.equal(createHash("sha256").update(masterBytes).digest("hex"), master.imageSha256, `${master.hatColor} master matches its registered source hash`);
+    assert.notEqual(master.regions.front.calibration.version, master.regions.rear.calibration.version);
+    assert.equal(master.sleeveMask.length, 8, "each master has an explicit rear sleeve mask");
+    for (const color of sleeveColors.MANUFACTURED_SLEEVE_COLORS) {
+      assert.ok(Math.abs(customizerImage.snapback360MaterialIllumination(master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance * 255, master.sleeveBaseLuminance) - 1) < 1e-10,
+        `${master.hatColor} hat supports a neutral ${color.label} sleeve at the registered material baseline`);
+      const targetRgb = [1, 3, 5].map((offset) => Number.parseInt(color.hex.slice(offset, offset + 2), 16));
+      const sourcePixels = new Uint8ClampedArray([128, 128, 128, 255, 23, 41, 59, 255]);
+      const maskPixels = new Uint8ClampedArray([0, 0, 0, 255, 0, 0, 0, 0]);
+      customizerImage.recolorSnapback360Pixels(sourcePixels, maskPixels, color.hex, 128 / 255);
+      assert.deepEqual([...sourcePixels], [...targetRgb, 255, 23, 41, 59, 255], `${master.hatColor} + ${color.label} changes only the masked sleeve pixel`);
+    }
+  }
   for (const entry of SNAPBACK360_LOGO_LIBRARY) {
     assert.ok(fs.existsSync(new URL(`../public${entry.src}`, import.meta.url)), `logo asset exists: ${entry.file}`);
   }
