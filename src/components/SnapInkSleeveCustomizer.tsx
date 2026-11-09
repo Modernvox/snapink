@@ -4790,7 +4790,7 @@ function ColorSwatchRow({
             type="button"
             aria-label={c.label}
             aria-pressed={selected}
-            onClick={() => onChange(c.value)}
+            onClick={() => onChange(hex)}
             className={`w-7 h-7 rounded-full border ${
               selected ? "ring-2 ring-si-accent border-white" : "border-neutral-600"
             }`}
