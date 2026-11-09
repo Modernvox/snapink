@@ -69,9 +69,12 @@ import { createProductPhotoZip } from "../utils/productPhotoZip";
 import {
   compositeSnapback360ProductImage,
   compositeSnapback360RegionPreview,
+  extendSnapback360QuadForArtwork,
+  placeSnapback360ArtworkQuad,
   quadMetrics,
-  resolveSnapback360ArtworkSelections,
+  snapback360ArtworkTargetQuad,
   snapback360StudioArtworkExtensionRatios,
+  type Snapback360ArtworkPlacement,
 } from "../utils/snapback360ProductImage";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
@@ -224,8 +227,22 @@ export type SleeveDraft = {
   artworkStrokeEnabled?: boolean;
   artworkStrokeWidthMm?: number;
   artworkStrokeColor?: string;
+  snapback360ArtworkPlacements?: Snapback360DesignPlacements;
+  snapback360UseSameRearArtwork?: boolean;
+  snapback360RearArtworkId?: string;
+  snapback360RearArtworkName?: string;
+  snapback360RearArtworkDataUrl?: string;
   extendedArtwork: boolean;
   hasCustomArtwork: boolean;
+};
+
+export type Snapback360DesignPlacement = Snapback360ArtworkPlacement;
+
+export type Snapback360DesignPlacements = Record<Snapback360RegionId, Snapback360DesignPlacement>;
+
+const DEFAULT_SNAPBACK360_DESIGN_PLACEMENTS: Snapback360DesignPlacements = {
+  front: { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
+  rear: { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
 };
 
 export interface SnapInkSleeveCustomizerProps {
@@ -682,11 +699,30 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [lifestyleCalibration, setLifestyleCalibration] = useState(()=>{const defaults={x:530,y:263,width:370,height:100,rotation:0,perspective:0};try{const saved=JSON.parse(localStorage.getItem("snapink.lifestyleCalibration.v1")||"null");if(!saved||typeof saved!=="object")return defaults;return{x:Number(saved.x??defaults.x),y:Number(saved.y??defaults.y),width:Number(saved.width??defaults.width),height:Number(saved.height??defaults.height),rotation:Number(saved.rotation??defaults.rotation),perspective:Number(saved.perspective??defaults.perspective)};}catch{return defaults;}});
   const [snapback360MasterId, setSnapback360MasterId] = useState(SNAPBACK360_MASTER.id);
   const [snapback360Calibrations, setSnapback360Calibrations] = useState<Snapback360Calibrations>(readSnapback360Calibrations);
-  const [snapback360FrontLogo, setSnapback360FrontLogo] = useState("svg/apex_logo.svg");
-  const [snapback360FrontUpload, setSnapback360FrontUpload] = useState<{ dataUrl: string; name: string } | null>(null);
-  const [snapback360RearLogo, setSnapback360RearLogo] = useState("svg/New_York_logo.svg");
-  const [snapback360RearUpload, setSnapback360RearUpload] = useState<{ dataUrl: string; name: string } | null>(null);
-  const [snapback360UseDifferentRearLogo, setSnapback360UseDifferentRearLogo] = useState(false);
+  const [snapback360ArtworkPlacements, setSnapback360ArtworkPlacements] = useState<Snapback360DesignPlacements>(
+    () => ({ ...DEFAULT_SNAPBACK360_DESIGN_PLACEMENTS, ...initial.snapback360ArtworkPlacements }),
+  );
+  const [snapback360ActiveRegion, setSnapback360ActiveRegion] = useState<Snapback360RegionId>("front");
+  const snapback360PlacementDragRef = useRef<null | {
+    pointerId: number;
+    region: Snapback360RegionId;
+    mode: "move" | "resize";
+    startX: number;
+    startY: number;
+    centerX: number;
+    centerY: number;
+    startDistance: number;
+    initial: Snapback360DesignPlacement;
+  }>(null);
+  const [snapback360RearLogo, setSnapback360RearLogo] = useState(initial.snapback360RearArtworkId || "");
+  const [snapback360RearUpload, setSnapback360RearUpload] = useState<{ dataUrl: string; name: string } | null>(
+    () => initial.snapback360RearArtworkDataUrl ? { dataUrl: initial.snapback360RearArtworkDataUrl, name: initial.snapback360RearArtworkName || "Uploaded artwork" } : null,
+  );
+  const [snapback360UseSameRearArtwork, setSnapback360UseSameRearArtwork] = useState(initial.snapback360UseSameRearArtwork ?? true);
+  const [snapback360EditorPreviewUrl, setSnapback360EditorPreviewUrl] = useState("");
+  const snapback360PreviewUrlRef = useRef("");
+  const snapback360EditorArtboardsRef = useRef<Partial<Record<Snapback360RegionId, HTMLImageElement>>>({});
+  useEffect(() => () => { if (snapback360PreviewUrlRef.current) URL.revokeObjectURL(snapback360PreviewUrlRef.current); }, []);
   const [snapback360CalibrationRegion, setSnapback360CalibrationRegion] = useState<Snapback360RegionId | null>(null);
   const [snapback360CalibrationDraft, setSnapback360CalibrationDraft] = useState<Snapback360RegionCalibration | null>(null);
   const snapback360CalibrationDragRef = useRef<null | { pointerId: number; corner: number | null; x: number; y: number }>(null);
@@ -695,7 +731,9 @@ const SnapInkSleeveCustomizer = forwardRef<
   const [productPhotoProgress, setProductPhotoProgress] = useState("");
   const [generatedShopImages, setGeneratedShopImages] = useState<Record<string,Blob>|null>(null);
   const [generatedPhotoEntries,setGeneratedPhotoEntries]=useState<{key:string;label:string;filename:string;blob:Blob}[]>([]);
+  const [expandedGeneratedPhoto,setExpandedGeneratedPhoto]=useState<{label:string;url:string}|null>(null);
   const [generatedPreviewUrls,setGeneratedPreviewUrls]=useState<{key:string;url:string}[]>([]);
+  useEffect(() => () => { if (expandedGeneratedPhoto) URL.revokeObjectURL(expandedGeneratedPhoto.url); }, [expandedGeneratedPhoto]);
   useEffect(()=>{
     let cancelled=false;const urls:string[]=[];setGeneratedPreviewUrls([]);
     const createThumbnails=async()=>{
@@ -717,8 +755,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     void createThumbnails();
     return()=>{cancelled=true;urls.forEach(url=>URL.revokeObjectURL(url))};
   },[generatedPhotoEntries]);
-  const productPhotoPreviewLabel=(key:string)=>({rear:"On-Hat",desk:"Sleeve",packaging:"Packaging",maleLifestyle:"Male Lifestyle",femaleLifestyle:"Female Lifestyle"} as Record<string,string>)[key]||key;
-  const generatedPhotoResults=<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{generatedPhotoEntries.map(entry=>{const preview=generatedPreviewUrls.find(item=>item.key===entry.key);return <article key={entry.key} className="w-full max-w-[160px] min-w-0 rounded border border-neutral-700 p-2"><div className="flex h-24 items-center justify-center overflow-hidden rounded bg-neutral-900 sm:h-28">{preview?<img className="block max-h-full max-w-full object-contain" src={preview.url} alt={`${productPhotoPreviewLabel(entry.key)} thumbnail`} />:<span className="text-xs text-neutral-500">Preparing thumbnail…</span>}</div><p className="truncate py-1 text-xs font-semibold" title={productPhotoPreviewLabel(entry.key)}>{productPhotoPreviewLabel(entry.key)}</p><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></article>})}</div>;
+  const productPhotoPreviewLabel=(key:string)=>({rear:"On-Hat",desk:"On-Desk",packaging:"Packaging",maleLifestyle:"Male Lifestyle",femaleLifestyle:"Female Lifestyle",snapback360:"Snapback 360"} as Record<string,string>)[key]||key;
+  const generatedPhotoResults=<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{generatedPhotoEntries.map(entry=>{const preview=generatedPreviewUrls.find(item=>item.key===entry.key);return <article key={entry.key} className="w-full max-w-[160px] min-w-0 rounded border border-neutral-700 p-2"><button type="button" onClick={()=>setExpandedGeneratedPhoto({label:productPhotoPreviewLabel(entry.key),url:URL.createObjectURL(entry.blob)})} className="block w-full rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-si-accent" aria-label={`Open larger ${productPhotoPreviewLabel(entry.key)} preview`}><span className="flex h-24 items-center justify-center overflow-hidden rounded bg-neutral-900 sm:h-28">{preview?<img className="block max-h-full max-w-full object-contain" src={preview.url} alt={`${productPhotoPreviewLabel(entry.key)} thumbnail`} />:<span className="text-xs text-neutral-500">Preparing thumbnail…</span>}</span></button><p className="truncate py-1 text-xs font-semibold" title={productPhotoPreviewLabel(entry.key)}>{productPhotoPreviewLabel(entry.key)}</p><button type="button" onClick={()=>downloadPNGBlob(entry.blob,entry.filename)} className="text-xs underline">Download {entry.label}</button></article>})}</div>;
   const [generatedShopImageSignature, setGeneratedShopImageSignature] = useState("");
   const [studioAdminToken, setStudioAdminToken] = useState("");
   const [showPublishProduct, setShowPublishProduct] = useState(false);
@@ -1658,6 +1696,11 @@ const SnapInkSleeveCustomizer = forwardRef<
       artworkBottomExtensionMm: artworkStatus.bottomExtensionMm,
       extendedArtwork: artworkRequiresPremiumPricing,
       hasCustomArtwork: Boolean(text.trim() || logoDataUrl),
+      snapback360ArtworkPlacements,
+      snapback360UseSameRearArtwork,
+      snapback360RearArtworkId: snapback360UseSameRearArtwork ? undefined : (snapback360RearUpload ? "uploaded" : snapback360RearLogo || undefined),
+      snapback360RearArtworkName: snapback360UseSameRearArtwork ? undefined : snapback360RearUpload?.name,
+      snapback360RearArtworkDataUrl: snapback360UseSameRearArtwork ? undefined : snapback360RearUpload?.dataUrl,
     });
   }, [
     text,
@@ -1694,6 +1737,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     selectedArtworkWidthMm,
     selectedArtworkHeightMm,
     artworkExtensionMm,
+    snapback360ArtworkPlacements,
+    snapback360UseSameRearArtwork,
+    snapback360RearLogo,
+    snapback360RearUpload,
   ]);
   const mobilePhotoTextOffset = (() => {
     if (!isMobilePreview || !ghostHat || fixedProductConfiguration || mobileStageWidth <= 0) {
@@ -1791,10 +1838,44 @@ const SnapInkSleeveCustomizer = forwardRef<
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
     if(options.artworkOnly)exportSvg.querySelectorAll('[data-product-image="true"]').forEach(node=>node.remove());
-    if (options.artworkOverrideSrc && logoDataUrl) {
-      exportSvg.querySelectorAll('[data-artwork-overlay="true"] image').forEach((image) => {
-        if (image.getAttribute("href") === logoDataUrl) image.setAttribute("href", options.artworkOverrideSrc!);
-      });
+    if (options.artworkOverrideSrc) {
+      if (logoDataUrl) {
+        exportSvg.querySelectorAll('[data-artwork-overlay="true"] image').forEach((image) => {
+          if (image.getAttribute("href") === logoDataUrl) image.setAttribute("href", options.artworkOverrideSrc!);
+        });
+      } else {
+        const artworkGroup = exportSvg.querySelector<SVGGElement>('[data-artwork-overlay="true"] [data-artwork-height-scale]');
+        if (!artworkGroup) throw new Error("The Studio artwork position is unavailable for the rear logo.");
+        const svgNamespace = "http://www.w3.org/2000/svg";
+        const overrideGroup = document.createElementNS(svgNamespace, "g");
+        const addImage = (attributes: Record<string, string>) => {
+          const image = document.createElementNS(svgNamespace, "image");
+          image.setAttribute("href", options.artworkOverrideSrc!);
+          image.setAttribute("x", String(attributes.x ?? logoImageX));
+          image.setAttribute("y", String(attributes.y ?? logoImageY));
+          image.setAttribute("width", String(attributes.width ?? logoImageWidthSvg));
+          image.setAttribute("height", String(attributes.height ?? logoImageHeightSvg));
+          image.setAttribute("preserveAspectRatio", "xMidYMid meet");
+          image.setAttribute("opacity", String(logoOpacity / 100));
+          for (const [name, value] of Object.entries(attributes)) if (!["x", "y", "width", "height"].includes(name)) image.setAttribute(name, value);
+          overrideGroup.appendChild(image);
+        };
+        if (styleMode === "emboss") for (let index = 0; index < STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS; index++) {
+          const layer = STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS - index;
+          const depth = layer / STUDIO_EMBOSSED_PREVIEW_EXTRUSION_STEPS;
+          addImage({
+            transform: `translate(${embossedExtrusionX * depth} ${embossedExtrusionY * depth})`,
+            style: `filter:brightness(${0.36 + (1 - depth) * 0.3})`,
+            "data-emboss-extrusion-step": String(layer),
+          });
+        }
+        if (artworkStrokeEnabled) addImage({ filter: `url(#${artworkStrokeFilterId})`, "data-artwork-stroke-layer": "true" });
+        addImage({
+          ...(styleMode === "emboss" ? { filter: `url(#${embossFaceHighlightId})` } : {}),
+          "data-testid": "studio-logo-artwork-override",
+        });
+        artworkGroup.appendChild(overrideGroup);
+      }
     }
     exportSvg.removeAttribute("style");
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
@@ -2207,20 +2288,15 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   const snapback360CurrentCalibrations = snapback360Calibrations[snapback360MasterId];
-  const snapback360FrontLibraryEntry = SNAPBACK360_LOGO_LIBRARY.find((entry) => entry.file === snapback360FrontLogo || entry.file === `svg/${snapback360FrontLogo}`);
   const snapback360RearLibraryEntry = SNAPBACK360_LOGO_LIBRARY.find((entry) => entry.file === snapback360RearLogo || entry.file === `svg/${snapback360RearLogo}`);
-  const snapback360FrontArtworkCandidate = snapback360FrontUpload
-    ? { src: snapback360FrontUpload.dataUrl, label: snapback360FrontUpload.name }
-    : snapback360FrontLibraryEntry ? { src: snapback360FrontLibraryEntry.src, label: snapback360FrontLibraryEntry.name } : null;
   const snapback360RearArtworkCandidate = snapback360RearUpload
     ? { src: snapback360RearUpload.dataUrl, label: snapback360RearUpload.name }
     : snapback360RearLibraryEntry ? { src: snapback360RearLibraryEntry.src, label: snapback360RearLibraryEntry.name } : null;
-  const { front: snapback360FrontArtworkSelection, rear: snapback360RearArtworkSelection } = resolveSnapback360ArtworkSelections(
-    snapback360FrontArtworkCandidate,
-    snapback360RearArtworkCandidate,
-    snapback360UseDifferentRearLogo,
-  );
-  const snapback360ArtworkSelectionsValid = Boolean(snapback360FrontArtworkSelection && snapback360RearArtworkSelection);
+  const snapback360HasStudioArtwork = Boolean(logoDataUrl || text.trim());
+  const snapback360RearArtworkSelection = snapback360UseSameRearArtwork
+    ? null
+    : snapback360RearArtworkCandidate;
+  const snapback360ArtworkSelectionsValid = snapback360HasStudioArtwork && (snapback360UseSameRearArtwork || Boolean(snapback360RearArtworkSelection));
   const snapback360CalibrationIsValid = (calibration?: Snapback360RegionCalibration) => Boolean(
     calibration?.quadPx?.length === 4 && calibration.quadPx.every(([x, y]) =>
       Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 &&
@@ -2310,42 +2386,42 @@ const SnapInkSleeveCustomizer = forwardRef<
     if (!snapback360CalibrationIsValid(snapback360CurrentCalibrations.front) || !snapback360CalibrationIsValid(snapback360CurrentCalibrations.rear)) {
       throw new Error("Snapback 360 calibration is outside the master image. Reopen calibration and save valid artwork boundaries.");
     }
-    if (!snapback360FrontArtworkSelection) throw new Error("Front Hat Logo is missing. Choose a library logo or upload front artwork.");
-    if (!snapback360RearArtworkSelection) throw new Error("Rear Sleeve Logo is missing. Choose a library logo or upload rear artwork.");
+    if (!snapback360HasStudioArtwork) throw new Error("Load artwork or add text in the main Studio designer before generating Snapback 360.");
+    if (!snapback360UseSameRearArtwork && !snapback360RearArtworkSelection) {
+      throw new Error("Choose or upload the different rear sleeve artwork first.");
+    }
     const master = await loadStudioImage(SNAPBACK360_MASTER.image);
     if (master.naturalWidth !== SNAPBACK360_MASTER.imageDimensions.width || master.naturalHeight !== SNAPBACK360_MASTER.imageDimensions.height) {
       throw new Error("Snapback 360 master image dimensions do not match its locked source.");
     }
-    const loadArtwork = async (selection: { src: string; label: string }, regionName: string) => {
+    const renderStudioArtwork = async (regionName: string, overrideSrc?: string) => {
+      let objectUrl: string | null = null;
       try {
-        const image = await loadStudioImage(selection.src);
+        const blob = await renderStudioPNGBlob({
+          sleeveOnly: true,
+          artworkOnly: true,
+          scale: rearPhotoSvgRasterScale(variant),
+          onHatProductPhoto: true,
+          ...(overrideSrc ? { artworkOverrideSrc: overrideSrc } : {}),
+        });
+        objectUrl = URL.createObjectURL(blob);
+        const image = await loadStudioImage(objectUrl);
         if (typeof image.decode === "function") await image.decode();
-        if (!image.naturalWidth || !image.naturalHeight) throw new Error("The decoded image has no pixels.");
+        if (!image.naturalWidth || !image.naturalHeight) throw new Error("The rendered artboard has no pixels.");
         return image;
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`${regionName} artwork “${selection.label}” could not be loaded and decoded. ${detail}`);
+        throw new Error(`${regionName} could not render the Studio design. ${detail}`);
+      } finally {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
       }
     };
-    const front = await loadArtwork(snapback360FrontArtworkSelection, "Front Hat Logo");
-    if (snapback360RearArtworkSelection.src !== snapback360FrontArtworkSelection.src) {
-      await loadArtwork(snapback360RearArtworkSelection, "Rear Sleeve Logo");
-    }
-    let rearArtboardUrl: string | null = null;
+    const front = await renderStudioArtwork("Front Hat Artwork");
+    const rear = snapback360UseSameRearArtwork
+      ? front
+      : await renderStudioArtwork("Rear Sleeve Artwork", snapback360RearArtworkSelection?.src);
+    snapback360EditorArtboardsRef.current = { front, rear };
     try {
-      const rearArtboard = await renderStudioPNGBlob({
-        sleeveOnly: true,
-        artworkOnly: true,
-        scale: rearPhotoSvgRasterScale(variant),
-        onHatProductPhoto: true,
-        artworkOverrideSrc: snapback360RearArtworkSelection.src,
-      });
-      rearArtboardUrl = URL.createObjectURL(rearArtboard);
-      const rearArtboardImage = await loadStudioImage(rearArtboardUrl);
-      if (typeof rearArtboardImage.decode === "function") await rearArtboardImage.decode();
-      if (!rearArtboardImage.naturalWidth || !rearArtboardImage.naturalHeight) {
-        throw new Error("The finalized Studio artwork artboard is empty.");
-      }
       const rearExtensionRatios = snapback360StudioArtworkExtensionRatios(
         bounds.maxY - bounds.minY,
         MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
@@ -2354,18 +2430,39 @@ const SnapInkSleeveCustomizer = forwardRef<
       return await compositeSnapback360ProductImage(
         master,
         front,
-        rearArtboardImage,
+        rear,
         snapback360CurrentCalibrations.front.quadPx,
         snapback360CurrentCalibrations.rear.quadPx,
         rearExtensionRatios,
+        snapback360ArtworkPlacements,
       );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Rear Sleeve Artwork from the finalized Studio design could not be rendered. ${detail}`);
-    } finally {
-      if (rearArtboardUrl) URL.revokeObjectURL(rearArtboardUrl);
     }
   }
+
+  useEffect(() => {
+    if (!productPhotoChoice.includes("snapback360") || !snapback360HasStudioArtwork || snapback360MissingRegions.length) {
+      if (snapback360PreviewUrlRef.current) URL.revokeObjectURL(snapback360PreviewUrlRef.current);
+      snapback360PreviewUrlRef.current = "";
+      setSnapback360EditorPreviewUrl("");
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void renderSnapback360ProductImage().then((blob) => {
+        if (cancelled) return;
+        const nextUrl = URL.createObjectURL(blob);
+        if (snapback360PreviewUrlRef.current) URL.revokeObjectURL(snapback360PreviewUrlRef.current);
+        snapback360PreviewUrlRef.current = nextUrl;
+        setSnapback360EditorPreviewUrl(nextUrl);
+      }).catch(() => { if (!cancelled) setSnapback360EditorPreviewUrl(""); });
+    }, 120);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [productPhotoChoice, snapback360HasStudioArtwork, snapback360MissingRegions.join(","), snapback360UseSameRearArtwork,
+    snapback360RearArtworkSelection?.src, snapback360ArtworkPlacements, snapback360CurrentCalibrations, logoDataUrl, text,
+    logoScale, logoPosY, fill, variant, previewSleeveSize, artworkStrokeExtensionMm, bounds.maxY, bounds.minY]);
 
   async function previewSnapback360ProductImage() {
     if (artworkInvalid) {
@@ -2392,48 +2489,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
 
   function shopImageDesignSignature() {
-    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor,sleeveSize,lifestyleCalibration,snapback360MasterId,snapback360FrontLogo,snapback360FrontUpload,snapback360RearLogo,snapback360RearUpload,snapback360UseDifferentRearLogo,snapback360Calibrations});
-  }
-
-  function snapback360ArtworkSelector(region: "front" | "rear") {
-    const isFront = region === "front";
-    const selected = isFront ? snapback360FrontLogo : snapback360RearLogo;
-    const upload = isFront ? snapback360FrontUpload : snapback360RearUpload;
-    const libraryEntry = isFront ? snapback360FrontLibraryEntry : snapback360RearLibraryEntry;
-    const artworkSrc = upload?.dataUrl || libraryEntry?.src || "";
-    return <div className="grid grid-cols-[1fr_5rem] items-end gap-2">
-      <label className="block text-xs text-neutral-300">{isFront ? "Front Hat Logo" : "Rear Sleeve Logo"}
-        <select value={upload ? "__upload__" : selected} onChange={(event) => {
-          if (event.target.value === "__upload__") return;
-          if (isFront) { setSnapback360FrontLogo(event.target.value); setSnapback360FrontUpload(null); }
-          else { setSnapback360RearLogo(event.target.value); setSnapback360RearUpload(null); }
-        }} disabled={!isFront && !snapback360UseDifferentRearLogo}
-          className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm text-neutral-100 disabled:opacity-50">
-          {SNAPBACK360_LOGO_LIBRARY.map((entry) => <option key={entry.file} value={entry.file}>{entry.name}</option>)}
-          {upload && <option value="__upload__">Uploaded: {upload.name}</option>}
-        </select>
-      </label>
-      <div className="flex h-12 items-center justify-center overflow-hidden rounded border border-neutral-700 bg-neutral-900">
-        {artworkSrc && <img src={artworkSrc} alt={`${isFront ? "Front" : "Rear sleeve"} artwork preview`} className="max-h-full max-w-full object-contain" />}
-      </div>
-      <label className={`col-span-2 block text-xs text-neutral-400${!isFront && !snapback360UseDifferentRearLogo ? " opacity-50" : ""}`}>
-        Upload artwork
-        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" disabled={!isFront && !snapback360UseDifferentRearLogo}
-          onChange={async (event) => {
-            const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
-            try {
-              const loaded = await readSnapback360Upload(file);
-              if (isFront) { setSnapback360FrontLogo("__upload__"); setSnapback360FrontUpload(loaded); }
-              else { setSnapback360RearLogo("__upload__"); setSnapback360RearUpload(loaded); }
-            } catch (error) { alert(error instanceof Error ? error.message : "Artwork upload failed."); }
-          }}
-          className="mt-1 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-neutral-700 file:px-2 file:py-1 file:text-neutral-100" />
-      </label>
-      {upload && <button type="button" onClick={() => {
-        if (isFront) { setSnapback360FrontUpload(null); setSnapback360FrontLogo("svg/apex_logo.svg"); }
-        else { setSnapback360RearUpload(null); setSnapback360RearLogo("svg/New_York_logo.svg"); }
-      }} disabled={!isFront && !snapback360UseDifferentRearLogo} className="col-span-2 justify-self-start text-xs underline disabled:opacity-50">Use library logo</button>}
-    </div>;
+    return JSON.stringify({variant,text,font,fontSize,fontWeight,tracking,lineHeight,fill,stroke,strokeWidth,styleMode,arc,posX,posY,logoPosY,align,safeMargin,backgroundColor,logoDataUrl,logoScale,artworkHeightScale,logoOpacity,artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor,sleeveSize,lifestyleCalibration,snapback360MasterId,snapback360RearLogo,snapback360RearUpload,snapback360UseSameRearArtwork,snapback360ArtworkPlacements,snapback360Calibrations});
   }
 
   function snapback360CalibrationEditor() {
@@ -2529,34 +2585,80 @@ const SnapInkSleeveCustomizer = forwardRef<
 
   function snapback360ProductImageControls() {
     if (!productPhotoChoice.includes("snapback360")) return null;
+    const active = snapback360ActiveRegion;
+    const placements = snapback360ArtworkPlacements;
+    const baseRegion = snapback360CurrentCalibrations?.[active]?.quadPx;
+    const extendedRear = active === "rear" ? snapback360StudioArtworkExtensionRatios(
+      bounds.maxY - bounds.minY,
+      MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+      MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+    ) : null;
+    const quad = baseRegion && active === "rear" && extendedRear
+      ? extendSnapback360QuadForArtwork(baseRegion, extendedRear.topExtensionRatio, extendedRear.bottomExtensionRatio)
+      : baseRegion;
+    const placedQuad = quad ? placeSnapback360ArtworkQuad(quad, baseRegion!, placements[active]) : null;
+    const pointString = placedQuad?.map(([x, y]) => `${x},${y}`).join(" ") || "";
+    const eventPoint = (event: React.PointerEvent<SVGSVGElement>): [number, number] => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      return [(event.clientX - rect.left) / rect.width * SNAPBACK360_MASTER.imageDimensions.width,
+        (event.clientY - rect.top) / rect.height * SNAPBACK360_MASTER.imageDimensions.height];
+    };
+    const beginPlacement = (event: React.PointerEvent<SVGSVGElement>) => {
+      const target = (event.target as SVGElement).closest<SVGElement>("[data-region]");
+      const region = (target?.getAttribute("data-region") as Snapback360RegionId | null) || active;
+      if (region !== active) setSnapback360ActiveRegion(region);
+      const handle = (event.target as SVGElement).closest("[data-resize-handle]");
+      const point = eventPoint(event);
+      const q = region === active ? placedQuad : (snapback360CurrentCalibrations?.[region]?.quadPx || SNAPBACK360_MASTER.regions[region].calibration.quadPx);
+      const center = q ? quadMetrics(q) : { centerX: point[0], centerY: point[1] };
+      snapback360PlacementDragRef.current = { pointerId: event.pointerId, region, mode: handle ? "resize" : "move",
+        startX: point[0], startY: point[1], centerX: center.centerX, centerY: center.centerY,
+        startDistance: Math.max(1, Math.hypot(point[0] - center.centerX, point[1] - center.centerY)),
+        initial: snapback360ArtworkPlacements[region] };
+      event.currentTarget.setPointerCapture(event.pointerId); event.preventDefault();
+    };
+    const movePlacement = (event: React.PointerEvent<SVGSVGElement>) => {
+      const drag = snapback360PlacementDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const point = eventPoint(event);
+      const regionQuad = snapback360CurrentCalibrations?.[drag.region]?.quadPx || SNAPBACK360_MASTER.regions[drag.region].calibration.quadPx;
+      const dimensions = quadMetrics(regionQuad);
+      const next = drag.mode === "move"
+        ? { ...drag.initial, offsetXRatio: drag.initial.offsetXRatio + (point[0] - drag.startX) / Math.max(1, dimensions.width), offsetYRatio: drag.initial.offsetYRatio + (point[1] - drag.startY) / Math.max(1, dimensions.height) }
+        : { ...drag.initial, scale: Math.max(0.1, Math.min(4, drag.initial.scale * Math.hypot(point[0] - drag.centerX, point[1] - drag.centerY) / drag.startDistance)) };
+      setSnapback360ArtworkPlacements((previous) => ({ ...previous, [drag.region]: next }));
+    };
+    const endPlacement = (event: React.PointerEvent<SVGSVGElement>) => { if (snapback360PlacementDragRef.current?.pointerId === event.pointerId) snapback360PlacementDragRef.current = null; };
+    const setActivePlacement = (patch: Partial<Snapback360DesignPlacement>) => setSnapback360ArtworkPlacements((previous) => ({ ...previous, [active]: { ...previous[active], ...patch } }));
     return <section className="space-y-3 rounded-lg border border-neutral-700 bg-neutral-950/70 p-3" aria-label="Snapback 360 product image controls">
-      <label className="block text-xs text-neutral-300">Master
-        <select value={snapback360MasterId} onChange={(event) => setSnapback360MasterId(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm text-neutral-100">
-          {SNAPBACK360_MASTERS.map((master) => <option key={master.id} value={master.id}>{master.name}</option>)}
-        </select>
-      </label>
-      <p className="text-[11px] text-neutral-400">Combined Front + Rear Product Image</p>
-      {snapback360ArtworkSelector("front")}
-      <label className="flex items-center gap-2 text-xs text-neutral-200"><input type="checkbox" checked={snapback360UseDifferentRearLogo} onChange={(event) => setSnapback360UseDifferentRearLogo(event.target.checked)} />Use Different Sleeve Artwork</label>
-      {snapback360ArtworkSelector("rear")}
-      <div className="space-y-1 rounded border border-neutral-800 px-2 py-2 text-xs" aria-live="polite">
-        {(["front", "rear"] as const).map((region) => <p key={region} className="flex items-center justify-between gap-2">
-          <span>{SNAPBACK360_MASTER.regions[region].name}</span>
-          <span className={snapback360CurrentCalibrations?.[region]?.locked && snapback360CalibrationIsValid(snapback360CurrentCalibrations[region]) ? "text-emerald-300" : "text-amber-300"}>
-            {snapback360CurrentCalibrations?.[region]?.locked && snapback360CalibrationIsValid(snapback360CurrentCalibrations[region]) ? "Locked" : "Calibration missing"}
-          </span>
-        </p>)}
-      </div>
+      <p className="text-sm font-semibold text-neutral-100">Snapback 360 - Black Trucker</p>
+      <label className="flex items-center gap-2 text-sm text-neutral-200"><input type="checkbox" checked={snapback360UseSameRearArtwork} onChange={(event) => setSnapback360UseSameRearArtwork(event.target.checked)} />Use Same Design on Rear Sleeve</label>
+      {!snapback360UseSameRearArtwork && <div className="grid grid-cols-[1fr_5rem] items-end gap-2">
+        <label className="block text-xs text-neutral-300">Rear Sleeve Artwork<select value={snapback360RearUpload ? "__upload__" : snapback360RearLogo} onChange={(event) => { if (event.target.value !== "__upload__") { setSnapback360RearLogo(event.target.value); setSnapback360RearUpload(null); } }} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-2 text-sm">{SNAPBACK360_LOGO_LIBRARY.map((entry) => <option key={entry.file} value={entry.file}>{entry.name}</option>)}{snapback360RearUpload && <option value="__upload__">Uploaded: {snapback360RearUpload.name}</option>}</select></label>
+        <label className="block text-xs text-neutral-400">Upload rear<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const upload = await readSnapback360Upload(file); setSnapback360RearUpload(upload); } catch (error) { alert(error instanceof Error ? error.message : "Rear artwork upload failed."); } }} className="mt-1 block w-full text-[10px]" /></label>
+      </div>}
+      <div className="space-y-1 rounded border border-neutral-800 px-2 py-2 text-xs" aria-live="polite">{(["front", "rear"] as const).map((region) => <p key={region} className="flex justify-between"><span>{region === "front" ? "Front Hat Artwork" : "Rear SnapInk Sleeve Artwork"}</span><span className={snapback360CurrentCalibrations?.[region]?.locked ? "text-emerald-300" : "text-amber-300"}>{snapback360CurrentCalibrations?.[region]?.locked ? "Calibration Saved ?" : "Calibration missing"}</span></p>)}</div>
       {snapback360MissingRegions.length > 0 && <p role="alert" className="text-xs text-amber-200">Calibration required: {snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.</p>}
-      {!snapback360FrontArtworkSelection && <p role="alert" className="text-xs text-amber-200">Front Hat Logo: select a library logo or upload artwork.</p>}
-      {snapback360UseDifferentRearLogo && !snapback360RearArtworkSelection && <p role="alert" className="text-xs text-amber-200">Rear Sleeve Logo: select a library logo or upload artwork.</p>}
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => void openSnapback360Calibration("front")} className="rounded border border-neutral-600 px-2 py-2 text-xs">Calibrate Front Hat</button>
-        <button type="button" onClick={() => void openSnapback360Calibration("rear")} className="rounded border border-neutral-600 px-2 py-2 text-xs">Calibrate Rear Sleeve</button>
+      <p className="text-[11px] text-neutral-400">Mockup adjustment only. Studio production dimensions, artwork, and validation remain unchanged. Extended sleeve artwork may extend beyond the strap.</p>
+      <div className="relative mx-auto w-full max-w-[540px] overflow-hidden rounded border border-neutral-700 touch-none"><img src={snapback360EditorPreviewUrl || SNAPBACK360_MASTER.image} alt="Snapback 360 front and rear product preview" className="block h-auto w-full select-none" draggable={false} />
+        <svg viewBox={`0 0 ${SNAPBACK360_MASTER.imageDimensions.width} ${SNAPBACK360_MASTER.imageDimensions.height}`} className="absolute inset-0 h-full w-full touch-none" onPointerDown={beginPlacement} onPointerMove={movePlacement} onPointerUp={endPlacement} onPointerCancel={endPlacement}>
+          {(["front", "rear"] as const).map((region) => { const regionBase = snapback360CurrentCalibrations?.[region]?.quadPx || SNAPBACK360_MASTER.regions[region].calibration.quadPx; const extension = region === "rear" ? snapback360StudioArtworkExtensionRatios(bounds.maxY - bounds.minY, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm, MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm) : null; const source = snapback360EditorArtboardsRef.current[region]; const placed = source ? snapback360ArtworkTargetQuad(source, regionBase, placements[region], region === "rear" && extension ? { studioArtboard: extension } : {}) : placeSnapback360ArtworkQuad(regionBase, regionBase, placements[region]); const selected = active === region; return <g key={region} data-region={region} style={{ cursor: "move" }}><polygon points={placed.map(([x, y]) => `${x},${y}`).join(" ")} fill={selected ? "rgba(110,231,183,.18)" : "rgba(255,255,255,.03)"} stroke={selected ? "#6ee7b7" : "rgba(255,255,255,.55)"} strokeWidth={selected ? 4 : 2} strokeDasharray={selected ? undefined : "10 8"} />{selected && placed.map(([x, y], index) => <circle key={index} data-region={region} data-resize-handle={index === 2 ? "corner" : undefined} cx={x} cy={y} r={index === 2 ? 13 : 6} fill={index === 2 ? "#fbbf24" : "#6ee7b7"} stroke="#111827" strokeWidth="3" style={{ pointerEvents: index === 2 ? "auto" : "none" }} />)}</g>; })}
+        </svg></div>
+      <div className="flex gap-2">{(["front", "rear"] as const).map((region) => <button key={region} type="button" onClick={() => setSnapback360ActiveRegion(region)} className={`rounded px-3 py-2 text-xs ${active === region ? "bg-si-accent text-neutral-950" : "border border-neutral-700"}`}>{region === "front" ? "Front Hat" : "Rear Sleeve"}</button>)}</div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <label className="text-xs text-neutral-400">Scale {Math.round(placements[active].scale * 100)}%<input type="range" min="25" max="300" value={Math.round(placements[active].scale * 100)} onChange={(event) => setActivePlacement({ scale: Number(event.target.value) / 100 })} className="block w-full" /></label>
+        <label className="text-xs text-neutral-400">Rotation (degrees)<input type="number" min="-180" max="180" step="1" value={placements[active].rotationDeg} onChange={(event) => setActivePlacement({ rotationDeg: Number(event.target.value) || 0 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
+        <label className="text-xs text-neutral-400">Horizontal position %<input type="number" step="1" value={Math.round(placements[active].offsetXRatio * 100)} onChange={(event) => setActivePlacement({ offsetXRatio: (Number(event.target.value) || 0) / 100 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
+        <label className="text-xs text-neutral-400">Vertical position %<input type="number" step="1" value={Math.round(placements[active].offsetYRatio * 100)} onChange={(event) => setActivePlacement({ offsetYRatio: (Number(event.target.value) || 0) / 100 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
+        <label className="text-xs text-neutral-400">Perspective %<input type="number" min="-100" max="100" step="1" value={placements[active].perspectivePercent} onChange={(event) => setActivePlacement({ perspectivePercent: Number(event.target.value) || 0 })} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100" /></label>
+        <button type="button" onClick={() => setActivePlacement({ offsetXRatio: 0, offsetYRatio: 0 })} className="rounded border border-neutral-700 px-2 py-2 text-xs">Center artwork</button>
+        <button type="button" onClick={() => setSnapback360ArtworkPlacements((previous) => ({ ...previous, [active]: { ...DEFAULT_SNAPBACK360_DESIGN_PLACEMENTS[active] } }))} className="rounded border border-neutral-700 px-2 py-2 text-xs">Reset placement</button>
       </div>
-      {snapback360CalibrationEditor()}
-      <button type="button" disabled={isGeneratingProductImage || snapback360MissingRegions.length > 0 || !snapback360ArtworkSelectionsValid} onClick={() => void previewSnapback360ProductImage()} className="w-full rounded border border-neutral-600 px-3 py-2 text-xs disabled:opacity-50">Preview Product Image</button>
-      <p className="text-[11px] text-neutral-500">The selected front logo is used on the sleeve unless a different rear logo is enabled. Calibration is stored independently per master and region.</p>
+      <div className="flex gap-2"><button type="button" onClick={async () => { try { await navigator.clipboard.writeText(JSON.stringify(snapback360ArtworkPlacements)); } catch { alert("Clipboard access is unavailable."); } }} className="rounded border border-neutral-700 px-3 py-2 text-xs">Copy placements</button><button type="button" onClick={async () => { try { const value = JSON.parse(await navigator.clipboard.readText()) as Partial<Snapback360DesignPlacements>; const valid = (["front", "rear"] as const).every((region) => { const placement = value?.[region]; return placement && Number.isFinite(placement.offsetXRatio) && Number.isFinite(placement.offsetYRatio) && Number.isFinite(placement.scale) && Number.isFinite(placement.rotationDeg) && Number.isFinite(placement.perspectivePercent); }); if (!valid) throw new Error(); setSnapback360ArtworkPlacements((previous) => ({ ...previous, ...value })); } catch { alert("Clipboard does not contain valid Snapback 360 placement settings."); } }} className="rounded border border-neutral-700 px-3 py-2 text-xs">Paste to this design</button></div>
+      <details className="rounded border border-neutral-800 p-2"><summary className="cursor-pointer text-xs">Advanced - Master Calibration</summary>
+        <div className="mt-2 grid grid-cols-2 gap-2"><button type="button" onClick={() => void openSnapback360Calibration("front")} className="rounded border border-neutral-600 px-2 py-2 text-xs">Calibrate Front Hat</button><button type="button" onClick={() => void openSnapback360Calibration("rear")} className="rounded border border-neutral-600 px-2 py-2 text-xs">Calibrate Rear Sleeve</button></div>
+        {snapback360CalibrationEditor()}
+      </details>
     </section>;
   }
 

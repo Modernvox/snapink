@@ -5,6 +5,14 @@ export interface Snapback360ArtworkSelection {
   label: string;
 }
 
+export interface Snapback360ArtworkPlacement {
+  offsetXRatio: number;
+  offsetYRatio: number;
+  scale: number;
+  rotationDeg: number;
+  perspectivePercent: number;
+}
+
 export function resolveSnapback360ArtworkSelections(
   front: Snapback360ArtworkSelection | null,
   rear: Snapback360ArtworkSelection | null,
@@ -126,6 +134,58 @@ export function snapback360StudioArtworkExtensionRatios(
   };
 }
 
+export function placeSnapback360ArtworkQuad(
+  baseQuad: Snapback360Quad,
+  anchorQuad: Snapback360Quad,
+  placement: Snapback360ArtworkPlacement,
+): Snapback360Quad {
+  const anchor = quadMetrics(anchorQuad);
+  const base = quadMetrics(baseQuad);
+  const scale = Number.isFinite(placement.scale) ? Math.max(0.05, Math.min(5, placement.scale)) : 1;
+  const angle = (Number(placement.rotationDeg) || 0) * Math.PI / 180;
+  const offsetX = (Number(placement.offsetXRatio) || 0) * anchor.width;
+  const offsetY = (Number(placement.offsetYRatio) || 0) * anchor.height;
+  const positioned = baseQuad.map(([x, y]) => {
+    const dx = (x - anchor.centerX) * scale;
+    const dy = (y - anchor.centerY) * scale;
+    return [
+      anchor.centerX + offsetX + dx * Math.cos(angle) - dy * Math.sin(angle),
+      anchor.centerY + offsetY + dx * Math.sin(angle) + dy * Math.cos(angle),
+    ] as const;
+  }) as unknown as Snapback360Quad;
+  const perspective = Number(placement.perspectivePercent) || 0;
+  if (Math.abs(perspective) < 0.001 || base.width < 0.001) return positioned;
+  const metrics = quadMetrics(positioned);
+  const axis = metrics.rotationDeg * Math.PI / 180;
+  const ux = Math.cos(axis), uy = Math.sin(axis);
+  const halfDelta = metrics.width * Math.max(-150, Math.min(150, perspective)) / 400;
+  const move = (point: Snapback360Point, distance: number): Snapback360Point => [point[0] + ux * distance, point[1] + uy * distance];
+  return [move(positioned[0], -halfDelta), move(positioned[1], halfDelta), move(positioned[2], halfDelta), move(positioned[3], -halfDelta)];
+}
+
+export function snapback360ArtworkTargetQuad(
+  artwork: HTMLImageElement,
+  region: Snapback360Quad,
+  placement: Snapback360ArtworkPlacement,
+  options: { studioArtboard?: { topExtensionRatio: number; bottomExtensionRatio: number } } = {},
+): Snapback360Quad {
+  if (options.studioArtboard) {
+    return placeSnapback360ArtworkQuad(
+      extendSnapback360QuadForArtwork(region, options.studioArtboard.topExtensionRatio, options.studioArtboard.bottomExtensionRatio),
+      region,
+      placement,
+    );
+  }
+  const { width: sourceWidth, height: sourceHeight } = alphaBounds(artwork);
+  const averageWidth = (Math.hypot(region[1][0] - region[0][0], region[1][1] - region[0][1]) +
+    Math.hypot(region[2][0] - region[3][0], region[2][1] - region[3][1])) / 2;
+  const averageHeight = (Math.hypot(region[3][0] - region[0][0], region[3][1] - region[0][1]) +
+    Math.hypot(region[2][0] - region[1][0], region[2][1] - region[1][1])) / 2;
+  const fit = Math.min(averageWidth / sourceWidth, averageHeight / sourceHeight);
+  const base = scaledQuad(region, sourceWidth * fit / averageWidth, sourceHeight * fit / averageHeight);
+  return placeSnapback360ArtworkQuad(base, region, placement);
+}
+
 function warpArtworkPixels(
   source: Uint8ClampedArray,
   sourceWidth: number,
@@ -179,6 +239,7 @@ function createArtworkLayer(
   region: Snapback360Quad,
   width: number,
   height: number,
+  placement: Snapback360ArtworkPlacement = { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
 ) {
   const { canvas: sourceCanvas, left, top, width: sourceWidth, height: sourceHeight } = alphaBounds(artwork);
   const averageWidth = (Math.hypot(region[1][0] - region[0][0], region[1][1] - region[0][1]) +
@@ -188,7 +249,9 @@ function createArtworkLayer(
   const fit = Math.min(averageWidth / sourceWidth, averageHeight / sourceHeight);
   const fitWidth = sourceWidth * fit;
   const fitHeight = sourceHeight * fit;
-  const fittedRegion = scaledQuad(region, fitWidth / averageWidth, fitHeight / averageHeight);
+  const fittedRegion = placeSnapback360ArtworkQuad(
+    scaledQuad(region, fitWidth / averageWidth, fitHeight / averageHeight), region, placement,
+  );
   const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
   if (!sourceContext) throw new Error("Snapback 360 artwork sampling is unavailable.");
   const source = sourceContext.getImageData(left, top, sourceWidth, sourceHeight).data;
@@ -202,6 +265,7 @@ function createStudioArtworkLayer(
   bottomExtensionRatio: number,
   width: number,
   height: number,
+  placement: Snapback360ArtworkPlacement = { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 },
 ) {
   const source = document.createElement("canvas");
   source.width = artworkArtboard.naturalWidth; source.height = artworkArtboard.naturalHeight;
@@ -210,7 +274,7 @@ function createStudioArtworkLayer(
   sourceContext.drawImage(artworkArtboard, 0, 0);
   const pixels = sourceContext.getImageData(0, 0, source.width, source.height).data;
   const extendedRegion = extendSnapback360QuadForArtwork(sleeveRegion, topExtensionRatio, bottomExtensionRatio);
-  return warpArtworkPixels(pixels, source.width, source.height, extendedRegion, width, height);
+  return warpArtworkPixels(pixels, source.width, source.height, placeSnapback360ArtworkQuad(extendedRegion, sleeveRegion, placement), width, height);
 }
 
 export async function compositeSnapback360ProductImage(
@@ -220,6 +284,7 @@ export async function compositeSnapback360ProductImage(
   frontRegion: Snapback360Quad,
   rearRegion: Snapback360Quad,
   rearStudioArtboard?: { topExtensionRatio: number; bottomExtensionRatio: number },
+  placements: { front?: Snapback360ArtworkPlacement; rear?: Snapback360ArtworkPlacement } = {},
 ) {
   if (!master.naturalWidth || !master.naturalHeight) throw new Error("Snapback 360 master image could not be loaded.");
   const canvas = document.createElement("canvas");
@@ -229,10 +294,10 @@ export async function compositeSnapback360ProductImage(
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
   context.drawImage(master, 0, 0);
-  context.drawImage(createArtworkLayer(frontArtwork, frontRegion, canvas.width, canvas.height), 0, 0);
+  context.drawImage(createArtworkLayer(frontArtwork, frontRegion, canvas.width, canvas.height, placements.front), 0, 0);
   const rearLayer = rearStudioArtboard
-    ? createStudioArtworkLayer(rearArtwork, rearRegion, rearStudioArtboard.topExtensionRatio, rearStudioArtboard.bottomExtensionRatio, canvas.width, canvas.height)
-    : createArtworkLayer(rearArtwork, rearRegion, canvas.width, canvas.height);
+    ? createStudioArtworkLayer(rearArtwork, rearRegion, rearStudioArtboard.topExtensionRatio, rearStudioArtboard.bottomExtensionRatio, canvas.width, canvas.height, placements.rear)
+    : createArtworkLayer(rearArtwork, rearRegion, canvas.width, canvas.height, placements.rear);
   context.drawImage(rearLayer, 0, 0);
   return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
     (blob) => blob ? resolve(blob) : reject(new Error("Snapback 360 PNG encoding failed.")), "image/png",

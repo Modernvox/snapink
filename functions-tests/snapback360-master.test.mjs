@@ -65,6 +65,22 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   assert.deepEqual(customizerImage.extendSnapback360QuadForArtwork(sleeveQuad, extendedInsets.topExtensionRatio, extendedInsets.bottomExtensionRatio),
     [[100, 87.5], [300, 87.5], [300, 156.25], [100, 156.25]],
     "extended artwork expands past the sleeve without shrinking the calibrated sleeve core");
+
+  const defaultPlacement = { offsetXRatio: 0, offsetYRatio: 0, scale: 1, rotationDeg: 0, perspectivePercent: 0 };
+  const movedPlacement = { ...defaultPlacement, offsetXRatio: 0.1, offsetYRatio: 0.2, scale: 1.5 };
+  const frontMoved = customizerImage.placeSnapback360ArtworkQuad(sleeveQuad, sleeveQuad, movedPlacement);
+  const rearUnchanged = customizerImage.placeSnapback360ArtworkQuad(sleeveQuad, sleeveQuad, defaultPlacement);
+  assert.deepEqual(frontMoved, [[70, 97.5], [370, 97.5], [370, 172.5], [70, 172.5]],
+    "per-design offsets and scale transform the artwork around its calibrated surface");
+  assert.deepEqual(rearUnchanged, sleeveQuad, "front placement edits do not change rear placement");
+  assert.deepEqual(customizerImage.placeSnapback360ArtworkQuad(sleeveQuad, sleeveQuad, defaultPlacement), sleeveQuad,
+    "default placement preserves the existing calibrated artwork transform");
+  const extendedPlaced = customizerImage.placeSnapback360ArtworkQuad(
+    customizerImage.extendSnapback360QuadForArtwork(sleeveQuad, extendedInsets.topExtensionRatio, extendedInsets.bottomExtensionRatio),
+    sleeveQuad,
+    defaultPlacement,
+  );
+  assert.equal(extendedPlaced[0][1], 87.5, "rear preview placement retains legitimate top extension");
 });
 
 test("Snapback 360 Shop gallery images receive their own type and ordering", async () => {
