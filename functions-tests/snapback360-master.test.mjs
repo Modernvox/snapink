@@ -53,6 +53,18 @@ test("Snapback 360 master is an independent, source-preserving two-region master
   assert.deepEqual(resolve(upload, ny, true), { front: upload, rear: ny }, "uploaded front and library rear");
   assert.deepEqual(resolve(apex, upload, true), { front: apex, rear: upload }, "library front and uploaded rear");
   assert.deepEqual(resolve(apex, ny, true), { front: apex, rear: ny }, "different library logos remain independent");
+
+  const sleeveQuad = [[100, 100], [300, 100], [300, 150], [100, 150]];
+  const standardInsets = customizerImage.snapback360StudioArtworkExtensionRatios(40, 0, 0);
+  assert.deepEqual(standardInsets, { topExtensionRatio: 0, bottomExtensionRatio: 0 });
+  assert.deepEqual(customizerImage.extendSnapback360QuadForArtwork(sleeveQuad, standardInsets.topExtensionRatio, standardInsets.bottomExtensionRatio), sleeveQuad,
+    "standard artwork keeps the calibrated sleeve frame at its original scale");
+
+  const extendedInsets = customizerImage.snapback360StudioArtworkExtensionRatios(40, 10, 5);
+  assert.deepEqual(extendedInsets, { topExtensionRatio: 0.25, bottomExtensionRatio: 0.125 });
+  assert.deepEqual(customizerImage.extendSnapback360QuadForArtwork(sleeveQuad, extendedInsets.topExtensionRatio, extendedInsets.bottomExtensionRatio),
+    [[100, 87.5], [300, 87.5], [300, 156.25], [100, 156.25]],
+    "extended artwork expands past the sleeve without shrinking the calibrated sleeve core");
 });
 
 test("Snapback 360 Shop gallery images receive their own type and ordering", async () => {

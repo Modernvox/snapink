@@ -71,6 +71,7 @@ import {
   compositeSnapback360RegionPreview,
   quadMetrics,
   resolveSnapback360ArtworkSelections,
+  snapback360StudioArtworkExtensionRatios,
 } from "../utils/snapback360ProductImage";
 
 const CITY_LIFESTYLE_BACKGROUND_PATHS = {
@@ -1779,7 +1780,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean; onHatFaceOnly?: boolean } = {}): Promise<Blob> {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean; onHatFaceOnly?: boolean; artworkOverrideSrc?: string } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
       throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
@@ -1790,6 +1791,11 @@ const SnapInkSleeveCustomizer = forwardRef<
     const exportSvg = svg.cloneNode(true) as SVGSVGElement;
     exportSvg.querySelectorAll('[data-preview-only="true"]').forEach((node) => node.remove());
     if(options.artworkOnly)exportSvg.querySelectorAll('[data-product-image="true"]').forEach(node=>node.remove());
+    if (options.artworkOverrideSrc && logoDataUrl) {
+      exportSvg.querySelectorAll('[data-artwork-overlay="true"] image').forEach((image) => {
+        if (image.getAttribute("href") === logoDataUrl) image.setAttribute("href", options.artworkOverrideSrc!);
+      });
+    }
     exportSvg.removeAttribute("style");
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
     const fixedSleeveLayer = onHatSvgRaster && !options.onHatFaceOnly && !options.artworkOnly;
@@ -2322,15 +2328,50 @@ const SnapInkSleeveCustomizer = forwardRef<
       }
     };
     const front = await loadArtwork(snapback360FrontArtworkSelection, "Front Hat Logo");
-    const rear = snapback360RearArtworkSelection.src === snapback360FrontArtworkSelection.src
-      ? front
-      : await loadArtwork(snapback360RearArtworkSelection, "Rear Sleeve Logo");
-    return await compositeSnapback360ProductImage(
-      master, front, rear, snapback360CurrentCalibrations.front.quadPx, snapback360CurrentCalibrations.rear.quadPx,
-    );
+    if (snapback360RearArtworkSelection.src !== snapback360FrontArtworkSelection.src) {
+      await loadArtwork(snapback360RearArtworkSelection, "Rear Sleeve Logo");
+    }
+    let rearArtboardUrl: string | null = null;
+    try {
+      const rearArtboard = await renderStudioPNGBlob({
+        sleeveOnly: true,
+        artworkOnly: true,
+        scale: rearPhotoSvgRasterScale(variant),
+        onHatProductPhoto: true,
+        artworkOverrideSrc: snapback360RearArtworkSelection.src,
+      });
+      rearArtboardUrl = URL.createObjectURL(rearArtboard);
+      const rearArtboardImage = await loadStudioImage(rearArtboardUrl);
+      if (typeof rearArtboardImage.decode === "function") await rearArtboardImage.decode();
+      if (!rearArtboardImage.naturalWidth || !rearArtboardImage.naturalHeight) {
+        throw new Error("The finalized Studio artwork artboard is empty.");
+      }
+      const rearExtensionRatios = snapback360StudioArtworkExtensionRatios(
+        bounds.maxY - bounds.minY,
+        MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+        MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm,
+      );
+      return await compositeSnapback360ProductImage(
+        master,
+        front,
+        rearArtboardImage,
+        snapback360CurrentCalibrations.front.quadPx,
+        snapback360CurrentCalibrations.rear.quadPx,
+        rearExtensionRatios,
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Rear Sleeve Artwork from the finalized Studio design could not be rendered. ${detail}`);
+    } finally {
+      if (rearArtboardUrl) URL.revokeObjectURL(rearArtboardUrl);
+    }
   }
 
   async function previewSnapback360ProductImage() {
+    if (artworkInvalid) {
+      alert(`Artwork exceeds ${artworkInvalidBoundary}. Move or resize it before previewing product images.`);
+      return;
+    }
     if (snapback360MissingRegions.length) {
       alert(`Snapback 360 calibration is missing: ${snapback360MissingRegions.map((region) => SNAPBACK360_MASTER.regions[region].name).join(" and ")}.`);
       return;

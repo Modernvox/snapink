@@ -96,37 +96,57 @@ function scaledQuad(quad: Snapback360Quad, scaleX: number, scaleY: number): Snap
   }) as unknown as Snapback360Quad;
 }
 
-function createArtworkLayer(
-  artwork: HTMLImageElement,
-  region: Snapback360Quad,
+export function extendSnapback360QuadForArtwork(
+  quad: Snapback360Quad,
+  topExtensionRatio: number,
+  bottomExtensionRatio: number,
+): Snapback360Quad {
+  const top = Math.max(0, topExtensionRatio), bottom = Math.max(0, bottomExtensionRatio);
+  const leftSide = [quad[3][0] - quad[0][0], quad[3][1] - quad[0][1]] as const;
+  const rightSide = [quad[2][0] - quad[1][0], quad[2][1] - quad[1][1]] as const;
+  return [
+    [quad[0][0] - leftSide[0] * top, quad[0][1] - leftSide[1] * top],
+    [quad[1][0] - rightSide[0] * top, quad[1][1] - rightSide[1] * top],
+    [quad[2][0] + rightSide[0] * bottom, quad[2][1] + rightSide[1] * bottom],
+    [quad[3][0] + leftSide[0] * bottom, quad[3][1] + leftSide[1] * bottom],
+  ];
+}
+
+export function snapback360StudioArtworkExtensionRatios(
+  sleeveBoundsHeightMm: number,
+  topExtensionMm: number,
+  bottomExtensionMm: number,
+) {
+  if (!Number.isFinite(sleeveBoundsHeightMm) || sleeveBoundsHeightMm <= 0) {
+    throw new Error("Studio sleeve bounds are invalid for Snapback 360 artwork mapping.");
+  }
+  return {
+    topExtensionRatio: Math.max(0, topExtensionMm) / sleeveBoundsHeightMm,
+    bottomExtensionRatio: Math.max(0, bottomExtensionMm) / sleeveBoundsHeightMm,
+  };
+}
+
+function warpArtworkPixels(
+  source: Uint8ClampedArray,
+  sourceWidth: number,
+  sourceHeight: number,
+  targetQuad: Snapback360Quad,
   width: number,
   height: number,
 ) {
-  const { canvas: sourceCanvas, left, top, width: sourceWidth, height: sourceHeight } = alphaBounds(artwork);
-  const averageWidth = (Math.hypot(region[1][0] - region[0][0], region[1][1] - region[0][1]) +
-    Math.hypot(region[2][0] - region[3][0], region[2][1] - region[3][1])) / 2;
-  const averageHeight = (Math.hypot(region[3][0] - region[0][0], region[3][1] - region[0][1]) +
-    Math.hypot(region[2][0] - region[1][0], region[2][1] - region[1][1])) / 2;
-  const fit = Math.min(averageWidth / sourceWidth, averageHeight / sourceHeight);
-  const fitWidth = sourceWidth * fit;
-  const fitHeight = sourceHeight * fit;
-  const fittedRegion = scaledQuad(region, fitWidth / averageWidth, fitHeight / averageHeight);
-  const [h0, h1, h2, h3, h4, h5, h6, h7] = inverseHomography(fittedRegion, sourceWidth, sourceHeight);
-  const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
-  if (!sourceContext) throw new Error("Snapback 360 artwork sampling is unavailable.");
-  const source = sourceContext.getImageData(left, top, sourceWidth, sourceHeight).data;
+  const [h0, h1, h2, h3, h4, h5, h6, h7] = inverseHomography(targetQuad, sourceWidth, sourceHeight);
   const layer = document.createElement("canvas");
   layer.width = width; layer.height = height;
   const context = layer.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("Snapback 360 artwork layer is unavailable.");
   const output = context.createImageData(width, height);
-  const minX = Math.max(0, Math.floor(Math.min(...region.map(([x]) => x))));
-  const maxX = Math.min(width - 1, Math.ceil(Math.max(...region.map(([x]) => x))));
-  const minY = Math.max(0, Math.floor(Math.min(...region.map(([, y]) => y))));
-  const maxY = Math.min(height - 1, Math.ceil(Math.max(...region.map(([, y]) => y))));
+  const minX = Math.max(0, Math.floor(Math.min(...targetQuad.map(([x]) => x))));
+  const maxX = Math.min(width - 1, Math.ceil(Math.max(...targetQuad.map(([x]) => x))));
+  const minY = Math.max(0, Math.floor(Math.min(...targetQuad.map(([, y]) => y))));
+  const maxY = Math.min(height - 1, Math.ceil(Math.max(...targetQuad.map(([, y]) => y))));
   for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
     const px = x + 0.5, py = y + 0.5;
-    if (!pointInPolygon(px, py, region)) continue;
+    if (!pointInPolygon(px, py, targetQuad)) continue;
     const denominator = h6 * px + h7 * py + 1;
     if (Math.abs(denominator) < 1e-9) continue;
     const sx = (h0 * px + h1 * py + h2) / denominator;
@@ -154,12 +174,52 @@ function createArtworkLayer(
   return layer;
 }
 
+function createArtworkLayer(
+  artwork: HTMLImageElement,
+  region: Snapback360Quad,
+  width: number,
+  height: number,
+) {
+  const { canvas: sourceCanvas, left, top, width: sourceWidth, height: sourceHeight } = alphaBounds(artwork);
+  const averageWidth = (Math.hypot(region[1][0] - region[0][0], region[1][1] - region[0][1]) +
+    Math.hypot(region[2][0] - region[3][0], region[2][1] - region[3][1])) / 2;
+  const averageHeight = (Math.hypot(region[3][0] - region[0][0], region[3][1] - region[0][1]) +
+    Math.hypot(region[2][0] - region[1][0], region[2][1] - region[1][1])) / 2;
+  const fit = Math.min(averageWidth / sourceWidth, averageHeight / sourceHeight);
+  const fitWidth = sourceWidth * fit;
+  const fitHeight = sourceHeight * fit;
+  const fittedRegion = scaledQuad(region, fitWidth / averageWidth, fitHeight / averageHeight);
+  const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+  if (!sourceContext) throw new Error("Snapback 360 artwork sampling is unavailable.");
+  const source = sourceContext.getImageData(left, top, sourceWidth, sourceHeight).data;
+  return warpArtworkPixels(source, sourceWidth, sourceHeight, fittedRegion, width, height);
+}
+
+function createStudioArtworkLayer(
+  artworkArtboard: HTMLImageElement,
+  sleeveRegion: Snapback360Quad,
+  topExtensionRatio: number,
+  bottomExtensionRatio: number,
+  width: number,
+  height: number,
+) {
+  const source = document.createElement("canvas");
+  source.width = artworkArtboard.naturalWidth; source.height = artworkArtboard.naturalHeight;
+  const sourceContext = source.getContext("2d", { willReadFrequently: true });
+  if (!sourceContext) throw new Error("Studio rear artwork could not be sampled.");
+  sourceContext.drawImage(artworkArtboard, 0, 0);
+  const pixels = sourceContext.getImageData(0, 0, source.width, source.height).data;
+  const extendedRegion = extendSnapback360QuadForArtwork(sleeveRegion, topExtensionRatio, bottomExtensionRatio);
+  return warpArtworkPixels(pixels, source.width, source.height, extendedRegion, width, height);
+}
+
 export async function compositeSnapback360ProductImage(
   master: HTMLImageElement,
   frontArtwork: HTMLImageElement,
   rearArtwork: HTMLImageElement,
   frontRegion: Snapback360Quad,
   rearRegion: Snapback360Quad,
+  rearStudioArtboard?: { topExtensionRatio: number; bottomExtensionRatio: number },
 ) {
   if (!master.naturalWidth || !master.naturalHeight) throw new Error("Snapback 360 master image could not be loaded.");
   const canvas = document.createElement("canvas");
@@ -170,7 +230,10 @@ export async function compositeSnapback360ProductImage(
   context.imageSmoothingQuality = "high";
   context.drawImage(master, 0, 0);
   context.drawImage(createArtworkLayer(frontArtwork, frontRegion, canvas.width, canvas.height), 0, 0);
-  context.drawImage(createArtworkLayer(rearArtwork, rearRegion, canvas.width, canvas.height), 0, 0);
+  const rearLayer = rearStudioArtboard
+    ? createStudioArtworkLayer(rearArtwork, rearRegion, rearStudioArtboard.topExtensionRatio, rearStudioArtboard.bottomExtensionRatio, canvas.width, canvas.height)
+    : createArtworkLayer(rearArtwork, rearRegion, canvas.width, canvas.height);
+  context.drawImage(rearLayer, 0, 0);
   return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
     (blob) => blob ? resolve(blob) : reject(new Error("Snapback 360 PNG encoding failed.")), "image/png",
   ));
