@@ -15,6 +15,7 @@ import {
   ARTWORK_VERTICAL_POSITION_MIN,
   BRANDING_EDGE_CLEARANCE_MM,
   MAX_BOTTOM_ARTWORK_EXTENSION_MM,
+  MAX_EXTENDED_ARTWORK_HEIGHT_MM,
   MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
   MAX_TOP_ARTWORK_EXTENSION_MM,
   GEOMETRY_VERSION,
@@ -415,8 +416,6 @@ const SLEEVE_PHOTO = {
 
 const MOBILE_STAGE_WIDTH_HEIGHT_RATIO = 9 / 16;
 const STUDIO_STAGE_COORDINATE_WIDTH = 1000;
-const MOBILE_PHOTO_TEXT_NUDGE_X_PX = 11;
-const MOBILE_PHOTO_TEXT_NUDGE_Y_PX = 13;
 // Visual preview only; matches the approved raised artwork reference height.
 const STUDIO_EMBOSSED_PREVIEW_RELIEF_MM = 0.8;
 // Render-only extrusion: stacked SVG copies create visible sidewalls without
@@ -1445,6 +1444,35 @@ const SnapInkSleeveCustomizer = forwardRef<
   const photoFaceRenderPath = mobileBodyExtensionCanvasPx > 0
     ? `M ${photoFacePoints.map(([x, y], index) => `${(index === 1 || index === 2 ? x + mobileBodyExtensionCanvasPx : x).toFixed(2)} ${y.toFixed(2)}`).join(" L ")} Z`
     : photoFacePath;
+  // The mobile sleeve can extend its body to match the calibrated size endpoint.
+  // Keep the photographed artwork face, artwork transform, and clip in that same
+  // coordinate space so the overlay cannot stop at the pre-extension edge.
+  const photoArtworkFacePoints = mobileBodyExtensionCanvasPx > 0
+    ? photoFacePoints.map(([x, y], index) => [
+      index === 1 || index === 2 ? x + mobileBodyExtensionCanvasPx : x,
+      y,
+    ] as const)
+    : photoFacePoints;
+  const mobileArtworkScaleX = (photoArtworkFacePoints[1][0] - photoArtworkFacePoints[0][0]) / (cadArtworkEnd - cadArtworkStart);
+  const mobileArtworkTranslateX = photoArtworkFacePoints[0][0] - cadArtworkStart * mobileArtworkScaleX;
+  const mobilePhotoArtworkTransform = `matrix(${mobileArtworkScaleX} 0 0 ${artworkScaleY} ${mobileArtworkTranslateX} ${artworkTranslateY})`;
+  const mobileFaceTopLeft: [number, number] = [
+    photoArtworkFacePoints[0][0] + (photoArtworkFacePoints[0][0] - photoArtworkFacePoints[3][0]) * photoFaceExtensionRatio,
+    photoArtworkFacePoints[0][1] + (photoArtworkFacePoints[0][1] - photoArtworkFacePoints[3][1]) * photoFaceExtensionRatio,
+  ];
+  const mobileFaceTopRight: [number, number] = [
+    photoArtworkFacePoints[1][0] + (photoArtworkFacePoints[1][0] - photoArtworkFacePoints[2][0]) * photoFaceExtensionRatio,
+    photoArtworkFacePoints[1][1] + (photoArtworkFacePoints[1][1] - photoArtworkFacePoints[2][1]) * photoFaceExtensionRatio,
+  ];
+  const mobileFaceBottomRight: [number, number] = [
+    photoArtworkFacePoints[2][0] + (photoArtworkFacePoints[2][0] - photoArtworkFacePoints[1][0]) * photoFaceBottomExtensionRatio,
+    photoArtworkFacePoints[2][1] + (photoArtworkFacePoints[2][1] - photoArtworkFacePoints[1][1]) * photoFaceBottomExtensionRatio,
+  ];
+  const mobileFaceBottomLeft: [number, number] = [
+    photoArtworkFacePoints[3][0] + (photoArtworkFacePoints[3][0] - photoArtworkFacePoints[0][0]) * photoFaceBottomExtensionRatio,
+    photoArtworkFacePoints[3][1] + (photoArtworkFacePoints[3][1] - photoArtworkFacePoints[0][1]) * photoFaceBottomExtensionRatio,
+  ];
+  const mobileExtendedPhotoArtworkClipPath = `M ${mobileFaceTopLeft[0]} ${mobileFaceTopLeft[1]} L ${mobileFaceTopRight[0]} ${mobileFaceTopRight[1]} L ${photoArtworkFacePoints[1][0]} ${photoArtworkFacePoints[1][1]} L ${mobileFaceBottomRight[0]} ${mobileFaceBottomRight[1]} L ${mobileFaceBottomLeft[0]} ${mobileFaceBottomLeft[1]} L ${photoArtworkFacePoints[3][0]} ${photoArtworkFacePoints[3][1]} Z`;
   // Mobile's rectangular face mask lets the matte darkening reach the clipped
   // Billboard free edge. Match that overlay boundary on desktop only; keep the
   // curved artwork clip and the sleeve contour unchanged.
@@ -1571,7 +1599,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     ? productionLogoBaseHeightMm * logoAspectRatio
     : productionTextWidthMm;
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
-  const premiumArtworkHeightInvalid = selectedArtworkHeightMm > 50.8;
+  const premiumArtworkHeightInvalid = selectedArtworkHeightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
     selectedArtworkWidthMm, selectedArtworkHeightMm, undefined,
@@ -1591,7 +1619,7 @@ const SnapInkSleeveCustomizer = forwardRef<
       : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
         : artworkStatus.violatesTopClearance ? "top edge clearance"
           : artworkStatus.violatesBottomClearance ? "bottom edge clearance"
-            : artworkStatus.topExtensionMm > MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "Studio top artwork boundary (2 in)"
+            : artworkStatus.topExtensionMm > MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "Studio top artwork boundary (0.5 in)"
               : "approved bottom production boundary";
   function artworkPointInCadCanvas(clientX: number, clientY: number) {
     const svg = svgRef.current;
@@ -1750,27 +1778,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     snapback360RearLogo,
     snapback360RearUpload,
   ]);
-  const mobilePhotoTextOffset = (() => {
-    if (!isMobilePreview || !ghostHat || fixedProductConfiguration || mobileStageWidth <= 0) {
-      return { x: 0, y: 0 };
-    }
-    const sleeveCssWidth = mobileStageWidth * sleevePreviewWidthPercent / 100;
-    const sleeveCssHeight = (mobileStageWidth / stageAspectRatio) * sleevePreviewHeightPercent / 100;
-    const cameraScale = sleeveCssWidth > 0 && sleeveCssHeight > 0 ? cameraZoom : 0;
-    const textScaleX = (sleeveCssWidth / sleeveRenderViewW) * artworkScaleX * cameraScale;
-    const textScaleY = (sleeveCssHeight / sleeveSvgHeight) * artworkScaleY * cameraScale;
-    if (textScaleX <= 0 || textScaleY <= 0) return { x: 0, y: 0 };
-    const rotation = stageComposition.rotationDeg * Math.PI / 180;
-    const cos = Math.cos(rotation);
-    const sin = Math.sin(rotation);
-    const offsetX = MOBILE_PHOTO_TEXT_NUDGE_X_PX;
-    const offsetY = MOBILE_PHOTO_TEXT_NUDGE_Y_PX;
-    return {
-      x: (cos * offsetX + sin * offsetY) / textScaleX,
-      y: (-sin * offsetX + cos * offsetY) / textScaleY,
-    };
-  })();
-
   function centerCurrentArtwork() {
     setAlign("center");
     setPosX(artworkCenterCanvasPercent);
@@ -2925,7 +2932,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   }
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
-    if (publishArtworkTier === "premium" && premiumArtworkHeightInvalid) { setPublishProductStatus("Premium Extended Artwork must be 50.8 mm (2 in) or less in total height."); return; }
+    if (publishArtworkTier === "premium" && premiumArtworkHeightInvalid) { setPublishProductStatus(`Premium Extended Artwork must be ${MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in) or less in total height.`); return; }
     if (publishArtworkTier==="premium" && (!approveExtendedArtwork || artworkInvalid)) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval and must remain inside the permitted boundaries."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     if(!publishCategoryId){setPublishProductStatus("Choose a product category before publishing.");setPublishingProduct(false);return;}
@@ -3009,9 +3016,6 @@ const SnapInkSleeveCustomizer = forwardRef<
     // never contain the presentation photo. Only the separate PNG preview has
     // the product image composited beneath the artwork.
     const artworkSvgNode = previewSvg.cloneNode(true) as SVGSVGElement;
-    artworkSvgNode.querySelectorAll('[data-mobile-photographic-text-offset="true"]').forEach((node) => {
-      node.removeAttribute("transform");
-    });
     artworkSvgNode.querySelectorAll('[data-product-image="true"]').forEach((node) => node.remove());
     const artworkOverlay = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-overlay="true"]');
     const artworkClip = artworkSvgNode.querySelector<SVGGElement>('[data-artwork-clip="true"]');
@@ -3578,7 +3582,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         <Range label="Text inset" min={0} max={12} step={0.5} value={safeMargin} setValue={setSafeMargin} suffix="%" />
         {logoDataUrl && <>
           <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" showValue={false} />
-          <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>
+          <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
           {extendedArtworkNotice("toolbar")}
           <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" showValue={false} />
@@ -3804,7 +3808,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             <path d={`${brandingSurfacePath(variant, renderGeometrySize, viewW, viewH, MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm, MAX_BOTTOM_ARTWORK_EXTENSION_MM + artworkStrokeExtensionMm)} ${grooveCutoutPath}`} fillRule="evenodd" clipRule="evenodd" />
           </clipPath>
           <clipPath id={`${surfaceClipId}-printable-photo`} clipPathUnits="userSpaceOnUse">
-            <path d={extendedPhotoArtworkClipPath} />
+            <path d={mobileBodyExtensionCanvasPx > 0 ? mobileExtendedPhotoArtworkClipPath : extendedPhotoArtworkClipPath} />
           </clipPath>
           {billboardPhotoRightContourClipPath && <clipPath id={`${surfaceClipId}-billboard-photo-contour`} clipPathUnits="userSpaceOnUse">
             <path d={billboardPhotoRightContourClipPath} />
@@ -3863,7 +3867,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         </svg>
 
         <g clipPath={`url(#${surfaceClipId}-printable-photo)`} data-artwork-clip="true">
-        <g transform={photoArtworkTransform} data-artwork-overlay="true">
+        <g transform={mobileBodyExtensionCanvasPx > 0 ? mobilePhotoArtworkTransform : photoArtworkTransform} data-artwork-overlay="true">
           <g transform={`translate(0 ${logoDataUrl ? logoCenterCanvasY : textCenterCanvasY}) scale(1 ${artworkHeightScale / 100}) translate(0 ${-(logoDataUrl ? logoCenterCanvasY : textCenterCanvasY)})`} data-artwork-height-scale={artworkHeightScale}>
           <defs><path id={pathId} d={arcPath} /></defs>
         {logoDataUrl && !logoNeedsRemoval && (
@@ -3982,11 +3986,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               data-emboss-extrusion-step={layer}
               aria-hidden="true"
             >
-              <g transform={isMobilePreview && ghostHat && !fixedProductConfiguration
-                ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
-                : undefined}>
-                {renderStudioText()}
-              </g>
+              {renderStudioText()}
             </g>
           );
         })}
@@ -3996,23 +3996,12 @@ const SnapInkSleeveCustomizer = forwardRef<
           data-artwork-stroke-layer="true"
           aria-hidden="true"
         >
-          <g transform={isMobilePreview && ghostHat && !fixedProductConfiguration
-            ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
-            : undefined}>
-            {renderStudioText()}
-          </g>
+          {renderStudioText()}
         </g>}
 
         {Boolean(text) && (
           <g filter={styleMode === "emboss" ? `url(#${embossFaceHighlightId})` : undefined}>
-            <g
-              transform={isMobilePreview && ghostHat && !fixedProductConfiguration
-                ? `translate(${mobilePhotoTextOffset.x} ${mobilePhotoTextOffset.y})`
-                : undefined}
-              data-mobile-photographic-text-offset={isMobilePreview && ghostHat && !fixedProductConfiguration ? "true" : undefined}
-            >
-              {renderStudioText()}
-            </g>
+            {renderStudioText()}
           </g>
         )}
           </g>
@@ -4306,7 +4295,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
               {(logoDataUrl || text.trim()) && artworkStrokeControls("mobile")}
-              {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
+              {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
               {extendedArtworkNotice("mobile")}
 
@@ -4608,7 +4597,7 @@ const SnapInkSleeveCustomizer = forwardRef<
             />}
               {(logoDataUrl || text.trim()) && <Range label="Artwork Height" min={25} max={200} step={1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />}
               {(logoDataUrl || text.trim()) && artworkStrokeControls("desktop")}
-            {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 2 in); right moves it down (up to 0.5 in).</p>}
+            {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
             {extendedArtworkNotice("desktop")}
 
@@ -4755,7 +4744,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <p className="text-sm text-neutral-300">Sleeve Style: {variant === "standard" ? "Standard" : "Billboard"} · Sleeve Color: {backgroundColor}</p>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={publishArtworkTier==="premium"} onChange={(event)=>{setPublishArtworkTier(event.target.checked?"premium":"standard");setApproveExtendedArtwork(false);}} /><span>Premium Extended Artwork</span></label>
           <p className="text-xs text-neutral-400">{publishArtworkTier==="premium" ? "Premium design prices: sizes 0–2 $24.99 | sizes 3–5 $29.99" : "Standard pricing uses the current Shop schedule."}</p>
-          {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p>{premiumArtworkHeightInvalid&&<p role="alert">Total artwork height is {selectedArtworkHeightMm.toFixed(2)} mm. Premium artwork must be 50.8 mm (2 in) or less.</p>}<label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
+          {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p>{premiumArtworkHeightInvalid&&<p role="alert">Total artwork height is {selectedArtworkHeightMm.toFixed(2)} mm. Premium artwork must be {MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in) or less.</p>}<label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||(publishArtworkTier==="premium"&&(!approveExtendedArtwork||artworkInvalid||premiumArtworkHeightInvalid))} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
