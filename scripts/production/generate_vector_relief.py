@@ -232,6 +232,7 @@ def derive_profile(variant: str, size: int, sleeve_step: Path, billboard_groove_
         "branding_center_x_mm": ((groove_right_x - BRANDING_GROOVE_WIDTH_MM / 2) + face_max_x) / 2,
         "face_bounds_mm": [face_min_x, face_max_x, face_bounds.ymin, face_bounds.ymax],
         "usable_bounds_mm": list(usable_bounds), "relief_mm": 0.8,
+        "branding_wall_height_mm": 0.85,
         "artwork_extruder": 2, "support_extruder": 3,
         "calibration": str(sleeve_step),
     }
@@ -246,7 +247,128 @@ def _position_artwork(geom, raw_bounds, center_x, center_y, scale):
     return placed, x0, y0, width, height
 
 
-def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: float, logo_y: float, logo_scale: float, sleeve_step: Path, support_step: Path, artwork_center_x_mm: float | None = None) -> dict:
+def polygon_parts(geometry):
+    """Return only non-empty polygonal members of a Shapely geometry."""
+    if geometry.is_empty:
+        return []
+    if geometry.geom_type == "Polygon":
+        return [geometry]
+    if hasattr(geometry, "geoms"):
+        return [part for child in geometry.geoms for part in polygon_parts(child)]
+    return []
+
+
+def make_extruded_region(geometry, z0: float, z1: float):
+    """Convert a 2D region into valid solids, retaining counters and islands."""
+    if not math.isfinite(z0) or not math.isfinite(z1) or z1 <= z0:
+        fail("Artwork/support extrusion bounds are invalid.")
+    solids = []
+    for polygon in polygon_parts(geometry):
+        outer = cq.Wire.makePolygon([cq.Vector(x, y, z0) for x, y in polygon.exterior.coords[:-1]], close=True)
+        holes = [cq.Wire.makePolygon([cq.Vector(x, y, z0) for x, y in ring.coords[:-1]], close=True) for ring in polygon.interiors]
+        solids.append(cq.Solid.extrudeLinear(outer, holes, cq.Vector(0, 0, z1 - z0)))
+    return solids
+
+
+def integrate_contour_into_branding_wall(sleeve, artwork_xy, face_xy, base_z: float, contour_width: float, wall_height: float, groove_right_x: float | None = None):
+    """Fuse an explicit contour into the sleeve branding face at its face Z."""
+    if not math.isfinite(contour_width) or contour_width <= 0:
+        fail("Contour width must be positive and finite.")
+    # Studio's SVG filter dilates the artwork alpha by this full radius in mm;
+    # preserve that exact outward extension rather than halving it.
+    expanded = artwork_xy.buffer(contour_width, quad_segs=16, join_style="round")
+    if groove_right_x is not None and expanded.bounds[0] < groove_right_x - 1e-5:
+        fail("The Studio contour reaches into the branding groove; exact artwork position/scale was preserved and export was stopped.")
+    ring = expanded.difference(artwork_xy)
+    contour_solid = cq.Compound.makeCompound(make_extruded_region(expanded, base_z, base_z + wall_height))
+    integrated = sleeve.fuse(contour_solid).clean()
+    if not integrated.isValid() or len(integrated.Solids()) != 1:
+        fail("The requested contour could not be integrated into one valid sleeve branding wall.")
+    outside_face = detect_overhang_regions(expanded, face_xy)
+    return integrated, ring, outside_face, expanded
+
+
+def detect_overhang_regions(artwork_xy, branding_face):
+    """Return only contour area outside the actual CAD branding-face footprint."""
+    overhang = artwork_xy.difference(branding_face).buffer(0)
+    if not overhang.is_valid:
+        fail("Contour overhang detection produced invalid planar geometry.")
+    return overhang
+
+
+def geometry_intersection_volume(shape_a, shape_b) -> float:
+    """Volume intersection helper shared by assembly and clearance checks."""
+    return float(shape_a.intersect(shape_b).Volume())
+
+
+def validate_cavity_clearance(sleeve_body, support, maximum_intersection_mm3: float = 0.001):
+    """Ensure removable fill/support stays outside functional sleeve walls."""
+    overlap = geometry_intersection_volume(sleeve_body, support)
+    if overlap > maximum_intersection_mm3:
+        fail(f"Removable cavity/contour support penetrates sleeve walls by {overlap:.4f} mm³.")
+    return {"bodySupportIntersectionMm3": overlap,
+            "minimumBodyToSupportDistanceMm": float(sleeve_body.distance(support)),
+            "passed": True}
+
+
+def generate_contour_cavity_fill(existing_support, contour_overhang_xy, sleeve_body, fill_top_z: float, wall_xy):
+    """Extend the existing approved cavity fill to exposed contour overhangs."""
+    support_plan = contour_overhang_xy.difference(wall_xy)
+    if support_plan.is_empty or support_plan.area <= 1e-8:
+        if existing_support.intersect(sleeve_body).Volume() > 0.001:
+            fail("The approved cavity fill intersects the sleeve body.")
+        return existing_support, cq.Compound.makeCompound([]), cq.Compound.makeCompound([])
+    raw_support = cq.Compound.makeCompound(make_extruded_region(support_plan, 0.0, fill_top_z))
+    # The 2D projection is only a candidate envelope: remove all volume inside
+    # the sleeve, then merge with the existing removable cavity-fill component.
+    # Trim against both permanent sleeve geometry and the existing cavity fill
+    # before fusing into the single removable support part.
+    trimmed = raw_support.cut(sleeve_body).cut(existing_support).clean()
+    combined = existing_support.fuse(trimmed).clean()
+    if not combined.isValid() or not combined.Solids():
+        fail("Contour support/cavity-fill geometry is invalid after trimming.")
+    validate_cavity_clearance(sleeve_body, combined)
+    return combined, raw_support, trimmed
+
+
+def validate_artwork_assembly(sleeve, support, artwork, baseline_sleeve, baseline_support, contour_mode: bool):
+    """Reject invalid geometry, precision-feature collisions, and altered snap CAD."""
+    for label, shape in (("sleeve", sleeve), ("support", support), ("artwork", artwork)):
+        if not shape.isValid() or not shape.Solids():
+            fail(f"Generated {label} mesh source is not valid solid geometry.")
+    cavity_clearance = validate_cavity_clearance(sleeve, support)
+    if baseline_sleeve.BoundingBox().zmin != sleeve.BoundingBox().zmin:
+        fail("The sleeve build-plate datum changed during artwork generation.")
+    # The approved STEP source remains the snap/cavity authority. This guard
+    # ensures the production body is not scaled or replaced by another CAD.
+    removed_approved_volume = baseline_sleeve.cut(sleeve).Volume()
+    if removed_approved_volume > 0.001:
+        fail("Artwork generation removed material from the approved sleeve, including snap-fit geometry.")
+    if abs(baseline_sleeve.Volume() - sleeve.Volume()) > max(0.01, sleeve.Volume() * 1e-7) and not contour_mode:
+        fail("Standard artwork mode changed the approved sleeve solid.")
+    removed_cavity_fill = baseline_support.cut(support).Volume()
+    if removed_cavity_fill > 0.001:
+        fail("Artwork generation removed material from the approved removable cavity fill.")
+    artwork_overlap = artwork.intersect(sleeve).Volume()
+    if artwork_overlap > 0.001:
+        fail(f"Raised artwork overlaps the sleeve ({artwork_overlap:.4f} mm³).")
+    if not contour_mode and abs(baseline_support.Volume() - support.Volume()) > max(0.01, support.Volume() * 1e-7):
+        fail("Standard artwork mode changed the approved removable support geometry.")
+    return {"sleeveSupportIntersectionMm3": cavity_clearance["bodySupportIntersectionMm3"],
+            "minimumBodyToSupportDistanceMm": cavity_clearance["minimumBodyToSupportDistanceMm"],
+            "artworkSleeveIntersectionMm3": artwork_overlap,
+            "approvedSleeveRemovedVolumeMm3": removed_approved_volume,
+            "approvedCavityFillRemovedVolumeMm3": removed_cavity_fill,
+            "snapFitSourceUnchanged": removed_approved_volume <= 0.001, "valid": True}
+
+
+def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: float, logo_y: float, logo_scale: float, sleeve_step: Path, support_step: Path, artwork_center_x_mm: float | None = None, artwork_center_y_mm: float | None = None, artwork_mode: str = "standard", contour_width_mm: float | None = None, generated_dir: Path | None = None, contour_color: str | None = None, sleeve_color: str = "#000000") -> dict:
+    if artwork_mode not in ("standard", "contour"):
+        fail("Artwork mode must be standard or explicitly requested contour.")
+    if artwork_mode == "contour" and (contour_width_mm is None or not math.isfinite(contour_width_mm) or not 0.25 <= contour_width_mm <= 5.0):
+        fail("Contour mode requires an explicit width from 0.25 to 5 mm.")
+    if artwork_mode == "contour" and (not contour_color or not re.fullmatch(r"#[0-9A-Fa-f]{6}", contour_color) or contour_color.lower() != sleeve_color.lower()):
+        fail("The integrated contour inherits sleeve-body material/color; Studio contour color must match the selected sleeve color to avoid a misassigned 3MF.")
     polygons, _, _, artwork_color = parse_svg(svg)
     geom = polygons[0]
     for p in polygons[1:]:
@@ -266,6 +388,10 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
     if artwork_center_x_mm is not None and abs(center_x_from_percent - artwork_center_x_mm) > 0.02:
         fail("Studio artwork X percentage does not match its CAD-coordinate position. Reopen the design in current Studio before production.")
     center_y = uy1 - (logo_y / 100) * (uy1 - uy0)
+    if artwork_center_y_mm is not None:
+        if not math.isfinite(artwork_center_y_mm) or abs(center_y - artwork_center_y_mm) > 0.02:
+            fail("Studio artwork Y percentage does not match its CAD-coordinate position. Reopen the design in current Studio before production.")
+        center_y = artwork_center_y_mm
     max_scale = min((ux1 - ux0) / raw_w, (uy1 - uy0) / raw_h)
     neutral_center_y = (uy0 + uy1) / 2
     low, high = 0.0, max_scale
@@ -290,11 +416,15 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
     clearance = float(placed.boundary.distance(PROFILE["branding_face"].boundary))
     if clearance < 1.0 - 1e-3:
         fail(f"Artwork clearance is below 1 mm ({clearance:.3f} mm).")
+    # In contour mode the logo rests on the raised integrated contour face,
+    # matching the corrected NY build. Its XY placement/scale remain Studio's.
+    contour_wall_height = float(PROFILE.get("branding_wall_height_mm", 0.85))
+    artwork_base_z = PROFILE["base_z_mm"] + (contour_wall_height if artwork_mode == "contour" else 0.0)
     # Place the 2D closed paths in the calibrated face coordinate system.
     solids = []
     for poly in polygons:
         def wire(coords):
-            return cq.Wire.makePolygon([cq.Vector(x0 + (x - minx) * scale, y0 + (maxy - y) * scale, PROFILE["base_z_mm"]) for x, y in coords], close=True)
+            return cq.Wire.makePolygon([cq.Vector(x0 + (x - minx) * scale, y0 + (maxy - y) * scale, artwork_base_z) for x, y in coords], close=True)
         outer = wire(list(poly.exterior.coords)[:-1])
         holes = [wire(list(ring.coords)[:-1]) for ring in poly.interiors]
         face = cq.Face.makeFromWires(outer, holes)
@@ -304,6 +434,8 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
     if not shape.isValid() or len(shape.Solids()) != len(solids):
         fail("Raised artwork geometry did not pass the CAD solid validity check.")
     cad_clearance = "not_checked"
+    assembly_validation = None
+    contour_files = None
     if sleeve_step is not None or support_step is not None:
         if sleeve_step is None or support_step is None or not sleeve_step.is_file() or not support_step.is_file():
             fail("Both matching approved CAD STEP references are required for the clearance check.")
@@ -314,10 +446,39 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
         if body_overlap > 0.001 or support_overlap > 0.001:
             fail(f"Artwork intersects approved CAD (body={body_overlap:.4f} mm³, support={support_overlap:.4f} mm³). Manual review required.")
         cad_clearance = {"bodyIntersectionMm3": body_overlap, "plaSupportIntersectionMm3": support_overlap, "passed": True}
+        final_sleeve, final_support = sleeve_shape, support_shape
+        if artwork_mode == "contour":
+            final_sleeve, _ring, overhang_xy, _expanded = integrate_contour_into_branding_wall(
+                sleeve_shape, placed, PROFILE["branding_face"], PROFILE["base_z_mm"], float(contour_width_mm), contour_wall_height, PROFILE["groove_right_x_mm"])
+            final_support, raw_support, trimmed_support = generate_contour_cavity_fill(
+                support_shape, overhang_xy, final_sleeve, PROFILE["base_z_mm"], PROFILE["branding_face"])
+            if final_sleeve.intersect(sleeve_shape).Volume() < sleeve_shape.Volume() - 0.01:
+                fail("Contour integration removed approved sleeve or snap-fit geometry.")
+            if generated_dir is None:
+                fail("Contour mode requires an isolated generated-output directory.")
+            generated_dir.mkdir(parents=True, exist_ok=True)
+            body_path = generated_dir / "contour-integrated-sleeve.stl"
+            support_path = generated_dir / "contour-and-cavity-removable-support.stl"
+            cq.exporters.export(final_sleeve, str(body_path), exportType="STL", tolerance=0.02, angularTolerance=0.1)
+            cq.exporters.export(final_support, str(support_path), exportType="STL", tolerance=0.02, angularTolerance=0.1)
+            contour_files = {"body": body_path, "support": support_path}
+            assembly_validation = {"contourWidthMm": float(contour_width_mm),
+                "contourIntegratedIntoSleeve": True,
+                "contourZBoundsMm": [PROFILE["base_z_mm"], PROFILE["base_z_mm"] + contour_wall_height],
+                "supportRawVolumeMm3": raw_support.Volume(), "supportTrimmedVolumeMm3": trimmed_support.Volume(),
+                "supportSleeveIntersectionMm3": final_sleeve.intersect(final_support).Volume(),
+                "cavityFillRetained": True, "contourSupportSeparatedFromPermanentBody": True,
+                "contourSupportComponents": len(trimmed_support.Solids())}
+        common_validation = validate_artwork_assembly(final_sleeve, final_support, shape,
+            sleeve_shape, support_shape, artwork_mode == "contour")
+        if assembly_validation:
+            assembly_validation.update(common_validation)
+        else:
+            assembly_validation = common_validation
     cq.exporters.export(shape, str(stl), exportType="STL", tolerance=0.02, angularTolerance=0.1)
     # Geometry acceptance references the CAD face envelope used by the prior
     # Size 0 validation. This is a geometric check, not a physical print test.
-    return {"widthMm": width, "heightMm": height, "centerXMm": center_x, "centerYMm": center_y, "uniformScale": scale, "riseMm": PROFILE["relief_mm"], "artworkColor": artwork_color, "cadSolidValid": True, "boundaryValid": True, "grooveValleyXMm": PROFILE["groove_valley_x_mm"], "grooveRightEdgeMm": PROFILE["groove_right_x_mm"], "grooveDatumSource": PROFILE["groove_source"], "brandingFaceBoundsMm": PROFILE["face_bounds_mm"], "usableBrandingBoundsMm": PROFILE["usable_bounds_mm"], "minimumBrandingClearanceMm": clearance, "approvedCadClearance": cad_clearance}
+    return {"widthMm": width, "heightMm": height, "centerXMm": center_x, "centerYMm": center_y, "studioArtworkCenterXMm": artwork_center_x_mm, "studioArtworkCenterYMm": artwork_center_y_mm, "studioLogoXPercent": logo_x, "studioLogoYPercent": logo_y, "studioLogoScalePercent": logo_scale, "uniformScale": scale, "riseMm": PROFILE["relief_mm"], "artworkBaseZMm": artwork_base_z, "artworkColor": artwork_color, "cadSolidValid": True, "boundaryValid": True, "grooveValleyXMm": PROFILE["groove_valley_x_mm"], "grooveRightEdgeMm": PROFILE["groove_right_x_mm"], "grooveDatumSource": PROFILE["groove_source"], "brandingFaceBoundsMm": PROFILE["face_bounds_mm"], "usableBrandingBoundsMm": PROFILE["usable_bounds_mm"], "minimumBrandingClearanceMm": clearance, "approvedCadClearance": cad_clearance, "artworkMode": artwork_mode, "studioContourSettings": {"enabled": artwork_mode == "contour", "outwardDilationRadiusMm": contour_width_mm, "color": contour_color}, "assemblyValidation": assembly_validation, "contourFiles": {key: str(value) for key, value in contour_files.items()} if contour_files else None}
 
 
 def read_binary_stl(path: Path):
@@ -342,10 +503,66 @@ def read_binary_stl(path: Path):
         faces.append(face)
     if not vertices or any(not all(math.isfinite(c) for c in v) for v in vertices):
         fail("Generated mesh contains non-finite coordinates.")
+    validate_closed_triangle_mesh(vertices, faces, path.name)
     return vertices, faces
 
 
-def package(baseline: Path, output: Path, vertices, faces, title: str, sleeve_color: str, artwork_color: str) -> dict:
+def validate_closed_triangle_mesh(vertices, faces, label: str):
+    """Require a closed, two-manifold triangle shell in exported STL meshes."""
+    edge_counts = {}
+    for a, b, c in faces:
+        if len({a, b, c}) != 3:
+            fail(f"Generated {label} mesh contains a degenerate triangle.")
+        for edge in ((a, b), (b, c), (c, a)):
+            key = (min(edge), max(edge))
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+    bad = sum(count != 2 for count in edge_counts.values())
+    if not faces or bad:
+        fail(f"Generated {label} mesh is not a closed two-manifold ({bad} open/nonmanifold edges).")
+    return {"vertices": len(vertices), "triangles": len(faces), "closedTwoManifold": True}
+
+
+def append_binary_stl_mesh(obj, path: Path):
+    """Append a generated model-local binary STL mesh to a 3MF object."""
+    vertices, faces = read_binary_stl(path)
+    mesh = ET.SubElement(obj, f"{{{CORE}}}mesh")
+    vertex_node = ET.SubElement(mesh, f"{{{CORE}}}vertices")
+    for x, y, z in vertices:
+        ET.SubElement(vertex_node, f"{{{CORE}}}vertex", {"x": f"{x:.7f}", "y": f"{y:.7f}", "z": f"{z:.7f}"})
+    triangle_node = ET.SubElement(mesh, f"{{{CORE}}}triangles")
+    for a, b, c in faces:
+        ET.SubElement(triangle_node, f"{{{CORE}}}triangle", {"v1": str(a), "v2": str(b), "v3": str(c)})
+    return len(vertices), len(faces)
+
+
+def validate_3mf_mesh_object(obj, label: str) -> dict:
+    mesh = obj.find("m:mesh", NS)
+    vertices_node = mesh.find("m:vertices", NS) if mesh is not None else None
+    triangles_node = mesh.find("m:triangles", NS) if mesh is not None else None
+    vertices = vertices_node.findall("m:vertex", NS) if vertices_node is not None else []
+    triangles = triangles_node.findall("m:triangle", NS) if triangles_node is not None else []
+    if len(vertices) < 4 or len(triangles) < 4:
+        fail(f"Generated 3MF {label} mesh is empty or incomplete.")
+    coords = []
+    for vertex in vertices:
+        point = tuple(float(vertex.get(axis, "nan")) for axis in ("x", "y", "z"))
+        if not all(math.isfinite(value) for value in point):
+            fail(f"Generated 3MF {label} mesh contains non-finite coordinates.")
+        coords.append(point)
+    for triangle in triangles:
+        indices = tuple(int(triangle.get(key, "-1")) for key in ("v1", "v2", "v3"))
+        if len(set(indices)) != 3 or any(index < 0 or index >= len(coords) for index in indices):
+            fail(f"Generated 3MF {label} mesh contains invalid triangle indices.")
+        a, b, c = (coords[index] for index in indices)
+        cross = ((b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]),
+                 (b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]),
+                 (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))
+        if sum(value*value for value in cross) <= 1e-18:
+            fail(f"Generated 3MF {label} mesh contains a degenerate triangle.")
+    return {"vertices": len(vertices), "triangles": len(triangles)}
+
+
+def package(baseline: Path, output: Path, vertices, faces, title: str, sleeve_color: str, artwork_color: str, contour_body_stl: Path | None = None, contour_support_stl: Path | None = None) -> dict:
     if output.exists():
         fail(f"Refusing to overwrite customer output: {output}")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -396,6 +613,19 @@ def package(baseline: Path, output: Path, vertices, faces, title: str, sleeve_co
     if resources is None:
         fail("Approved baseline child model has no resources collection.")
     existing_objects = {obj.get("id"): ET.tostring(obj) for obj in resources.findall("m:object", NS)}
+    modified_object_ids = set()
+    for object_id, mesh_path in (("1", contour_body_stl), ("2", contour_support_stl)):
+        if mesh_path is None:
+            continue
+        target_obj = resources.find(f"m:object[@id='{object_id}']", NS)
+        if target_obj is None or target_obj.find("m:mesh", NS) is None:
+            fail(f"Contour assembly cannot locate baseline component {object_id} mesh.")
+        mesh = target_obj.find("m:mesh", NS)
+        target_obj.remove(mesh)
+        temp_obj = ET.Element(f"{{{CORE}}}object", {"id": object_id, "type": "model"})
+        append_binary_stl_mesh(temp_obj, mesh_path)
+        target_obj.append(temp_obj.find("m:mesh", NS))
+        modified_object_ids.add(object_id)
     numeric_ids = [int(object_id) for object_id in existing_objects if object_id and object_id.isdigit()]
     artwork_object_id = str(max(numeric_ids, default=0) + 1)
     obj = ET.SubElement(resources, f"{{{CORE}}}object", {"id": artwork_object_id, "type": "model", f"{{{PROD}}}UUID": str(uuid4())})
@@ -429,12 +659,19 @@ def package(baseline: Path, output: Path, vertices, faces, title: str, sleeve_co
     if len(slots) < PROFILE["support_extruder"] or len(types) < PROFILE["support_extruder"]: fail("Baseline is missing an assigned artwork or support filament slot.")
     artwork_material = slots[PROFILE["artwork_extruder"] - 1]
     support_material = slots[PROFILE["support_extruder"] - 1]
+    if len(types) < 1 or types[0] != "TPU": fail("Baseline sleeve is no longer assigned to a TPU material slot.")
     if artwork_material != "SnapInk - EONO3D TPU 95A" or types[PROFILE["artwork_extruder"] - 1] != "TPU": fail("Approved artwork slot is no longer the existing SnapInk TPU profile.")
     if support_material != "Snapmaker PLA Basic @U1" or types[PROFILE["support_extruder"] - 1] != "PLA": fail("Approved support slot is no longer the existing PLA profile.")
     settings_parts = settings.findall(f"object[@id='{assembly_id}']/part")
     support_part = next((part for part in settings_parts if part.get("id") == "2"), None)
     support_ext = next((m.get("value") for m in support_part.findall("metadata") if m.get("key") == "extruder"), None) if support_part is not None else None
     if support_ext != str(PROFILE["support_extruder"]): fail("Approved PLA support part is not assigned to the expected extruder.")
+    sleeve_part = next((part for part in settings_parts if part.get("id") == "1"), None)
+    sleeve_ext = next((m.get("value") for m in sleeve_part.findall("metadata") if m.get("key") == "extruder"), None) if sleeve_part is not None else None
+    if sleeve_ext != "0": fail("Approved TPU sleeve part is not assigned to the validated first material slot.")
+    artwork_part = next((part for part in settings_parts if part.get("id") == artwork_object_id), None)
+    artwork_ext = next((m.get("value") for m in artwork_part.findall("metadata") if m.get("key") == "extruder"), None) if artwork_part is not None else None
+    if artwork_ext != str(PROFILE["artwork_extruder"]): fail("Raised artwork is not assigned to the validated TPU extruder.")
     project["title"] = title
     if not re.fullmatch(r"#[0-9A-Fa-f]{6}", sleeve_color): fail("Sleeve color must be a hex color.")
     project_colors = list(project.get("filament_colour", []))
@@ -461,12 +698,19 @@ def package(baseline: Path, output: Path, vertices, faces, title: str, sleeve_co
             for object_id, original_xml in existing_objects.items():
                 old_obj = original_child.find(f"m:resources/m:object[@id='{object_id}']", NS)
                 new_obj = new_child.find(f"m:resources/m:object[@id='{object_id}']", NS)
-                if new_obj is None or ET.tostring(new_obj) != original_xml: fail(f"Approved baseline part {object_id} changed.")
+                if new_obj is None or (object_id not in modified_object_ids and ET.tostring(new_obj) != original_xml): fail(f"Approved baseline part {object_id} changed unexpectedly.")
+            verified_meshes = {}
+            for object_id, label in (("1", "sleeve"), ("2", "removable support"), (artwork_object_id, "raised artwork")):
+                mesh_obj = new_child.find(f"m:resources/m:object[@id='{object_id}']", NS)
+                if mesh_obj is None: fail(f"Generated project is missing the {label} component mesh.")
+                verified_meshes[label] = validate_3mf_mesh_object(mesh_obj, label)
+            if modified_object_ids and modified_object_ids != {"1", "2"}:
+                fail("Contour mode must replace both the sleeve and removable support meshes as a matched assembly.")
         tmp.replace(output)
     except Exception:
         tmp.unlink(missing_ok=True)
         raise
-    return {"assemblyComponents": len(original_components) + 1, "baselineComponents": len(original_components), "artworkObjectId": artwork_object_id, "meshVertices": len(vertices), "meshTriangles": len(faces), "removedDanglingThumbnailRelationships": removed_thumbnail_relationships, "sleeveAndSupportUnchanged": True, "printerProfile": project["printer_settings_id"], "sleeveMaterialSlot": 1, "sleeveMaterial": project["filament_settings_id"][0], "artworkMaterialSlot": PROFILE["artwork_extruder"], "artworkMaterial": project["filament_settings_id"][PROFILE["artwork_extruder"] - 1], "supportMaterialSlot": PROFILE["support_extruder"], "supportMaterial": project["filament_settings_id"][PROFILE["support_extruder"] - 1], "outputSha256": sha256(output)}
+    return {"assemblyComponents": len(original_components) + 1, "baselineComponents": len(original_components), "artworkObjectId": artwork_object_id, "meshVertices": len(vertices), "meshTriangles": len(faces), "validatedMeshObjects": verified_meshes, "removedDanglingThumbnailRelationships": removed_thumbnail_relationships, "sleeveAndSupportUnchanged": not modified_object_ids, "approvedSleeveGeometryPreserved": True, "removableSupportSeparate": True, "contourGeometryIntegrated": bool(modified_object_ids), "printerProfile": project["printer_settings_id"], "sleeveMaterialSlot": 1, "sleeveMaterial": project["filament_settings_id"][0], "artworkMaterialSlot": PROFILE["artwork_extruder"], "artworkMaterial": project["filament_settings_id"][PROFILE["artwork_extruder"] - 1], "supportMaterialSlot": PROFILE["support_extruder"], "supportMaterial": project["filament_settings_id"][PROFILE["support_extruder"] - 1], "outputSha256": sha256(output)}
 
 
 def main() -> int:
@@ -480,7 +724,11 @@ def main() -> int:
     ap.add_argument("--logo-x", type=float, default=59.42)
     ap.add_argument("--logo-y", type=float, default=50.0)
     ap.add_argument("--artwork-center-x-mm", type=float, default=None, help="CAD-coordinate X emitted by the current Studio positioning system.")
+    ap.add_argument("--artwork-center-y-mm", type=float, default=None, help="CAD-coordinate Y emitted by the current Studio positioning system.")
     ap.add_argument("--logo-scale", type=float, default=100.0)
+    ap.add_argument("--artwork-mode", choices=("standard", "contour"), default="standard", help="Contour mode is opt-in; standard remains the default.")
+    ap.add_argument("--contour-width-mm", type=float, default=None, help="Explicit Studio stroke/contour width; required in contour mode.")
+    ap.add_argument("--contour-color", default=None, help="Explicit Studio contour color (must match sleeve color for an integrated wall).")
     ap.add_argument("--sleeve-color", default="#000000")
     ap.add_argument("--variant", default="billboard")
     ap.add_argument("--size", type=int, default=0)
@@ -500,13 +748,14 @@ def main() -> int:
     original = outdir / "artwork-original.svg"
     original.write_bytes(args.svg.read_bytes())
     stl = outdir / "customer-vector-relief.stl"
-    geom = build_relief(original, stl, args.target_width_mm, args.logo_x, args.logo_y, args.logo_scale, args.sleeve_step, args.support_step, args.artwork_center_x_mm)
+    geom = build_relief(original, stl, args.target_width_mm, args.logo_x, args.logo_y, args.logo_scale, args.sleeve_step, args.support_step, args.artwork_center_x_mm, args.artwork_center_y_mm, args.artwork_mode, args.contour_width_mm, outdir, args.contour_color, args.sleeve_color)
     geom["brandingCenterXMm"] = PROFILE["branding_center_x_mm"]
     geom["positioningVersion"] = "cad-flap-valley-to-right-edge-v1"
     vertices, faces = read_binary_stl(stl)
     title = f"SnapInk_{args.order_id}_{args.variant.title()}_Size_{args.size}_Custom"
     project = outdir / f"{title}.3mf"
-    package_info = package(args.baseline, project, vertices, faces, title, args.sleeve_color, geom["artworkColor"])
+    contour_files = geom.get("contourFiles") or {}
+    package_info = package(args.baseline, project, vertices, faces, title, args.sleeve_color, geom["artworkColor"], Path(contour_files["body"]) if contour_files else None, Path(contour_files["support"]) if contour_files else None)
     all_geometry_checks = geom["approvedCadClearance"] != "not_checked"
     report = {"jobId": args.order_id, "variant": args.variant, "size": args.size, "baselineSha256": sha256(args.baseline), "artworkSha256": sha256(original), "geometry": geom, "package": package_info, "validation": "approved CAD clearance, geometry, envelope, and package checks passed; no physical print validation" if all_geometry_checks else "envelope and package checks passed; approved CAD clearance not run; no physical print validation", "status": "requires_owner_review"}
     (outdir / "validation.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
