@@ -1,5 +1,12 @@
 # SnapInk artwork production rules
 
+## Billboard flap geometry
+
+- Every Billboard sleeve, Sizes 0–5 and future generated sizes, keeps the left flap extension straight from its left edge through the engraved ridge/groove. The main branding bow starts at the groove and continues to the right.
+- Generate the flap's outer strip with `scripts/production/billboard_flap_geometry.py`. Match its width at the groove to the main branding bow so the union is continuous. Apply the same boundary to a separate cavity support where that support follows the sleeve outline.
+- Do not change groove placement, snap/cavity geometry, side-wall thickness, sleeve length, artwork, or branding dimensions to implement this profile.
+- Keep revised CAD candidates and baseline backups separate. This geometric correction alone does not change validation or production-approval status.
+
 ## Artwork modes
 
 - **Standard is the default.** Unless the saved Studio design explicitly has `artworkStrokeEnabled: true`, generate only the calibrated raised artwork. Do not add a contour, extra cavity fill, or contour supports. Preserve the approved sleeve and existing removable cavity support meshes.
