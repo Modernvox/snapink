@@ -78,7 +78,6 @@
       { label: "How It Works", href: `${rootPrefix}#how` },
       { label: "Customization", href: `${rootPrefix}#customization` },
       { label: "Fit Guide", href: "/fit-guide.html", key: "/fit-guide.html" },
-      { label: "Design Studio", href: "/customize.html", key: "/customize.html" },
       { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
       { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
       { label: "Contact", href: "/contact.html", key: "/contact.html" },
@@ -108,7 +107,7 @@
       </header>
       <nav class="snapink-mobile-panel" id="snapink-mobile-panel" aria-label="Mobile navigation" aria-hidden="true" inert>
         ${linkMarkup}
-        <a class="snapink-mobile-panel__cta" href="${ctaHref}"${isStudio ? ' aria-current="page"' : ""}>Start Designing</a>
+        <a class="snapink-mobile-panel__cta" href="${ctaHref}"${isStudio ? ' aria-current="page"' : ""}>Design Your Sleeve</a>
       </nav>`;
 
     const routeClass = path.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
