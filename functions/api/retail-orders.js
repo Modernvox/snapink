@@ -3,13 +3,14 @@ import { digest, json, now, randomId } from "../_lib/orders.js";
 import { validDraft } from "../_lib/draft.js";
 import { createSnapInkEmailAttachment, EmailDeliveryError, enforcePublicFormRateLimit, sendSnapInkEmail } from "../_lib/snapink-email.js";
 import { cleanRetailCustomer, decodeRetailFiles, RetailOrderValidationError, safeOrderJson, sourceArtworkExtension } from "../_lib/retail-order-utils.js";
+import { artworkHeightExceedsMaximum } from "../_lib/artwork-limits.js";
 
 const MAX_JSON_BYTES = 40 * 1024 * 1024;
 const ADMIN_URL = "https://snapbacksleeves.com/admin.html";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
-function describeDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nExtension: ${Number(draft.artworkExtensionMm).toFixed(2)} mm\nArtwork: ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm\nHeight scale: ${draft.artworkHeightScale}%\nFinal design position: X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm ?? 0).toFixed(2)} mm` : ""); }
-function describeCustomerDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nProduction approval is required.` : ""); }
+function describeDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nExtension: ${Number(draft.artworkExtensionMm).toFixed(2)} mm\nArtwork: ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm\nHeight scale: ${draft.artworkHeightScale}%\nFinal design position: X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm ?? 0).toFixed(2)} mm` : "") + (draft.productionReviewRequired ? `\nMANUFACTURING REVIEW REQUIRED\nArtwork height ${Number(draft.artworkHeightMm).toFixed(2)} mm exceeds the 38.1 mm verified limit. Do not approve for production without review.` : ""); }
+function describeCustomerDesign(draft) { return `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}` + `\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended design price: ${usd(calculateRetailPricing(draft.size, 1, true).unitPriceCents)} each\nProduction approval is required.` : "") + (draft.productionReviewRequired ? `\nMANUFACTURING REVIEW REQUIRED\nArtwork height ${Number(draft.artworkHeightMm).toFixed(2)} mm exceeds the verified production specification. We may ask you to adjust it before production.` : ""); }
 async function notifyOrder(env, order, draft, emailPreview) {
   const summary = `Design review reference ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeDesign(draft)}\nQuantity: ${order.quantity}\n\nName: ${order.customerName}\nEmail: ${order.customerEmail}`;
   const customerSummary = `Design review reference ${order.orderNumber}\nSleeve: ${draft.variant} / Size ${draft.size}\n${describeCustomerDesign(draft)}\nQuantity: ${order.quantity}`;
@@ -51,6 +52,8 @@ export async function onRequestPost({ request, env }) {
     if (typeof data.idempotencyKey !== "string" || !/^[\w-]{16,80}$/.test(data.idempotencyKey)) return json({ error: "Refresh the page and submit your design again." }, 400);
     const draft = data.draft;
     if (!draft || !["standard", "billboard"].includes(draft.variant) || !Number.isInteger(draft.size) || draft.size < 0 || draft.size > 5 || !validDraft(draft)) return json({ error: "Choose a valid sleeve style and size, then review your design." }, 400);
+    const productionReviewRequired = artworkHeightExceedsMaximum(draft.artworkHeightMm ?? 0);
+    const submittedDraft = { ...draft, productionReviewRequired, ...(productionReviewRequired ? { productionReviewReason: "total_height_exceeds_38_1_mm" } : { productionReviewReason: undefined }) };
     const price = calculateRetailPricing(draft.size, quantity, Boolean(draft.extendedArtwork));
 
     const existing = await env.DB.prepare(`SELECT id,order_number AS orderNumber,status,quantity,variant,size,draft_json AS draftJson,unit_price_cents AS unitPriceCents,merchandise_subtotal_cents AS merchandiseSubtotalCents,
@@ -81,7 +84,7 @@ export async function onRequestPost({ request, env }) {
     const failedPut = puts.find((put) => put.status === "rejected");
     if (failedPut) throw failedPut.reason;
 
-    const draftJson = JSON.stringify({ ...draft, submittedAt: createdAt, shippingAddress: shipping, pricing: price, emailPreviewKey });
+    const draftJson = JSON.stringify({ ...submittedDraft, submittedAt: createdAt, shippingAddress: shipping, pricing: price, emailPreviewKey });
     const insert = env.DB.prepare(`INSERT INTO retail_orders
       (id,order_number,idempotency_key,customer_name,customer_email,customer_phone,shipping_address_json,quantity,variant,size,status,draft_json,
        artwork_key,artwork_sha256,preview_key,preview_sha256,source_artwork_key,source_artwork_sha256,unit_price_cents,merchandise_subtotal_cents,discount_cents,shipping_cents,total_before_tax_cents,currency,owner_email_status,customer_email_status,payment_email_status,payment_confirmation_status,created_at,updated_at)
@@ -90,7 +93,7 @@ export async function onRequestPost({ request, env }) {
         artworkKey,await digest(artwork.bytes),previewKey,await digest(preview.bytes),sourceArtworkKey,source ? await digest(source.bytes) : null,
         price.unitPriceCents,price.merchandiseSubtotalCents,price.discountCents,price.shippingCents,price.totalBeforeTaxCents,createdAt,createdAt);
     const event = env.DB.prepare("INSERT INTO retail_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)")
-      .bind(id,"customer","order_submitted",JSON.stringify({ quantity, variant: draft.variant, size: draft.size, totalBeforeTaxCents: price.totalBeforeTaxCents, extendedArtwork: Boolean(draft.extendedArtwork), artworkExtensionMm: draft.artworkExtensionMm ?? 0, manualProductionReviewRequired: Boolean(draft.extendedArtwork), pricingReviewRequired: Boolean(draft.extendedArtwork) }),createdAt);
+      .bind(id,"customer","order_submitted",JSON.stringify({ quantity, variant: draft.variant, size: draft.size, totalBeforeTaxCents: price.totalBeforeTaxCents, extendedArtwork: Boolean(draft.extendedArtwork), artworkExtensionMm: draft.artworkExtensionMm ?? 0, productionReviewRequired, productionReviewReason: submittedDraft.productionReviewReason || null, manualProductionReviewRequired: Boolean(draft.extendedArtwork)||productionReviewRequired, pricingReviewRequired: Boolean(draft.extendedArtwork) }),createdAt);
     try { await env.DB.batch([insert,event]); }
     catch (error) {
       const duplicate = await env.DB.prepare("SELECT id,order_number AS orderNumber,status,quantity,variant,size,draft_json AS draftJson,unit_price_cents AS unitPriceCents,merchandise_subtotal_cents AS merchandiseSubtotalCents,discount_cents AS discountCents,shipping_cents AS shippingCents,total_before_tax_cents AS totalBeforeTaxCents,owner_email_status AS ownerEmailStatus,customer_email_status AS customerEmailStatus FROM retail_orders WHERE idempotency_key=?").bind(data.idempotencyKey).first();
@@ -98,7 +101,7 @@ export async function onRequestPost({ request, env }) {
       throw error;
     }
     const order = { id, orderNumber, customerName: customer.name, customerEmail: customer.email, customerPhone: customer.phone, quantity };
-    const notifications = await notifyOrder(env, order, draft, emailPreview);
+    const notifications = await notifyOrder(env, order, submittedDraft, emailPreview);
     await env.DB.prepare("UPDATE retail_orders SET owner_email_status=?,customer_email_status=?,updated_at=? WHERE id=?")
       .bind(notifications.owner,notifications.customer,now(),id).run();
     uploaded=[];

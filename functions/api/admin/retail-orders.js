@@ -4,6 +4,7 @@ import { createSnapInkEmailAttachment, EmailDeliveryError, sendSnapInkEmail } fr
 import { safeOrderJson } from "../../_lib/retail-order-utils.js";
 import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
 import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-methods.js";
+import { artworkHeightExceedsMaximum } from "../../_lib/artwork-limits.js";
 
 const STATUSES = ["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT","PAID","IN_PRODUCTION","SHIPPED","COMPLETED"];
 const SITE = "https://snapbacksleeves.com";
@@ -21,11 +22,15 @@ async function designAttachments(env, order) {
   if (bytes.length > 3.4 * 1024 * 1024) throw new Error("The saved design email attachment is too large to send safely.");
   return [createSnapInkEmailAttachment(`SnapInk-${order.orderNumber}-design.png`, bytes, "image/png")];
 }
-const rowOrder = (row) => ({
-  ...row,
-  shippingAddress: safeOrderJson(row.shippingAddressJson),
-  draft: safeOrderJson(row.draftJson),
-});
+const rowOrder = (row) => {
+  const draft = safeOrderJson(row.draftJson);
+  const productionReviewRequired = Boolean(draft.productionReviewRequired || artworkHeightExceedsMaximum(draft.artworkHeightMm ?? 0));
+  return {
+    ...row,
+    shippingAddress: safeOrderJson(row.shippingAddressJson),
+    draft: { ...draft, productionReviewRequired, ...(productionReviewRequired ? { productionReviewReason: "total_height_exceeds_38_1_mm" } : {}) },
+  };
+};
 
 async function loadOrder(db, id) {
   return db.prepare(`SELECT id,order_number AS orderNumber,status,customer_name AS customerName,customer_email AS customerEmail,customer_phone AS customerPhone,
@@ -175,6 +180,8 @@ export async function onRequestPatch({request,env}) {
       if(!["PENDING_REVIEW","CHANGES_REQUESTED","APPROVED"].includes(order.status)) return json({error:`This order cannot be approved from ${order.status}.`},409);
       const draft=orderDraft(order);
       if(draft.extendedArtwork && body.extendedReviewApproved!==true) return json({error:"Extended artwork requires explicit administrator confirmation that production feasibility and final pricing were reviewed."},409);
+      const productionReviewRequired=Boolean(draft.productionReviewRequired||artworkHeightExceedsMaximum(draft.artworkHeightMm??0));
+      if(productionReviewRequired&&body.productionReviewApproved!==true)return json({error:"Artwork above the 38.1 mm production limit requires explicit manufacturing review before checkout can be approved."},409);
       const attempt=Number(order.paymentAttempts||0)+1;
       const session=await createCheckoutSession(env,order,attempt);
       const created=now();
@@ -187,7 +194,7 @@ export async function onRequestPatch({request,env}) {
         return json({error:"Order changed during approval. Refresh the retail order list and retry."},409);
       }
       await env.DB.prepare("INSERT INTO retail_order_events(order_id,actor,event,detail_json,created_at) VALUES(?,?,?,?,?)")
-        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity,Boolean(draft.extendedArtwork)).totalBeforeTaxCents,extendedArtworkReviewApproved:Boolean(draft.extendedArtwork),artworkExtensionMm:draft.artworkExtensionMm??0}),created).run();
+        .bind(order.id,"admin","approved_for_production",JSON.stringify({stripeSessionId:session.id,totalBeforeTaxCents:calculateRetailPricing(order.size,order.quantity,Boolean(draft.extendedArtwork)).totalBeforeTaxCents,extendedArtworkReviewApproved:Boolean(draft.extendedArtwork),productionReviewRequired,productionReviewApproved:productionReviewRequired,productionReviewReason:draft.productionReviewReason||null,artworkExtensionMm:draft.artworkExtensionMm??0}),created).run();
       order=await loadOrder(env.DB,body.id);
       const emailed=await sendPaymentLinkEmail(env,order);
       return json({ok:true,orderNumber:order.orderNumber,status:order.status,checkoutUrl:order.checkoutUrl,emailStatus:emailed.sent?"sent":"failed",warning:emailed.error||null});

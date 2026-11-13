@@ -237,6 +237,8 @@ export type SleeveDraft = {
   artworkStrokeEnabled?: boolean;
   artworkStrokeWidthMm?: number;
   artworkStrokeColor?: string;
+  productionReviewRequired?: boolean;
+  productionReviewReason?: string;
   snapback360ArtworkPlacements?: Snapback360DesignPlacements;
   snapback360MasterId?: string;
   snapback360UseSameRearArtwork?: boolean;
@@ -1605,6 +1607,8 @@ const SnapInkSleeveCustomizer = forwardRef<
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
   const artworkHeightInvalid = artworkHeightExceedsMaximum(selectedArtworkHeightMm);
   const premiumArtworkHeightInvalid = artworkHeightInvalid;
+  const productionReviewRequired = artworkHeightInvalid;
+  const productionReviewReason = artworkHeightInvalid ? "total_height_exceeds_38_1_mm" : undefined;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
     selectedArtworkWidthMm, selectedArtworkHeightMm, undefined,
@@ -1618,7 +1622,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // premium-priced just because the Studio placement range was expanded.
   const artworkRequiresPremiumPricing = artworkStatus.bottomExtensionMm > 0.001
     || (artworkStatus.topExtensionMm > 0.001 && artworkStatus.topExtensionMm <= MAX_TOP_ARTWORK_EXTENSION_MM + 0.001);
-  const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension || artworkHeightInvalid;
+  const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension;
   const artworkInvalidBoundary = artworkStatus.crossesLeftEdge ? "left edge clearance"
     : artworkStatus.crossesRightEdge ? "right edge clearance"
       : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
@@ -1734,6 +1738,8 @@ const SnapInkSleeveCustomizer = forwardRef<
       artworkExtensionMm,
       artworkTopExtensionMm: artworkStatus.topExtensionMm,
       artworkBottomExtensionMm: artworkStatus.bottomExtensionMm,
+      productionReviewRequired,
+      productionReviewReason,
       extendedArtwork: artworkRequiresPremiumPricing,
       hasCustomArtwork: Boolean(text.trim() || logoDataUrl),
       snapback360ArtworkPlacements,
@@ -1778,6 +1784,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     selectedArtworkWidthMm,
     selectedArtworkHeightMm,
     artworkExtensionMm,
+    productionReviewRequired,
+    productionReviewReason,
     snapback360ArtworkPlacements,
     snapback360MasterId,
     snapback360UseSameRearArtwork,
@@ -2939,6 +2947,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   async function handlePublishProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!generatedShopImages||publishingProduct)return;
     if (artworkInvalid) { setPublishProductStatus(`Artwork exceeds ${artworkInvalidBoundary}. Move or resize it before publishing.`); return; }
+    if (productionReviewRequired) { setPublishProductStatus("This artwork exceeds verified production limits and cannot be published as production-ready. Submit it for manufacturing review first."); return; }
     if (publishArtworkTier==="premium" && !approveExtendedArtwork) { setPublishProductStatus("Premium Extended Artwork needs explicit admin approval."); return; }
     setPublishingProduct(true);setPublishProductStatus("Publishing product…");
     if(!publishCategoryId){setPublishProductStatus("Choose a product category before publishing.");setPublishingProduct(false);return;}
@@ -3532,6 +3541,10 @@ const SnapInkSleeveCustomizer = forwardRef<
     );
   };
 
+  const oversizedArtworkReviewNotice = (idSuffix: string) => productionReviewRequired && (logoDataUrl || text.trim())
+    ? <p key={idSuffix} role="status" className="rounded-md border border-amber-500/60 bg-amber-950/50 p-2 text-xs text-amber-100">Production review required: this artwork is {selectedArtworkHeightMm.toFixed(2)} mm high; the verified production limit is {MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm. You can finish and submit this design. Manufacturing review may require adjustment before production; this preview is not production approval.</p>
+    : null;
+
   const previewToolbar = (instance: "mobile" | "desktop", basicOnly = false) => (
     <div className={`snapink-preview-toolbar${basicOnly ? " snapink-desktop-basic-toolbar" : ""}`} style={instance === "desktop" && !basicOnly ? {
       position: "static",
@@ -3588,6 +3601,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <Range label="Artwork vertical position" min={ARTWORK_VERTICAL_POSITION_MIN} max={ARTWORK_VERTICAL_POSITION_MAX} step={0.5} value={logoPosY} setValue={setLogoPosY} suffix="%" showValue={false} />
           <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>
           {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
+          {oversizedArtworkReviewNotice("toolbar")}
           {extendedArtworkNotice("toolbar")}
           <Range label="Logo size" min={0} max={200} step={1} value={logoScale} setValue={setLogoScale} suffix="%" showValue={false} />
           <Range label="Artwork Height" min={25} max={artworkHeightScaleMax} step={0.1} value={artworkHeightScale} setValue={setArtworkHeightScale} suffix="%" showValue={false} />
@@ -4301,6 +4315,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && artworkStrokeControls("mobile")}
               {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>}
               {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
+              {oversizedArtworkReviewNotice("mobile")}
               {extendedArtworkNotice("mobile")}
 
               <div className="grid grid-cols-2 gap-3">
@@ -4603,6 +4618,7 @@ const SnapInkSleeveCustomizer = forwardRef<
               {(logoDataUrl || text.trim()) && artworkStrokeControls("desktop")}
             {(logoDataUrl || text.trim()) && <p className="text-xs text-neutral-500">Left moves artwork up (up to 0.5 in); right moves it down (up to 0.5 in).</p>}
             {logoOutsidePrintableArea && <p role="alert" className="text-xs text-red-300">Artwork exceeds {artworkInvalidBoundary}. Move or resize it before submitting.</p>}
+            {oversizedArtworkReviewNotice("desktop")}
             {extendedArtworkNotice("desktop")}
 
             <div className="grid grid-cols-2 gap-3">
@@ -4750,7 +4766,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           <p className="text-xs text-neutral-400">{publishArtworkTier==="premium" ? "Premium design prices: sizes 0–2 $24.99 | sizes 3–5 $29.99" : "Standard pricing uses the current Shop schedule."}</p>
           {publishArtworkTier==="premium" && <div className="space-y-2 rounded-lg border border-amber-500/70 bg-amber-950/60 p-3 text-sm text-amber-100"><strong>Premium Extended Artwork — Pricing Review Required</strong><p>Production feasibility and final pricing require explicit admin approval.</p>{premiumArtworkHeightInvalid&&<p role="alert">Total artwork height is {selectedArtworkHeightMm.toFixed(2)} mm. Maximum permitted height is {MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in).</p>}<label className="flex items-start gap-2"><input type="checkbox" checked={approveExtendedArtwork} onChange={(event)=>setApproveExtendedArtwork(event.target.checked)} /><span>I approve publishing this product at the premium design price, subject to production review.</span></label></div>}
           {publishProductStatus && <p role="status" className="break-all text-sm text-neutral-200">{publishProductStatus.includes("/shop/")?<><a className="underline" href={publishProductStatus.slice(publishProductStatus.indexOf(location.origin)+location.origin.length)} target="_blank" rel="noreferrer">{publishProductStatus}</a></>:publishProductStatus}</p>}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||artworkInvalid||(publishArtworkTier==="premium"&&!approveExtendedArtwork)} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>setShowPublishProduct(false)} className="rounded-lg border border-neutral-600 px-4 py-2">Close</button><button type="submit" disabled={publishingProduct||!generatedShopImages||artworkInvalid||productionReviewRequired||(publishArtworkTier==="premium"&&!approveExtendedArtwork)} className="rounded-lg bg-si-accent px-4 py-2 font-black text-neutral-950 disabled:opacity-50">{publishingProduct?"Publishing…":"Publish Product"}</button></div>
         </form>
       </div>}
     </>

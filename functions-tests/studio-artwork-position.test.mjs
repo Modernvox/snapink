@@ -61,3 +61,24 @@ test("visible Nike PNG bounds stay valid through the full 38.1 mm height across 
     }
   }
 });
+
+test("visible ITGIRL PNG bounds retain independent artwork scaling while oversized height is reviewable", () => {
+  // Native alpha bbox measured from Itgirl_logo.png: canvas 2172×724, visible 2168×708.
+  const visibleAspectRatio = 2168 / 708;
+  for (const variant of ["standard", "billboard"]) {
+    for (let size = 0; size <= 5; size += 1) {
+      const range = geometry.usableBrandingCanvasRangePercentFor(variant, size);
+      const centerPercent = (range.start + range.end) / 2;
+      const base = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, visibleAspectRatio, 75, 100);
+      const stretched = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, visibleAspectRatio, 75, 250);
+      const shifted = geometry.studioLogoPlacementMmFor(variant, size, range.end, visibleAspectRatio, 75, 250);
+
+      assert.ok(Math.abs(base.heightMm - (base.baseHeightMm)) < 1e-9, `${variant} size ${size} preserves the uploaded artwork's visible height`);
+      assert.equal(stretched.widthMm, base.widthMm, `${variant} size ${size} vertical scaling leaves width unchanged`);
+      assert.equal(stretched.heightMm, base.heightMm * 2.5, `${variant} size ${size} stretches height independently`);
+      assert.equal(shifted.widthMm, stretched.widthMm, `${variant} size ${size} horizontal movement preserves width`);
+      assert.equal(shifted.heightMm, stretched.heightMm, `${variant} size ${size} horizontal movement preserves height`);
+      assert.equal(geometry.artworkHeightExceedsMaximum(stretched.heightMm), true, `${variant} size ${size} marks over-limit production height for review`);
+    }
+  }
+});

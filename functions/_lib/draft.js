@@ -1,4 +1,4 @@
-import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, artworkHeightExceedsMaximum } from "./artwork-limits.js";
+import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM } from "./artwork-limits.js";
 
 const RIGHT_EDGE_X_MM = [71.52, 80.21, 88.9, 97.59, 106.28, 114.97];
 const FLAP_VALLEY_X_MM = -3.2;
@@ -8,7 +8,7 @@ const STUDIO_ARTWORK_VERTICAL_POSITION_MIN = -400;
 
 export function validDraft(draft) {
   if (!draft || typeof draft !== "object" || Array.isArray(draft) || Object.keys(draft).length > 48) return false;
-  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkHeightScale","logoOpacity","artworkStrokeEnabled","artworkStrokeWidthMm","artworkStrokeColor","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork"]);
+  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkHeightScale","logoOpacity","artworkStrokeEnabled","artworkStrokeWidthMm","artworkStrokeColor","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork","productionReviewRequired","productionReviewReason"]);
   if (Object.keys(draft).some((key) => !allowed.has(key))) return false;
   if (draft.productionGeometryVersion !== GEOMETRY_VERSION || draft.positioningVersion !== POSITIONING_VERSION) return false;
   if (typeof draft.hasCustomArtwork !== "boolean" || !Number.isFinite(draft.brandingCenterXmm) || !Number.isFinite(draft.artworkCenterXmm) || (draft.artworkCenterYmm != null && !Number.isFinite(draft.artworkCenterYmm))) return false;
@@ -33,13 +33,15 @@ export function validDraft(draft) {
     ? draft.artworkBottomExtensionMm > 0.001 || (draft.artworkTopExtensionMm > 0.001 && draft.artworkTopExtensionMm <= 12.7 + 0.001)
     : draft.artworkExtensionMm > 0.001;
   if (hasArtworkReviewMetadata && (![draft.artworkWidthMm,draft.artworkHeightMm,draft.artworkExtensionMm].every(Number.isFinite)
-    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || artworkHeightExceedsMaximum(draft.artworkHeightMm)
+    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > 200
     || draft.artworkExtensionMm < 0 || draft.artworkExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
     || (hasDirectionalExtensionMetadata && (!Number.isFinite(draft.artworkTopExtensionMm) || !Number.isFinite(draft.artworkBottomExtensionMm)
       || draft.artworkTopExtensionMm < 0 || draft.artworkTopExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
       || draft.artworkBottomExtensionMm < 0 || draft.artworkBottomExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
       || Math.abs(draft.artworkExtensionMm - Math.max(draft.artworkTopExtensionMm, draft.artworkBottomExtensionMm)) > 0.001))
     || typeof draft.extendedArtwork !== "boolean" || draft.extendedArtwork !== requiresPremiumArtwork)) return false;
+  if (draft.productionReviewRequired != null && typeof draft.productionReviewRequired !== "boolean") return false;
+  if (draft.productionReviewReason != null && draft.productionReviewReason !== "total_height_exceeds_38_1_mm") return false;
   if (!Number.isFinite(draft.strokeWidth) || draft.strokeWidth < 0 || draft.strokeWidth > 40 || !["emboss","flat"].includes(draft.styleMode) || !["start","center","end"].includes(draft.align) || draft.bgType !== "vector") return false;
   for (const color of [draft.fill,draft.stroke,draft.backgroundColor]) if (typeof color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(color)) return false;
   if (draft.artworkStrokeEnabled != null && typeof draft.artworkStrokeEnabled !== "boolean") return false;

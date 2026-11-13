@@ -53,14 +53,29 @@ function payload({key="draft-idempotency-key-0001",name="Test Customer",variant=
 }
 function request(data,{ip="192.0.2.1",auth}={}) { return new Request("https://snapbacksleeves.com/api/design-drafts",{method:"POST",headers:{"Content-Type":"application/json","CF-Connecting-IP":ip},body:JSON.stringify(data)}); }
 
-test("draft validation accepts independently scaled artwork up to the physical 1.5 inch height limit",()=>{
+test("draft validation retains oversized visual artwork for production review while enforcing per-edge extensions",()=>{
   const draft=payload().draft;
-  Object.assign(draft,{artworkHeightScale:350,artworkWidthMm:50,artworkHeightMm:38.1,artworkExtensionMm:12.7,artworkTopExtensionMm:12.7,artworkBottomExtensionMm:12.7,extendedArtwork:true});
+  Object.assign(draft,{artworkHeightScale:350,artworkWidthMm:80,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true,productionReviewRequired:true,productionReviewReason:"total_height_exceeds_38_1_mm"});
   assert.equal(validDraft(draft),true);
-  draft.artworkHeightMm=38.102;
+  draft.artworkHeightMm=200.001;
   assert.equal(validDraft(draft),false);
-  draft.artworkHeightMm=38.1;draft.artworkTopExtensionMm=12.702;draft.artworkExtensionMm=12.702;
+  draft.artworkHeightMm=42.16;draft.artworkTopExtensionMm=12.702;draft.artworkExtensionMm=12.702;
   assert.equal(validDraft(draft),false);
+});
+
+test("design draft submission saves oversized artwork and server-derived production review status",async()=>{
+  const data=payload({key:"draft-oversized-review-key-001"});
+  Object.assign(data.draft,{artworkHeightScale:252,artworkWidthMm:80,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true});
+  const response=await onRequestPost({request:request(data,{ip:"192.0.2.91"}),env}),result=await response.json();
+  assert.equal(response.status,201);
+  const saved=[...drafts.values()].find((draft)=>draft.idempotency_key===data.idempotencyKey);
+  assert.ok(saved);
+  const savedDesign=JSON.parse(saved.draft_json);
+  assert.equal(savedDesign.artworkHeightMm,42.16);
+  assert.equal(savedDesign.productionReviewRequired,true);
+  assert.equal(savedDesign.productionReviewReason,"total_height_exceeds_38_1_mm");
+  assert.equal(saved.status,"pending_review");
+  assert.equal(result.draft.status,"pending_review");
 });
 
  test("public draft intake saves review-only draft and assets when notification is unavailable",async()=>{
