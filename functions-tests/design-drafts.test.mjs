@@ -8,6 +8,7 @@ async function loadFunction(entry) {
   return import("data:text/javascript;base64," + Buffer.from(result.outputFiles[0].contents).toString("base64"));
 }
 const { onRequestPost } = await loadFunction("../functions/api/design-drafts.js");
+const { validDraft } = await loadFunction("../functions/_lib/draft.js");
 const { onRequestGet: listDrafts } = await loadFunction("../functions/api/admin/design-drafts.js");
 const { onRequestGet: getDraftFile } = await loadFunction("../functions/api/admin/design-draft-file.js");
 const drafts = new Map(), limits = new Map(), files = new Map();
@@ -51,6 +52,16 @@ function payload({key="draft-idempotency-key-0001",name="Test Customer",variant=
   return {customer:{name,email:"customer@example.test",phone:""},quantity:1,draft,files:{artworkSvg:toData("image/svg+xml",svg),previewPng:toData("image/png",png),sourceArtwork:toData("image/png",png)},submittedAt:new Date().toISOString(),idempotencyKey:key};
 }
 function request(data,{ip="192.0.2.1",auth}={}) { return new Request("https://snapbacksleeves.com/api/design-drafts",{method:"POST",headers:{"Content-Type":"application/json","CF-Connecting-IP":ip},body:JSON.stringify(data)}); }
+
+test("draft validation accepts independently scaled artwork up to the physical 1.5 inch height limit",()=>{
+  const draft=payload().draft;
+  Object.assign(draft,{artworkHeightScale:350,artworkWidthMm:50,artworkHeightMm:38.1,artworkExtensionMm:12.7,artworkTopExtensionMm:12.7,artworkBottomExtensionMm:12.7,extendedArtwork:true});
+  assert.equal(validDraft(draft),true);
+  draft.artworkHeightMm=38.102;
+  assert.equal(validDraft(draft),false);
+  draft.artworkHeightMm=38.1;draft.artworkTopExtensionMm=12.702;draft.artworkExtensionMm=12.702;
+  assert.equal(validDraft(draft),false);
+});
 
  test("public draft intake saves review-only draft and assets when notification is unavailable",async()=>{
   const response=await onRequestPost({request:request(payload()),env}),data=await response.json();

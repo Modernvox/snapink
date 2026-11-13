@@ -1,3 +1,5 @@
+import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM } from "./artwork-limits.js";
+
 const RIGHT_EDGE_X_MM = [71.52, 80.21, 88.9, 97.59, 106.28, 114.97];
 const FLAP_VALLEY_X_MM = -3.2;
 const GEOMETRY_VERSION = "blank-flap-candidate-v1";
@@ -24,18 +26,18 @@ export function validDraft(draft) {
   if (Math.abs(draft.brandingCenterXmm - expectedCenter) > 0.01) return false;
   if (draft.text.trim() && Math.abs(draft.artworkCenterXmm - expectedArtworkCenter) > 0.01) return false;
   if (!draft.text.trim() && (Math.abs(draft.artworkCenterXmm - expectedCenter) > 0.01 || Math.abs(draft.logoX - ((expectedCenter - (FLAP_VALLEY_X_MM + 0.4 + 1.05)) / ((edge - 1.05) - (FLAP_VALLEY_X_MM + 0.4 + 1.05))) * 100) > 0.05)) return false;
-  if (!Number.isFinite(draft.safeMargin) || draft.safeMargin < 0 || draft.safeMargin > 12 || !Number.isFinite(draft.logoScale) || draft.logoScale < 0 || draft.logoScale > 100 || (draft.artworkHeightScale != null && (!Number.isFinite(draft.artworkHeightScale) || draft.artworkHeightScale < 25 || draft.artworkHeightScale > 200)) || !Number.isFinite(draft.logoOpacity) || draft.logoOpacity < 0 || draft.logoOpacity > 100) return false;
+  if (!Number.isFinite(draft.safeMargin) || draft.safeMargin < 0 || draft.safeMargin > 12 || !Number.isFinite(draft.logoScale) || draft.logoScale < 0 || draft.logoScale > 100 || (draft.artworkHeightScale != null && (!Number.isFinite(draft.artworkHeightScale) || draft.artworkHeightScale < 25)) || !Number.isFinite(draft.logoOpacity) || draft.logoOpacity < 0 || draft.logoOpacity > 100) return false;
   const hasArtworkReviewMetadata = draft.extendedArtwork != null || draft.artworkExtensionMm != null || draft.artworkWidthMm != null || draft.artworkHeightMm != null || draft.artworkTopExtensionMm != null || draft.artworkBottomExtensionMm != null;
   const hasDirectionalExtensionMetadata = draft.artworkTopExtensionMm != null || draft.artworkBottomExtensionMm != null;
   const requiresPremiumArtwork = hasDirectionalExtensionMetadata
     ? draft.artworkBottomExtensionMm > 0.001 || (draft.artworkTopExtensionMm > 0.001 && draft.artworkTopExtensionMm <= 12.7 + 0.001)
     : draft.artworkExtensionMm > 0.001;
   if (hasArtworkReviewMetadata && (![draft.artworkWidthMm,draft.artworkHeightMm,draft.artworkExtensionMm].every(Number.isFinite)
-    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > 100
-    || draft.artworkExtensionMm < 0 || draft.artworkExtensionMm > (hasDirectionalExtensionMetadata ? 50.8 : 12.7) + 0.001
+    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM + 0.001
+    || draft.artworkExtensionMm < 0 || draft.artworkExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
     || (hasDirectionalExtensionMetadata && (!Number.isFinite(draft.artworkTopExtensionMm) || !Number.isFinite(draft.artworkBottomExtensionMm)
-      || draft.artworkTopExtensionMm < 0 || draft.artworkTopExtensionMm > 50.8 + 0.001
-      || draft.artworkBottomExtensionMm < 0 || draft.artworkBottomExtensionMm > 12.7 + 0.001
+      || draft.artworkTopExtensionMm < 0 || draft.artworkTopExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
+      || draft.artworkBottomExtensionMm < 0 || draft.artworkBottomExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
       || Math.abs(draft.artworkExtensionMm - Math.max(draft.artworkTopExtensionMm, draft.artworkBottomExtensionMm)) > 0.001))
     || typeof draft.extendedArtwork !== "boolean" || draft.extendedArtwork !== requiresPremiumArtwork)) return false;
   if (!Number.isFinite(draft.strokeWidth) || draft.strokeWidth < 0 || draft.strokeWidth > 40 || !["emboss","flat"].includes(draft.styleMode) || !["start","center","end"].includes(draft.align) || draft.bgType !== "vector") return false;
