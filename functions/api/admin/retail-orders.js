@@ -24,7 +24,7 @@ async function designAttachments(env, order) {
 }
 const rowOrder = (row) => {
   const draft = safeOrderJson(row.draftJson);
-  const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, row.size);
+  const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, row.size, draft.artworkExtensionMm ?? 0);
   const productionReviewRequired = Boolean(draft.productionReviewRequired || productionReviewReason);
   return {
     ...row,

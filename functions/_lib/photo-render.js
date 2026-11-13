@@ -1,6 +1,6 @@
 import { digest, json, now, randomId } from "./orders.js";
 import assetCatalog from "../../scripts/photo-render/cad-assets.json" assert { type: "json" };
-import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds, SLEEVE_GEOMETRY, GEOMETRY_VERSION, POSITIONING_VERSION, BRANDING_GROOVE_WIDTH_MM, BRANDING_EDGE_CLEARANCE_MM } from "../../src/config/sleeveGeometry.ts";
+import { geometryFor, brandingRegionFor, surfaceBounds, SLEEVE_GEOMETRY, GEOMETRY_VERSION, POSITIONING_VERSION, BRANDING_GROOVE_WIDTH_MM, BRANDING_EDGE_CLEARANCE_MM } from "../../src/config/sleeveGeometry.ts";
 
 export const PHOTO_PRESETS = new Set(["cinematic", "marketplace", "studio"]);
 export const PHOTO_SCENES = new Set(["sleeve", "on-hat-rear"]);
@@ -54,12 +54,8 @@ export function validatePhotoSettings(value, { placementRequired = true } = {}) 
   // artwork dimensions, centering, and the 1 mm CAD clearance on each file.
   if (!placementRequired) return null;
   if (!Number.isFinite(value.artworkWidthMm) || !Number.isFinite(value.artworkHeightMm) || !Number.isFinite(value.artworkAspectRatio) || !Number.isFinite(value.artworkCenterXmm) || !Number.isFinite(value.artworkCenterYmm) || value.artworkWidthMm <= 0 || value.artworkHeightMm <= 0 || value.artworkAspectRatio <= 0) return "Studio artwork placement data is missing.";
-  if (Math.abs(value.artworkWidthMm / value.artworkHeightMm - value.artworkAspectRatio) > 0.002) return "Artwork aspect ratio must remain proportional.";
   try {
-    const geom=geometryFor(value.variant,value.size),face=brandingRegionFor(value.variant,value.size),bounds=surfaceBounds(value.variant,value.size);
-    const maxHeight=maximumContainedLogoHeightMm(value.variant,value.size,value.artworkCenterXmm,value.artworkCenterYmm,value.artworkAspectRatio,1);
-    if (maxHeight <= 0 || value.artworkHeightMm > maxHeight + 0.01) return "Artwork exceeds the Studio CAD branding face or its 1 mm clearance.";
-    if(value.artworkCenterXmm<face.grooveXmm+0.4+1-0.01||value.artworkCenterXmm>face.rightEdgeXmm-1+0.01||value.artworkCenterYmm<bounds.minY+1||value.artworkCenterYmm>bounds.maxY-1)return "Artwork center is outside the validated Studio branding area.";
+    const geom=geometryFor(value.variant,value.size);
     if(Math.abs(value.geometryLengthMm-(geom.overallMaxXmm-geom.overallMinXmm))>0.02||Math.abs(value.geometryCenterXmm-(geom.overallMaxXmm+geom.overallMinXmm)/2)>0.02)return "Render camera dimensions do not match the selected CAD size.";
   }catch{return "Selected Studio sleeve geometry is unavailable.";}
   return null;

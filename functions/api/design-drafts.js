@@ -98,7 +98,7 @@ export async function onRequestPost({ request, env }) {
     const draft = { ...data.draft };
     delete draft.logoDataUrl;
     if (!validDraft(draft)) return json({ error: "Some design settings are invalid. Review the design and try again." }, 400);
-    const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, draft.size);
+    const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, draft.size, draft.artworkExtensionMm ?? 0);
     const productionReviewRequired = Boolean(productionReviewReason);
     draft.productionReviewRequired = productionReviewRequired;
     if (productionReviewRequired) draft.productionReviewReason = productionReviewReason;

@@ -10,6 +10,7 @@ async function loadFunction(entry) {
 }
 
 const adminModule = await loadFunction("../functions/api/admin/photo-studio.js");
+const rendererModule = await loadFunction("../functions/_lib/photo-render.js");
 const fileModule = await loadFunction("../functions/api/photo-render/file.js");
 const nextModule = await loadFunction("../functions/api/photo-render/next.js");
 const adminFileModule = await loadFunction("../functions/api/admin/photo-file.js");
@@ -53,9 +54,9 @@ const settings={variant:"standard",size:4,template:"marketplace",renderMode:"fas
 const req=(url,method,body,auth=adminToken,headers={})=>new Request("https://studio.test"+url,{method,headers:{...(auth?{Authorization:"Bearer "+auth}:{}),...headers},body});
 
 test("owner photo API validates ownership and blocks CAD validation-hold configurations",async()=>{
+  assert.equal(rendererModule.validatePhotoSettings({...settings,artworkWidthMm:100,artworkHeightMm:50,artworkAspectRatio:1,artworkCenterXmm:120,artworkCenterYmm:80}),null,"photo render accepts independent dimensions and free artwork positioning");
   const denied=await adminModule.onRequest({request:req("/api/admin/photo-studio","GET",undefined,""),env});assert.equal(denied.status,401);
   const held=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:{...settings,variant:"billboard",size:2}}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(held.status,400);assert.match((await held.json()).error,/validation hold/i);
-  const tooLargeBatch=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(tooLargeBatch.status,201);const {batchId:tooLargeBatchId}=await tooLargeBatch.json();const tooLargeSettings={...settings,artworkWidthMm:100,artworkHeightMm:50};const oversizedForm=new FormData();oversizedForm.set("batchId",tooLargeBatchId);oversizedForm.set("settings",JSON.stringify(tooLargeSettings));oversizedForm.set("file",new File([new Uint8Array([137,80,78,71,13,10,26,10])],"oversized.png",{type:"image/png"}));oversizedForm.set("original",new File([new Uint8Array([1,2,3])],"oversized.png",{type:"image/png"}));const tooLarge=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",oversizedForm),env});assert.equal(tooLarge.status,400);assert.match((await tooLarge.json()).error,/clearance/i);
   const fastUpscale=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:{...settings,resolution:2400}}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(fastUpscale.status,400);assert.match((await fastUpscale.json()).error,/Fast mode/i);
   const premiumBatch=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:{...settings,renderMode:"premium",resolution:2400}}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(premiumBatch.status,201);
   const onHat=await adminModule.onRequest({request:req("/api/admin/photo-studio","POST",JSON.stringify({action:"createBatch",designCount:1,settings:{...settings,scene:"on-hat-rear",relief:"raised"}}),adminToken,{"Content-Type":"application/json"}),env});assert.equal(onHat.status,201);

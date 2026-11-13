@@ -57,12 +57,13 @@ test("draft validation retains oversized visual artwork for production review wh
   const draft=payload().draft;
   Object.assign(draft,{artworkWidthScale:400,artworkHeightScale:350,artworkWidthMm:240,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true,productionReviewRequired:true,productionReviewReason:"total_height_exceeds_38_1_mm"});
   assert.equal(validDraft(draft),true);
-  draft.artworkWidthScale=400.01;
-  assert.equal(validDraft(draft),false);
+  draft.artworkWidthScale=10000;
+  assert.equal(validDraft(draft),true);
   draft.artworkWidthScale=400;
   draft.artworkHeightMm=200.001;
-  assert.equal(validDraft(draft),false);
-  draft.artworkHeightMm=42.16;draft.artworkTopExtensionMm=12.702;draft.artworkExtensionMm=12.702;
+  draft.artworkTopExtensionMm=100.001;draft.artworkBottomExtensionMm=100.001;draft.artworkExtensionMm=100.001;
+  assert.equal(validDraft(draft),true);
+  draft.artworkWidthScale=10000.01;
   assert.equal(validDraft(draft),false);
 });
 

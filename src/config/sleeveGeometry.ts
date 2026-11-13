@@ -226,8 +226,8 @@ export function brandingCenterCanvasPercentFor(variant: SleeveVariant, size: num
 export function usableBrandingCanvasRangePercentFor(variant: SleeveVariant, size: number): { start: number; end: number } {
   const geometry = geometryFor(variant, size);
   const branding = brandingRegionFor(variant, size);
-  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
-  const usableMaxX = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2;
+  const usableMaxX = branding.rightEdgeXmm;
   const canvasLength = geometry.overallMaxXmm - geometry.overallMinXmm;
   return {
     start: ((usableMinX - geometry.overallMinXmm) / canvasLength) * 100,
@@ -237,8 +237,7 @@ export function usableBrandingCanvasRangePercentFor(variant: SleeveVariant, size
 
 /** Center of the CAD branding face after excluding the groove and edge insets. */
 export function usableBrandingCenterCanvasPercentFor(variant: SleeveVariant, size: number): number {
-  const range = usableBrandingCanvasRangePercentFor(variant, size);
-  return (range.start + range.end) / 2;
+  return brandingCenterCanvasPercentFor(variant, size);
 }
 
 export function usableBrandingAlignmentCanvasPercentFor(
@@ -249,7 +248,7 @@ export function usableBrandingAlignmentCanvasPercentFor(
   const range = usableBrandingCanvasRangePercentFor(variant, size);
   if (alignment === "start") return range.start;
   if (alignment === "end") return range.end;
-  return (range.start + range.end) / 2;
+  return brandingCenterCanvasPercentFor(variant, size);
 }
 
 export const SLEEVE_GEOMETRY: Record<SleeveVariant, GeometryFamily> = {
@@ -504,33 +503,8 @@ export function artworkCenterYForPositionMm(
   bottomExtensionMm = 0
 ): number {
   const bounds = surfaceBounds(variant, size);
-  const baseRange = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm);
-  const extendedRange = artworkVerticalCenterRangeMm(variant, size, artworkHeightMm, edgeMarginMm, topExtensionMm, bottomExtensionMm);
-  if (positionPercent < 0 && topExtensionMm > 0) {
-    const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
-    const baseTop = baseRange.maxCenterY >= baseRange.minCenterY ? baseRange.maxCenterY : bounds.maxY - halfArtworkHeight;
-    const extendedTop = extendedRange.maxCenterY >= extendedRange.minCenterY ? extendedRange.maxCenterY : bounds.maxY + topExtensionMm - halfArtworkHeight;
-    return baseTop + (extendedTop - baseTop) * Math.min(1, Math.max(0, -positionPercent / Math.abs(ARTWORK_VERTICAL_POSITION_MIN)));
-  }
-  if (positionPercent > 100 && bottomExtensionMm > 0) {
-    const bottomCenter = baseRange.minCenterY >= baseRange.maxCenterY
-      ? bounds.minY + Math.max(0, artworkHeightMm) / 2
-      : baseRange.minCenterY;
-    const extendedBottomCenter = extendedRange.minCenterY <= extendedRange.maxCenterY
-      ? extendedRange.minCenterY
-      : bounds.minY - bottomExtensionMm + Math.max(0, artworkHeightMm) / 2;
-    return bottomCenter + (extendedBottomCenter - bottomCenter) * Math.min(1, Math.max(0, (positionPercent - 100) / 100));
-  }
-  const { minCenterY, maxCenterY } = topExtensionMm > 0 || bottomExtensionMm > 0 ? baseRange : extendedRange;
-  if (maxCenterY >= minCenterY) {
-    return maxCenterY - ((maxCenterY - minCenterY) * positionPercent) / 100;
-  }
-  // If the artwork cannot fit vertically, still move it with the slider using
-  // the sleeve's physical edge as the reference. The warning reports the fit.
-  const halfArtworkHeight = Math.max(0, artworkHeightMm) / 2;
-  const topCenterY = bounds.maxY - halfArtworkHeight;
-  const bottomCenterY = bounds.minY + halfArtworkHeight;
-  return topCenterY - ((topCenterY - bottomCenterY) * positionPercent) / 100;
+  // Keep the selected center fixed when only artwork height changes.
+  return bounds.maxY - ((bounds.maxY - bounds.minY) * positionPercent) / 100;
 }
 
 function toCanvas(x: number, y: number, bounds: SurfaceBounds, width: number, height: number): [number, number] {
@@ -698,16 +672,18 @@ export function artworkHorizontalPositionRangePercentFor(
 ): { start: number; end: number } {
   const geometry = geometryFor(variant, size);
   const branding = brandingRegionFor(variant, size);
-  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
-  const usableMaxX = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2;
+  const usableMaxX = branding.rightEdgeXmm;
   const current = Number.isFinite(currentPositionPercent) ? currentPositionPercent : usableBrandingCenterCanvasPercentFor(variant, size);
   const width = Number.isFinite(artworkWidthMm) ? Math.max(0, artworkWidthMm) : Infinity;
   const minCenterX = usableMinX + width / 2;
   const maxCenterX = usableMaxX - width / 2;
-  if (maxCenterX < minCenterX) return { start: current, end: current };
+  const canContain = maxCenterX >= minCenterX;
+  const rangeMin = canContain ? minCenterX : usableMinX;
+  const rangeMax = canContain ? maxCenterX : usableMaxX;
   const canvasLength = geometry.overallMaxXmm - geometry.overallMinXmm;
   return {
-    start: ((minCenterX - geometry.overallMinXmm) / canvasLength) * 100,
-    end: ((maxCenterX - geometry.overallMinXmm) / canvasLength) * 100,
+    start: ((rangeMin - geometry.overallMinXmm) / canvasLength) * 100,
+    end: ((rangeMax - geometry.overallMinXmm) / canvasLength) * 100,
   };
 }
