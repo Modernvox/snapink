@@ -1,5 +1,10 @@
 export const MAX_ARTWORK_EXTENSION_PER_EDGE_MM = 12.7;
 export const MAX_EXTENDED_ARTWORK_HEIGHT_MM = 38.1;
+export const ARTWORK_MEASUREMENT_TOLERANCE_MM = 0.001;
+
+export function artworkHeightExceedsMaximum(heightMm) {
+  return !Number.isFinite(heightMm) || heightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM + ARTWORK_MEASUREMENT_TOLERANCE_MM;
+}
 export function maximumArtworkHeightScalePercent(baseHeightMm, currentScale = 100) {
   const safeCurrentScale = Number.isFinite(currentScale) && currentScale >= 0 ? currentScale : 100;
   const physicalMaximum = Number.isFinite(baseHeightMm) && baseHeightMm > 0

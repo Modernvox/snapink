@@ -16,6 +16,7 @@ import {
   BRANDING_EDGE_CLEARANCE_MM,
   MAX_BOTTOM_ARTWORK_EXTENSION_MM,
   MAX_EXTENDED_ARTWORK_HEIGHT_MM,
+  artworkHeightExceedsMaximum,
   MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM,
   MAX_TOP_ARTWORK_EXTENSION_MM,
   maximumArtworkHeightScalePercent,
@@ -1602,8 +1603,8 @@ const SnapInkSleeveCustomizer = forwardRef<
     ? logoPlacement.widthMm
     : productionTextWidthMm;
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
-  const artworkHeightExceedsMaximum = selectedArtworkHeightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM + 0.001;
-  const premiumArtworkHeightInvalid = artworkHeightExceedsMaximum;
+  const artworkHeightInvalid = artworkHeightExceedsMaximum(selectedArtworkHeightMm);
+  const premiumArtworkHeightInvalid = artworkHeightInvalid;
   const artworkStatus = artworkBoundsStatusMm(
     variant, sleeveSize, productionLogoCenterXmm, productionCenterYmm,
     selectedArtworkWidthMm, selectedArtworkHeightMm, undefined,
@@ -1617,12 +1618,12 @@ const SnapInkSleeveCustomizer = forwardRef<
   // premium-priced just because the Studio placement range was expanded.
   const artworkRequiresPremiumPricing = artworkStatus.bottomExtensionMm > 0.001
     || (artworkStatus.topExtensionMm > 0.001 && artworkStatus.topExtensionMm <= MAX_TOP_ARTWORK_EXTENSION_MM + 0.001);
-  const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension || artworkHeightExceedsMaximum;
+  const artworkInvalid = artworkStatus.crossesLockedEdge || artworkStatus.violatesClearance || artworkExceedsAllowedExtension || artworkHeightInvalid;
   const artworkInvalidBoundary = artworkStatus.crossesLeftEdge ? "left edge clearance"
     : artworkStatus.crossesRightEdge ? "right edge clearance"
       : artworkStatus.crossesGroove ? "left edge clearance at the flap groove"
         : artworkStatus.violatesTopClearance ? "top edge clearance"
-            : artworkHeightExceedsMaximum ? "maximum total artwork height (1.5 in)"
+            : artworkHeightInvalid ? `maximum total artwork height (${selectedArtworkHeightMm.toFixed(2)} mm; 38.1 mm limit)`
               : artworkStatus.violatesBottomClearance ? "bottom edge clearance"
             : artworkStatus.topExtensionMm > MAX_STUDIO_TOP_ARTWORK_EXTENSION_MM + 0.001 ? "Studio top artwork boundary (0.5 in)"
               : "approved bottom production boundary";

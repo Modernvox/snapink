@@ -1,7 +1,7 @@
 import { bearer, json, now } from "../../_lib/orders.js";
 import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy, SHOP_SIZE_IDS, shopCheckoutProductError, shopProductImageRank, shopProductImageType } from "../../_lib/shop.js";
 import { canonicalShopProductName } from "../../_lib/shop-product-name.js";
-import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM } from "../../_lib/artwork-limits.js";
+import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum } from "../../_lib/artwork-limits.js";
 
 const defaultCardDescription = (name) => `${name} is a premium swappable snapback hat strap featuring custom artwork on a SnapInk Sleeve™.`;
 const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
@@ -32,7 +32,7 @@ export async function onRequestPost({request,env}) {
   const productionMetadata={artworkWidthMm,artworkHeightMm,artworkExtensionMm:extensionMm,artworkTopExtensionMm:Number(form.get("artworkTopExtensionMm")||0),artworkBottomExtensionMm:Number(form.get("artworkBottomExtensionMm")||0),artworkHeightScale:Number(form.get("artworkHeightScale")||100),artworkCenterXmm:Number(form.get("artworkCenterXmm")||0),artworkCenterYmm:Number(form.get("artworkCenterYmm")||0),artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor};
   const {artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm}=productionMetadata;
   if (![artworkWidthMm,artworkHeightMm,extensionMm,artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm].every(Number.isFinite)
-    || artworkWidthMm<0 || artworkWidthMm>200 || artworkHeightMm<0 || artworkHeightMm>MAX_EXTENDED_ARTWORK_HEIGHT_MM+0.001
+    || artworkWidthMm<0 || artworkWidthMm>200 || artworkHeightMm<0 || artworkHeightExceedsMaximum(artworkHeightMm)
     || extensionMm<0 || extensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
     || artworkTopExtensionMm<0 || artworkTopExtensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
     || artworkBottomExtensionMm<0 || artworkBottomExtensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
@@ -40,7 +40,7 @@ export async function onRequestPost({request,env}) {
     || Math.abs(extensionMm-Math.max(artworkTopExtensionMm,artworkBottomExtensionMm))>0.001) return json({error:"Artwork measurements exceed the permitted production dimensions."},400);
   if (premiumArtwork) {
     if (String(form.get("approveExtendedArtwork"))!=="true") return json({error:"Explicit administrator approval is required to publish extended artwork at its premium price."},403);
-    if (!extensionMm||!artworkWidthMm||!artworkHeightMm||artworkHeightMm>MAX_EXTENDED_ARTWORK_HEIGHT_MM+0.001) return json({error:`Premium Extended Artwork must have valid measurements and a total artwork height of ${MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in) or less.`},400);
+    if (!extensionMm||!artworkWidthMm||!artworkHeightMm||artworkHeightExceedsMaximum(artworkHeightMm)) return json({error:`Premium Extended Artwork must have valid measurements and a total artwork height of ${MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in) or less.`},400);
     if(artworkTopExtensionMm>artworkHeightMm||artworkBottomExtensionMm>artworkHeightMm)return json({error:"Premium Extended Artwork measurements are invalid or exceed the permitted boundaries."},400);
   } else {
     description=removeExtendedArtworkCopy(description);

@@ -1,10 +1,11 @@
 import {
   MAX_ARTWORK_EXTENSION_PER_EDGE_MM,
+  artworkHeightExceedsMaximum,
   MAX_EXTENDED_ARTWORK_HEIGHT_MM,
   maximumArtworkHeightScalePercent,
 } from "../../functions/_lib/artwork-limits.js";
 
-export { MAX_EXTENDED_ARTWORK_HEIGHT_MM, maximumArtworkHeightScalePercent };
+export { MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, maximumArtworkHeightScalePercent };
 
 /**
  * Read-only transcription of the validated production-family dimensions.

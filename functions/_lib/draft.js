@@ -1,4 +1,4 @@
-import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM } from "./artwork-limits.js";
+import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, artworkHeightExceedsMaximum } from "./artwork-limits.js";
 
 const RIGHT_EDGE_X_MM = [71.52, 80.21, 88.9, 97.59, 106.28, 114.97];
 const FLAP_VALLEY_X_MM = -3.2;
@@ -33,7 +33,7 @@ export function validDraft(draft) {
     ? draft.artworkBottomExtensionMm > 0.001 || (draft.artworkTopExtensionMm > 0.001 && draft.artworkTopExtensionMm <= 12.7 + 0.001)
     : draft.artworkExtensionMm > 0.001;
   if (hasArtworkReviewMetadata && (![draft.artworkWidthMm,draft.artworkHeightMm,draft.artworkExtensionMm].every(Number.isFinite)
-    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM + 0.001
+    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || artworkHeightExceedsMaximum(draft.artworkHeightMm)
     || draft.artworkExtensionMm < 0 || draft.artworkExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
     || (hasDirectionalExtensionMetadata && (!Number.isFinite(draft.artworkTopExtensionMm) || !Number.isFinite(draft.artworkBottomExtensionMm)
       || draft.artworkTopExtensionMm < 0 || draft.artworkTopExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001

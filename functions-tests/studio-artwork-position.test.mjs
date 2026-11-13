@@ -36,3 +36,28 @@ test("horizontal movement preserves selected logo width and height for every sle
     }
   }
 });
+
+test("visible Nike PNG bounds stay valid through the full 38.1 mm height across sleeve sizes", () => {
+  // Native alpha bbox measured from nike_white.png: canvas 1774×887, visible 1663×759.
+  const visibleAspectRatio = 1663 / 759;
+  for (const variant of ["standard", "billboard"]) {
+    for (let size = 0; size <= 5; size += 1) {
+      const range = geometry.usableBrandingCanvasRangePercentFor(variant, size);
+      const centerPercent = (range.start + range.end) / 2;
+      const defaultPlacement = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, visibleAspectRatio, 75, 100);
+      assert.ok(Math.abs(defaultPlacement.heightMm - 16.725) < 0.01, `${variant} size ${size} uses the visible PNG height`);
+      const maxScale = geometry.maximumArtworkHeightScalePercent(defaultPlacement.baseHeightMm);
+      const atMaximum = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, visibleAspectRatio, 75, maxScale);
+      const centerY = geometry.artworkCenterYForPositionMm(variant, size, 50, atMaximum.heightMm, 1, 12.7, 12.7);
+      const status = geometry.artworkBoundsStatusMm(variant, size, atMaximum.centerXmm, centerY, atMaximum.widthMm, atMaximum.heightMm);
+
+      assert.ok(Math.abs(atMaximum.heightMm - 38.1) < 1e-9, `${variant} size ${size} reaches the total limit`);
+      assert.equal(geometry.artworkHeightExceedsMaximum(atMaximum.heightMm), false, `${variant} size ${size} accepts the limit`);
+      assert.ok(status.topExtensionMm <= 12.7 + 0.001, `${variant} size ${size} stays under the top allowance`);
+      assert.ok(status.bottomExtensionMm <= 12.7 + 0.001, `${variant} size ${size} stays under the bottom allowance`);
+
+      const tooTall = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, visibleAspectRatio, 75, maxScale + 0.1);
+      assert.equal(geometry.artworkHeightExceedsMaximum(tooTall.heightMm), true, `${variant} size ${size} rejects a real overage`);
+    }
+  }
+});
