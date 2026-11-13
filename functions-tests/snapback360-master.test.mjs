@@ -16,10 +16,25 @@ async function loadModule(entry) {
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`);
 }
 
+test("Snapback 360 preview and generated product image use shadow-free raised artwork", () => {
+  const source = fs.readFileSync(new URL("../src/components/SnapInkSleeveCustomizer.tsx", import.meta.url), "utf8");
+  const snapbackRenderer = source.slice(source.indexOf("async function renderSnapback360ProductImage()"), source.indexOf("async function loadSnapback360BlackSleeveReference"));
+  assert.match(snapbackRenderer, /snapback360Artwork:\s*true/, "both Snapback 360 front and rear artboards use the scoped emboss treatment");
+  assert.match(source, /if\s*\(options\.snapback360Artwork\)\s*removeSnapback360EmbossSidewalls\(exportSvg\)/);
+  assert.match(source, /feFlood floodColor="#ffffff" floodOpacity="0\.62"/, "the clean raised face highlight remains enabled");
+});
+
 test("Snapback 360 hat masters share the black master calibration and source-preserving sleeve mask", async () => {
   const registry = await loadModule("../src/config/snapback360MasterRegistry.ts");
   const { SNAPBACK360_MASTER, SNAPBACK360_MASTERS, SNAPBACK360_CALIBRATION_MASTER_ID, SNAPBACK360_LOGO_LIBRARY } = registry;
   const customizerImage = await loadModule("../src/utils/snapback360ProductImage.ts");
+  const removedSidewalls = [];
+  const sidewallNodes = [1, 2, 3].map((index) => ({ remove() { removedSidewalls.push(index); } }));
+  assert.equal(customizerImage.removeSnapback360EmbossSidewalls({ querySelectorAll: (selector) => {
+    assert.equal(selector, "[data-emboss-extrusion-step]");
+    return sidewallNodes;
+  } }), 3, "Snapback 360 removes only the translated dark relief layers");
+  assert.deepEqual(removedSidewalls, [1, 2, 3]);
   assert.equal(customizerImage.snapback360EffectiveRearScale(0), 1.45, "new rear artwork starts at the former 145% size");
   assert.equal(customizerImage.snapback360EffectiveRearScale(10), 1.595, "+10% is relative to the 145% baseline");
   assert.equal(customizerImage.snapback360EffectiveRearScale(-10), 1.305, "-10% is relative to the 145% baseline");

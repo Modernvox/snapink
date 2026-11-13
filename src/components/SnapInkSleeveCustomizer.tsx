@@ -84,6 +84,7 @@ import {
   snapback360EffectiveRearScale,
   snapback360RearAdjustmentPercent,
   snapback360StudioArtworkExtensionRatios,
+  removeSnapback360EmbossSidewalls,
   recolorSnapback360MasterPreview,
   type Snapback360ArtworkPlacement,
 } from "../utils/snapback360ProductImage";
@@ -1839,7 +1840,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     return `M ${leftX} ${baseY} Q ${viewW / 2} ${midY} ${rightX} ${baseY}`;
   }, [arc, textCenterCanvasY, margin, viewH]);
 
-  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean; onHatFaceOnly?: boolean; artworkOverrideSrc?: string } = {}): Promise<Blob> {
+  async function renderStudioPNGBlob(options: { sleeveOnly?: boolean; artworkOnly?: boolean; scale?: number; onHatProductPhoto?: boolean; onHatFaceOnly?: boolean; snapback360Artwork?: boolean; artworkOverrideSrc?: string } = {}): Promise<Blob> {
     if (logoNeedsRemoval) {
       throw new Error("Remove the logo background before exporting, or upload a transparent PNG.");
     }
@@ -1889,6 +1890,7 @@ const SnapInkSleeveCustomizer = forwardRef<
         artworkGroup.appendChild(overrideGroup);
       }
     }
+    if (options.snapback360Artwork) removeSnapback360EmbossSidewalls(exportSvg);
     exportSvg.removeAttribute("style");
     const onHatSvgRaster = options.onHatProductPhoto && options.sleeveOnly;
     const fixedSleeveLayer = onHatSvgRaster && !options.onHatFaceOnly && !options.artworkOnly;
@@ -2417,6 +2419,7 @@ const SnapInkSleeveCustomizer = forwardRef<
           artworkOnly: true,
           scale: rearPhotoSvgRasterScale(variant),
           onHatProductPhoto: true,
+          snapback360Artwork: true,
           ...(overrideSrc ? { artworkOverrideSrc: overrideSrc } : {}),
         });
         objectUrl = URL.createObjectURL(blob);

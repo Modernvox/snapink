@@ -23,6 +23,13 @@ export function snapback360EffectiveRearScale(adjustmentPercent: number) {
   return SNAPBACK360_REAR_BASELINE_SCALE * (1 + adjustmentPercent / 100);
 }
 
+/** Remove only the dark offset layers from Snapback 360 artwork while retaining the highlighted face. */
+export function removeSnapback360EmbossSidewalls(svg: SVGSVGElement) {
+  const sidewalls = Array.from(svg.querySelectorAll("[data-emboss-extrusion-step]"));
+  sidewalls.forEach((layer) => layer.remove());
+  return sidewalls.length;
+}
+
 export function snapback360MaterialIllumination(red: number, green: number, blue: number, baseLuminance: number) {
   const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
   const normalizedLight = luminance / baseLuminance;
