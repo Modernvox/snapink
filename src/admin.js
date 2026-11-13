@@ -1,5 +1,4 @@
 import "./admin-dashboard.css";
-import { maximumContainedLogoHeightMm, geometryFor, brandingRegionFor, surfaceBounds } from "./config/sleeveGeometry";
 import { mountAdminShop } from "./admin-shop.js";
 
 let adminToken = "";
@@ -263,10 +262,10 @@ function setupAdminLayout(){
   const metrics=document.createElement("div");metrics.className="admin-metrics";overview.append(metrics);content.prepend(overview);main.append(pageHeader,content);shell.append(sidebar,main);desk.replaceChildren(shell);
 
   const panel=(selector)=>$(selector)?.closest(".panel")||$(selector);
-  const pages={overview,products:$("shop-products-panel"),shopOrders:$("shop-orders-panel"),designReviews:panel("#design-drafts-body"),retailOrders:panel("#retail-orders-body"),productionOrders:panel("#search"),wholesale:$("wholesale-management"),pilot:$("pilot-review"),partnerAccess:$("partner-access-panel"),photo:$("photo-studio"),pairing:$("pair-panel")};
+  const pages={overview,products:$("shop-products-panel"),shopOrders:$("shop-orders-panel"),designReviews:panel("#design-drafts-body"),retailOrders:panel("#retail-orders-body"),productionOrders:panel("#search"),wholesale:$("wholesale-management"),pilot:$("pilot-review"),partnerAccess:$("partner-access-panel"),pairing:$("pair-panel")};
   for(const [key,node] of Object.entries(pages))if(key!=="overview"&&node)node.classList.add("hidden");
 
-  const sections=[["Workspace",[["overview","Overview"],["products","Products & Inventory"],["shopOrders","Shop Orders"]]],["Orders & Reviews",[["designReviews","Design Reviews"],["retailOrders","Retail Custom Orders"],["productionOrders","Production Orders"]]],["Partners",[["pilot","Pilot Partners"],["partnerAccess","Partner Access"],["wholesale","Wholesale Orders"]]],["Tools",[["photo","Photo Studio"],["pairing","Pair Windows PC"]]]],navItems=new Map();
+  const sections=[["Workspace",[["overview","Overview"],["products","Products & Inventory"],["shopOrders","Shop Orders"]]],["Orders & Reviews",[["designReviews","Design Reviews"],["retailOrders","Retail Custom Orders"],["productionOrders","Production Orders"]]],["Partners",[["pilot","Pilot Partners"],["partnerAccess","Partner Access"],["wholesale","Wholesale Orders"]]],["Tools",[["pairing","Pair Windows PC"]]]],navItems=new Map();
   for(const [group,items] of sections){const groupNode=document.createElement("div");groupNode.className="admin-nav-group";groupNode.append(textNode("p",group,"admin-nav-heading"));for(const [key,label]of items){const button=document.createElement("button");button.type="button";button.className="admin-nav-item";button.textContent=label;button.addEventListener("click",()=>{void openPage(key)});groupNode.append(button);navItems.set(key,button)}navigation.append(groupNode)}
   menuButton.addEventListener("click",()=>{const open=sidebar.classList.toggle("is-open");menuButton.setAttribute("aria-expanded",String(open))});
 
@@ -284,7 +283,6 @@ function setupAdminLayout(){
   async function openPage(key){
     for(const [pageKey,node]of Object.entries(pages))if(pageKey!=="overview"&&node)node.classList.add("hidden");
     overview.classList.toggle("hidden",key!=="overview");
-    if(key!=="photo")stopPhotoPolling();
     if(key==="overview"){overview.classList.remove("hidden");await loadOverview()}
     else if(key==="products")await shopAdmin.showProducts();
     else if(key==="shopOrders")await shopAdmin.showOrders();
@@ -294,7 +292,6 @@ function setupAdminLayout(){
     else if(key==="wholesale"){pages.wholesale.classList.remove("hidden");await renderWholesaleOrders()}
     else if(key==="pilot"){pages.pilot.classList.remove("hidden");await renderPilotApplications()}
     else if(key==="partnerAccess"){pages.partnerAccess.classList.remove("hidden");await renderPartnerAccess()}
-    else if(key==="photo"){pages.photo.classList.remove("hidden");await refreshPhotoGallery();startPhotoPolling()}
     else if(key==="pairing"){pages.pairing.classList.remove("hidden");await renderDevices()}
     for(const [item,button]of navItems){const active=item===key;button.classList.toggle("is-active",active);if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current")}
     sidebar.classList.remove("is-open");menuButton.setAttribute("aria-expanded","false");
@@ -314,119 +311,7 @@ $("status-filter").addEventListener("change", renderOrders);
 let searchTimer; $("search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderOrders, 250); });
 $("detail-close").addEventListener("click", () => $("order-detail").close());
 $("pair-toggle").addEventListener("click", async () => { $("pair-panel").classList.toggle("hidden"); if (!$("pair-panel").classList.contains("hidden")) await renderDevices(); });
-$("logout").addEventListener("click", () => { adminToken = ""; $("admin-token").value = ""; $("desk").classList.add("hidden"); $("login").classList.remove("hidden"); document.querySelector(".wrap > .brand").hidden=false; $("photo-studio").classList.add("hidden"); stopPhotoPolling(); setMessage(""); });
+$("logout").addEventListener("click", () => { adminToken = ""; $("admin-token").value = ""; $("desk").classList.add("hidden"); $("login").classList.remove("hidden"); document.querySelector(".wrap > .brand").hidden=false; setMessage(""); });
 async function renderDevices() { const root=$("devices-list"); root.replaceChildren(); try { const {data}=await api("/api/admin/pair-device"); for(const device of data.devices||[]) { const box=document.createElement("div"); box.className="panel"; const label=document.createElement("span"); label.textContent=`${device.name} | ${device.active ? "paired" : "revoked"} | last seen ${device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : "never"}`; box.append(label); if(device.active) { const revoke=document.createElement("button"); revoke.className="danger"; revoke.textContent="Revoke"; revoke.addEventListener("click",async()=>{try{await api("/api/admin/pair-device",{method:"DELETE",body:JSON.stringify({id:device.id})});await renderDevices();}catch(e){setMessage(e.message,true);}});box.append(revoke);} root.append(box); } } catch(e) { setMessage(e.message,true); } }
 $("pair-close").addEventListener("click", () => $("pair-panel").classList.add("hidden"));
 $("pair-form").addEventListener("submit", async (event) => { event.preventDefault(); try { const { data } = await api("/api/admin/pair-device", { method: "POST", body: JSON.stringify({ name: $("device-name").value }) }); $("pair-output").textContent = `One-time device token:\n${data.token}\n\nUse this with the Windows companion setup. Copy it now; it cannot be retrieved again.`; $("pair-output").classList.remove("hidden"); await renderDevices(); } catch (e) { $("pair-output").textContent = e.message; $("pair-output").classList.remove("hidden"); } });
-
-
-// Private geometry-based product photography queue. Renders run on the paired Windows PC.
-const photoDefaults={scene:"sleeve",variant:"billboard",size:4,material:"#111111",artColor:"#ffffff",relief:"raised",template:"cinematic",renderMode:"fast",resolution:1600,background:"remove-white"};
-let photoSettings={...photoDefaults,...JSON.parse(localStorage.getItem("snapink.photo.settings")||"{}")};
-if(!["sleeve","on-hat-rear"].includes(photoSettings.scene))photoSettings.scene="sleeve";
-if(photoSettings.renderMode==="fast")photoSettings.resolution=1600;
-if(![1600,2400,3000].includes(photoSettings.resolution))photoSettings.resolution=photoSettings.renderMode==="premium"?2400:1600;
-for(const [key,id] of Object.entries({scene:"photo-scene",variant:"photo-variant",size:"photo-size",material:"photo-material",artColor:"photo-art-color",relief:"photo-relief",template:"photo-template",renderMode:"photo-render-mode",resolution:"photo-resolution",background:"photo-background"})){
- const control=$(id);if(key==="size")for(let n=0;n<6;n++){const option=document.createElement("option");option.value=String(n);option.textContent="Size "+n;control.append(option)}
- if(photoSettings[key]!=null)control.value=String(photoSettings[key]);control.addEventListener("change",()=>{photoSettings[key]=key==="size"||key==="resolution"?Number(control.value):control.value;if(key==="scene"&&control.value==="on-hat-rear"){photoSettings.relief="raised";$("photo-relief").value="raised"}if(key==="renderMode"&&control.value==="fast"){photoSettings.resolution=1600;$("photo-resolution").value="1600"}syncPhotoQualityControls();syncPhotoSceneControls();localStorage.setItem("snapink.photo.settings",JSON.stringify(photoSettings));validatePhotoConfig()});
-}
-const photoGallery=$("photo-gallery"),photoProgress=$("photo-progress"),photoMessage=$("photo-message");let photoJobs=[];const photoCardViews=new Map();let photoPollingTimer=null,photoRefreshBusy=false,photoSubmissionInProgress=false,photoDownloadInProgress=false;const photoRendererStatusEl=document.createElement("p");photoRendererStatusEl.id="photo-renderer-status";photoRendererStatusEl.className="notice";photoRendererStatusEl.setAttribute("role","status");photoRendererStatusEl.setAttribute("aria-live","polite");photoMessage.insertAdjacentElement("afterend",photoRendererStatusEl);
-function syncPhotoQualityControls(){const fast=photoSettings.renderMode==="fast",fixedScene=photoSettings.scene==="on-hat-rear";for(const option of $("photo-resolution").options)option.disabled=fixedScene||(fast&&option.value!=="1600");if(fast&&$("photo-resolution").value!=="1600")$("photo-resolution").value="1600"}
-function syncPhotoSceneControls(){const fixed=photoSettings.scene==="on-hat-rear";$("photo-material").disabled=fixed;$("photo-template").disabled=fixed;$("photo-relief").disabled=fixed;$("photo-resolution").disabled=fixed;$("photo-scene-note").textContent=fixed?"On-Hat Rear View uses locked master snapink.rear-snapback.master.v1 (1536 × 1024). Hat, sleeve, lighting, and framing stay fixed; CAD-derived artwork placement excludes the flap and groove. Artwork remains raised at 0.8 mm.":"Sleeve Only uses the selected CAD mesh, sleeve materials, and photography template.";syncPhotoQualityControls()}
-function validatePhotoConfig(updateMessage=true){const held=photoSettings.variant==="billboard"&&photoSettings.size<3;$("photo-generate").disabled=held;if(updateMessage)photoMessage.textContent=held?"Billboard sizes 0–2 are on CAD validation hold and cannot be rendered.":photoSettings.scene==="on-hat-rear"?"Fast uses Eevee; Premium uses Cycles with OptiX when available. On-Hat output remains the locked 1536 × 1024 master composition.":photoSettings.renderMode==="fast"?"Fast mode uses Blender Eevee at 1600 × 1600. Premium uses Cycles and reports CPU fallback.":"Premium uses Blender Cycles with OptiX when available; CPU fallback and render time are reported per result.";return !held}
-async function photoApi(url,options={}){const headers={Authorization:"Bearer "+adminToken,...(options.headers||{})};if(options.body&&!(options.body instanceof FormData))headers["Content-Type"]="application/json";const response=await fetch(url,{...options,headers,cache:"no-store"});const data=response.headers.get("content-type")?.includes("application/json")?await response.json():null;if(!response.ok)throw new Error(data?.error||"Photo request failed ("+response.status+").");return{response,data}}
-function applyPhotoArtworkColor(pixels,color){
-  if(color==="original")return;
-  const data=pixels.data;
-  let foreground=0,grayscale=0,dark=0,light=0;
-  for(let i=0;i<data.length;i+=4){
-    if(data[i+3]<128)continue;
-    foreground++;
-    const r=data[i],g=data[i+1],b=data[i+2],luminance=Math.round(.2126*r+.7152*g+.0722*b);
-    if(Math.max(r,g,b)-Math.min(r,g,b)<=24)grayscale++;
-    if(luminance<=48)dark++;
-    if(luminance>=207)light++;
-  }
-  const preserveMonochromeDetail=foreground>0&&grayscale/foreground>=.95&&dark/foreground>=.05&&light/foreground>=.05;
-  const tint=[1,3,5].map(offset=>parseInt(color.slice(offset,offset+2),16));
-  for(let i=0;i<data.length;i+=4){
-    if(data[i+3]===0)continue;
-    const luminance=Math.round(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2]);
-    const tone=preserveMonochromeDetail?luminance/255:1;
-    data[i]=Math.round(tint[0]*tone);
-    data[i+1]=Math.round(tint[1]*tone);
-    data[i+2]=Math.round(tint[2]*tone);
-  }
-}
-
-function decodeArtwork(file){
-  return new Promise((resolve,reject)=>{
-    const url=URL.createObjectURL(file),img=new Image();
-    img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Artwork could not be decoded."))};
-    img.onload=()=>{
-      URL.revokeObjectURL(url);
-      if(img.naturalWidth>8192||img.naturalHeight>8192||img.naturalWidth*img.naturalHeight>40000000){reject(Error("Artwork image dimensions are too large (maximum 40 megapixels)."));return}
-      try{
-        const src=document.createElement("canvas");src.width=img.naturalWidth;src.height=img.naturalHeight;
-        const ctx=src.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
-        const imageData=ctx.getImageData(0,0,src.width,src.height),d=imageData.data;let hasTransparency=false;
-        for(let a=3;a<d.length;a+=4){if(d[a]<255){hasTransparency=true;break}}
-        let x0=src.width,y0=src.height,x1=-1,y1=-1;
-        for(let y=0;y<src.height;y++)for(let x=0;x<src.width;x++){
-          const i=(y*src.width+x)*4;
-          if(!hasTransparency&&photoSettings.background==="remove-white"&&d[i+3]>0&&d[i]>220&&d[i+1]>220&&d[i+2]>220)d[i+3]=0;
-          if(d[i+3]>8){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
-        }
-        if(x1<x0)throw Error("No visible artwork pixels were found.");
-        const w=x1-x0+1,h=y1-y0+1,crop=document.createElement("canvas");crop.width=w;crop.height=h;
-        const out=crop.getContext("2d");out.putImageData(ctx.getImageData(x0,y0,w,h),0,0);
-        if(photoSettings.artColor!=="original"){
-          const pixels=out.getImageData(0,0,w,h);
-          applyPhotoArtworkColor(pixels,photoSettings.artColor);
-          out.putImageData(pixels,0,0);
-        }
-        crop.toBlob(blob=>blob?resolve({blob,width:w,height:h}):reject(Error("Could not prepare transparent artwork.")),"image/png");
-      }catch(e){reject(e)}
-    };
-    img.src=url;
-  });
-}
-async function makePlacement(texture){const variant=photoSettings.variant,size=photoSettings.size,geo=geometryFor(variant,size),face=brandingRegionFor(variant,size),bounds=surfaceBounds(variant,size),cx=face.centerXmm,cy=(bounds.minY+bounds.maxY)/2,aspect=texture.width/texture.height;const maxHeight=maximumContainedLogoHeightMm(variant,size,cx,cy,aspect,1);if(maxHeight<=0)throw Error("Artwork cannot fit within the CAD branding face with 1 mm clearance.");const h=maxHeight,w=h*aspect;return{geometryLengthMm:geo.overallMaxXmm-geo.overallMinXmm,geometryCenterXmm:(geo.overallMinXmm+geo.overallMaxXmm)/2,artworkCenterXmm:cx,artworkCenterYmm:cy,artworkAspectRatio:aspect,artworkWidthMm:w,artworkHeightMm:h}}
-// Incremental gallery reconciliation: polling updates existing nodes in place,
-// preserving focus, scroll position, and already-loaded private thumbnail URLs.
-function setIfChanged(node,value){if(node.textContent!==value)node.textContent=value}
-function photoJobLabel(job){if(job.status==="completed")return"Completed";if(job.status==="failed")return"Failed — "+(job.error||"Renderer could not complete this photo.");if(job.status==="queued")return"Waiting for renderer";if(job.stage==="Uploading")return"Uploading completed photo";return"Rendering"+(job.stage&&job.stage!=="rendering"?" · "+job.stage:"")}
-function createPhotoCard(job){const card=document.createElement("article"),frame=document.createElement("div"),heading=document.createElement("strong"),meta=document.createElement("p"),asset=document.createElement("p"),status=document.createElement("p"),progress=document.createElement("progress"),renderInfo=document.createElement("p"),downloads=document.createElement("div"),download=document.createElement("a"),original=document.createElement("button"),row=document.createElement("div"),retry=document.createElement("button"),del=document.createElement("button");card.className="photo-card";frame.className="photo-image-frame";Object.assign(frame.style,{width:"100%",aspectRatio:"4/3",overflow:"hidden",display:"grid",placeItems:"center",background:"#eee",borderRadius:"6px"});meta.className="muted";asset.className="muted";status.className="muted";status.setAttribute("aria-live","polite");progress.max=100;progress.className="photo-job-progress";progress.style.cssText="width:100%;height:10px";renderInfo.className="muted";downloads.className="photo-card-downloads";downloads.style.minHeight="84px";download.className="photo-link";download.textContent="Download photograph";original.className="secondary";original.textContent="Download original artwork";row.className="row";retry.className="secondary";retry.textContent="Retry";retry.disabled=true;del.className="danger";del.textContent="Delete";frame.append(heading);card.append(frame,meta,asset,status,progress,renderInfo,downloads,row);row.append(retry,del);const view={element:card,frame,heading,meta,asset,status,progress,renderInfo,downloads,download,original,retry,deleteButton:del,outputUrl:null,loadingImage:false,jobStatus:job.status};retry.addEventListener("click",async()=>{retry.disabled=true;try{await photoApi("/api/admin/photo-studio",{method:"PATCH",body:JSON.stringify({id:job.id,action:"retry"})});await refreshPhotoGallery()}catch(e){photoMessage.textContent=e.message}finally{retry.disabled=view.jobStatus!=="failed"}});del.addEventListener("click",async()=>{del.disabled=true;try{await photoApi("/api/admin/photo-studio",{method:"DELETE",body:JSON.stringify({id:job.id})});await refreshPhotoGallery()}catch(e){photoMessage.textContent=e.message;del.disabled=false}});original.addEventListener("click",async()=>{try{const {response}=await photoApi("/api/admin/photo-file?id="+encodeURIComponent(job.id)+"&kind=original"),url=URL.createObjectURL(await response.blob()),a=document.createElement("a");a.href=url;a.download=job.originalName;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){photoMessage.textContent=e.message}});return view}
-function loadPhotoOutput(view,job){if(view.outputUrl||view.loadingImage)return;view.loadingImage=true;photoApi("/api/admin/photo-file?id="+encodeURIComponent(job.id)).then(async({response})=>{const blob=await response.blob();if(photoCardViews.get(job.id)!==view)return;view.outputUrl=URL.createObjectURL(blob);const img=document.createElement("img");img.src=view.outputUrl;img.alt=job.originalName+" SnapInk product photo";img.style.cssText="width:100%;height:100%;object-fit:contain";view.frame.append(img);view.download.href=view.outputUrl;const suffix=job.settings.scene==="on-hat-rear"?"on-hat-rear":job.settings.template;view.download.download=job.originalName.replace(/\.[^.]+$/,"-")+suffix+(job.settings.scene==="on-hat-rear"?".png":".jpg");view.download.hidden=false;view.original.hidden=false;view.downloads.append(view.download,view.original)}).catch(e=>{setIfChanged(view.status,"Completed - photo download failed: "+e.message)}).finally(()=>{view.loadingImage=false})}
-function updatePhotoCard(view,job){const cfg=job.settings||{};view.jobStatus=job.status;setIfChanged(view.heading,job.originalName);setIfChanged(view.meta,(cfg.scene==="on-hat-rear"?"On-Hat Rear View":"Sleeve Only")+" | "+(cfg.variant||"")+" | size "+cfg.size+" | "+(cfg.scene==="on-hat-rear"?"fixed master":(cfg.template||""))+" | "+new Date(job.createdAt).toLocaleString());setIfChanged(view.asset,cfg.scene==="on-hat-rear"?"Locked master: "+(cfg.generationMetadata?.masterImageId||"verification pending")+" | Calibration: "+(cfg.generationMetadata?.calibrationVersion||"pending")+" | Outside pixels unchanged: "+(cfg.generationMetadata?.outsideMaskUnchanged?"verified":"pending"):"CAD asset: "+job.assetValidationStatus);setIfChanged(view.status,photoJobLabel(job));view.status.className=job.status==="failed"?"error":job.status==="completed"?"photo-complete":"muted";view.status.setAttribute("aria-label",photoJobLabel(job));view.progress.hidden=job.status==="queued"||job.status==="failed"||job.status==="completed";if(job.status==="rendering"&&job.stage==="Rendering"){view.progress.removeAttribute("value");view.progress.setAttribute("aria-label","Blender rendering; exact render percentage unavailable")}else{view.progress.value=Number(job.progress)||0;view.progress.setAttribute("aria-label",job.stage||"Renderer checkpoint")};const info=job.status==="completed"?((job.renderMode||cfg.renderMode)+" | "+(job.renderEngine||"engine unknown")+" | "+(((job.renderDurationMs||0)/1000).toFixed(1))+" s ? peak sampled GPU memory "+(job.peakGpuMemoryMb==null?"unavailable":job.peakGpuMemoryMb+" MB")+(job.gpuWarning?" | "+job.gpuWarning:"")):"";setIfChanged(view.renderInfo,info);view.renderInfo.className=job.gpuWarning?"error":"muted";view.retry.disabled=job.status!=="failed";view.retry.title=job.status==="failed"?"Retry this photo job":"Retry is available when a job fails.";view.deleteButton.disabled=false;if(job.status==="completed")loadPhotoOutput(view,job)}
-function updateRendererStatus(renderer,jobs){const active=(jobs||[]).find(j=>j.status==="rendering");let label="Waiting for renderer";if(renderer?.connected){if(renderer.state==="paused_orca")label="Paused — Snapmaker Orca running";else if(renderer.state==="uploading")label="Renderer connected · Uploading completed photo";else if(renderer.state==="rendering"||active)label="Renderer connected · Rendering";else label="Renderer connected";if(renderer.deviceName)label+=" · "+renderer.deviceName}else if(renderer?.message)label=renderer.message;setIfChanged(photoRendererStatusEl,label)}
-async function refreshPhotoGallery({poll=false}={}){if(photoRefreshBusy||(poll&&(photoSubmissionInProgress||photoDownloadInProgress)))return;photoRefreshBusy=true;try{const {data}=await photoApi("/api/admin/photo-studio"),x=window.scrollX,y=window.scrollY;photoJobs=data.jobs||[];updateRendererStatus(data.renderer,photoJobs);const liveIds=new Set(photoJobs.map(j=>j.id));for(const [id,view] of photoCardViews){if(!liveIds.has(id)){if(view.outputUrl)URL.revokeObjectURL(view.outputUrl);view.element.remove();photoCardViews.delete(id)}}for(const job of photoJobs){let view=photoCardViews.get(job.id);if(!view){view=createPhotoCard(job);photoCardViews.set(job.id,view);photoGallery.append(view.element)}updatePhotoCard(view,job)}photoGallery.getBoundingClientRect();if(window.scrollX!==x||window.scrollY!==y)window.scrollTo(x,y)}catch(e){if(!poll&&!photoSubmissionInProgress)photoMessage.textContent=e.message}finally{photoRefreshBusy=false}}
-function startPhotoPolling(){if(photoPollingTimer)return;photoPollingTimer=setInterval(()=>{if(!$("photo-studio").classList.contains("hidden"))refreshPhotoGallery({poll:true})},4000)}function stopPhotoPolling(){if(photoPollingTimer){clearInterval(photoPollingTimer);photoPollingTimer=null}}
-function crc32(bytes){let crc=-1;for(const b of bytes){crc^=b;for(let k=0;k<8;k++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}return(crc^-1)>>>0}
-function le(value,size){const b=new Uint8Array(size),v=new DataView(b.buffer);if(size===2)v.setUint16(0,value,true);else v.setUint32(0,value,true);return b}
-async function downloadPhotoZip(){if(photoDownloadInProgress)return;photoDownloadInProgress=true;try{const completed=photoJobs.filter(j=>j.status==="completed");if(!completed.length){photoMessage.textContent="No completed photos to download yet.";return}const locals=[],centrals=[];let offset=0;for(const job of completed){const {response}=await photoApi("/api/admin/photo-file?id="+encodeURIComponent(job.id));const bytes=new Uint8Array(await response.arrayBuffer()),name=job.originalName.replace(/\.[^.]+$/,"-")+(job.settings.scene==="on-hat-rear"?"on-hat-rear":job.settings.template)+(job.settings.scene==="on-hat-rear"?".png":".jpg"),nb=new TextEncoder().encode(name),crc=crc32(bytes);const local=new Uint8Array([...le(0x04034b50,4),...le(20,2),...le(0x0800,2),...le(0,2),...le(0,2),...le(0,2),...le(crc,4),...le(bytes.length,4),...le(bytes.length,4),...le(nb.length,2),...le(0,2),...nb]);locals.push(local,bytes);const central=new Uint8Array([...le(0x02014b50,4),...le(20,2),...le(20,2),...le(0x0800,2),...le(0,2),...le(0,2),...le(0,2),...le(crc,4),...le(bytes.length,4),...le(bytes.length,4),...le(nb.length,2),...le(0,2),...le(0,2),...le(0,2),...le(0,2),...le(0,4),...le(offset,4),...nb]);centrals.push(central);offset+=local.length+bytes.length}const centralSize=centrals.reduce((n,b)=>n+b.length,0),end=new Uint8Array([...le(0x06054b50,4),...le(0,2),...le(0,2),...le(completed.length,2),...le(completed.length,2),...le(centralSize,4),...le(offset,4),...le(0,2)]),blob=new Blob([...locals,...centrals,end],{type:"application/zip"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="snapink-product-photos.zip";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),60000)}catch(e){photoMessage.textContent=e.message}finally{photoDownloadInProgress=false}}
-syncPhotoSceneControls();validatePhotoConfig();$("photo-download-all").onclick=downloadPhotoZip;$("photo-refresh").onclick=refreshPhotoGallery;$("photo-toggle").addEventListener("click",()=>{const panel=$("photo-studio");panel.classList.toggle("hidden");if(!panel.classList.contains("hidden")){refreshPhotoGallery();startPhotoPolling()}else stopPhotoPolling()});
-$("photo-generate").onclick=async()=>{
- const files=[...$("photo-files").files];
- if(!files.length){photoMessage.textContent="Choose artwork files first.";return}
- if(files.length>100){photoMessage.textContent="Choose at most 100 designs per batch.";return}
- if(!validatePhotoConfig())return;
- photoSubmissionInProgress=true;const settings={...photoSettings};photoProgress.max=files.length;photoProgress.value=0;$("photo-generate").disabled=true;
- let uploaded=0;const failures=[];
- try{
-  const {data:batch}=await photoApi("/api/admin/photo-studio",{method:"POST",body:JSON.stringify({action:"createBatch",designCount:files.length,settings})});
-  for(const file of files){
-   try{
-    if(file.size>12*1024*1024)throw Error("Artwork exceeds 12 MB.");
-    if(!["image/png","image/jpeg","image/webp","image/svg+xml"].includes(file.type))throw Error("Use PNG, JPG, WebP, or SVG artwork.");
-    if(file.type==="image/svg+xml"){const svg=await file.text();if(/<\s*(script|foreignObject|iframe|object|embed)\b|\bon\w+\s*=|(?:href|src)\s*=\s*["']\s*(?!#)[^"']+|<!DOCTYPE|<!ENTITY|<\?xml-stylesheet|url\s*\(\s*(?!#)|@import/i.test(svg))throw Error("SVG contains active or external content and was blocked.")}
-    const texture=await decodeArtwork(file),placement=await makePlacement(texture),form=new FormData();form.set("batchId",batch.batchId);form.set("settings",JSON.stringify({...settings,...placement}));form.set("file",texture.blob,file.name.replace(/\.[^.]+$/,".png"));form.set("original",file,file.name);
-    await photoApi("/api/admin/photo-studio",{method:"POST",body:form});uploaded++;
-   }catch(e){failures.push(file.name+": "+(e.message||"Could not queue artwork."))}
-   photoProgress.value++;
-  }
-  await refreshPhotoGallery();
-  photoMessage.textContent=failures.length?`Uploaded ${uploaded}/${files.length} design(s); ${failures.length} failed. ${failures.slice(0,3).join(" | ")}`:`Uploaded ${uploaded} design(s) to the private renderer queue. The paired PC must be running SnapInk-Photo-Renderer.ps1.`;
- }catch(e){photoMessage.textContent=e.message||"Could not create the private render batch."}
- finally{photoSubmissionInProgress=false;$("photo-generate").disabled=false;validatePhotoConfig(false)}
-};
