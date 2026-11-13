@@ -645,3 +645,65 @@ export function maximumContainedLogoHeightMm(
   // Deflate a tiny amount so SVG/raster rounding cannot touch the margin.
   return Math.max(0, low - 0.01);
 }
+
+/** Resolve the Studio's overall logo scale from a stable calibrated center. */
+export function studioLogoBaseHeightMmFor(
+  variant: SleeveVariant,
+  size: number,
+  aspectRatio: number,
+  logoScalePercent: number
+): number {
+  const bounds = surfaceBounds(variant, size);
+  const usable = usableBrandingCanvasRangePercentFor(variant, size);
+  const calibratedCenterX = studioArtworkPositionFor(variant, size, (usable.start + usable.end) / 2, 50).centerXmm;
+  const maxHeight = maximumContainedLogoHeightMm(
+    variant,
+    size,
+    calibratedCenterX,
+    (bounds.minY + bounds.maxY) / 2,
+    aspectRatio
+  );
+  return maxHeight * (Math.max(0, Math.min(200, logoScalePercent)) / 100);
+}
+
+/** Position varies only X; the selected logo dimensions come from fixed size controls. */
+export function studioLogoPlacementMmFor(
+  variant: SleeveVariant,
+  size: number,
+  positionPercent: number,
+  aspectRatio: number,
+  logoScalePercent: number,
+  artworkHeightScalePercent: number
+): { centerXmm: number; baseHeightMm: number; widthMm: number; heightMm: number } {
+  const centerXmm = studioArtworkPositionFor(variant, size, positionPercent, 50).centerXmm;
+  const baseHeightMm = studioLogoBaseHeightMmFor(variant, size, aspectRatio, logoScalePercent);
+  return {
+    centerXmm,
+    baseHeightMm,
+    widthMm: baseHeightMm * aspectRatio,
+    heightMm: baseHeightMm * (Math.max(0, artworkHeightScalePercent) / 100),
+  };
+}
+
+/** Horizontal slider limits that preserve a fixed artwork width. */
+export function artworkHorizontalPositionRangePercentFor(
+  variant: SleeveVariant,
+  size: number,
+  artworkWidthMm: number,
+  currentPositionPercent: number
+): { start: number; end: number } {
+  const geometry = geometryFor(variant, size);
+  const branding = brandingRegionFor(variant, size);
+  const usableMinX = branding.grooveXmm + BRANDING_GROOVE_WIDTH_MM / 2 + PRODUCTION_BRANDING_INSET_MM;
+  const usableMaxX = branding.rightEdgeXmm - PRODUCTION_BRANDING_INSET_MM;
+  const current = Number.isFinite(currentPositionPercent) ? currentPositionPercent : usableBrandingCenterCanvasPercentFor(variant, size);
+  const width = Number.isFinite(artworkWidthMm) ? Math.max(0, artworkWidthMm) : Infinity;
+  const minCenterX = usableMinX + width / 2;
+  const maxCenterX = usableMaxX - width / 2;
+  if (maxCenterX < minCenterX) return { start: current, end: current };
+  const canvasLength = geometry.overallMaxXmm - geometry.overallMinXmm;
+  return {
+    start: ((minCenterX - geometry.overallMinXmm) / canvasLength) * 100,
+    end: ((maxCenterX - geometry.overallMinXmm) / canvasLength) * 100,
+  };
+}

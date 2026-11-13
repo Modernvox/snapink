@@ -34,10 +34,11 @@ import {
   artworkBoundsStatusMm,
   artworkVerticalCenterRangeMm,
   brandingSurfacePath,
+  artworkHorizontalPositionRangePercentFor,
+  studioLogoPlacementMmFor,
   artworkCenterYForPositionMm,
   cadXToCanvasX,
   geometryFor,
-  maximumContainedLogoHeightMm,
   nonPrintableGroovePath,
   sleeveGrooveFractionFor,
   surfaceBounds,
@@ -1511,20 +1512,13 @@ const SnapInkSleeveCustomizer = forwardRef<
   const cameraOriginXPercent = (stageComposition.grooveX / STUDIO_STAGE_COORDINATE_WIDTH) * 100;
   const cameraOriginYPercent = (stageComposition.grooveY / stageCoordinateHeight) * 100;
   const productionBounds = surfaceBounds(variant, sleeveSize);
-  const productionLogoCenterXmm = studioArtworkPositionFor(variant, sleeveSize, draftCanvasX, 50).centerXmm;
+  const logoPlacement = studioLogoPlacementMmFor(variant, sleeveSize, draftCanvasX, logoAspectRatio, logoScale, artworkHeightScale);
+  const productionLogoCenterXmm = logoPlacement.centerXmm;
   // Billboard logos center on the inset face customers see as printable,
   // excluding the groove/flap side from the visual centering zone. Preview
   // size and validation share this same selected-CAD fit calculation.
-  const logoFitCenterXmm = productionLogoCenterXmm;
-  const logoFitCenterYmm = (productionBounds.minY + productionBounds.maxY) / 2;
-  const logoMaxHeightMm = maximumContainedLogoHeightMm(
-    variant,
-    sleeveSize,
-    logoFitCenterXmm,
-    logoFitCenterYmm,
-    logoAspectRatio
-  );
-  const logoBaseHeightMm = logoMaxHeightMm * (clamp(logoScale, 0, 200) / 100);
+  // Size against the calibrated branding center, never the movable X position.
+  const logoBaseHeightMm = logoPlacement.baseHeightMm;
   const selectedBrandingRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
   const previewBrandingRange = usableBrandingCanvasRangePercentFor(variant, renderGeometrySize);
   const renderPosX = previewBrandingRange.start
@@ -1535,7 +1529,7 @@ const SnapInkSleeveCustomizer = forwardRef<
   // Boundary placement follows the visible alpha image face. Emboss extrusion
   // is rendered as offset edge layers and must not inflate the centered face
   // bounds used for clearance checks.
-  const logoArtworkHeightMm = logoHeightMm * artworkHeightScale / 100;
+  const logoArtworkHeightMm = logoPlacement.heightMm;
   const textArtworkHeightMmScaled = textArtworkHeightMm * artworkHeightScale / 100;
   const textCenterYmm = artworkCenterYForPositionMm(
     variant,
@@ -1574,9 +1568,6 @@ const SnapInkSleeveCustomizer = forwardRef<
   const logoImageX = logoCenterCanvasX - visibleLogoWidthSvg / 2 - logoVisibleBounds.x * logoImageWidthSvg;
   const logoImageY = logoCenterCanvasY - visibleLogoHeightSvg / 2 - logoVisibleBounds.y * logoImageHeightSvg;
   const artworkCenterCanvasPercent = usableBrandingCenterCanvasPercentFor(variant, sleeveSize);
-  const usableArtworkRange = usableBrandingCanvasRangePercentFor(variant, sleeveSize);
-  const artworkMinXCanvasPercent = usableArtworkRange.start;
-  const artworkMaxXCanvasPercent = usableArtworkRange.end;
   const productionTextBaseHeightMm = textArtworkHeightMm
     * ((productionBounds.maxY - productionBounds.minY) / (bounds.maxY - bounds.minY));
   const productionTextHeightMm = productionTextBaseHeightMm * artworkHeightScale / 100;
@@ -1585,10 +1576,18 @@ const SnapInkSleeveCustomizer = forwardRef<
   const productionLogoBaseHeightMm = logoDataUrl ? logoBaseHeightMm : 0;
   const artworkBaseHeightMm = logoDataUrl ? productionLogoBaseHeightMm : productionTextBaseHeightMm;
   const artworkHeightScaleMax = maximumArtworkHeightScalePercent(artworkBaseHeightMm, artworkHeightScale);
+  const artworkWidthForPositionMm = logoDataUrl
+    ? logoPlacement.widthMm
+    : productionTextWidthMm;
+  const artworkHorizontalRange = artworkHorizontalPositionRangePercentFor(
+    variant, sleeveSize, artworkWidthForPositionMm, posX
+  );
+  const artworkMinXCanvasPercent = artworkHorizontalRange.start;
+  const artworkMaxXCanvasPercent = artworkHorizontalRange.end;
   // Studio applies artworkHeightScale only on Y (scale(1, scaleY)). Keep the
   // visible width on its independent logoScale so validation matches preview.
   const productionLogoHeightMm = logoDataUrl
-    ? productionLogoBaseHeightMm * artworkHeightScale / 100
+    ? logoPlacement.heightMm
     : 0;
   const productionCenterYmm = artworkCenterYForPositionMm(
     variant,
@@ -1600,7 +1599,7 @@ const SnapInkSleeveCustomizer = forwardRef<
     MAX_BOTTOM_ARTWORK_EXTENSION_MM
   );
   const selectedArtworkWidthMm = logoDataUrl
-    ? productionLogoBaseHeightMm * logoAspectRatio
+    ? logoPlacement.widthMm
     : productionTextWidthMm;
   const selectedArtworkHeightMm = logoDataUrl ? productionLogoHeightMm : productionTextHeightMm;
   const artworkHeightExceedsMaximum = selectedArtworkHeightMm > MAX_EXTENDED_ARTWORK_HEIGHT_MM + 0.001;
