@@ -1,7 +1,7 @@
 import { decodeDataUrl, digest, json, now, randomId, validEmail } from "../_lib/orders.js";
 import { validDraft } from "../_lib/draft.js";
 import { EmailDeliveryError, sendSnapInkEmail } from "../_lib/snapink-email.js";
-import { artworkHeightExceedsMaximum } from "../_lib/artwork-limits.js";
+import { artworkProductionReviewReason } from "../_lib/artwork-limits.js";
 
 const MAX_JSON_BYTES = 24 * 1024 * 1024;
 const MAX_ARTWORK_BYTES = 8 * 1024 * 1024;
@@ -98,9 +98,10 @@ export async function onRequestPost({ request, env }) {
     const draft = { ...data.draft };
     delete draft.logoDataUrl;
     if (!validDraft(draft)) return json({ error: "Some design settings are invalid. Review the design and try again." }, 400);
-    const productionReviewRequired = artworkHeightExceedsMaximum(draft.artworkHeightMm ?? 0);
+    const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, draft.size);
+    const productionReviewRequired = Boolean(productionReviewReason);
     draft.productionReviewRequired = productionReviewRequired;
-    if (productionReviewRequired) draft.productionReviewReason = "total_height_exceeds_38_1_mm";
+    if (productionReviewRequired) draft.productionReviewReason = productionReviewReason;
     else delete draft.productionReviewReason;
     const { artwork, preview, source } = decodeFiles(data.files || {});
     const existing = await env.DB.prepare("SELECT id,reference,status FROM design_drafts WHERE idempotency_key=?").bind(data.idempotencyKey).first();
@@ -143,7 +144,7 @@ export async function onRequestPost({ request, env }) {
       await sendSnapInkEmail(env, {
         to: "partners@snapbacksleeves.com",
         subject: `SnapInk design draft ${reference} received`,
-        text: `A customer design draft is ready for review.\n\nReference: ${reference}\nCustomer: ${customer.name}\nEmail: ${customer.email}\nSleeve: ${draft.variant} - Size ${draft.size}\nQuantity: ${quantity}\nSubmitted: ${createdAt}${productionReviewRequired ? `\n\nMANUFACTURING REVIEW REQUIRED: Artwork height ${Number(draft.artworkHeightMm).toFixed(2)} mm exceeds the 38.1 mm production specification. Do not approve for production without review.` : ""}\n\nReview securely in the SnapInk admin dashboard: ${ADMIN_URL}\n\nThis is a design review request, not a production order.`,
+        text: `A customer design draft is ready for review.\n\nReference: ${reference}\nCustomer: ${customer.name}\nEmail: ${customer.email}\nSleeve: ${draft.variant} - Size ${draft.size}\nQuantity: ${quantity}\nSubmitted: ${createdAt}${productionReviewRequired ? `\n\nMANUFACTURING REVIEW REQUIRED: ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm artwork exceeds verified production limits (${productionReviewReason}). Do not approve for production without review.` : ""}\n\nReview securely in the SnapInk admin dashboard: ${ADMIN_URL}\n\nThis is a design review request, not a production order.`,
       });
       emailDelivered = true;
       await env.DB.prepare("UPDATE design_drafts SET notification_status='sent',notification_error=NULL,updated_at=? WHERE id=?").bind(now(), id).run();

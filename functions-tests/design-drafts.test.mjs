@@ -55,8 +55,11 @@ function request(data,{ip="192.0.2.1",auth}={}) { return new Request("https://sn
 
 test("draft validation retains oversized visual artwork for production review while enforcing per-edge extensions",()=>{
   const draft=payload().draft;
-  Object.assign(draft,{artworkHeightScale:350,artworkWidthMm:80,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true,productionReviewRequired:true,productionReviewReason:"total_height_exceeds_38_1_mm"});
+  Object.assign(draft,{artworkWidthScale:400,artworkHeightScale:350,artworkWidthMm:240,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true,productionReviewRequired:true,productionReviewReason:"total_height_exceeds_38_1_mm"});
   assert.equal(validDraft(draft),true);
+  draft.artworkWidthScale=400.01;
+  assert.equal(validDraft(draft),false);
+  draft.artworkWidthScale=400;
   draft.artworkHeightMm=200.001;
   assert.equal(validDraft(draft),false);
   draft.artworkHeightMm=42.16;draft.artworkTopExtensionMm=12.702;draft.artworkExtensionMm=12.702;
@@ -65,16 +68,31 @@ test("draft validation retains oversized visual artwork for production review wh
 
 test("design draft submission saves oversized artwork and server-derived production review status",async()=>{
   const data=payload({key:"draft-oversized-review-key-001"});
-  Object.assign(data.draft,{artworkHeightScale:252,artworkWidthMm:80,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true});
+  Object.assign(data.draft,{artworkWidthScale:250,artworkHeightScale:252,artworkWidthMm:80,artworkHeightMm:42.16,artworkExtensionMm:8.9,artworkTopExtensionMm:8.9,artworkBottomExtensionMm:8.9,extendedArtwork:true});
   const response=await onRequestPost({request:request(data,{ip:"192.0.2.91"}),env}),result=await response.json();
   assert.equal(response.status,201);
   const saved=[...drafts.values()].find((draft)=>draft.idempotency_key===data.idempotencyKey);
   assert.ok(saved);
   const savedDesign=JSON.parse(saved.draft_json);
   assert.equal(savedDesign.artworkHeightMm,42.16);
+  assert.equal(savedDesign.artworkWidthScale,250);
   assert.equal(savedDesign.productionReviewRequired,true);
   assert.equal(savedDesign.productionReviewReason,"total_height_exceeds_38_1_mm");
   assert.equal(saved.status,"pending_review");
+  assert.equal(result.draft.status,"pending_review");
+});
+
+test("design draft submission flags horizontally oversized artwork for internal manufacturing review",async()=>{
+  const data=payload({key:"draft-horizontal-review-key-001",size:2,variant:"standard"});
+  Object.assign(data.draft,{artworkWidthScale:300,artworkWidthMm:120,artworkHeightMm:18,artworkExtensionMm:0,artworkTopExtensionMm:0,artworkBottomExtensionMm:0,extendedArtwork:false});
+  const response=await onRequestPost({request:request(data,{ip:"192.0.2.92"}),env}),result=await response.json();
+  assert.equal(response.status,201);
+  const saved=[...drafts.values()].find((draft)=>draft.idempotency_key===data.idempotencyKey);
+  const savedDesign=JSON.parse(saved.draft_json);
+  assert.equal(savedDesign.artworkWidthScale,300);
+  assert.equal(savedDesign.artworkWidthMm,120);
+  assert.equal(savedDesign.productionReviewRequired,true);
+  assert.equal(savedDesign.productionReviewReason,"horizontal_artwork_bounds_exceeded");
   assert.equal(result.draft.status,"pending_review");
 });
 

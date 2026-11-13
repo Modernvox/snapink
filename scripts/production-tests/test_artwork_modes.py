@@ -134,6 +134,19 @@ class ArtworkModeRegression(unittest.TestCase):
         with zipfile.ZipFile(self.work / "standard-output.3mf") as archive:
             self.assertIn("3D/Objects/base.model", archive.namelist())
 
+    def test_independent_studio_width_and_height_are_preserved_in_relief_geometry(self):
+        result = GEN.build_relief(
+            self.svg, self.work / "independent-scale.stl", 6.0, 50, 50, 100,
+            self.sleeve_step, self.support_step, None, None, "standard", None,
+            self.work, None, "#000000", 3.0,
+        )
+        self.assertAlmostEqual(result["widthMm"], 6.0, places=6)
+        self.assertAlmostEqual(result["heightMm"], 3.0, places=6)
+        self.assertAlmostEqual(result["centerXMm"], 0.0, places=6)
+        self.assertAlmostEqual(result["centerYMm"], 0.0, places=6)
+        self.assertIsNone(result["uniformScale"])
+        self.assertNotEqual(result["horizontalScale"], result["verticalScale"])
+
     def test_corrected_ny_contour_path_integrates_wall_and_trims_removable_support(self):
         result = self.generate("contour", 4.0)
         validation = result["assemblyValidation"]

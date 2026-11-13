@@ -82,3 +82,28 @@ test("visible ITGIRL PNG bounds retain independent artwork scaling while oversiz
     }
   }
 });
+
+test("Artwork Width stretches only X, stays anchored, and horizontal movement changes only its center", () => {
+  const visibleAspectRatios = [1663 / 759, 2168 / 708]; // nike_white.png and Itgirl_logo.png visible alpha bounds.
+  for (const variant of ["standard", "billboard"]) {
+    for (let size = 0; size <= 5; size += 1) {
+      const range = geometry.usableBrandingCanvasRangePercentFor(variant, size);
+      const centerPercent = (range.start + range.end) / 2;
+      for (const aspectRatio of visibleAspectRatios) {
+        const original = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, aspectRatio, 75, 130, 100);
+        const compressed = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, aspectRatio, 75, 130, 35);
+        const enlarged = geometry.studioLogoPlacementMmFor(variant, size, centerPercent, aspectRatio, 75, 130, 300);
+        const moved = geometry.studioLogoPlacementMmFor(variant, size, range.end, aspectRatio, 75, 130, 300);
+
+        assert.equal(compressed.heightMm, original.heightMm, `${variant} size ${size} width compression leaves height unchanged`);
+        assert.equal(enlarged.heightMm, original.heightMm, `${variant} size ${size} width enlargement leaves height unchanged`);
+        assert.equal(compressed.widthMm, original.widthMm * 0.35, `${variant} size ${size} compression applies only on X`);
+        assert.equal(enlarged.widthMm, original.widthMm * 3, `${variant} size ${size} enlargement applies only on X`);
+        assert.equal(enlarged.centerXmm, original.centerXmm, `${variant} size ${size} width change keeps the center fixed`);
+        assert.equal(moved.widthMm, enlarged.widthMm, `${variant} size ${size} horizontal movement preserves width`);
+        assert.equal(moved.heightMm, enlarged.heightMm, `${variant} size ${size} horizontal movement preserves height`);
+        assert.notEqual(moved.centerXmm, enlarged.centerXmm, `${variant} size ${size} horizontal movement changes the center`);
+      }
+    }
+  }
+});

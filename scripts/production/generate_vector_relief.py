@@ -238,11 +238,12 @@ def derive_profile(variant: str, size: int, sleeve_step: Path, billboard_groove_
     }
 
 
-def _position_artwork(geom, raw_bounds, center_x, center_y, scale):
+def _position_artwork(geom, raw_bounds, center_x, center_y, scale_x, scale_y=None):
     minx, miny, maxx, maxy = raw_bounds
-    width, height = (maxx - minx) * scale, (maxy - miny) * scale
+    scale_y = scale_x if scale_y is None else scale_y
+    width, height = (maxx - minx) * scale_x, (maxy - miny) * scale_y
     x0, y0 = center_x - width / 2, center_y - height / 2
-    placed = shape_scale(geom, xfact=scale, yfact=-scale, origin=(minx, maxy))
+    placed = shape_scale(geom, xfact=scale_x, yfact=-scale_y, origin=(minx, maxy))
     placed = shape_translate(placed, xoff=x0 - minx, yoff=y0 - maxy)
     return placed, x0, y0, width, height
 
@@ -362,7 +363,7 @@ def validate_artwork_assembly(sleeve, support, artwork, baseline_sleeve, baselin
             "snapFitSourceUnchanged": removed_approved_volume <= 0.001, "valid": True}
 
 
-def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: float, logo_y: float, logo_scale: float, sleeve_step: Path, support_step: Path, artwork_center_x_mm: float | None = None, artwork_center_y_mm: float | None = None, artwork_mode: str = "standard", contour_width_mm: float | None = None, generated_dir: Path | None = None, contour_color: str | None = None, sleeve_color: str = "#000000") -> dict:
+def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: float, logo_y: float, logo_scale: float, sleeve_step: Path, support_step: Path, artwork_center_x_mm: float | None = None, artwork_center_y_mm: float | None = None, artwork_mode: str = "standard", contour_width_mm: float | None = None, generated_dir: Path | None = None, contour_color: str | None = None, sleeve_color: str = "#000000", requested_height: float | None = None) -> dict:
     if artwork_mode not in ("standard", "contour"):
         fail("Artwork mode must be standard or explicitly requested contour.")
     if artwork_mode == "contour" and (contour_width_mm is None or not math.isfinite(contour_width_mm) or not 0.25 <= contour_width_mm <= 5.0):
@@ -400,19 +401,28 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
         placed, *_ = _position_artwork(geom, (minx, miny, maxx, maxy), center_x, neutral_center_y, mid)
         if usable.covers(placed): low = mid
         else: high = mid
-    scale = low * (logo_scale / 100)
-    if scale <= 0:
+    fit_scale = low * (logo_scale / 100)
+    if fit_scale <= 0:
         fail("The selected design size does not fit the safe branding face.")
-    if requested_width is not None:
-        if requested_width <= 0 or requested_width > (ux1 - ux0):
+    scale_x = scale_y = fit_scale
+    if requested_width is not None or requested_height is not None:
+        if requested_width is not None and (not math.isfinite(requested_width) or requested_width <= 0 or requested_width > (ux1 - ux0)):
             fail("Requested artwork width is outside this CAD-validated branding face.")
-        requested_scale = requested_width / raw_w
-        if requested_scale > scale + 1e-6:
-            fail("Requested width exceeds the design's centered safe maximum; artwork will not be silently resized.")
-        scale = requested_scale
-    placed, x0, y0, width, height = _position_artwork(geom, (minx, miny, maxx, maxy), center_x, center_y, scale)
+        if requested_height is not None and (not math.isfinite(requested_height) or requested_height <= 0 or requested_height > (uy1 - uy0)):
+            fail("Requested artwork height is outside this CAD-validated branding face.")
+        if requested_width is not None and requested_height is not None:
+            scale_x = requested_width / raw_w
+            scale_y = requested_height / raw_h
+        else:
+            requested_scale = requested_width / raw_w if requested_width is not None else requested_height / raw_h
+            if requested_scale > fit_scale + 1e-6:
+                fail("Requested artwork size exceeds the design's centered safe maximum; artwork will not be silently resized.")
+            scale_x = scale_y = requested_scale
+    if scale_x <= 0 or scale_y <= 0:
+        fail("Requested artwork scales must be positive.")
+    placed, x0, y0, width, height = _position_artwork(geom, (minx, miny, maxx, maxy), center_x, center_y, scale_x, scale_y)
     if not usable.covers(placed):
-        fail("The selected artwork position extends outside the safe printable area. Its saved position was preserved; reposition the artwork in Studio before production.")
+        fail("The selected artwork position or independent dimensions extend outside the safe printable area. Its selected dimensions were preserved; manufacturing review is required.")
     clearance = float(placed.boundary.distance(PROFILE["branding_face"].boundary))
     if clearance < 1.0 - 1e-3:
         fail(f"Artwork clearance is below 1 mm ({clearance:.3f} mm).")
@@ -424,7 +434,7 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
     solids = []
     for poly in polygons:
         def wire(coords):
-            return cq.Wire.makePolygon([cq.Vector(x0 + (x - minx) * scale, y0 + (maxy - y) * scale, artwork_base_z) for x, y in coords], close=True)
+            return cq.Wire.makePolygon([cq.Vector(x0 + (x - minx) * scale_x, y0 + (maxy - y) * scale_y, artwork_base_z) for x, y in coords], close=True)
         outer = wire(list(poly.exterior.coords)[:-1])
         holes = [wire(list(ring.coords)[:-1]) for ring in poly.interiors]
         face = cq.Face.makeFromWires(outer, holes)
@@ -478,7 +488,7 @@ def build_relief(svg: Path, stl: Path, requested_width: float | None, logo_x: fl
     cq.exporters.export(shape, str(stl), exportType="STL", tolerance=0.02, angularTolerance=0.1)
     # Geometry acceptance references the CAD face envelope used by the prior
     # Size 0 validation. This is a geometric check, not a physical print test.
-    return {"widthMm": width, "heightMm": height, "centerXMm": center_x, "centerYMm": center_y, "studioArtworkCenterXMm": artwork_center_x_mm, "studioArtworkCenterYMm": artwork_center_y_mm, "studioLogoXPercent": logo_x, "studioLogoYPercent": logo_y, "studioLogoScalePercent": logo_scale, "uniformScale": scale, "riseMm": PROFILE["relief_mm"], "artworkBaseZMm": artwork_base_z, "artworkColor": artwork_color, "cadSolidValid": True, "boundaryValid": True, "grooveValleyXMm": PROFILE["groove_valley_x_mm"], "grooveRightEdgeMm": PROFILE["groove_right_x_mm"], "grooveDatumSource": PROFILE["groove_source"], "brandingFaceBoundsMm": PROFILE["face_bounds_mm"], "usableBrandingBoundsMm": PROFILE["usable_bounds_mm"], "minimumBrandingClearanceMm": clearance, "approvedCadClearance": cad_clearance, "artworkMode": artwork_mode, "studioContourSettings": {"enabled": artwork_mode == "contour", "outwardDilationRadiusMm": contour_width_mm, "color": contour_color}, "assemblyValidation": assembly_validation, "contourFiles": {key: str(value) for key, value in contour_files.items()} if contour_files else None}
+    return {"widthMm": width, "heightMm": height, "centerXMm": center_x, "centerYMm": center_y, "studioArtworkCenterXMm": artwork_center_x_mm, "studioArtworkCenterYMm": artwork_center_y_mm, "studioLogoXPercent": logo_x, "studioLogoYPercent": logo_y, "studioLogoScalePercent": logo_scale, "uniformScale": scale_x if abs(scale_x - scale_y) <= 1e-12 else None, "horizontalScale": scale_x, "verticalScale": scale_y, "riseMm": PROFILE["relief_mm"], "artworkBaseZMm": artwork_base_z, "artworkColor": artwork_color, "cadSolidValid": True, "boundaryValid": True, "grooveValleyXMm": PROFILE["groove_valley_x_mm"], "grooveRightEdgeMm": PROFILE["groove_right_x_mm"], "grooveDatumSource": PROFILE["groove_source"], "brandingFaceBoundsMm": PROFILE["face_bounds_mm"], "usableBrandingBoundsMm": PROFILE["usable_bounds_mm"], "minimumBrandingClearanceMm": clearance, "approvedCadClearance": cad_clearance, "artworkMode": artwork_mode, "studioContourSettings": {"enabled": artwork_mode == "contour", "outwardDilationRadiusMm": contour_width_mm, "color": contour_color}, "assemblyValidation": assembly_validation, "contourFiles": {key: str(value) for key, value in contour_files.items()} if contour_files else None}
 
 
 def read_binary_stl(path: Path):
@@ -721,6 +731,7 @@ def main() -> int:
     ap.add_argument("--output-dir", type=Path, required=True)
     ap.add_argument("--order-id", required=True)
     ap.add_argument("--target-width-mm", type=float, default=None)
+    ap.add_argument("--target-height-mm", type=float, default=None, help="Optional independent Studio artwork height in millimeters; combine with target width for non-proportional scaling.")
     ap.add_argument("--logo-x", type=float, default=59.42)
     ap.add_argument("--logo-y", type=float, default=50.0)
     ap.add_argument("--artwork-center-x-mm", type=float, default=None, help="CAD-coordinate X emitted by the current Studio positioning system.")
@@ -748,7 +759,7 @@ def main() -> int:
     original = outdir / "artwork-original.svg"
     original.write_bytes(args.svg.read_bytes())
     stl = outdir / "customer-vector-relief.stl"
-    geom = build_relief(original, stl, args.target_width_mm, args.logo_x, args.logo_y, args.logo_scale, args.sleeve_step, args.support_step, args.artwork_center_x_mm, args.artwork_center_y_mm, args.artwork_mode, args.contour_width_mm, outdir, args.contour_color, args.sleeve_color)
+    geom = build_relief(original, stl, args.target_width_mm, args.logo_x, args.logo_y, args.logo_scale, args.sleeve_step, args.support_step, args.artwork_center_x_mm, args.artwork_center_y_mm, args.artwork_mode, args.contour_width_mm, outdir, args.contour_color, args.sleeve_color, args.target_height_mm)
     geom["brandingCenterXMm"] = PROFILE["branding_center_x_mm"]
     geom["positioningVersion"] = "cad-flap-valley-to-right-edge-v1"
     vertices, faces = read_binary_stl(stl)

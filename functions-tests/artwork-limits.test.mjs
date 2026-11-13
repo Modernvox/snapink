@@ -4,7 +4,7 @@ import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 
 const bundled = await build({ entryPoints: [fileURLToPath(new URL("../functions/_lib/artwork-limits.js", import.meta.url))], bundle: true, write: false, platform: "node", format: "esm" });
-const { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, maximumArtworkHeightScalePercent } = await import("data:text/javascript;base64," + Buffer.from(bundled.outputFiles[0].contents).toString("base64"));
+const { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, maximumArtworkHeightScalePercent, artworkWidthExceedsHorizontalBounds, artworkProductionReviewReason } = await import("data:text/javascript;base64," + Buffer.from(bundled.outputFiles[0].contents).toString("base64"));
 
 test("height slider maximum follows the 38.1 mm physical height without changing defaults or width", () => {
   assert.equal(MAX_ARTWORK_EXTENSION_PER_EDGE_MM, 12.7);
@@ -16,4 +16,19 @@ test("height slider maximum follows the 38.1 mm physical height without changing
   assert.equal(maximumArtworkHeightScalePercent(5, 450), 762);
   assert.equal(maximumArtworkHeightScalePercent(0.01), 381000);
   assert.equal(maximumArtworkHeightScalePercent(0), 200);
+});
+
+test("horizontal overflow is retained for manufacturing review across sleeve sizes", () => {
+  const rightEdges = [71.52, 80.21, 88.9, 97.59, 106.28, 114.97];
+  const leftEdge = -1.75;
+  for (let size = 0; size <= 5; size += 1) {
+    const rightEdge = rightEdges[size] - 1.05;
+    const width = rightEdge - leftEdge;
+    const center = (rightEdge + leftEdge) / 2;
+    assert.equal(artworkWidthExceedsHorizontalBounds(width, center, size), false);
+    assert.equal(artworkWidthExceedsHorizontalBounds(width + 1, center, size), true);
+    assert.equal(artworkProductionReviewReason(width, 20, center, size), undefined);
+    assert.equal(artworkProductionReviewReason(width + 1, 20, center, size), "horizontal_artwork_bounds_exceeded");
+  }
+  assert.equal(artworkProductionReviewReason(20, 42.16, 40, 2), "total_height_exceeds_38_1_mm");
 });

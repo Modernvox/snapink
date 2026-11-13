@@ -8,7 +8,7 @@ const STUDIO_ARTWORK_VERTICAL_POSITION_MIN = -400;
 
 export function validDraft(draft) {
   if (!draft || typeof draft !== "object" || Array.isArray(draft) || Object.keys(draft).length > 48) return false;
-  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkHeightScale","logoOpacity","artworkStrokeEnabled","artworkStrokeWidthMm","artworkStrokeColor","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork","productionReviewRequired","productionReviewReason"]);
+  const allowed = new Set(["size","variant","text","font","fontSize","fontWeight","tracking","lineHeight","fill","stroke","strokeWidth","styleMode","arc","posX","posY","logoPosY","align","safeMargin","bgType","backgroundColor","logoName","logoX","logoY","logoScale","artworkWidthScale","artworkHeightScale","logoOpacity","artworkStrokeEnabled","artworkStrokeWidthMm","artworkStrokeColor","productionGeometryVersion","positioningVersion","brandingCenterXmm","artworkCenterXmm","artworkCenterYmm","artworkWidthMm","artworkHeightMm","artworkExtensionMm","artworkTopExtensionMm","artworkBottomExtensionMm","extendedArtwork","hasCustomArtwork","productionReviewRequired","productionReviewReason"]);
   if (Object.keys(draft).some((key) => !allowed.has(key))) return false;
   if (draft.productionGeometryVersion !== GEOMETRY_VERSION || draft.positioningVersion !== POSITIONING_VERSION) return false;
   if (typeof draft.hasCustomArtwork !== "boolean" || !Number.isFinite(draft.brandingCenterXmm) || !Number.isFinite(draft.artworkCenterXmm) || (draft.artworkCenterYmm != null && !Number.isFinite(draft.artworkCenterYmm))) return false;
@@ -27,13 +27,14 @@ export function validDraft(draft) {
   if (draft.text.trim() && Math.abs(draft.artworkCenterXmm - expectedArtworkCenter) > 0.01) return false;
   if (!draft.text.trim() && (Math.abs(draft.artworkCenterXmm - expectedCenter) > 0.01 || Math.abs(draft.logoX - ((expectedCenter - (FLAP_VALLEY_X_MM + 0.4 + 1.05)) / ((edge - 1.05) - (FLAP_VALLEY_X_MM + 0.4 + 1.05))) * 100) > 0.05)) return false;
   if (!Number.isFinite(draft.safeMargin) || draft.safeMargin < 0 || draft.safeMargin > 12 || !Number.isFinite(draft.logoScale) || draft.logoScale < 0 || draft.logoScale > 100 || (draft.artworkHeightScale != null && (!Number.isFinite(draft.artworkHeightScale) || draft.artworkHeightScale < 25)) || !Number.isFinite(draft.logoOpacity) || draft.logoOpacity < 0 || draft.logoOpacity > 100) return false;
+  if (draft.artworkWidthScale != null && (!Number.isFinite(draft.artworkWidthScale) || draft.artworkWidthScale < 10 || draft.artworkWidthScale > 400)) return false;
   const hasArtworkReviewMetadata = draft.extendedArtwork != null || draft.artworkExtensionMm != null || draft.artworkWidthMm != null || draft.artworkHeightMm != null || draft.artworkTopExtensionMm != null || draft.artworkBottomExtensionMm != null;
   const hasDirectionalExtensionMetadata = draft.artworkTopExtensionMm != null || draft.artworkBottomExtensionMm != null;
   const requiresPremiumArtwork = hasDirectionalExtensionMetadata
     ? draft.artworkBottomExtensionMm > 0.001 || (draft.artworkTopExtensionMm > 0.001 && draft.artworkTopExtensionMm <= 12.7 + 0.001)
     : draft.artworkExtensionMm > 0.001;
   if (hasArtworkReviewMetadata && (![draft.artworkWidthMm,draft.artworkHeightMm,draft.artworkExtensionMm].every(Number.isFinite)
-    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 200 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > 200
+    || draft.artworkWidthMm < 0 || draft.artworkWidthMm > 500 || draft.artworkHeightMm < 0 || draft.artworkHeightMm > 200
     || draft.artworkExtensionMm < 0 || draft.artworkExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
     || (hasDirectionalExtensionMetadata && (!Number.isFinite(draft.artworkTopExtensionMm) || !Number.isFinite(draft.artworkBottomExtensionMm)
       || draft.artworkTopExtensionMm < 0 || draft.artworkTopExtensionMm > MAX_ARTWORK_EXTENSION_PER_EDGE_MM + 0.001
@@ -41,7 +42,7 @@ export function validDraft(draft) {
       || Math.abs(draft.artworkExtensionMm - Math.max(draft.artworkTopExtensionMm, draft.artworkBottomExtensionMm)) > 0.001))
     || typeof draft.extendedArtwork !== "boolean" || draft.extendedArtwork !== requiresPremiumArtwork)) return false;
   if (draft.productionReviewRequired != null && typeof draft.productionReviewRequired !== "boolean") return false;
-  if (draft.productionReviewReason != null && draft.productionReviewReason !== "total_height_exceeds_38_1_mm") return false;
+  if (draft.productionReviewReason != null && !["total_height_exceeds_38_1_mm", "horizontal_artwork_bounds_exceeded"].includes(draft.productionReviewReason)) return false;
   if (!Number.isFinite(draft.strokeWidth) || draft.strokeWidth < 0 || draft.strokeWidth > 40 || !["emboss","flat"].includes(draft.styleMode) || !["start","center","end"].includes(draft.align) || draft.bgType !== "vector") return false;
   for (const color of [draft.fill,draft.stroke,draft.backgroundColor]) if (typeof color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(color)) return false;
   if (draft.artworkStrokeEnabled != null && typeof draft.artworkStrokeEnabled !== "boolean") return false;

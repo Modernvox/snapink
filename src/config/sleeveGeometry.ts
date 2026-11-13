@@ -3,9 +3,11 @@ import {
   artworkHeightExceedsMaximum,
   MAX_EXTENDED_ARTWORK_HEIGHT_MM,
   maximumArtworkHeightScalePercent,
+  artworkWidthExceedsHorizontalBounds,
+  artworkProductionReviewReason,
 } from "../../functions/_lib/artwork-limits.js";
 
-export { MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, maximumArtworkHeightScalePercent };
+export { MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, maximumArtworkHeightScalePercent, artworkWidthExceedsHorizontalBounds, artworkProductionReviewReason };
 
 /**
  * Read-only transcription of the validated production-family dimensions.
@@ -674,14 +676,15 @@ export function studioLogoPlacementMmFor(
   positionPercent: number,
   aspectRatio: number,
   logoScalePercent: number,
-  artworkHeightScalePercent: number
+  artworkHeightScalePercent: number,
+  artworkWidthScalePercent = 100
 ): { centerXmm: number; baseHeightMm: number; widthMm: number; heightMm: number } {
   const centerXmm = studioArtworkPositionFor(variant, size, positionPercent, 50).centerXmm;
   const baseHeightMm = studioLogoBaseHeightMmFor(variant, size, aspectRatio, logoScalePercent);
   return {
     centerXmm,
     baseHeightMm,
-    widthMm: baseHeightMm * aspectRatio,
+    widthMm: baseHeightMm * aspectRatio * (Math.max(0, artworkWidthScalePercent) / 100),
     heightMm: baseHeightMm * (Math.max(0, artworkHeightScalePercent) / 100),
   };
 }

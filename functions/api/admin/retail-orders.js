@@ -4,14 +4,14 @@ import { createSnapInkEmailAttachment, EmailDeliveryError, sendSnapInkEmail } fr
 import { safeOrderJson } from "../../_lib/retail-order-utils.js";
 import { stripeAutomaticTaxEnabled, stripeSessionTax } from "../../_lib/stripe-tax.js";
 import { setSnapInkCheckoutPaymentMethods } from "../../_lib/stripe-payment-methods.js";
-import { artworkHeightExceedsMaximum } from "../../_lib/artwork-limits.js";
+import { artworkProductionReviewReason } from "../../_lib/artwork-limits.js";
 
 const STATUSES = ["PENDING_REVIEW","CHANGES_REQUESTED","DECLINED","APPROVED","AWAITING_PAYMENT","PAID","IN_PRODUCTION","SHIPPED","COMPLETED"];
 const SITE = "https://snapbacksleeves.com";
 const usd = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const orderDraft = (order) => order.draft && typeof order.draft === "object" ? order.draft : safeOrderJson(order.draftJson);
 const orderShipping = (order) => order.shippingAddress && typeof order.shippingAddress === "object" ? order.shippingAddress : safeOrderJson(order.shippingAddressJson);
-const designDescription = (draft) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PRICING REVIEW REQUIRED\nExtension ${Number(draft.artworkExtensionMm).toFixed(2)} mm; artwork ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm; scale ${draft.artworkHeightScale}%; position X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm).toFixed(2)} mm.` : "");
+const designDescription = (draft) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PRICING REVIEW REQUIRED\nExtension ${Number(draft.artworkExtensionMm).toFixed(2)} mm; artwork ${Number(draft.artworkWidthMm).toFixed(2)} × ${Number(draft.artworkHeightMm).toFixed(2)} mm; width scale ${draft.artworkWidthScale ?? 100}%, height scale ${draft.artworkHeightScale}%; position X ${Number(draft.artworkCenterXmm).toFixed(2)} mm, Y ${Number(draft.artworkCenterYmm).toFixed(2)} mm.` : "");
 const customerDesignDescription = (draft, size) => `Design: ${draft.text?.trim() ? `“${draft.text.trim()}”` : draft.logoName ? `Uploaded artwork (${draft.logoName})` : "Custom sleeve colors / blank artwork"}\nColors: sleeve ${draft.backgroundColor}, text ${draft.fill}, outline ${draft.stroke}` + (draft.extendedArtwork ? `\nEXTENDED ARTWORK — PREMIUM DESIGN\nExtended premium design price: ${usd(calculateRetailPricing(size,1,true).unitPriceCents)} each. Production approval is required.` : "");
 async function designAttachments(env, order) {
   const draft = orderDraft(order);
@@ -24,11 +24,12 @@ async function designAttachments(env, order) {
 }
 const rowOrder = (row) => {
   const draft = safeOrderJson(row.draftJson);
-  const productionReviewRequired = Boolean(draft.productionReviewRequired || artworkHeightExceedsMaximum(draft.artworkHeightMm ?? 0));
+  const productionReviewReason = artworkProductionReviewReason(draft.artworkWidthMm ?? 0, draft.artworkHeightMm ?? 0, draft.artworkCenterXmm ?? 0, row.size);
+  const productionReviewRequired = Boolean(draft.productionReviewRequired || productionReviewReason);
   return {
     ...row,
     shippingAddress: safeOrderJson(row.shippingAddressJson),
-    draft: { ...draft, productionReviewRequired, ...(productionReviewRequired ? { productionReviewReason: "total_height_exceeds_38_1_mm" } : {}) },
+    draft: { ...draft, productionReviewRequired, ...(productionReviewRequired ? { productionReviewReason: productionReviewReason || draft.productionReviewReason } : {}) },
   };
 };
 
@@ -180,8 +181,9 @@ export async function onRequestPatch({request,env}) {
       if(!["PENDING_REVIEW","CHANGES_REQUESTED","APPROVED"].includes(order.status)) return json({error:`This order cannot be approved from ${order.status}.`},409);
       const draft=orderDraft(order);
       if(draft.extendedArtwork && body.extendedReviewApproved!==true) return json({error:"Extended artwork requires explicit administrator confirmation that production feasibility and final pricing were reviewed."},409);
-      const productionReviewRequired=Boolean(draft.productionReviewRequired||artworkHeightExceedsMaximum(draft.artworkHeightMm??0));
-      if(productionReviewRequired&&body.productionReviewApproved!==true)return json({error:"Artwork above the 38.1 mm production limit requires explicit manufacturing review before checkout can be approved."},409);
+      const productionReviewReason=artworkProductionReviewReason(draft.artworkWidthMm??0,draft.artworkHeightMm??0,draft.artworkCenterXmm??0,order.size);
+      const productionReviewRequired=Boolean(draft.productionReviewRequired||productionReviewReason);
+      if(productionReviewRequired&&body.productionReviewApproved!==true)return json({error:"Artwork outside verified production dimensions requires explicit manufacturing review before checkout can be approved."},409);
       const attempt=Number(order.paymentAttempts||0)+1;
       const session=await createCheckoutSession(env,order,attempt);
       const created=now();

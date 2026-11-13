@@ -1,7 +1,7 @@
 import { bearer, json, now } from "../../_lib/orders.js";
 import { PREMIUM_EXTENDED_SHOP_PRICES, readStandardShopPrices, removeExtendedArtworkCopy, SHOP_SIZE_IDS, shopCheckoutProductError, shopProductImageRank, shopProductImageType } from "../../_lib/shop.js";
 import { canonicalShopProductName } from "../../_lib/shop-product-name.js";
-import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum } from "../../_lib/artwork-limits.js";
+import { MAX_ARTWORK_EXTENSION_PER_EDGE_MM, MAX_EXTENDED_ARTWORK_HEIGHT_MM, artworkHeightExceedsMaximum, artworkProductionReviewReason } from "../../_lib/artwork-limits.js";
 
 const defaultCardDescription = (name) => `${name} is a premium swappable snapback hat strap featuring custom artwork on a SnapInk Sleeve™.`;
 const defaultDescription = (name) => `${name} brings custom artwork and a distinctive SnapInk detail to your snapback. The flexible TPU SnapInk Sleeve™ slides over the existing plastic snapback strap, snaps securely into place, and becomes the visible, customizable strap surface. It works with the original snapback closure and does not replace it. Sleeve only; hat sold separately.`;
@@ -29,15 +29,18 @@ export async function onRequestPost({request,env}) {
   const extensionMm=Number(form.get("artworkExtensionMm")||0), artworkWidthMm=Number(form.get("artworkWidthMm")||0), artworkHeightMm=Number(form.get("artworkHeightMm")||0);
   const artworkStrokeEnabled=String(form.get("artworkStrokeEnabled")||"false")==="true", artworkStrokeWidthMm=Number(form.get("artworkStrokeWidthMm")||1.5), artworkStrokeColor=String(form.get("artworkStrokeColor")||"#000000");
   if(!Number.isFinite(artworkStrokeWidthMm)||artworkStrokeWidthMm<0.25||artworkStrokeWidthMm>5||!/^#[0-9a-f]{6}$/i.test(artworkStrokeColor))return json({error:"Artwork stroke settings are invalid."},400);
-  const productionMetadata={artworkWidthMm,artworkHeightMm,artworkExtensionMm:extensionMm,artworkTopExtensionMm:Number(form.get("artworkTopExtensionMm")||0),artworkBottomExtensionMm:Number(form.get("artworkBottomExtensionMm")||0),artworkHeightScale:Number(form.get("artworkHeightScale")||100),artworkCenterXmm:Number(form.get("artworkCenterXmm")||0),artworkCenterYmm:Number(form.get("artworkCenterYmm")||0),artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor};
-  const {artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm}=productionMetadata;
-  if (![artworkWidthMm,artworkHeightMm,extensionMm,artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm].every(Number.isFinite)
+  const productionMetadata={size:Number(form.get("artworkSize")),artworkWidthMm,artworkWidthScale:Number(form.get("artworkWidthScale")||100),artworkHeightMm,artworkExtensionMm:extensionMm,artworkTopExtensionMm:Number(form.get("artworkTopExtensionMm")||0),artworkBottomExtensionMm:Number(form.get("artworkBottomExtensionMm")||0),artworkHeightScale:Number(form.get("artworkHeightScale")||100),artworkCenterXmm:Number(form.get("artworkCenterXmm")||0),artworkCenterYmm:Number(form.get("artworkCenterYmm")||0),artworkStrokeEnabled,artworkStrokeWidthMm,artworkStrokeColor};
+  const {size,artworkWidthScale,artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm}=productionMetadata;
+  if (!Number.isInteger(size)||size<0||size>5||![artworkWidthMm,artworkWidthScale,artworkHeightMm,extensionMm,artworkTopExtensionMm,artworkBottomExtensionMm,artworkHeightScale,artworkCenterXmm,artworkCenterYmm].every(Number.isFinite)
     || artworkWidthMm<0 || artworkWidthMm>200 || artworkHeightMm<0 || artworkHeightExceedsMaximum(artworkHeightMm)
+    || artworkWidthScale<10 || artworkWidthScale>400
     || extensionMm<0 || extensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
     || artworkTopExtensionMm<0 || artworkTopExtensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
     || artworkBottomExtensionMm<0 || artworkBottomExtensionMm>MAX_ARTWORK_EXTENSION_PER_EDGE_MM+0.001
     || artworkHeightScale<25
     || Math.abs(extensionMm-Math.max(artworkTopExtensionMm,artworkBottomExtensionMm))>0.001) return json({error:"Artwork measurements exceed the permitted production dimensions."},400);
+  const productionReviewReason=artworkProductionReviewReason(artworkWidthMm,artworkHeightMm,artworkCenterXmm,size);
+  if(productionReviewReason)return json({error:"Artwork outside verified production dimensions requires manufacturing review before product publication."},409);
   if (premiumArtwork) {
     if (String(form.get("approveExtendedArtwork"))!=="true") return json({error:"Explicit administrator approval is required to publish extended artwork at its premium price."},403);
     if (!extensionMm||!artworkWidthMm||!artworkHeightMm||artworkHeightExceedsMaximum(artworkHeightMm)) return json({error:`Premium Extended Artwork must have valid measurements and a total artwork height of ${MAX_EXTENDED_ARTWORK_HEIGHT_MM.toFixed(1)} mm (1.5 in) or less.`},400);
