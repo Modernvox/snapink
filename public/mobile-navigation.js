@@ -100,7 +100,7 @@
             <span></span><span></span><span></span>
           </button>
           <a href="/" aria-label="SnapInk home">
-            <img class="snapink-mobile-header__logo" src="/images/logos/snapink-header-logo.png" alt="SnapInk" width="2172" height="242" />
+            <img class="snapink-mobile-header__logo" src="/images/logos/svg/wordmark_white.svg" alt="SnapInk" width="610" height="992" />
           </a>
           <a class="snapink-mobile-header__bag" href="/shop?bag=open" aria-label="Open shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span class="snapink-mobile-header__bag-count" aria-live="polite">0</span></a>
         </div>

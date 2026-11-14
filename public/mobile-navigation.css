@@ -28,7 +28,7 @@
 
 .snapink-logo-lockup {
   display: flex !important;
-  width: clamp(118px, 14vw, 166px) !important;
+  width: 30px !important;
   max-width: 42vw !important;
   min-width: 0 !important;
   flex: 0 0 auto;
@@ -41,7 +41,7 @@
 }
 
 .snapink-brand-tagline {
-  display: block;
+  display: none;
   box-sizing: border-box;
   max-width: 100%;
   margin-inline: auto;
@@ -82,8 +82,8 @@
   .snapink-logo-lockup {
     display: grid !important;
     width: max-content !important;
-    grid-template-columns: clamp(118px, 14vw, 166px) max-content;
-    grid-template-rows: auto auto;
+    grid-template-columns: 38px max-content;
+    grid-template-rows: auto;
     column-gap: 12px;
     row-gap: 4px !important;
     justify-content: start;
@@ -95,8 +95,7 @@
   }
 
   .snapink-logo-lockup > .snapink-brand-tagline {
-    grid-column: 1;
-    grid-row: 2;
+    display: none;
   }
 
   .snapink-logo-lockup > .snapink-made-in-usa {
@@ -145,8 +144,8 @@
   }
 
   .snapink-logo-lockup {
-    width: min(clamp(100px, 30.6vw, 136px), 122px) !important;
-    max-width: 122px !important;
+    width: 28px !important;
+    max-width: 28px !important;
     align-items: flex-start !important;
     justify-content: center !important;
     gap: 0 !important;
@@ -193,8 +192,9 @@
   .snapink-mobile-header__logo {
     display: block;
     flex: 0 1 auto;
-    width: min(clamp(100px, 30.6vw, 136px), 122px);
-    max-height: none;
+    width: 28px;
+    height: 46px;
+    max-height: 46px;
     object-fit: contain;
     object-position: center;
   }
@@ -203,8 +203,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: min(clamp(100px, 30.6vw, 136px), 122px) !important;
-    max-width: 38vw !important;
+    width: 28px !important;
+    max-width: 28px !important;
     align-items: center !important;
     transform: translate(-50%, -50%);
   }
