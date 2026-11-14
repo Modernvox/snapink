@@ -131,3 +131,13 @@
 .shop-page .shop-cart-trigger svg{display:none}@media(max-width:800px){.shop-page .shop-cart-trigger svg{display:block}}
 .shop-mobile-bag{display:none}@media(max-width:800px){.shop-mobile-bag{display:inline-flex}}
 @media(max-width:800px){.shop-page .shop-menu-button,.shop-page .shop-cart-trigger,.shop-page .shop-mobile-bag{border:0!important;border-radius:0;background:transparent!important;box-shadow:none;color:#fff!important}.shop-page .shop-menu-button:hover,.shop-page .shop-cart-trigger:hover,.shop-page .shop-mobile-bag:hover,.shop-page .shop-menu-button:active,.shop-page .shop-cart-trigger:active,.shop-page .shop-mobile-bag:active{background:color-mix(in srgb,var(--shop-gold) 10%,transparent)!important;color:#fff!important}.shop-page .shop-menu-button:focus-visible,.shop-page .shop-cart-trigger:focus-visible,.shop-page .shop-mobile-bag:focus-visible{outline:2px solid var(--shop-gold)!important;outline-offset:2px}.shop-page .shop-menu-button span{background:#fff}.shop-page .shop-cart-trigger svg,.shop-page .shop-mobile-bag svg{stroke:#fff}.shop-page .shop-cart-count{background:var(--shop-gold);color:#111}}
+/* Compact the Shop introduction on mobile while preserving desktop typography. */
+@media(max-width:800px){
+  .shop-intro{padding:36px 0 30px}
+  .shop-intro h1{font-size:clamp(32px,8vw,36px);line-height:1.12}
+  .shop-intro-copy>.shop-eyebrow{margin-bottom:10px}
+  .shop-intro-copy>p:not(.shop-eyebrow){margin:12px 0 0;font-size:15px;line-height:1.55}
+  .shop-experience-links{gap:8px;margin-top:14px}
+  .shop-experience-links>.shop-gold-button{margin-top:0}
+  .shop-experience-links>.shop-text-link{text-align:left}
+}
