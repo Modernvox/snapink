@@ -23,34 +23,7 @@
         if (!lockup) return;
         lockup.classList.add("snapink-logo-lockup");
         lockup.setAttribute("aria-label", "SnapInk — Snapback Strap Sleeves home");
-        if (!lockup.querySelector(".snapink-brand-tagline")) {
-          const tagline = document.createElement("span");
-          tagline.className = "snapink-brand-tagline";
-          tagline.textContent = "Snapback Strap Sleeves";
-          lockup.append(tagline);
-        }
-        const tagline = lockup.querySelector(".snapink-brand-tagline");
-        if (!lockup.querySelector(".snapink-made-in-usa")) {
-          const madeInUsa = document.createElement("span");
-          madeInUsa.className = "snapink-made-in-usa";
-          madeInUsa.innerHTML = '<svg viewBox="0 0 26 17" aria-hidden="true" focusable="false"><rect width="26" height="17" fill="#fff"/><path fill="#b22234" d="M0 0h26v1.31H0zm0 2.62h26v1.31H0zm0 2.62h26v1.31H0zm0 2.62h26v1.31H0zm0 2.62h26v1.31H0zm0 2.62h26v1.31H0zm0 2.62h26V17H0z"/><rect width="11" height="9.17" fill="#3c3b6e"/><g fill="#fff"><circle cx="1.5" cy="1.5" r=".45"/><circle cx="4" cy="1.5" r=".45"/><circle cx="6.5" cy="1.5" r=".45"/><circle cx="9" cy="1.5" r=".45"/><circle cx="2.75" cy="3.5" r=".45"/><circle cx="5.25" cy="3.5" r=".45"/><circle cx="7.75" cy="3.5" r=".45"/><circle cx="1.5" cy="5.5" r=".45"/><circle cx="4" cy="5.5" r=".45"/><circle cx="6.5" cy="5.5" r=".45"/><circle cx="9" cy="5.5" r=".45"/><circle cx="2.75" cy="7.5" r=".45"/><circle cx="5.25" cy="7.5" r=".45"/><circle cx="7.75" cy="7.5" r=".45"/></g></svg><span>3D PRINTED IN THE USA</span>';
-          lockup.append(madeInUsa);
-        }
-        const syncTagline = () => {
-          const logoWidth = logo.getBoundingClientRect().width;
-          if (!logoWidth) return;
-          tagline.style.width = `${logoWidth * .93}px`;
-          tagline.style.fontSize = "9px";
-          const availableWidth = tagline.clientWidth;
-          const textWidth = tagline.scrollWidth;
-          if (textWidth > availableWidth && availableWidth > 0) {
-            tagline.style.fontSize = `${Math.max(6, 9 * availableWidth / textWidth)}px`;
-          }
-        };
-        syncTagline();
-        logo.addEventListener("load", syncTagline);
-        if ("ResizeObserver" in window) new ResizeObserver(syncTagline).observe(logo);
-        else window.addEventListener("resize", syncTagline);
+
       });
   };
 
