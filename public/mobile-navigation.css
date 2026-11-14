@@ -58,40 +58,40 @@
 
 .snapink-made-in-usa {
   display: inline-flex;
-  max-width: 100%;
+  max-width: none;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 7px;
   color: #FFFFFF;
-  font-size: 7px;
-  font-weight: 750;
-  letter-spacing: .055em;
-  line-height: 1;
+  font-size: clamp(11px, .8vw, 12px);
+  font-weight: 650;
+  letter-spacing: .035em;
+  line-height: 1.15;
   white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 .snapink-made-in-usa svg {
   display: block;
-  width: 17px;
-  height: auto;
+  width: auto;
+  height: 15px;
   flex: 0 0 auto;
   border-radius: 1px;
 }
 
 @media (min-width: 769px) {
   .snapink-logo-lockup {
-    display: grid !important;
+    display: flex !important;
     width: max-content !important;
-    grid-template-columns: 38px max-content;
-    grid-template-rows: auto;
-    column-gap: 12px;
-    row-gap: 4px !important;
+    gap: clamp(16px, 1.4vw, 24px) !important;
     justify-content: start;
+    align-items: center !important;
+    flex-direction: row !important;
   }
 
   .snapink-logo-lockup > img {
-    grid-column: 1;
-    grid-row: 1;
+    flex: 0 0 38px;
   }
 
   .snapink-logo-lockup > .snapink-brand-tagline {
@@ -99,9 +99,7 @@
   }
 
   .snapink-logo-lockup > .snapink-made-in-usa {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
+    flex: 0 0 auto;
   }
 }
 
@@ -112,6 +110,13 @@
   height: auto !important;
   max-height: none !important;
   object-fit: contain;
+}
+
+@media (min-width: 769px) {
+  .snapink-logo-lockup > img {
+    width: 38px !important;
+    flex: 0 0 38px;
+  }
 }
 
 .snapink-desktop-header > div.py-3 {
