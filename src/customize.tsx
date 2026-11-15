@@ -70,7 +70,7 @@ function App() {
           <div className="snapink-retail-copy">
             <p className="snapink-draft-eyebrow">CUSTOM SLEEVE DESIGN REVIEW</p>
             <h2 className="snapink-draft-heading">READY TO SHARE YOUR DESIGN?</h2>
-            <p className="snapink-draft-description">Submit your custom sleeve design for review. No payment required. We will check that your design can be produced and contact you by email with the next steps.</p>
+            <p className="snapink-draft-description">Submit your custom SnapInk Sleeve™ design for review. No payment is collected at submission. If approved, we will email you a secure Stripe checkout link.</p>
           </div>
           <div className="snapink-retail-layout">
             <aside className="snapink-retail-summary" aria-live="polite">

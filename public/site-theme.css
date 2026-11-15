@@ -73,7 +73,7 @@ a[href^="/customize.html#"].snap-btn:hover, a[href="/customize.html"].bg-pink-60
 .snap-btn:hover { background: var(--si-gold-hover) !important; color: var(--si-gold-ink) !important; }
 .snap-links a[href="/customize.html"], .snap-links a[href^="/customize.html#"] { color: var(--si-gold); }
 .snap-links a[href="/pilot.html"], .snapink-mobile-panel a[href="/pilot.html"],
-.snapink-mobile-panel a[href="/wholesale"] { color: var(--si-accent); }
+.snapink-mobile-panel a[href="/wholesale"] { color: var(--si-gold); }
 .snapink-mobile-panel .snapink-mobile-panel__cta,
 .snapink-mobile-panel .snapink-mobile-panel__cta:hover,
 .snapink-mobile-panel .snapink-mobile-panel__cta[aria-current="page"] {
@@ -82,13 +82,13 @@ a[href^="/customize.html#"].snap-btn:hover, a[href="/customize.html"].bg-pink-60
 .snapink-mobile-panel .snapink-mobile-panel__cta:hover { background: var(--si-gold-hover); }
 .snapink-mobile-header__toggle { border-color: color-mix(in srgb, var(--si-accent) 36%, transparent); }
 .snapink-mobile-panel a[href="/customize.html"], .snapink-mobile-panel a[href^="/customize.html#"] { color: var(--si-gold); }
-.snapink-mobile-panel a[href="/pilot.html"], .snapink-mobile-panel a[href="/wholesale"] { color: var(--si-marketing-pink); }
+.snapink-mobile-panel a[href="/pilot.html"], .snapink-mobile-panel a[href="/wholesale"] { color: var(--si-gold); }
 .snapink-mobile-panel a[href="/pilot.html"]:hover, .snapink-mobile-panel a[href="/wholesale"]:hover { color: var(--si-hover); }
 .snap-links a[href="/pilot.html"] { color: #fff; }
 .snap-links a[href="/pilot.html"]:hover,
 .snap-links a[href="/pilot.html"]:focus-visible,
 .snap-links a[href="/pilot.html"][aria-current="page"] { color: #fff; }
-.links a[href="/pilot.html"], .links a[href="/wholesale-info.html"], .links a[href="/wholesale"] { color: var(--si-marketing-pink); }
+.links a[href="/pilot.html"], .links a[href="/wholesale-info.html"], .links a[href="/wholesale"] { color: inherit; }
 .links a[href="/pilot.html"],
 .links a[href="/pilot.html"]:hover,
 .links a[href="/pilot.html"]:focus-visible,

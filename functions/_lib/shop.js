@@ -56,21 +56,47 @@ export async function readShopProducts(db, { includeInactive = false, productIds
   if (!includeInactive) where.push("product.active=1");
   if (selectedIds) { where.push(`product.product_id IN (${selectedIds.map(() => "?").join(",")})`); bindings.push(...selectedIds); }
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  // Some production databases receive migrations at different times. Retry the
+  // richer catalog query while removing only the field/table reported missing;
+  // in particular, a missing `featured` column must not discard artwork_tier.
+  const optionalColumns = {
+    card_description: "product.card_description AS cardDescription",
+    artwork_tier: "product.artwork_tier AS artworkTier",
+    production_metadata_json: "product.production_metadata_json AS productionMetadataJson",
+    category_id: "product.category_id AS categoryId",
+    featured: "product.featured",
+  };
+  const available = new Set(Object.keys(optionalColumns));
+  let categoriesAvailable = true;
   let rows;
-  try {
-    const statement = db.prepare(`SELECT product.product_id AS productId,product.slug,product.name,product.description,product.card_description AS cardDescription,product.image_url AS imageUrl,product.image_alt AS imageAlt,product.prices_json AS pricesJson,product.artwork_tier AS artworkTier,product.production_metadata_json AS productionMetadataJson,product.category_id AS categoryId,category.name AS categoryName,category.slug AS categorySlug,product.active,product.featured
-      FROM shop_products AS product LEFT JOIN shop_product_categories AS category ON category.category_id=product.category_id ${whereSql} ORDER BY product.name`);
-    rows = await (bindings.length ? statement.bind(...bindings) : statement).all();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!/no such (?:column|table):\s*(?:card_description|artwork_tier|production_metadata_json|(?:product\.)?featured|(?:shop_products\.)?category_id|shop_product_categories)/i.test(message)) throw error;
-    const legacyWhere = [];
-    if (!includeInactive) legacyWhere.push("active=1");
-    if (selectedIds) { legacyWhere.push(`product_id IN (${selectedIds.map(() => "?").join(",")})`); }
-    const statement = db.prepare(`SELECT product_id AS productId,slug,name,description,image_url AS imageUrl,image_alt AS imageAlt,prices_json AS pricesJson,active
-      FROM shop_products ${legacyWhere.length ? `WHERE ${legacyWhere.join(" AND ")}` : ""} ORDER BY name`);
-    rows = await (bindings.length ? statement.bind(...bindings) : statement).all();
+  for (let attempt = 0; attempt <= Object.keys(optionalColumns).length + 1; attempt++) {
+    const field = (name) => available.has(name) ? optionalColumns[name] : null;
+    const select = ["product.product_id AS productId","product.slug","product.name","product.description",field("card_description"), "product.image_url AS imageUrl","product.image_alt AS imageAlt","product.prices_json AS pricesJson",field("artwork_tier"),field("production_metadata_json"),field("category_id"),"product.active",field("featured")].filter(Boolean);
+    const join = categoriesAvailable && available.has("category_id") ? "LEFT JOIN shop_product_categories AS category ON category.category_id=product.category_id" : "";
+    if (join) select.push("category.name AS categoryName","category.slug AS categorySlug");
+    const statement = db.prepare(`SELECT ${select.join(",")} FROM shop_products AS product ${join} ${whereSql} ORDER BY product.name`);
+    try {
+      rows = await (bindings.length ? statement.bind(...bindings) : statement).all();
+      break;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const missingColumn = message.match(/no such column:\s*(?:(?:product|shop_products|category)\.)?([a-z_]+)/i)?.[1]?.toLowerCase();
+      if (/no such column:\s*category\.(?:name|slug)\b/i.test(message) && categoriesAvailable) {
+        categoriesAvailable = false;
+        continue;
+      }
+      if (missingColumn && available.has(missingColumn)) {
+        available.delete(missingColumn);
+        continue;
+      }
+      if (/no such table:\s*shop_product_categories/i.test(message) && categoriesAvailable) {
+        categoriesAvailable = false;
+        continue;
+      }
+      throw error;
+    }
   }
+  if (!rows) throw new Error("Shop catalog schema compatibility retries were exhausted.");
   const standardRow = (rows.results || []).find((row) => row.artworkTier === "standard") || (selectedIds ? await db.prepare(`SELECT prices_json AS pricesJson FROM shop_products WHERE artwork_tier='standard' ${includeInactive ? "" : "AND active=1"} ORDER BY active DESC,created_at LIMIT 1`).first().catch(()=>null) : null);
   const standardPrices = parseShopJson(standardRow?.pricesJson, DEFAULT_STANDARD_SHOP_PRICES);
   const validStandardPrices = Array.isArray(standardPrices) && standardPrices.length === 6 && standardPrices.every((price) => Number.isSafeInteger(price) && price > 0) ? standardPrices : DEFAULT_STANDARD_SHOP_PRICES;

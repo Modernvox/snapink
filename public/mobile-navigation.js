@@ -47,12 +47,10 @@
     const rootPrefix = isHome ? "" : "/";
     const links = [
       { label: "Home", href: "/", key: "home" },
-      { label: "Shop", href: "/shop", key: "/shop" },
+      { label: "Shop Designs", href: "/shop", key: "/shop" },
       { label: "How It Works", href: `${rootPrefix}#how` },
-      { label: "Customization", href: `${rootPrefix}#customization` },
-      { label: "Fit Guide", href: "/fit-guide.html", key: "/fit-guide.html" },
-      { label: "Pilot Partners", href: "/pilot.html", key: "/pilot.html" },
-      { label: "Wholesale / Partners", href: "/wholesale", key: "/wholesale" },
+      { label: "Find Your Fit", href: `${rootPrefix}#fit`, key: "/fit-guide.html" },
+      { label: "Create Your Own", href: "/customize.html", key: "/customize.html" },
       { label: "Contact", href: "/contact.html", key: "/contact.html" },
     ];
     const activeKey = pageKey === "/" ? "home" : pageKey;
