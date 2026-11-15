@@ -1,7 +1,8 @@
 import { json } from "../../_lib/orders.js";
 import { readShopProducts, publicShopProduct, shopProductImageType } from "../../_lib/shop.js";
 
-const MAX_FEATURED = 4;
+const MAX_FEATURED = 6;
+const PRIORITY_PRODUCT_SLUG = "snapink-signature-brandmark-snapink-sleevetm-swappable-snapback-hat-st";
 
 function homepageProduct(product) {
   const publicProduct = publicShopProduct(product);
@@ -22,6 +23,8 @@ function homepageProduct(product) {
 export async function onRequestGet({env}) {
   if (!env.DB) return json({error:"The Shop catalog is temporarily unavailable."},503);
   try {
+    const priorityRow = await env.DB.prepare(`SELECT product_id AS productId,category_id AS categoryId
+      FROM shop_products WHERE active=1 AND slug=? LIMIT 1`).bind(PRIORITY_PRODUCT_SLUG).first();
     let featuredRows=[];
     let hasFeaturedColumn=true;
     try {
@@ -32,14 +35,31 @@ export async function onRequestGet({env}) {
       if(!/no such column:\s*featured\b/i.test(error instanceof Error?error.message:String(error))) throw error;
       hasFeaturedColumn=false;
     }
-    const featuredProducts = await readShopProducts(env.DB,{productIds:featuredRows.map((row)=>row.productId)});
+    const requestedIds=[priorityRow?.productId,...featuredRows.map((row)=>row.productId)].filter(Boolean);
+    const featuredProducts = await readShopProducts(env.DB,{productIds:requestedIds});
     const featuredById = new Map(featuredProducts.map((product)=>[product.productId,product]));
     const selected = [];
     const selectedIds = new Set();
-    for (const row of featuredRows) {
-      const product=featuredById.get(row.productId),card=product&&homepageProduct(product);
-      if(card&&!selectedIds.has(card.productId)){selected.push(card);selectedIds.add(card.productId)}
+    const priorityProduct=priorityRow&&featuredById.get(priorityRow.productId);
+    const priorityCard=priorityProduct&&homepageProduct(priorityProduct);
+    if(priorityCard){selected.push(priorityCard);selectedIds.add(priorityCard.productId)}
+    const appendDiverse = (rows, productsById) => {
+      const seenCategories=new Set(selected.map((product)=>product.categoryId||""));
+      const diverse=[],remaining=[];
+      for(const row of rows){
+        if(selectedIds.has(row.productId))continue;
+        const product=productsById.get(row.productId),card=product&&homepageProduct(product);
+        if(!card)continue;
+        const categoryKey=card.categoryId||"";
+        if(!seenCategories.has(categoryKey)){seenCategories.add(categoryKey);diverse.push(card)}
+        else remaining.push(card);
+      }
+      for(const card of [...diverse,...remaining]){
+        if(selected.length>=MAX_FEATURED)break;
+        if(!selectedIds.has(card.productId)){selected.push(card);selectedIds.add(card.productId)}
+      }
     }
+    appendDiverse(featuredRows,featuredById);
 
     if (selected.length < MAX_FEATURED) {
       const candidateResult = await env.DB.prepare(`WITH ranked AS (
@@ -51,22 +71,10 @@ export async function onRequestGet({env}) {
       )
       SELECT productId,categoryId,categoryOrder,categoryRank FROM ranked
       WHERE categoryRank<=6 ORDER BY categoryRank,categoryOrder,productId LIMIT 120`).all();
-      const seenCategories=new Set(selected.map((product)=>product.categoryId||""));
-      const diverse=[],remaining=[];
-      for(const candidate of candidateResult.results||[]){
-        if(selectedIds.has(candidate.productId))continue;
-        const categoryKey=candidate.categoryId||"";
-        if(!seenCategories.has(categoryKey)){seenCategories.add(categoryKey);diverse.push(candidate)}
-        else remaining.push(candidate);
-      }
-      const candidates=[...diverse,...remaining];
+      const candidates=candidateResult.results||[];
       for(let offset=0;offset<candidates.length&&selected.length<MAX_FEATURED;offset+=6){
         const batch=candidates.slice(offset,offset+6),products=await readShopProducts(env.DB,{productIds:batch.map((candidate)=>candidate.productId)}),byId=new Map(products.map((product)=>[product.productId,product]));
-        for(const candidate of batch){
-          if(selected.length>=MAX_FEATURED)break;
-          const product=byId.get(candidate.productId),card=product&&homepageProduct(product);
-          if(card&&!selectedIds.has(card.productId)){selected.push(card);selectedIds.add(card.productId)}
-        }
+        appendDiverse(batch,byId);
       }
     }
 
