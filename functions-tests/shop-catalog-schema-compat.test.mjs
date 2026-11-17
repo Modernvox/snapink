@@ -28,7 +28,7 @@ class SchemaCompatDb {
       {productId:"angel-id",slug:"angel-swappable-snapback-hat-strap-snapink-sleeve",name:"ANGEL – Swappable Snapback Hat Strap – SnapInk Sleeve™",description:"Angel design",imageUrl:"/angel.png",imageAlt:"ANGEL on hat",pricesJson:"[1599,1599,1599,1599,1899,1899]",artworkTier:"standard",productionMetadataJson:"{}",categoryId:"cat_motivation_mindset",categoryName:"Motivation & Mindset",categorySlug:"motivation-mindset",active:1},
       {productId:"dad-id",slug:"dad-swappable-snapback-hat-strap-snapink-sleeve",name:"DAD – Swappable Snapback Hat Strap – SnapInk Sleeve™",description:"Dad design",imageUrl:"/dad.png",imageAlt:"DAD on hat",pricesJson:"[2499,2499,2499,2999,2999,2999]",artworkTier:"premium",productionMetadataJson:"{}",categoryId:"cat_lifestyle_identity",categoryName:"Lifestyle & Identity",categorySlug:"lifestyle-identity",active:1},
       {productId:"apex-id",slug:"apex-swappable-snapback-hat-strap-snapink-sleeve",name:"APEX – \u00ad\u00ad\u00ad Swappable Snapback Hat Strap – SnapInk Sleeve™",description:"Apex design",imageUrl:"/apex.png",imageAlt:"APEX on hat",pricesJson:"[1599,1599,1599,1599,1899,1899]",artworkTier:"standard",productionMetadataJson:"{}",categoryId:"cat_sports_fan_culture",categoryName:"Sports & Fan Culture",categorySlug:"sports-fan-culture",active:1},
-      {productId:"brandmark-id",slug:"snapink-signature-brandmark-snapink-sleevetm-swappable-snapback-hat-st",name:"SNAPINK Signature Brandmark – SnapInk SleeveTM Swappable Snapback Hat Strap – SnapInk Sleeve™",description:"Signature brandmark design",imageUrl:"/brandmark.png",imageAlt:"SnapInk Signature Brandmark on hat",pricesJson:"[1599,1599,1599,1599,1899,1899]",artworkTier:"standard",productionMetadataJson:"{}",categoryId:"cat_custom_designs",categoryName:"Custom Designs",categorySlug:"custom-designs",active:1},
+      {productId:"brandmark-id",slug:"snapink-signature-brandmark-snapink-sleevetm-swappable-snapback-hat-st",name:"Signature Brandmark Swappable Snapback Hat Strap – SnapInk Sleeve™",description:"Signature brandmark design",imageUrl:"/brandmark.png",imageAlt:"SnapInk Signature Brandmark on hat",pricesJson:"[1599,1599,1599,1599,1899,1899]",artworkTier:"standard",productionMetadataJson:"{}",categoryId:"cat_custom_designs",categoryName:"Custom Designs",categorySlug:"custom-designs",active:1},
     ];
     this.galleries=Object.fromEntries(this.rows.map((row)=>[row.productId,[{url:`/api/shop/product-image?key=shop-products%2F${row.productId}%2Fon-desk.png`,alt:`${row.name} On-Desk product image`,label:"On-Desk"}]]));
     this.statements=[];
@@ -83,6 +83,7 @@ test("featured products returns six diverse On-Desk cards with Signature Brandma
   assert.equal(response.status,200);
   const body=await response.json();
   assert.equal(body.products.length,6);
+  assert.equal(body.products[0].name,"Signature Brandmark Swappable Snapback Hat Strap – SnapInk Sleeve™");
   assert.deepEqual(body.products.map((product)=>product.productId),["brandmark-id","nocap-id","boston-id","angel-id","dad-id","apex-id"]);
   assert.equal(new Set(body.products.map((product)=>product.productId)).size,6);
   const dad=body.products.find((product)=>product.productId==="dad-id");
