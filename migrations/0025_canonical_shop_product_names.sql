@@ -11,5 +11,5 @@ SET name = trim(trim(
       ' SnapInk SleeveTM', ''),
       ' – SnapInk SleeveTM', ''),
       ' SnapInk Sleeve™', ''),
-    char(173), ''), char(8203), ''), char(8204), ''), char(8205), '')),
+    char(173), ''), char(8203), ''), char(8204), ''), char(8205), ''),
   ' –—-') || ' Swappable Snapback Hat Strap – SnapInk Sleeve™');
