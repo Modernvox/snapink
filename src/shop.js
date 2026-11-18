@@ -39,7 +39,7 @@ function renderProducts(){
     const link=document.createElement("a");link.href=`/shop/${product.slug}`;link.setAttribute("aria-label",`View ${product.name} details`);
     const imageFrame=document.createElement("div");imageFrame.className="shop-card-image-frame";const image=document.createElement("img");applyShopProductThumbnail(image,product.imageUrl,"(max-width: 760px) 92vw, 30vw");image.alt=product.imageAlt;image.width||=1536;image.height||=1024;image.loading="lazy";image.decoding="async";imageFrame.append(image);if(isGeneratedShopPreview({url:product.imageUrl,alt:product.imageAlt}))imageFrame.append(createProductPreviewDisclosure());
     const body=document.createElement("div");body.className="shop-product-card-body";
-    const name=document.createElement("h3"),designName=String(product.name||"").replace(/\s+Swappable\b[\s\S]*$/i,"").replace(/[\s–—\-|:·]+$/u,"").trim();name.textContent=designName||product.name;
+    const name=document.createElement("h3");name.textContent=product.name;
     const desc=document.createElement("p");desc.textContent=product.cardDescription||product.description;
     const price=document.createElement("strong");price.className="shop-starting";price.textContent=`Starting at ${usd(Math.min(...product.prices))}`;
     let priceDisplay=price;if(product.artworkTier==="premium"){const priceRow=document.createElement("div");priceRow.className="shop-card-price-row";const extendedLabel=document.createElement("span");extendedLabel.className="shop-card-extended-label";extendedLabel.textContent="EXTENDED ARTWORK";priceRow.append(price,extendedLabel);priceDisplay=priceRow}

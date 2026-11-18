@@ -1,17 +1,8 @@
 import { applyShopProductThumbnail } from "./utils/imageRenditions.js";
-import { shopProductDesignName } from "../functions/_lib/shop-product-name.js";
 
 const section=document.querySelector(".exclusive-shop-promo"),cards=document.querySelector(".exclusive-shop-cards"),categoryLinks=document.querySelector(".home-category-links");
 const usd=(cents)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(cents/100);
-const FEATURED_DESIGN_NAMES={
-  "snapink-signature-brandmark-snapink-sleevetm-swappable-snapback-hat-st":"SNAPINK Signature Brandmark",
-  "no-cap-swappable-snapback-hat-strap-snapink-sleeve":"NO CAP",
-  "boston-snapink-sleevetm-swappable-snapback-hat-strap-snapink-sleeve":"BOSTON",
-  "angel-swappable-snapback-hat-strap-snapink-sleeve":"ANGEL",
-  "dad-swappable-snapback-hat-strap-snapink-sleeve":"DAD",
-  "apex-swappable-snapback-hat-strap-snapink-sleeve":"APEX",
-};
-const featuredDesignName=(product)=>FEATURED_DESIGN_NAMES[product.slug]||shopProductDesignName(product.name).replace(/[\u00AD\u200B-\u200D\uFEFF]/g,"").replace(/\s*[–—-]+\s*$/u,"").trim();
+const featuredDesignName=(product)=>product.name;
 async function renderExclusiveProducts(){
   if(!section||!cards)return;
   cards.replaceChildren();

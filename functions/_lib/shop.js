@@ -1,4 +1,5 @@
 import { json } from "./orders.js";
+import { canonicalShopProductName } from "./shop-product-name.js";
 export { SHOP_SIZE_IDS, shopCheckoutProductError } from "./shop-checkout-validation.mjs";
 
 export const DEFAULT_STANDARD_SHOP_PRICES = [1599,1599,1599,1599,1899,1899];
@@ -120,7 +121,7 @@ export async function readShopProducts(db, { includeInactive = false, productIds
     const images = [{url:row.imageUrl,alt:row.imageAlt,label:row.imageAlt,sequence:0},...parseShopGallery(galleryRow?.galleryJson).map((image,index)=>({...image,sequence:index+1}))]
       .sort((a,b)=>shopProductImageRank(a)-shopProductImageRank(b)||a.sequence-b.sequence);
     const primaryImage = images[0] || {url:row.imageUrl,alt:row.imageAlt};
-    products.push({productId:row.productId,slug:row.slug,name:row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:primaryImage.url,imageAlt:primaryImage.alt||row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:images.slice(1).map(({sequence,...image})=>image),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),featured:Boolean(row.featured),variants});
+    products.push({productId:row.productId,slug:row.slug,name:canonicalShopProductName(row.name)||row.name,description:row.description,cardDescription:row.cardDescription?.trim()||row.description,imageUrl:primaryImage.url,imageAlt:primaryImage.alt||row.imageAlt,categoryId:row.categoryId||null,categoryName:row.categoryName||null,categorySlug:row.categorySlug||null,gallery:images.slice(1).map(({sequence,...image})=>image),prices,artworkTier,productionMetadata:parseShopJson(row.productionMetadataJson,{}),active:Boolean(row.active),featured:Boolean(row.featured),variants});
   }
   return products;
 }

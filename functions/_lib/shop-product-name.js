@@ -1,15 +1,20 @@
-const removeWords = (value, pattern) => value.replace(pattern, " ");
+const suffixPatterns = [
+  /\s*[–—-]\s*SnapInk\s+Sleeve(?:™|TM)?\s*$/i,
+  /\s*[–—-]\s*Swappable\s+Snapback\s+Hat\s+Strap(?:\s*[–—-]\s*SnapInk\s+Sleeve(?:™|TM)?)?\s*$/i,
+  /\s*[–—-]\s*Swappable\s+Cover\s*$/i,
+  /\s+SnapInk\s+Sleeve(?:™|TM)?\s*$/i,
+  /\s+Swappable\s+Snapback\s+Hat\s+Strap(?:\s*[–—-]\s*SnapInk\s+Sleeve(?:™|TM)?)?\s*$/i,
+  /\s+Swappable\s+Cover\s*$/i,
+];
 
 export function shopProductDesignName(value) {
-  let design = String(value || "").normalize("NFKC").trim();
-  design = design
-    .replace(/\s*[–—-]\s*SnapInk\s+Sleeve™?\s*$/i, " ")
-    .replace(/\s*[–—-]\s*Swappable\s+Cover\s*$/i, " ");
-  design = removeWords(design, /\b(?:swappable\s+)?snapback\s+hat\s+strap(?:\s+(?:sleeve|cover))?\b/gi);
-  design = removeWords(design, /\bsnapback\s+strap(?:\s+(?:sleeve|cover))?\b/gi);
-  design = removeWords(design, /\bSnapInk\s+Sleeve(?:™)?(?=\W|$)/gi);
-  design = removeWords(design, /\bSwappable\b/gi);
-  return design.replace(/\s+/g, " ").replace(/^[–—-]\s*|\s*[–—-]$/g, "").trim();
+  let design = String(value || "").normalize("NFKC").replace(/[\u00AD\u200B-\u200D\uFEFF]/g, "").trim();
+  let previous;
+  do {
+    previous = design;
+    for (const pattern of suffixPatterns) design = design.replace(pattern, "").trim();
+  } while (design !== previous);
+  return design.replace(/[\s–—-]+$/u, "").trim();
 }
 
 export function canonicalShopProductName(value) {
